@@ -1,0 +1,25 @@
+{
+	"name": "SAA1099Tracker",
+	"version": "1.0.0",
+	"author": {
+		"name": "Martin Bórik",
+		"email": "mborik@users.sourceforge.net"
+	},
+	"private": true,
+	"scripts": {
+		"start": "node app.js"
+	},
+	"dependencies": {
+		"express": "3.10.5",
+		"ejs": "*",
+		"less-middleware": "~0.1.15",
+		"grunt": "~0.4.2",
+		"bower": "~1.2.8",
+		"grunt-typescript": "~0.6.0",
+		"grunt-contrib-jshint": "~0.8.0",
+		"grunt-contrib-concat": "~0.3.0",
+		"grunt-contrib-uglify": "~0.2.7",
+		"grunt-contrib-cssmin": "~0.7.0",
+		"grunt-contrib-copy": "~0.5.0"
+	}
+}
