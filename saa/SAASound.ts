@@ -34,8 +34,45 @@
 //---------------------------------------------------------------------------------------
 module SAASound {
 //---------------------------------------------------------------------------------------
-export var nSampleRate;
-export var nBufferSize;
+export var nSampleRate: number;
+export var nBufferSize: number;
+//---------------------------------------------------------------------------------------
+	var nCurrentReg: number = 0;
+	var uParam: number = 0;
+	var uParamRate: number = 0;
+
+	var bOutputEnabled: boolean = false;
+	var bAmpMuted: boolean[] = [ false, false, false, false, false, false ];
+
+	var Env: SAAEnv[] = [ new SAAEnv, new SAAEnv ];
+
+	var Noise: SAANoise[] = [
+		new SAANoise(0x14af5209),
+		new SAANoise(0x76a9b11e)
+	];
+
+	var Osc: SAAFreq[] = [
+		new SAAFreq(Noise[0], undefined),
+		new SAAFreq(undefined, Env[0]),
+		new SAAFreq(undefined, undefined),
+		new SAAFreq(Noise[1], undefined),
+		new SAAFreq(undefined, Env[0]),
+		new SAAFreq(undefined, undefined)
+	];
+
+	var Amp: SAAAmp[] = [
+		new SAAAmp(Osc[0], Noise[0], undefined),
+		new SAAAmp(Osc[1], Noise[0], undefined),
+		new SAAAmp(Osc[2], Noise[0], Env[0]),
+		new SAAAmp(Osc[3], Noise[1], undefined),
+		new SAAAmp(Osc[4], Noise[1], undefined),
+		new SAAAmp(Osc[5], Noise[1], Env[1])
+	];
+
+	export function Clear() {
+		// TODO
+	}
+
 //---------------------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------------------

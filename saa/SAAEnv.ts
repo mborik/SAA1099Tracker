@@ -9,7 +9,6 @@ interface ENVDATA {
 	aLevels: number[][][];
 }
 //---------------------------------------------------------------------------------------
-/** SAAEnv: Envelope generator */
 export class SAAEnv {
 	private nLeftLevel: number;
 	private nRightLevel: number;

@@ -35,6 +35,137 @@ var SAASound;
 (function (SAASound) {
     SAASound.nSampleRate;
     SAASound.nBufferSize;
+    var nCurrentReg = 0;
+    var uParam = 0;
+    var uParamRate = 0;
+    var bOutputEnabled = false;
+    var bAmpMuted = [false, false, false, false, false, false];
+    var Env = [new SAASound.SAAEnv, new SAASound.SAAEnv];
+    var Noise = [
+        new SAASound.SAANoise(0x14af5209),
+        new SAASound.SAANoise(0x76a9b11e)
+    ];
+    var Osc = [
+        new SAASound.SAAFreq(Noise[0], undefined),
+        new SAASound.SAAFreq(undefined, Env[0]),
+        new SAASound.SAAFreq(undefined, undefined),
+        new SAASound.SAAFreq(Noise[1], undefined),
+        new SAASound.SAAFreq(undefined, Env[0]),
+        new SAASound.SAAFreq(undefined, undefined)
+    ];
+    var Amp = [
+        new SAASound.SAAAmp(Osc[0], Noise[0], undefined),
+        new SAASound.SAAAmp(Osc[1], Noise[0], undefined),
+        new SAASound.SAAAmp(Osc[2], Noise[0], Env[0]),
+        new SAASound.SAAAmp(Osc[3], Noise[1], undefined),
+        new SAASound.SAAAmp(Osc[4], Noise[1], undefined),
+        new SAASound.SAAAmp(Osc[5], Noise[1], Env[1])
+    ];
+    function Clear() {
+    }
+    SAASound.Clear = Clear;
+})(SAASound || (SAASound = {}));
+/*! SAAAmp: Tone/Noise mixing, Envelope application and amplification */
+/// <reference path="SAASound.ts" />
+var SAASound;
+(function (SAASound) {
+    var SAAAmp = (function () {
+        function SAAAmp(ToneGenerator, NoiseGenerator, EnvGenerator) {
+            this.pcConnectedToneGenerator = ToneGenerator;
+            this.pcConnectedNoiseGenerator = NoiseGenerator;
+            this.pcConnectedEnvGenerator = EnvGenerator;
+            this.bUseEnvelope = !!EnvGenerator;
+            this.leftleveltimes32 = this.leftleveltimes16 = this.leftlevela0x0e = this.leftlevela0x0etimes2 = 0;
+            this.rightleveltimes32 = this.rightleveltimes16 = this.rightlevela0x0e = this.rightlevela0x0etimes2 = 0;
+            this.monoleveltimes32 = this.monoleveltimes16 = 0;
+            this.bMute = true;
+            this.nMixMode = 0;
+            this.nOutputIntermediate = 0;
+            this.last_level_byte = 0;
+            this.level_unchanged = false;
+            this.last_leftlevel = this.last_rightlevel = 0;
+            this.leftlevel_unchanged = this.rightlevel_unchanged = false;
+            this.cached_last_leftoutput = this.cached_last_rightoutput = 0;
+        }
+        SAAAmp.prototype.SetAmpLevel = function (level_byte) {
+            if ((level_byte &= 255) != this.last_level_byte) {
+                this.last_level_byte = level_byte;
+                this.leftlevela0x0e = level_byte & 0x0e;
+                this.leftlevela0x0etimes2 = this.leftlevela0x0e << 1;
+                this.leftleveltimes16 = (level_byte & 0x0f) << 4;
+                this.leftleveltimes32 = this.leftleveltimes16 << 1;
+                this.rightlevela0x0e = (level_byte >> 4) & 0x0e;
+                this.rightlevela0x0etimes2 = this.rightlevela0x0e << 1;
+                this.rightleveltimes16 = level_byte & 0xf0;
+                this.rightleveltimes32 = this.rightleveltimes16 << 1;
+                this.monoleveltimes16 = this.leftleveltimes16 + this.rightleveltimes16;
+                this.monoleveltimes32 = this.leftleveltimes32 + this.rightleveltimes32;
+            }
+        };
+        SAAAmp.prototype.SetToneMixer = function (bEnabled) {
+            if (!bEnabled)
+                this.nMixMode &= ~(0x01);
+            else
+                this.nMixMode |= 0x01;
+        };
+        SAAAmp.prototype.SetNoiseMixer = function (bEnabled) {
+            if (!bEnabled)
+                this.nMixMode &= ~(0x02);
+            else
+                this.nMixMode |= 0x02;
+        };
+        SAAAmp.prototype.Tick = function () {
+            switch (this.nMixMode) {
+                case 0:
+                    this.pcConnectedToneGenerator.Tick();
+                    this.nOutputIntermediate = 0;
+                    break;
+                case 1:
+                    this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
+                    break;
+                case 2:
+                    this.pcConnectedToneGenerator.Tick();
+                    this.nOutputIntermediate = this.pcConnectedNoiseGenerator.Level();
+                    break;
+                case 3:
+                    this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
+                    if (this.nOutputIntermediate === 2 && !!this.pcConnectedNoiseGenerator.Level())
+                        this.nOutputIntermediate = 1;
+                    break;
+            }
+        };
+        SAAAmp.prototype.TickAndOutputStereo = function () {
+            this.Tick();
+            var retval = { Left: 0, Right: 0, DWORD: 0 };
+            var out = this.nOutputIntermediate;
+            if (this.bMute)
+                return retval;
+            if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
+                if (out === 0) {
+                    retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2;
+                    retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2;
+                }
+                else if (out === 1) {
+                    retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e;
+                    retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e;
+                }
+            }
+            else {
+                if (out === 1) {
+                    retval.Left = this.leftleveltimes16;
+                    retval.Right = this.rightleveltimes16;
+                }
+                else if (out === 2) {
+                    retval.Left = this.leftleveltimes32;
+                    retval.Right = this.rightleveltimes32;
+                }
+            }
+            retval.DWORD = (retval.Right << 16) | retval.Left;
+            return retval;
+        };
+        return SAAAmp;
+    })();
+    SAASound.SAAAmp = SAAAmp;
 })(SAASound || (SAASound = {}));
 /*! SAAEnv: Envelope generator */
 /// <reference path="SAASound.ts" />
