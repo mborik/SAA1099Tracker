@@ -11,27 +11,23 @@ module.exports = function(grunt) {
 			' */',
 
 		jshint: {
-			options: {
-				jshintrc: '.jshintrc'
-			},
+			jshintrc: '.jshintrc',
 			gruntfile: {
 				src: 'Gruntfile.js'
 			},
 			files: [
-				'saa/SAASound.js'
+				'src/Audio.js'
 			]
 		},
 		typescript: {
-			base: {
+			SAASound: {
 				src: ['saa/**/*.ts'],
 				dest: 'saa/SAASound.js',
 				options: {
-					module: 'amd', //or commonjs
+					module: 'commonjs',
 					target: 'ES5',
 					sourceMap: true,
-					removeComments: true,
-					preserveConstEnums: true,
-					watch: false
+					removeComments: true
 				}
 			}
 		},
