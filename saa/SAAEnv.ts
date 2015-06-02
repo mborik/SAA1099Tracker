@@ -1,15 +1,12 @@
 /*! SAAEnv: Envelope generator */
 //---------------------------------------------------------------------------------------
-/// <reference path="SAASound.ts" />
-module SAASound {
-//---------------------------------------------------------------------------------------
 interface ENVDATA {
 	nPhases: number;
 	bLooping: boolean;
 	aLevels: number[][][];
 }
 //---------------------------------------------------------------------------------------
-export class SAAEnv {
+class SAAEnv {
 	private nLeftLevel: number;
 	private nRightLevel: number;
 	private pEnvData: ENVDATA;
@@ -279,4 +276,3 @@ export class SAAEnv {
 	public IsActive()  : boolean { return this.bEnabled; }
 }
 //---------------------------------------------------------------------------------------
-}

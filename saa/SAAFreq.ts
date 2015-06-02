@@ -1,20 +1,17 @@
 /*! SAAFreq: Frequency oscillator, 7-bit fractional accuracy */
 //---------------------------------------------------------------------------------------
-/// <reference path="SAASound.ts" />
-module SAASound {
-//---------------------------------------------------------------------------------------
-export class SAAFreq {
-	private nCounter: number;
-	private nAdd: number;
+class SAAFreq {
 	private nLevel: number;
-	private nCurrentOffset: number;
-	private nCurrentOctave: number;
-	private nNextOffset: number;
-	private nNextOctave: number;
+	private nCounter: number = 0;
+	private nAdd: number = 0;
+	private nCurrentOffset: number = 0;
+	private nCurrentOctave: number = 0;
+	private nNextOffset: number = 0;
+	private nNextOctave: number = 0;
 
-	private bIgnoreOffsetData: boolean;
-	private bNewData: boolean;
-	private bSync: boolean;
+	private bIgnoreOffsetData: boolean = false;
+	private bNewData: boolean = false;
+	private bSync: boolean = false;
 
 	private nSmpRate: number;
 	private nConnectedMode: number;
@@ -24,10 +21,6 @@ export class SAAFreq {
 
 	constructor(pcNoise?: SAANoise, pcEnv?: SAAEnv) {
 		this.nLevel = 2;
-		this.nCounter = this.nAdd = 0;
-		this.nCurrentOffset = this.nCurrentOctave = 0;
-		this.nNextOffset = this.nNextOctave = 0;
-		this.bIgnoreOffsetData = this.bNewData = this.bSync = false;
 		this.nSmpRate = SAASound.nSampleRate * SAASound.nBufferSize;
 		this.pcConnectedNoiseGenerator = pcNoise;
 		this.pcConnectedEnvGenerator = pcEnv;
@@ -158,7 +151,5 @@ export class SAAFreq {
 	}
 
 	private SetAdd() { this.nAdd = ((15625 << this.nCurrentOctave) / (511 - this.nCurrentOffset)) >> 0; }
-}
-//---------------------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------------------

@@ -1,28 +1,25 @@
 /*! SAAAmp: Tone/Noise mixing, Envelope application and amplification */
 //---------------------------------------------------------------------------------------
-/// <reference path="SAASound.ts" />
-module SAASound {
-//---------------------------------------------------------------------------------------
 interface stereolevel {
 	Left: number;
 	Right: number;
-	DWORD: number;
 }
 //---------------------------------------------------------------------------------------
-export class SAAAmp {
-	private leftleveltimes16: number;
-	private leftleveltimes32: number;
-	private leftlevela0x0e: number;
-	private leftlevela0x0etimes2: number;
-	private rightleveltimes16: number;
-	private rightleveltimes32: number;
-	private rightlevela0x0e: number;
-	private rightlevela0x0etimes2: number;
-	private monoleveltimes16: number;
-	private monoleveltimes32: number;
+class SAAAmp {
+	private last_level_byte: number = 0;
+	private leftleveltimes16: number = 0;
+	private leftleveltimes32: number = 0;
+	private leftlevela0x0e: number = 0;
+	private leftlevela0x0etimes2: number = 0;
+	private rightleveltimes16: number = 0;
+	private rightleveltimes32: number = 0;
+	private rightlevela0x0e: number = 0;
+	private rightlevela0x0etimes2: number = 0;
+	private monoleveltimes16: number = 0;
+	private monoleveltimes32: number = 0;
 
-	private nOutputIntermediate: number;
-	private nMixMode: number;
+	private nOutputIntermediate: number = 0;
+	private nMixMode: number = 0;
 
 	private pcConnectedToneGenerator: SAAFreq;
 	private pcConnectedNoiseGenerator: SAANoise;
@@ -31,34 +28,12 @@ export class SAAAmp {
 	private bUseEnvelope: boolean;
 	private bMute: boolean;
 
-	private last_level_byte: number;
-	private level_unchanged: boolean;
-	private last_leftlevel: number;
-	private leftlevel_unchanged: boolean;
-	private last_rightlevel: number;
-	private rightlevel_unchanged: boolean;
-	private cached_last_leftoutput: number;
-	private cached_last_rightoutput: number;
-
-	constructor(ToneGenerator: SAAFreq, NoiseGenerator: SAANoise, EnvGenerator: SAAEnv) {
+	constructor(ToneGenerator: SAAFreq, NoiseGenerator: SAANoise, EnvGenerator?: SAAEnv) {
 		this.pcConnectedToneGenerator = ToneGenerator;
 		this.pcConnectedNoiseGenerator = NoiseGenerator;
 		this.pcConnectedEnvGenerator = EnvGenerator;
 		this.bUseEnvelope = !!EnvGenerator;
-
-		this.leftleveltimes32 = this.leftleveltimes16 = this.leftlevela0x0e = this.leftlevela0x0etimes2 = 0;
-		this.rightleveltimes32 = this.rightleveltimes16 = this.rightlevela0x0e = this.rightlevela0x0etimes2 = 0;
-		this.monoleveltimes32 = this.monoleveltimes16 = 0;
-
 		this.bMute = true;
-		this.nMixMode = 0;
-		this.nOutputIntermediate = 0;
-
-		this.last_level_byte = 0;
-		this.level_unchanged = false;
-		this.last_leftlevel = this.last_rightlevel = 0;
-		this.leftlevel_unchanged = this.rightlevel_unchanged = false;
-		this.cached_last_leftoutput = this.cached_last_rightoutput = 0;
 	}
 
 	/**
@@ -66,7 +41,7 @@ export class SAAAmp {
 	 * @param level_byte BYTE
 	 */
 	public SetAmpLevel(level_byte: number) {
-		if ((level_byte &= 255) != this.last_level_byte) {
+		if ((level_byte &= 255) !== this.last_level_byte) {
 			this.last_level_byte = level_byte;
 			this.leftlevela0x0e = level_byte & 0x0e;
 			this.leftlevela0x0etimes2 = this.leftlevela0x0e << 1;
@@ -125,6 +100,36 @@ export class SAAAmp {
 		}
 	}
 
+	public TickAndOutputMono(): number {
+		this.Tick();
+
+		if (this.bMute)
+			return 0;
+
+		var retval: number = 0;
+		var out: number = this.nOutputIntermediate;
+
+		// now calculate the returned amplitude for this sample:
+		if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
+			if (out === 0) {
+				retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2)
+				       + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2);
+			}
+			else if (out === 1) {
+				retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e)
+				       + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e);
+			}
+		}
+		else {
+			if (out === 1)
+				retval = this.monoleveltimes16;
+			else if (out === 2)
+				retval = this.monoleveltimes32;
+		}
+
+		return retval;
+	}
+
 	public TickAndOutputStereo(): stereolevel {
 		this.Tick();
 
@@ -156,10 +161,9 @@ export class SAAAmp {
 			}
 		}
 
-		retval.DWORD = (retval.Right << 16) | retval.Left;
 		return retval;
 	}
-}
-//---------------------------------------------------------------------------------------
+
+	public Mute(bMute: boolean) { this.bMute = bMute; }
 }
 //---------------------------------------------------------------------------------------

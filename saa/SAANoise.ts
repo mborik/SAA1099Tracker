@@ -1,9 +1,6 @@
 /*! SAANoise: Noise generator */
 //---------------------------------------------------------------------------------------
-/// <reference path="SAASound.ts" />
-module SAASound {
-//---------------------------------------------------------------------------------------
-export class SAANoise {
+class SAANoise {
 	private nCounter: number;
 	private nAdd: number;           // nAdd for 31.25 kHz noise at samplerate
 	private bSync: boolean;         // see description of "SYNC" bit of register 28
@@ -74,7 +71,5 @@ export class SAANoise {
 		else
 			this.nRand <<= 1;
 	}
-}
-//---------------------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------------------
