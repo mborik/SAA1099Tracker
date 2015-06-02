@@ -1,126 +1,250 @@
-/*! SAAAmp: Tone/Noise mixing, Envelope application and amplification */
-var SAAAmp = (function () {
-    function SAAAmp(ToneGenerator, NoiseGenerator, EnvGenerator) {
-        this.last_level_byte = 0;
-        this.leftleveltimes16 = 0;
-        this.leftleveltimes32 = 0;
-        this.leftlevela0x0e = 0;
-        this.leftlevela0x0etimes2 = 0;
-        this.rightleveltimes16 = 0;
-        this.rightleveltimes32 = 0;
-        this.rightlevela0x0e = 0;
-        this.rightlevela0x0etimes2 = 0;
-        this.monoleveltimes16 = 0;
-        this.monoleveltimes32 = 0;
-        this.nOutputIntermediate = 0;
-        this.nMixMode = 0;
-        this.pcConnectedToneGenerator = ToneGenerator;
-        this.pcConnectedNoiseGenerator = NoiseGenerator;
-        this.pcConnectedEnvGenerator = EnvGenerator;
-        this.bUseEnvelope = !!EnvGenerator;
-        this.bMute = true;
+/*!
+ * SAASound is a Phillips SAA 1099 sound chip emulator
+ * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
+ * Based on SAASound - portable C/C++ library
+ * Copyright (c) 1998-2004 Dave Hooper <stripwax@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom
+ * the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
+ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+var SAASound = (function () {
+    function SAASound(nSampleRate) {
+        this.nCurrentReg = 0;
+        this.bOutputEnabled = false;
+        this.bAmpMuted = [false, false, false, false, false, false];
+        SAASound.nSampleRate = nSampleRate;
+        this.Env = [new SAAEnv, new SAAEnv];
+        this.Noise = [
+            new SAANoise(0x14af5209),
+            new SAANoise(0x76a9b11e)
+        ];
+        this.Osc = [
+            new SAAFreq(this.Noise[0]),
+            new SAAFreq(null, this.Env[0]),
+            new SAAFreq(),
+            new SAAFreq(this.Noise[1]),
+            new SAAFreq(null, this.Env[1]),
+            new SAAFreq()
+        ];
+        this.Amp = [
+            new SAAAmp(this.Osc[0], this.Noise[0]),
+            new SAAAmp(this.Osc[1], this.Noise[0]),
+            new SAAAmp(this.Osc[2], this.Noise[0], this.Env[0]),
+            new SAAAmp(this.Osc[3], this.Noise[1]),
+            new SAAAmp(this.Osc[4], this.Noise[1]),
+            new SAAAmp(this.Osc[5], this.Noise[1], this.Env[1])
+        ];
+        this.Clear();
     }
-    SAAAmp.prototype.SetAmpLevel = function (level_byte) {
-        if ((level_byte &= 255) !== this.last_level_byte) {
-            this.last_level_byte = level_byte;
-            this.leftlevela0x0e = level_byte & 0x0e;
-            this.leftlevela0x0etimes2 = this.leftlevela0x0e << 1;
-            this.leftleveltimes16 = (level_byte & 0x0f) << 4;
-            this.leftleveltimes32 = this.leftleveltimes16 << 1;
-            this.rightlevela0x0e = (level_byte >> 4) & 0x0e;
-            this.rightlevela0x0etimes2 = this.rightlevela0x0e << 1;
-            this.rightleveltimes16 = level_byte & 0xf0;
-            this.rightleveltimes32 = this.rightleveltimes16 << 1;
-            this.monoleveltimes16 = this.leftleveltimes16 + this.rightleveltimes16;
-            this.monoleveltimes32 = this.leftleveltimes32 + this.rightleveltimes32;
+    SAASound.prototype.Clear = function () {
+        this.WriteAddressData(28, 2);
+        for (var i = 31; i >= 0; i--) {
+            if (i != 28)
+                this.WriteAddressData(i, 0);
         }
+        this.WriteAddressData(28, 0);
+        this.WriteAddress(0);
     };
-    SAAAmp.prototype.SetToneMixer = function (bEnabled) {
-        if (!bEnabled)
-            this.nMixMode &= ~(0x01);
-        else
-            this.nMixMode |= 0x01;
-    };
-    SAAAmp.prototype.SetNoiseMixer = function (bEnabled) {
-        if (!bEnabled)
-            this.nMixMode &= ~(0x02);
-        else
-            this.nMixMode |= 0x02;
-    };
-    SAAAmp.prototype.Tick = function () {
-        switch (this.nMixMode) {
+    SAASound.prototype.WriteData = function (nData) {
+        nData &= 0xff;
+        var nReg = this.nCurrentReg;
+        switch (nReg) {
             case 0:
-                this.pcConnectedToneGenerator.Tick();
-                this.nOutputIntermediate = 0;
-                break;
             case 1:
-                this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
-                break;
             case 2:
-                this.pcConnectedToneGenerator.Tick();
-                this.nOutputIntermediate = this.pcConnectedNoiseGenerator.Level();
-                break;
             case 3:
-                this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
-                if (this.nOutputIntermediate === 2 && !!this.pcConnectedNoiseGenerator.Level())
-                    this.nOutputIntermediate = 1;
+            case 4:
+            case 5:
+                this.Amp[nReg].SetAmpLevel(nData);
+                break;
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+                this.Osc[(nReg & 0x07)].SetFreqOffset(nData);
+                break;
+            case 16:
+                this.Osc[0].SetFreqOctave(nData & 0x07);
+                this.Osc[1].SetFreqOctave((nData >> 4) & 0x07);
+                break;
+            case 17:
+                this.Osc[2].SetFreqOctave(nData & 0x07);
+                this.Osc[3].SetFreqOctave((nData >> 4) & 0x07);
+                break;
+            case 18:
+                this.Osc[4].SetFreqOctave(nData & 0x07);
+                this.Osc[5].SetFreqOctave((nData >> 4) & 0x07);
+                break;
+            case 20:
+                this.Amp[0].SetToneMixer(nData & 0x01);
+                this.Amp[1].SetToneMixer(nData & 0x02);
+                this.Amp[2].SetToneMixer(nData & 0x04);
+                this.Amp[3].SetToneMixer(nData & 0x08);
+                this.Amp[4].SetToneMixer(nData & 0x10);
+                this.Amp[5].SetToneMixer(nData & 0x20);
+                break;
+            case 21:
+                this.Amp[0].SetNoiseMixer(nData & 0x01);
+                this.Amp[1].SetNoiseMixer(nData & 0x02);
+                this.Amp[2].SetNoiseMixer(nData & 0x04);
+                this.Amp[3].SetNoiseMixer(nData & 0x08);
+                this.Amp[4].SetNoiseMixer(nData & 0x10);
+                this.Amp[5].SetNoiseMixer(nData & 0x20);
+                break;
+            case 22:
+                this.Noise[0].SetSource(nData & 0x03);
+                this.Noise[1].SetSource((nData >> 4) & 0x03);
+                break;
+            case 24:
+                this.Env[0].SetEnvControl(nData);
+                break;
+            case 25:
+                this.Env[1].SetEnvControl(nData);
+                break;
+            case 28:
+                var i;
+                var mute = !(nData & 0x01);
+                var sync = !!(nData & 0x02);
+                for (i = 0; i < 6; i++)
+                    this.Osc[i].Sync(sync);
+                this.Noise[0].Sync(sync);
+                this.Noise[1].Sync(sync);
+                this.bSync = sync;
+                if (mute) {
+                    for (i = 0; i < 6; i++)
+                        this.Amp[i].Mute(mute);
+                    this.bOutputEnabled = false;
+                }
+                else {
+                    for (i = 0; i < 6; i++)
+                        this.Amp[i].Mute(this.bAmpMuted[i]);
+                    this.bOutputEnabled = true;
+                }
+                break;
+            default:
                 break;
         }
     };
-    SAAAmp.prototype.TickAndOutputMono = function () {
-        this.Tick();
-        if (this.bMute)
-            return 0;
-        var retval = 0;
-        var out = this.nOutputIntermediate;
-        if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
-            if (out === 0) {
-                retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2)
-                    + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2);
-            }
-            else if (out === 1) {
-                retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e)
-                    + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e);
-            }
-        }
-        else {
-            if (out === 1)
-                retval = this.monoleveltimes16;
-            else if (out === 2)
-                retval = this.monoleveltimes32;
-        }
-        return retval;
+    SAASound.prototype.ReadAddress = function () { return this.nCurrentReg; };
+    SAASound.prototype.WriteAddress = function (nReg) {
+        this.nCurrentReg = (nReg &= 0x1f);
+        if (nReg === 24)
+            this.Env[0].ExternalClock();
+        else if (nReg === 25)
+            this.Env[1].ExternalClock();
     };
-    SAAAmp.prototype.TickAndOutputStereo = function () {
-        this.Tick();
-        var retval = { Left: 0, Right: 0 };
-        var out = this.nOutputIntermediate;
-        if (this.bMute)
-            return retval;
-        if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
-            if (out === 0) {
-                retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2;
-                retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2;
-            }
-            else if (out === 1) {
-                retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e;
-                retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e;
-            }
-        }
-        else {
-            if (out === 1) {
-                retval.Left = this.leftleveltimes16;
-                retval.Right = this.rightleveltimes16;
-            }
-            else if (out === 2) {
-                retval.Left = this.leftleveltimes32;
-                retval.Right = this.rightleveltimes32;
-            }
-        }
-        return retval;
+    SAASound.prototype.WriteAddressData = function (nReg, nData) {
+        this.WriteAddress(nReg);
+        this.WriteData(nData);
     };
-    SAAAmp.prototype.Mute = function (bMute) { this.bMute = bMute; };
-    return SAAAmp;
+    SAASound.prototype.MuteAmp = function (nChn, bMute) {
+        if (nChn < 0 || nChn >= 6)
+            return;
+        this.Amp[nChn].Mute((this.bAmpMuted[nChn] = bMute));
+    };
+    SAASound.prototype.GenerateMono = function (pBuffer, nSamples) {
+        var ptr = 0, val;
+        while (ptr < nSamples) {
+            this.Noise[0].Tick();
+            this.Noise[1].Tick();
+            val = this.Amp[0].TickAndOutputMono()
+                + this.Amp[1].TickAndOutputMono()
+                + this.Amp[2].TickAndOutputMono()
+                + this.Amp[3].TickAndOutputMono()
+                + this.Amp[4].TickAndOutputMono()
+                + this.Amp[5].TickAndOutputMono();
+            pBuffer[ptr++] = val / 12672;
+        }
+    };
+    SAASound.prototype.GenerateStereo = function (pLeft, pRight, nSamples) {
+        var ptr = 0, val, ampL, ampR;
+        while (ptr < nSamples) {
+            this.Noise[0].Tick();
+            this.Noise[1].Tick();
+            val = this.Amp[0].TickAndOutputStereo();
+            ampL = val.Left;
+            ampR = val.Right;
+            val = this.Amp[1].TickAndOutputStereo();
+            ampL += val.Left;
+            ampR += val.Right;
+            val = this.Amp[2].TickAndOutputStereo();
+            ampL += val.Left;
+            ampR += val.Right;
+            val = this.Amp[3].TickAndOutputStereo();
+            ampL += val.Left;
+            ampR += val.Right;
+            val = this.Amp[4].TickAndOutputStereo();
+            ampL += val.Left;
+            ampR += val.Right;
+            val = this.Amp[5].TickAndOutputStereo();
+            ampL += val.Left;
+            ampR += val.Right;
+            pRight[ptr] = ampR / 2880;
+            pLeft[ptr++] = ampL / 2880;
+        }
+    };
+    return SAASound;
+})();
+/*! SAANoise: Noise generator */
+var SAANoise = (function () {
+    function SAANoise(seed) {
+        if (seed === void 0) { seed = 0x11111111; }
+        this.nCounter = 0;
+        this.nAdd = 128e6;
+        this.bSync = false;
+        this.nSmpRate = SAASound.nSampleRate << 12;
+        this.nSource = 0;
+        this.nRand = seed;
+    }
+    SAANoise.prototype.Level = function () { return (this.nRand & 1) << 1; };
+    SAANoise.prototype.SetSource = function (nSource) {
+        this.nSource = (nSource &= 3);
+        this.nAdd = 128e6 >> nSource;
+    };
+    SAANoise.prototype.Trigger = function () {
+        if (this.nSource === 3)
+            this.ChangeLevel();
+    };
+    SAANoise.prototype.Tick = function () {
+        if (!this.bSync && (this.nSource != 3)) {
+            this.nCounter += this.nAdd;
+            if (this.nCounter >= this.nSmpRate) {
+                while (this.nCounter >= this.nSmpRate) {
+                    this.nCounter -= this.nSmpRate;
+                    this.ChangeLevel();
+                }
+            }
+        }
+        return (this.nRand & 1);
+    };
+    SAANoise.prototype.Sync = function (bSync) {
+        if (bSync)
+            this.nCounter = 0;
+        this.bSync = bSync;
+    };
+    SAANoise.prototype.ChangeLevel = function () {
+        if (!!(this.nRand & 0x40000004) && (this.nRand & 0x40000004) != 0x40000004)
+            this.nRand = (this.nRand << 1) | 1;
+        else
+            this.nRand <<= 1;
+    };
+    return SAANoise;
 })();
 /*! SAAEnv: Envelope generator */
 var SAAEnv = (function () {
@@ -373,236 +497,128 @@ var SAAFreq = (function () {
     };
     return SAAFreq;
 })();
-/*! SAANoise: Noise generator */
-var SAANoise = (function () {
-    function SAANoise(seed) {
-        if (seed === void 0) { seed = 0x11111111; }
-        this.nCounter = 0;
-        this.nAdd = 128e6;
-        this.bSync = false;
-        this.nSmpRate = SAASound.nSampleRate << 12;
-        this.nSource = 0;
-        this.nRand = seed;
+/*! SAAAmp: Tone/Noise mixing, Envelope application and amplification */
+var SAAAmp = (function () {
+    function SAAAmp(ToneGenerator, NoiseGenerator, EnvGenerator) {
+        this.last_level_byte = 0;
+        this.leftleveltimes16 = 0;
+        this.leftleveltimes32 = 0;
+        this.leftlevela0x0e = 0;
+        this.leftlevela0x0etimes2 = 0;
+        this.rightleveltimes16 = 0;
+        this.rightleveltimes32 = 0;
+        this.rightlevela0x0e = 0;
+        this.rightlevela0x0etimes2 = 0;
+        this.monoleveltimes16 = 0;
+        this.monoleveltimes32 = 0;
+        this.nOutputIntermediate = 0;
+        this.nMixMode = 0;
+        this.pcConnectedToneGenerator = ToneGenerator;
+        this.pcConnectedNoiseGenerator = NoiseGenerator;
+        this.pcConnectedEnvGenerator = EnvGenerator;
+        this.bUseEnvelope = !!EnvGenerator;
+        this.bMute = true;
     }
-    SAANoise.prototype.Level = function () { return (this.nRand & 1) << 1; };
-    SAANoise.prototype.SetSource = function (nSource) {
-        this.nSource = (nSource &= 3);
-        this.nAdd = 128e6 >> nSource;
+    SAAAmp.prototype.SetAmpLevel = function (level_byte) {
+        if ((level_byte &= 255) !== this.last_level_byte) {
+            this.last_level_byte = level_byte;
+            this.leftlevela0x0e = level_byte & 0x0e;
+            this.leftlevela0x0etimes2 = this.leftlevela0x0e << 1;
+            this.leftleveltimes16 = (level_byte & 0x0f) << 4;
+            this.leftleveltimes32 = this.leftleveltimes16 << 1;
+            this.rightlevela0x0e = (level_byte >> 4) & 0x0e;
+            this.rightlevela0x0etimes2 = this.rightlevela0x0e << 1;
+            this.rightleveltimes16 = level_byte & 0xf0;
+            this.rightleveltimes32 = this.rightleveltimes16 << 1;
+            this.monoleveltimes16 = this.leftleveltimes16 + this.rightleveltimes16;
+            this.monoleveltimes32 = this.leftleveltimes32 + this.rightleveltimes32;
+        }
     };
-    SAANoise.prototype.Trigger = function () {
-        if (this.nSource === 3)
-            this.ChangeLevel();
+    SAAAmp.prototype.SetToneMixer = function (bEnabled) {
+        if (!bEnabled)
+            this.nMixMode &= ~(0x01);
+        else
+            this.nMixMode |= 0x01;
     };
-    SAANoise.prototype.Tick = function () {
-        if (!this.bSync && (this.nSource != 3)) {
-            this.nCounter += this.nAdd;
-            if (this.nCounter >= this.nSmpRate) {
-                while (this.nCounter >= this.nSmpRate) {
-                    this.nCounter -= this.nSmpRate;
-                    this.ChangeLevel();
-                }
+    SAAAmp.prototype.SetNoiseMixer = function (bEnabled) {
+        if (!bEnabled)
+            this.nMixMode &= ~(0x02);
+        else
+            this.nMixMode |= 0x02;
+    };
+    SAAAmp.prototype.Tick = function () {
+        switch (this.nMixMode) {
+            case 0:
+                this.pcConnectedToneGenerator.Tick();
+                this.nOutputIntermediate = 0;
+                break;
+            case 1:
+                this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
+                break;
+            case 2:
+                this.pcConnectedToneGenerator.Tick();
+                this.nOutputIntermediate = this.pcConnectedNoiseGenerator.Level();
+                break;
+            case 3:
+                this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
+                if (this.nOutputIntermediate === 2 && !!this.pcConnectedNoiseGenerator.Level())
+                    this.nOutputIntermediate = 1;
+                break;
+        }
+    };
+    SAAAmp.prototype.TickAndOutputMono = function () {
+        this.Tick();
+        if (this.bMute)
+            return 0;
+        var retval = 0;
+        var out = this.nOutputIntermediate;
+        if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
+            if (out === 0) {
+                retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2)
+                    + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2);
+            }
+            else if (out === 1) {
+                retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e)
+                    + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e);
             }
         }
-        return (this.nRand & 1);
-    };
-    SAANoise.prototype.Sync = function (bSync) {
-        if (bSync)
-            this.nCounter = 0;
-        this.bSync = bSync;
-    };
-    SAANoise.prototype.ChangeLevel = function () {
-        if (!!(this.nRand & 0x40000004) && (this.nRand & 0x40000004) != 0x40000004)
-            this.nRand = (this.nRand << 1) | 1;
-        else
-            this.nRand <<= 1;
-    };
-    return SAANoise;
-})();
-/*!
- * SAASound is a portable Phillips SAA 1099 sound chip emulator
- * Copyright (c) 1998-2004 Dave Hooper <stripwax@users.sourceforge.net>
- *
- * JavaScript version:
- * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
- */
-var SAASound = (function () {
-    function SAASound(nSampleRate) {
-        this.nCurrentReg = 0;
-        this.bOutputEnabled = false;
-        this.bAmpMuted = [false, false, false, false, false, false];
-        SAASound.nSampleRate = nSampleRate;
-        this.Env = [new SAAEnv, new SAAEnv];
-        this.Noise = [
-            new SAANoise(0x14af5209),
-            new SAANoise(0x76a9b11e)
-        ];
-        this.Osc = [
-            new SAAFreq(this.Noise[0]),
-            new SAAFreq(null, this.Env[0]),
-            new SAAFreq(),
-            new SAAFreq(this.Noise[1]),
-            new SAAFreq(null, this.Env[1]),
-            new SAAFreq()
-        ];
-        this.Amp = [
-            new SAAAmp(this.Osc[0], this.Noise[0]),
-            new SAAAmp(this.Osc[1], this.Noise[0]),
-            new SAAAmp(this.Osc[2], this.Noise[0], this.Env[0]),
-            new SAAAmp(this.Osc[3], this.Noise[1]),
-            new SAAAmp(this.Osc[4], this.Noise[1]),
-            new SAAAmp(this.Osc[5], this.Noise[1], this.Env[1])
-        ];
-        this.Clear();
-    }
-    SAASound.prototype.Clear = function () {
-        this.WriteAddressData(28, 2);
-        for (var i = 31; i >= 0; i--) {
-            if (i != 28)
-                this.WriteAddressData(i, 0);
+        else {
+            if (out === 1)
+                retval = this.monoleveltimes16;
+            else if (out === 2)
+                retval = this.monoleveltimes32;
         }
-        this.WriteAddressData(28, 0);
-        this.WriteAddress(0);
+        return retval;
     };
-    SAASound.prototype.WriteData = function (nData) {
-        nData &= 0xff;
-        var nReg = this.nCurrentReg;
-        switch (nReg) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-                this.Amp[nReg].SetAmpLevel(nData);
-                break;
-            case 8:
-            case 9:
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-                this.Osc[(nReg & 0x07)].SetFreqOffset(nData);
-                break;
-            case 16:
-                this.Osc[0].SetFreqOctave(nData & 0x07);
-                this.Osc[1].SetFreqOctave((nData >> 4) & 0x07);
-                break;
-            case 17:
-                this.Osc[2].SetFreqOctave(nData & 0x07);
-                this.Osc[3].SetFreqOctave((nData >> 4) & 0x07);
-                break;
-            case 18:
-                this.Osc[4].SetFreqOctave(nData & 0x07);
-                this.Osc[5].SetFreqOctave((nData >> 4) & 0x07);
-                break;
-            case 20:
-                this.Amp[0].SetToneMixer(nData & 0x01);
-                this.Amp[1].SetToneMixer(nData & 0x02);
-                this.Amp[2].SetToneMixer(nData & 0x04);
-                this.Amp[3].SetToneMixer(nData & 0x08);
-                this.Amp[4].SetToneMixer(nData & 0x10);
-                this.Amp[5].SetToneMixer(nData & 0x20);
-                break;
-            case 21:
-                this.Amp[0].SetNoiseMixer(nData & 0x01);
-                this.Amp[1].SetNoiseMixer(nData & 0x02);
-                this.Amp[2].SetNoiseMixer(nData & 0x04);
-                this.Amp[3].SetNoiseMixer(nData & 0x08);
-                this.Amp[4].SetNoiseMixer(nData & 0x10);
-                this.Amp[5].SetNoiseMixer(nData & 0x20);
-                break;
-            case 22:
-                this.Noise[0].SetSource(nData & 0x03);
-                this.Noise[1].SetSource((nData >> 4) & 0x03);
-                break;
-            case 24:
-                this.Env[0].SetEnvControl(nData);
-                break;
-            case 25:
-                this.Env[1].SetEnvControl(nData);
-                break;
-            case 28:
-                var i;
-                var mute = !(nData & 0x01);
-                var sync = !!(nData & 0x02);
-                for (i = 0; i < 6; i++)
-                    this.Osc[i].Sync(sync);
-                this.Noise[0].Sync(sync);
-                this.Noise[1].Sync(sync);
-                this.bSync = sync;
-                if (mute) {
-                    for (i = 0; i < 6; i++)
-                        this.Amp[i].Mute(mute);
-                    this.bOutputEnabled = false;
-                }
-                else {
-                    for (i = 0; i < 6; i++)
-                        this.Amp[i].Mute(this.bAmpMuted[i]);
-                    this.bOutputEnabled = true;
-                }
-                break;
-            default:
-                break;
+    SAAAmp.prototype.TickAndOutputStereo = function () {
+        this.Tick();
+        var retval = { Left: 0, Right: 0 };
+        var out = this.nOutputIntermediate;
+        if (this.bMute)
+            return retval;
+        if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
+            if (out === 0) {
+                retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2;
+                retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2;
+            }
+            else if (out === 1) {
+                retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e;
+                retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e;
+            }
         }
-    };
-    SAASound.prototype.ReadAddress = function () { return this.nCurrentReg; };
-    SAASound.prototype.WriteAddress = function (nReg) {
-        this.nCurrentReg = (nReg &= 0x1f);
-        if (nReg === 24)
-            this.Env[0].ExternalClock();
-        else if (nReg === 25)
-            this.Env[1].ExternalClock();
-    };
-    SAASound.prototype.WriteAddressData = function (nReg, nData) {
-        this.WriteAddress(nReg);
-        this.WriteData(nData);
-    };
-    SAASound.prototype.MuteAmp = function (nChn, bMute) {
-        if (nChn < 0 || nChn >= 6)
-            return;
-        this.Amp[nChn].Mute((this.bAmpMuted[nChn] = bMute));
-    };
-    SAASound.prototype.GenerateMono = function (pBuffer, nSamples) {
-        var ptr = 0, val;
-        while (ptr < nSamples) {
-            this.Noise[0].Tick();
-            this.Noise[1].Tick();
-            val = this.Amp[0].TickAndOutputMono()
-                + this.Amp[1].TickAndOutputMono()
-                + this.Amp[2].TickAndOutputMono()
-                + this.Amp[3].TickAndOutputMono()
-                + this.Amp[4].TickAndOutputMono()
-                + this.Amp[5].TickAndOutputMono();
-            pBuffer[ptr++] = val / 12672;
+        else {
+            if (out === 1) {
+                retval.Left = this.leftleveltimes16;
+                retval.Right = this.rightleveltimes16;
+            }
+            else if (out === 2) {
+                retval.Left = this.leftleveltimes32;
+                retval.Right = this.rightleveltimes32;
+            }
         }
+        return retval;
     };
-    SAASound.prototype.GenerateStereo = function (pLeft, pRight, nSamples) {
-        var ptr = 0, val, ampL, ampR;
-        while (ptr < nSamples) {
-            this.Noise[0].Tick();
-            this.Noise[1].Tick();
-            val = this.Amp[0].TickAndOutputStereo();
-            ampL = val.Left;
-            ampR = val.Right;
-            val = this.Amp[1].TickAndOutputStereo();
-            ampL += val.Left;
-            ampR += val.Right;
-            val = this.Amp[2].TickAndOutputStereo();
-            ampL += val.Left;
-            ampR += val.Right;
-            val = this.Amp[3].TickAndOutputStereo();
-            ampL += val.Left;
-            ampR += val.Right;
-            val = this.Amp[4].TickAndOutputStereo();
-            ampL += val.Left;
-            ampR += val.Right;
-            val = this.Amp[5].TickAndOutputStereo();
-            ampL += val.Left;
-            ampR += val.Right;
-            pRight[ptr] = ampR / 2880;
-            pLeft[ptr++] = ampL / 2880;
-        }
-    };
-    return SAASound;
+    SAAAmp.prototype.Mute = function (bMute) { this.bMute = bMute; };
+    return SAAAmp;
 })();
 //# sourceMappingURL=SAASound.js.map

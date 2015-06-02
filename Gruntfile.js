@@ -21,7 +21,13 @@ module.exports = function(grunt) {
 		},
 		typescript: {
 			SAASound: {
-				src: ['saa/**/*.ts'],
+				src: [
+					'saa/SAASound.ts',
+					'saa/SAANoise.ts',
+					'saa/SAAEnv.ts',
+					'saa/SAAFreq.ts',
+					'saa/SAAAmp.ts'
+				],
 				dest: 'saa/SAASound.js',
 				options: {
 					module: 'commonjs',
@@ -34,8 +40,7 @@ module.exports = function(grunt) {
 		uglify: {
 			'scripts': {
 				options: {
-					banner: '<%= banner %>\n',
-					preserveComments: 'none'
+					preserveComments: 'some'
 				},
 				files: {
 					'saa/SAASound.min.js': 'saa/SAASound.js'
