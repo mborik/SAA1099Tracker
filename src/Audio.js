@@ -1,0 +1,99 @@
+function AudioPlayer() {
+	var audio;
+
+	try {
+		if (AudioContext || webkitAudioContext)
+			audio = new WebAPIAudioDriver();
+		else if (typeof(Audio) !== 'undefined')
+			audio = new FFAudioDriver();
+		else
+			throw 'Error: No audio driver found (incompatible or obsolete browser)';
+	} catch (e) {
+		console.error(e);
+	}
+
+	return audio;
+}
+
+function WebAPIAudioDriver() {
+	var audioSource = null;
+	var scriptProcessor = null;
+	var audioContext = new (AudioContext || webkitAudioContext);
+	var audioEventHandler = function(event) {
+		if (!(audioSource && audioSource.getAudio))
+			return;
+		var leftBuf = event.outputBuffer.getChannelData(0);
+		var rightBuf = event.outputBuffer.getChannelData(1);
+		audioSource.getAudio(leftBuf, rightBuf, event.outputBuffer.length);
+	}
+
+	if (audioContext.createJavaScriptNode != null)
+		scriptProcessor = audioContext.createJavaScriptNode(4096, 0, 2);
+	else if (audioContext.createScriptProcessor != null)
+		scriptProcessor = audioContext.createScriptProcessor(4096, 0, 2);
+
+	this.getSamplingRate = function() { return audioContext.sampleRate; }
+	this.setAudioSource = function(audioSrc) { audioSource = audioSrc; }
+
+	this.play = function() {
+		scriptProcessor.onaudioprocess = audioEventHandler;
+		scriptProcessor.connect(audioContext.destination);
+	}
+	this.stop = function() {
+		if (scriptProcessor.onaudioprocess)
+			scriptProcessor.disconnect(audioContext.destination);
+		scriptProcessor.onaudioprocess = null;
+	}
+}
+
+function FFAudioDriver() {
+	var audioContext = new Audio();
+	var samplingRate = 44100; // seems to sound best in Firefox
+	var buffer = new Float32Array(samplingRate >> 1); // 250ms
+	var bufferIndex = buffer.length;
+	var intervalId = null;
+	var audioSource = null;
+
+	audioContext.mozSetup(2, samplingRate);
+
+	this.getSamplingRate = function() { return samplingRate; }
+	this.setAudioSource = function(audioSrc) { audioSource = audioSrc; }
+
+	this.play = function() {
+		if (intervalId == null) {
+			var oldTime = new Date().getTime();
+			intervalId = setInterval(function() {
+				var newTime = new Date().getTime();
+				if (newTime - oldTime < 250) {
+					// Only write audio if the event came in roughly on time.
+					// Prevents stuttering when the script is running in the background.
+					if (bufferIndex < buffer.length) {
+						// Finish writing current buffer.
+						bufferIndex += audioContext.mozWriteAudio(buffer.subarray(bufferIndex));
+					}
+					while (bufferIndex >= buffer.length) {
+						// Write as many full buffers as possible.
+						var len = buffer.length >> 1;
+						var lOut = buffer.subarray(0, len);
+						var rOut = buffer.subarray(0, len);
+						audioSource.getAudio(lOut, rOut, len);
+
+						for (var bufIdx = 0, outIdx = 0; bufIdx < len; outIdx++) {
+							buffer[bufIdx++] = lOut[outIdx];
+							buffer[bufIdx++] = rOut[outIdx];
+						}
+						bufferIndex = audioContext.mozWriteAudio(buffer);
+					}
+				}
+				oldTime = newTime;
+			}, 125);
+		}
+	}
+
+	this.stop = function() {
+		if (intervalId != null) {
+			clearInterval(intervalId);
+			intervalId = null;
+		}
+	}
+}
