@@ -10,9 +10,9 @@ class SAANoise {
 
 	constructor(seed: number = 0x11111111) {
 		this.nCounter = 0;
-		this.nAdd = 31250 * SAASound.nBufferSize;
+		this.nAdd = 128e6; // 31250 << 12
 		this.bSync = false;
-		this.nSmpRate = SAASound.nSampleRate * SAASound.nBufferSize;
+		this.nSmpRate = SAASound.nSampleRate << 12;
 		this.nSource = 0;
 		this.nRand = seed;
 	}
@@ -25,7 +25,7 @@ class SAANoise {
 	 */
 	public SetSource(nSource: number) {
 		this.nSource = (nSource &= 3);
-		this.nAdd = (31250 >> nSource) * SAASound.nBufferSize;
+		this.nAdd = 128e6 >> nSource;
 	}
 
 	/**

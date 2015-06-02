@@ -21,10 +21,10 @@ class SAAFreq {
 
 	constructor(pcNoise?: SAANoise, pcEnv?: SAAEnv) {
 		this.nLevel = 2;
-		this.nSmpRate = SAASound.nSampleRate * SAASound.nBufferSize;
+		this.nSmpRate = SAASound.nSampleRate << 12;
 		this.pcConnectedNoiseGenerator = pcNoise;
 		this.pcConnectedEnvGenerator = pcEnv;
-		this.nConnectedMode = (pcNoise ? (pcEnv ? 0 : 1) : 2);
+		this.nConnectedMode = (!pcNoise ? (!pcEnv ? 0 : 1) : 2);
 		this.SetAdd();
 	}
 
@@ -150,6 +150,10 @@ class SAAFreq {
 		}
 	}
 
-	private SetAdd() { this.nAdd = ((15625 << this.nCurrentOctave) / (511 - this.nCurrentOffset)) >> 0; }
+	private SetAdd() {
+		var oct: number = this.nCurrentOctave + 13,
+			ton: number = this.nCurrentOffset ^ 511;
+		this.nAdd = ((15625 << oct) / ton) >> 0;
+	}
 }
 //---------------------------------------------------------------------------------------

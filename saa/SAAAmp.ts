@@ -133,7 +133,7 @@ class SAAAmp {
 	public TickAndOutputStereo(): stereolevel {
 		this.Tick();
 
-		var retval: stereolevel = { Left: 0, Right: 0, DWORD: 0 };
+		var retval: stereolevel = { Left: 0, Right: 0 };
 		var out: number = this.nOutputIntermediate;
 
 		if (this.bMute)

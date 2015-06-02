@@ -93,7 +93,7 @@ var SAAAmp = (function () {
     };
     SAAAmp.prototype.TickAndOutputStereo = function () {
         this.Tick();
-        var retval = { Left: 0, Right: 0, DWORD: 0 };
+        var retval = { Left: 0, Right: 0 };
         var out = this.nOutputIntermediate;
         if (this.bMute)
             return retval;
@@ -295,10 +295,10 @@ var SAAFreq = (function () {
         this.bNewData = false;
         this.bSync = false;
         this.nLevel = 2;
-        this.nSmpRate = SAASound.nSampleRate * SAASound.nBufferSize;
+        this.nSmpRate = SAASound.nSampleRate << 12;
         this.pcConnectedNoiseGenerator = pcNoise;
         this.pcConnectedEnvGenerator = pcEnv;
-        this.nConnectedMode = (pcNoise ? (pcEnv ? 0 : 1) : 2);
+        this.nConnectedMode = (!pcNoise ? (!pcEnv ? 0 : 1) : 2);
         this.SetAdd();
     }
     SAAFreq.prototype.Level = function () { return this.nLevel; };
@@ -367,7 +367,10 @@ var SAAFreq = (function () {
             this.SetAdd();
         }
     };
-    SAAFreq.prototype.SetAdd = function () { this.nAdd = ((15625 << this.nCurrentOctave) / (511 - this.nCurrentOffset)) >> 0; };
+    SAAFreq.prototype.SetAdd = function () {
+        var oct = this.nCurrentOctave + 13, ton = this.nCurrentOffset ^ 511;
+        this.nAdd = ((15625 << oct) / ton) >> 0;
+    };
     return SAAFreq;
 })();
 /*! SAANoise: Noise generator */
@@ -375,16 +378,16 @@ var SAANoise = (function () {
     function SAANoise(seed) {
         if (seed === void 0) { seed = 0x11111111; }
         this.nCounter = 0;
-        this.nAdd = 31250 * SAASound.nBufferSize;
+        this.nAdd = 128e6;
         this.bSync = false;
-        this.nSmpRate = SAASound.nSampleRate * SAASound.nBufferSize;
+        this.nSmpRate = SAASound.nSampleRate << 12;
         this.nSource = 0;
         this.nRand = seed;
     }
     SAANoise.prototype.Level = function () { return (this.nRand & 1) << 1; };
     SAANoise.prototype.SetSource = function (nSource) {
         this.nSource = (nSource &= 3);
-        this.nAdd = (31250 >> nSource) * SAASound.nBufferSize;
+        this.nAdd = 128e6 >> nSource;
     };
     SAANoise.prototype.Trigger = function () {
         if (this.nSource === 3)
@@ -423,10 +426,11 @@ var SAANoise = (function () {
  * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
  */
 var SAASound = (function () {
-    function SAASound(nSampleRate, nBufferSize) {
+    function SAASound(nSampleRate) {
         this.nCurrentReg = 0;
         this.bOutputEnabled = false;
         this.bAmpMuted = [false, false, false, false, false, false];
+        SAASound.nSampleRate = nSampleRate;
         this.Env = [new SAAEnv, new SAAEnv];
         this.Noise = [
             new SAANoise(0x14af5209),
@@ -448,8 +452,7 @@ var SAASound = (function () {
             new SAAAmp(this.Osc[4], this.Noise[1]),
             new SAAAmp(this.Osc[5], this.Noise[1], this.Env[1])
         ];
-        SAASound.nSampleRate = nSampleRate;
-        SAASound.nBufferSize = nBufferSize;
+        this.Clear();
     }
     SAASound.prototype.Clear = function () {
         this.WriteAddressData(28, 2);
@@ -478,7 +481,7 @@ var SAASound = (function () {
             case 11:
             case 12:
             case 13:
-                this.Amp[(nReg & 0x07)].SetAmpLevel(nData);
+                this.Osc[(nReg & 0x07)].SetFreqOffset(nData);
                 break;
             case 16:
                 this.Osc[0].SetFreqOctave(nData & 0x07);
@@ -596,8 +599,8 @@ var SAASound = (function () {
             val = this.Amp[5].TickAndOutputStereo();
             ampL += val.Left;
             ampR += val.Right;
-            pRight[ptr] = ampR / 12672;
-            pLeft[ptr++] = ampL / 12672;
+            pRight[ptr] = ampR / 2880;
+            pLeft[ptr++] = ampL / 2880;
         }
     };
     return SAASound;

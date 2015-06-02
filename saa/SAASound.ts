@@ -36,41 +36,46 @@
 class SAASound {
 //---------------------------------------------------------------------------------------
 	public static nSampleRate: number;
-	public static nBufferSize: number;
-//---------------------------------------------------------------------------------------
+
 	private nCurrentReg: number = 0;
 	private bOutputEnabled: boolean = false;
 	private bAmpMuted: boolean[] = [ false, false, false, false, false, false ];
 	private bSync: boolean;
 
-	private Env: SAAEnv[] = [ new SAAEnv, new SAAEnv ];
+	private Env: SAAEnv[];
+	private Noise: SAANoise[];
+	private Osc: SAAFreq[];
+	private Amp: SAAAmp[];
 
-	private Noise: SAANoise[] = [
-		new SAANoise(0x14af5209),
-		new SAANoise(0x76a9b11e)
-	];
-
-	private Osc: SAAFreq[] = [
-		new SAAFreq(this.Noise[0]),
-		new SAAFreq(null, this.Env[0]),
-		new SAAFreq(),
-		new SAAFreq(this.Noise[1]),
-		new SAAFreq(null, this.Env[1]),
-		new SAAFreq()
-	];
-
-	private Amp: SAAAmp[] = [
-		new SAAAmp(this.Osc[0], this.Noise[0]),
-		new SAAAmp(this.Osc[1], this.Noise[0]),
-		new SAAAmp(this.Osc[2], this.Noise[0], this.Env[0]),
-		new SAAAmp(this.Osc[3], this.Noise[1]),
-		new SAAAmp(this.Osc[4], this.Noise[1]),
-		new SAAAmp(this.Osc[5], this.Noise[1], this.Env[1])
-	];
-
-	constructor(nSampleRate: number, nBufferSize: number) {
+	constructor(nSampleRate: number) {
 		SAASound.nSampleRate = nSampleRate;
-		SAASound.nBufferSize = nBufferSize;
+
+		this.Env = [ new SAAEnv, new SAAEnv ];
+
+		this.Noise = [
+			new SAANoise(0x14af5209),
+			new SAANoise(0x76a9b11e)
+		];
+
+		this.Osc = [
+			new SAAFreq(this.Noise[0]),
+			new SAAFreq(null, this.Env[0]),
+			new SAAFreq(),
+			new SAAFreq(this.Noise[1]),
+			new SAAFreq(null, this.Env[1]),
+			new SAAFreq()
+		];
+
+		this.Amp = [
+			new SAAAmp(this.Osc[0], this.Noise[0]),
+			new SAAAmp(this.Osc[1], this.Noise[0]),
+			new SAAAmp(this.Osc[2], this.Noise[0], this.Env[0]),
+			new SAAAmp(this.Osc[3], this.Noise[1]),
+			new SAAAmp(this.Osc[4], this.Noise[1]),
+			new SAAAmp(this.Osc[5], this.Noise[1], this.Env[1])
+		];
+
+		this.Clear();
 	}
 
 	public Clear() {
@@ -116,7 +121,7 @@ class SAASound {
 			case 11:
 			case 12:
 			case 13:
-				this.Amp[(nReg & 0x07)].SetAmpLevel(nData);
+				this.Osc[(nReg & 0x07)].SetFreqOffset(nData);
 				break;
 
 		// Freq octave data (==> Osc) for channels 0,1
@@ -286,8 +291,8 @@ class SAASound {
 			ampL += val.Left; ampR += val.Right;
 
 			// force output into range 0 <= x < 1;
-			pRight[ptr]  = ampR / 12672;
-			pLeft[ptr++] = ampL / 12672;
+			pRight[ptr]  = ampR / 2880;
+			pLeft[ptr++] = ampL / 2880;
 		}
 	}
 //---------------------------------------------------------------------------------------
