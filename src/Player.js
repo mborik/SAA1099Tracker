@@ -111,9 +111,10 @@ var Player = (function () {
             "\xF3A#",
             "\xFFB-"
         ];
-        this.tones[0] = new pTone;
+        this.tones = [new pTone];
         var i, o, p, c;
         for (i = 1, o = 0, p = 1; i <= 96; i++, p++) {
+            this.tones[i] = new pTone;
             this.tones[i].txt = tab_tones[p].substr(1) + (o + 1);
             c = tab_tones[p].charCodeAt(0);
             if (c === 0xff && o !== 7) {

@@ -201,9 +201,10 @@ class Player {
 			"\xFFB-"
 		];
 
-		this.tones[0] = new pTone;
+		this.tones = [ new pTone ];
 		var i: number, o: number, p: number, c: number;
 		for (i = 1, o = 0, p = 1; i <= 96; i++, p++) {
+			this.tones[i] = new pTone;
 			this.tones[i].txt = tab_tones[p].substr(1) + (o + 1);
 
 			c = tab_tones[p].charCodeAt(0);
