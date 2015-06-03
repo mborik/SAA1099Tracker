@@ -20,6 +20,16 @@ module.exports = function(grunt) {
 			]
 		},
 		typescript: {
+			base: {
+				src: ['src/**/*.ts'],
+				dest: 'src',
+				options: {
+					module: 'commonjs',
+					target: 'ES5',
+					sourceMap: true,
+					preserveConstEnums: true
+				}
+			},
 			SAASound: {
 				src: [
 					'saa/SAASound.ts',
