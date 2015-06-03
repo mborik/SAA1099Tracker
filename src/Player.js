@@ -605,6 +605,71 @@ var Player = (function () {
         this.currentTick--;
         return true;
     };
+    //---------------------------------------------------------------------------------------
+    /**
+     * Play only current row in current position.
+     * @returns {boolean}
+     */
+    Player.prototype.playLine = function () {
+        if (this.mode === pMode.PM_LINE && this.currentTick > 0)
+            return false;
+        this.mode = pMode.PM_LINE;
+        this.currentTick = 0;
+        return this.prepareLine(false);
+    };
+    /**
+     * Start playback of position or pattern.
+     * @param fromStart Start playing from first position;
+     * @param follow Follow the song, change next position when position reach the end;
+     * @param resetLine Start playing from first row of the position;
+     * @returns {boolean} success or failure
+     */
+    Player.prototype.playPosition = function (fromStart, follow, resetLine) {
+        if (typeof fromStart === 'undefined' || fromStart)
+            this.currentPosition = 0;
+        if (typeof resetLine === 'undefined' || resetLine)
+            this.currentLine = 0;
+        if (typeof follow === 'undefined')
+            follow = true;
+        this.changedLine = true;
+        this.changedPosition = true;
+        if (this.currentPosition >= this.position.length)
+            return false;
+        this.stopChannel(0);
+        this.mode = follow ? pMode.PM_SONG : pMode.PM_POSITION;
+        this.currentSpeed = this.position[this.currentPosition].speed;
+        return this.prepareLine(false);
+    };
+    /**
+     * Play custom tone with particular sample/ornament in particular channel.
+     * @param s Sample;
+     * @param o Ornament;
+     * @param tone Tone number;
+     * @param chn (optional) Channel number or autodetect first "free" channel;
+     * @returns {number} channel (1-6) where the sample has been played or 0 if error
+     */
+    Player.prototype.playSample = function (s, o, tone, chn) {
+        var pp;
+        if (!chn) {
+            // first free channel detection
+            for (chn = 0; chn < 6; chn++)
+                if (!this.playParams[chn].playing)
+                    break;
+            if (chn === 6)
+                return 0;
+        }
+        else if (--chn > 5)
+            return 0;
+        else if ((pp = this.playParams[chn]).playing)
+            return 0;
+        this.clearPlayParams(chn);
+        pp.playing = true;
+        pp.tone = ++tone;
+        pp.sample = this.sample[s];
+        pp.ornament = this.ornament[o];
+        this.mode = pMode.PM_SAMPLE;
+        return ++chn;
+    };
     /**
      * Stops a playback of particular channel (1 <= chn <= 6) or stop playback (chn = 0).
      * Method reset appropriate channel's playParams.

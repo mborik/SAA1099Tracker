@@ -1,5 +1,4 @@
 module.exports = function(grunt) {
-
 	// Project configuration.
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
@@ -24,6 +23,7 @@ module.exports = function(grunt) {
 				src: ['src/**/*.ts'],
 				dest: 'src',
 				options: {
+					newLine: '\n',
 					module: 'commonjs',
 					target: 'ES5',
 					sourceMap: true,
@@ -48,13 +48,14 @@ module.exports = function(grunt) {
 			}
 		},
 		uglify: {
+			options: {
+				preserveComments: 'some',
+				screwIE8: true
+			},
 			'scripts': {
-				options: {
-					preserveComments: 'some'
-				},
 				files: {
-					'saa/SAASound.min.js': 'saa/SAASound.js',
-					'src/Player.min.js': 'src/Player.js'
+					'build/saa.js': 'saa/SAASound.js',
+					'build/player.js': 'src/Player.js'
 				}
 			}
 		}
