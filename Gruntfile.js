@@ -43,7 +43,7 @@ module.exports = function(grunt) {
 					module: 'commonjs',
 					target: 'ES5',
 					sourceMap: true,
-					removeComments: true
+					declaration: true
 				}
 			}
 		},
@@ -53,7 +53,8 @@ module.exports = function(grunt) {
 					preserveComments: 'some'
 				},
 				files: {
-					'saa/SAASound.min.js': 'saa/SAASound.js'
+					'saa/SAASound.min.js': 'saa/SAASound.js',
+					'src/Player.min.js': 'src/Player.js'
 				}
 			}
 		}
