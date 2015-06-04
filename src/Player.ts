@@ -60,7 +60,7 @@ class pVolume {
 // Ornament interface (data length = 256)
 interface pOrnament {
 	name: string;
-	data: Uint8Array;
+	data: Int8Array;
 	loop: number;
 	end: number;
 }
@@ -113,18 +113,20 @@ interface pChannel {
  */
 class pPosition {
 	public ch: pChannel[];
-	public length: number;
 	public speed: number;
+	public length: number;
 	public frames: number[];
 
 	constructor(length: number, speed: number = 6) {
+		this.ch = [];
+		this.speed = speed;
+		this.length = length;
+		this.frames = [];
+
 		for (var i: number = 0; i < 6; i++)
 			this.ch[i] = { pattern: 0, pitch: 0 };
 		for (var i: number = 0, line: number = 0; line <= 96; line++, i+= speed)
 			this.frames[line] = i;
-
-		this.length = length;
-		this.speed = speed;
 	}
 
 	public hasPattern(pattern: number): boolean { return this.indexOf(pattern) >= 0; }
@@ -258,7 +260,7 @@ class Player {
 	/** Clear all ornaments. */
 	public clearOrnaments() {
 		for (var i: number = 0; i < 16; i++)
-			this.ornament[i] = { name: '', data: new Uint8Array(256), loop: 0, end: 0 };
+			this.ornament[i] = { name: '', data: new Int8Array(256), loop: 0, end: 0 };
 	}
 
 	/**
