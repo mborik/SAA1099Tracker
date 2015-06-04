@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>SAA1099Tracker</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/Audio.min.js"></script>
+		<script type="text/javascript" src="js/Player.min.js"></script>
+		<script type="text/javascript" src="js/SAASound.min.js"></script>
+		<style>
+			body { padding: 16px; margin: 0 }
+			dl>* { padding: 5px }
+			dd { background: lavender; margin-left: 140px !important }
+			dt { text-align: left !important; width: 140px !important }
+		</style>
+		<script type="text/javascript">
+			console.log(AudioDriver.sampleRate + '/' + AudioDriver.bufferSize);
+			var saa = new SAASound(AudioDriver.sampleRate, AudioDriver.bufferSize);
+			var player = new Player(saa);
+
+			AudioDriver.setAudioSource({
+				getAudio: function(lb, rb, c) { saa.GenerateStereo(lb, rb, c) }
+			});
+
+			setInterval(function() { player.prepareFrame() }, 20);
+			AudioDriver.play();
+
+            function play() { player.playPosition() }
+            function stop() { player.stopChannel() }
+
+			$.getJSON('demosongs/POPCORN.json', function(data) {
+				console.log('loaded: ' + data.title + ' (' + data.author + ')');
+				for (var c, i = 0, j, k, p, s, d; i < 32; i++) {
+					if (s = data.samples[i]) {
+						p = player.sample[i];
+						p.name = s.name;
+						p.loop = s.loop;
+						p.end = s.end;
+						p.releasable = !!s.rel;
+						for (j = 0, k = 0, d = atob(s.data); j < d.length; j += 3, k++) {
+							c = (d.charCodeAt(j + 1) & 0xff);
+							p.data[k].volume.byte = (d.charCodeAt(j) & 0xff);
+							p.data[k].enable_freq = !!(c & 0x80);
+							p.data[k].enable_noise = !!(c & 0x40);
+							p.data[k].noise_value = (c & 0x30);
+							p.data[k].shift = (c & 7) | (d.charCodeAt(j + 2) & 0xff);
+							if (c & 8)
+								p.data[k].shift *= -1;
+						}
+					}
+				}
+				for (var i = 0, j, o, p; i < 16; i++) {
+					if (o = data.ornaments[i]) {
+						p = player.ornament[i];
+						p.name = o.name;
+						p.loop = o.loop;
+						p.end = o.end;
+						for (j = 0, d = atob(o.data); j < d.length; j++)
+							p.data[j] = d.charCodeAt(j);
+					}
+				}
+				for (var i = 0, j, k, c, d, p; i < data.patterns.length; i++) {
+					if (d = data.patterns[i]) {
+						d = atob(d);
+						p = player.pattern[player.addNewPattern()];
+						p.end = (d.charCodeAt(0) & 0xff);
+						for (j = 1, k = 0; j < d.length; j += 5, k++) {
+							p.data[k].tone = (d.charCodeAt(j) & 0x7f);
+							p.data[k].release = !!(d.charCodeAt(j) & 0x80);
+							p.data[k].smp = (d.charCodeAt(j + 1) & 0x1f);
+							p.data[k].orn_release = !!(d.charCodeAt(j + 1) & 0x80);
+							p.data[k].volume.byte = (d.charCodeAt(j + 2) & 0xff);
+							p.data[k].orn = (d.charCodeAt(j + 3) & 0x0f);
+							p.data[k].cmd = (d.charCodeAt(j + 3) & 0xf0);
+							p.data[k].cmd_data = (d.charCodeAt(j + 4) & 0xff);
+						}
+					}
+				}
+				for (var i = 0, j, k, d, e, p; i < data.positions.length; i++) {
+					e = data.positions[i];
+					d = atob(e.ch);
+					p = player.position[i] = new pPosition(e.length, e.speed);
+					for (j = 0, k = 0; j < 6; j++) {
+                        p.ch[j].pattern = (d.charCodeAt(k++) & 0xff);
+                        p.ch[j].pitch = d.charCodeAt(k++);
+                    }
+				}
+				player.currentPosition = data.config.currentPosition;
+				player.repeatPosition = data.config.repeatPosition;
+			})
+		</script>
+	</head>
+	<body>
+		<button id="play" type="button" class="btn btn-success glyphicon glyphicon-play" onclick="play()"></button>
+		<button id="stop" type="button" class="btn btn-danger  glyphicon glyphicon-stop" onclick="stop()"></button>
+	</body>
+</html>

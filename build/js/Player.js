@@ -73,12 +73,14 @@ var pVolume = (function () {
 var pPosition = (function () {
     function pPosition(length, speed) {
         if (speed === void 0) { speed = 6; }
+        this.ch = [];
+        this.speed = speed;
+        this.length = length;
+        this.frames = [];
         for (var i = 0; i < 6; i++)
             this.ch[i] = { pattern: 0, pitch: 0 };
         for (var i = 0, line = 0; line <= 96; line++, i += speed)
             this.frames[line] = i;
-        this.length = length;
-        this.speed = speed;
     }
     pPosition.prototype.hasPattern = function (pattern) { return this.indexOf(pattern) >= 0; };
     pPosition.prototype.indexOf = function (pattern) {
@@ -158,7 +160,7 @@ var Player = (function () {
     /** Clear all ornaments. */
     Player.prototype.clearOrnaments = function () {
         for (var i = 0; i < 16; i++)
-            this.ornament[i] = { name: '', data: new Uint8Array(256), loop: 0, end: 0 };
+            this.ornament[i] = { name: '', data: new Int8Array(256), loop: 0, end: 0 };
     };
     /**
      * Reset playParams for particular channel to default values.
@@ -848,4 +850,3 @@ var Player = (function () {
     ];
     return Player;
 })();
-//# sourceMappingURL=Player.js.map
