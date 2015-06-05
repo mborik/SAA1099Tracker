@@ -38,6 +38,8 @@ class pTone {
 	public oct: number = 0;
 	public txt: string = '---';
 
+	constructor (word: number = 0) { this.word = word }
+
 	get word(): number { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); }
 	set word(v: number) {
 		this.cent = (v & 0xff);
@@ -176,9 +178,6 @@ class Player {
 
 	private mode: number;
 	private playParams: pParams[];
-	private lastEnabledFreq: number;
-	private lastEnabledNoise: number;
-	private lastNoiseCharacter: number;
 
 	constructor(SAA1099: SAASound) {
 		this.SAA1099 = SAA1099;
@@ -224,8 +223,6 @@ class Player {
 		this.clearOrnaments();
 
 		this.loopMode = true;
-		this.lastEnabledFreq = this.lastEnabledNoise = this.lastNoiseCharacter = 0;
-
 		this.stopChannel(0);
 		this.mode = pMode.PM_NOT;
 	}
@@ -300,14 +297,8 @@ class Player {
 			height: number, val: number = 0,
 			chn: number, chn2nd: number, chn3rd: number,
 			oct: number = 0, noise: number, cmd: number, paramH: number, paramL: number,
-			eMask: number,
-			eFreq: number = this.lastEnabledFreq,
-			eNoiz: number = this.lastEnabledNoise,
-			eChar: number = this.lastNoiseCharacter;
-
-		// helper methods to selected sample/ornament data-on-cursor direct access:
-		var smpdat_at_cursor = function () { return pp.sample.data[pp.sample_cursor] },
-			orndat_at_cursor = function () { return pp.ornament.data[pp.ornament_cursor] };
+			samp: pSampleData, tone: pTone, c: number,
+			eMask: number, eFreq: number = 0, eNoiz: number = 0, eChar: number = 0;
 
 		// We processing channels backward! It's because of SAA1099 register architecture
 		// which expect settings for pairs or triplets of adjacent channels. We need
@@ -319,15 +310,16 @@ class Player {
 			// pick playParams for channel...
 			pp = this.playParams[chn];
 
-			eMask = (1 << chn);  // bit mask of channel
-			chn2nd = (chn >> 1); // calculate pair of channels
-			chn3rd = (chn / 3);  // calculate triple of channels
+			eMask  = (1 << chn);      // bit mask of channel
+			chn2nd = (chn >> 1);      // calculate pair of channels
+			chn3rd = ((chn / 3) & 1); // calculate triple of channels
 
 			if (pp.playing) {
 				// if playback in channel is enabled, fetch all smp/orn values...
-				wVol.byte = smpdat_at_cursor().volume.byte;
-				height = orndat_at_cursor();
-				noise = smpdat_at_cursor().noise_value | (smpdat_at_cursor().noise_value << 2);
+				samp = pp.sample.data[pp.sample_cursor];
+				wVol.byte = samp.volume.byte;
+				height = pp.ornament.data[pp.ornament_cursor];
+				noise = samp.noise_value | (<any>samp.enable_noise << 2);
 
 				// get command on trackline and calculate nibbles of command parameter...
 				cmd = pp.command;
@@ -424,7 +416,7 @@ class Player {
 						}
 						else {
 							pp.ornament_cursor = 0;
-							height = orndat_at_cursor();
+							height = pp.ornament.data[pp.ornament_cursor];
 							cmd = -1;
 						}
 						break;
@@ -444,7 +436,8 @@ class Player {
 							(pp.sample.releasable || pp.commandParam < pp.sample.end)) {
 
 							pp.sample_cursor = pp.commandParam;
-							wVol = smpdat_at_cursor().volume;
+							samp = pp.sample.data[pp.sample_cursor];
+							wVol.byte = samp.volume.byte;
 						}
 						cmd = -1;
 						break;
@@ -538,15 +531,14 @@ class Player {
 
 				// apply attenuation...
 				wVol.L = Math.max(0, (wVol.L - pp.attenuation.L));
-				wVol.R = Math.max(0, (wVol.R - pp.attenuation.L));
+				wVol.R = Math.max(0, (wVol.R - pp.attenuation.R));
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
 				this.SAA1099.WriteAddressData(chn, wVol.byte);
 
 				// get tone from tracklist, calculate proper frequency to register...
 				if (pp.tone) {
-					var tone: pTone = this.calculateTone(chn, pp.tone, height,
-										(smpdat_at_cursor().shift + pp.slideShift));
+					tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
 
 					///~ SAA1099 DATA 08-0D: Tone generator 0-5
 					this.SAA1099.WriteAddressData(8 + chn, tone.cent);
@@ -560,18 +552,18 @@ class Player {
 				this.SAA1099.WriteAddressData(16 + chn2nd, oct);
 
 				// set frequency enable bit...
-				if (smpdat_at_cursor().enable_freq)
+				if (samp.enable_freq)
 					eFreq |= eMask;
 				// set proper noise enable bit and value...
 				if ((noise & 4)) {
 					eNoiz |= eMask;
-					eMask = (chn3rd << 2);
-					eChar = (eChar & (0xf0 >> eMask)) | ((noise & 3) << eMask);
+					c = (chn3rd << 2);
+					eChar = (eChar & (0xf0 >> c)) | ((noise & 3) << c);
 				}
 
 				// current sample cursor position handler...
 				if (pp.sample_cursor + 1 >= pp.sample.end) {
-					var c: number = chn + 1;
+					c = chn + 1;
 
 					// it had to be released?
 					if (pp.sample.releasable && pp.released) {
@@ -657,7 +649,7 @@ class Player {
 		if (this.currentPosition >= this.position.length)
 			return false;
 
-		if (typeof next === 'undefined' || next) {
+		if (next === void 0 || next) {
 			this.currentLine++;
 			this.changedLine = true;
 		}
@@ -750,8 +742,8 @@ class Player {
 					pp.slideShift -= pp.commandValue2;
 				}
 
-				var base: pTone   = this.calculateTone(chn, pp.tone, 0, pp.slideShift),
-					target: pTone = this.calculateTone(chn, pl.tone, 0, 0),
+				var base: pTone   = this.calculateTone(pp.tone, 0, 0, pp.slideShift),
+					target: pTone = this.calculateTone(pl.tone, 0, 0, 0),
 					delta: number = target.word - base.word;
 
 				if (delta === 0) {
@@ -818,11 +810,11 @@ class Player {
 	 * @returns {boolean} success or failure
 	 */
 	public playPosition(fromStart?: boolean, follow?: boolean, resetLine?: boolean): boolean {
-		if (typeof fromStart === 'undefined' || fromStart)
+		if (fromStart === void 0 || fromStart)
 			this.currentPosition = 0;
-		if (typeof resetLine === 'undefined' || resetLine)
+		if (resetLine === void 0 || resetLine)
 			this.currentLine = 0;
-		if (typeof follow === 'undefined')
+		if (follow === void 0)
 			follow = true;
 
 		this.changedLine = true;
@@ -875,7 +867,7 @@ class Player {
 	 * Method reset appropriate channel's playParams.
 	 * @param chn Zero or channel number (1-6);
 	 */
-	public stopChannel(chn: number) {
+	public stopChannel(chn: number = 0) {
 		if (chn < 0 || chn > 6)
 			return;
 		else if (chn === 0) {
@@ -895,14 +887,14 @@ class Player {
 	/**
 	 * Calculate pTone object with actual frequency from a lot of parameters of player.
 	 * It takes into account all nuances which can occur in tracklist...
-	 * @param chn Channel for global pattern tone shift;
 	 * @param toneValue Base tone on input;
+	 * @param globalShift Global pattern tone shift;
 	 * @param toneShift Ornament tone shift;
 	 * @param slideShift Fine tune frequency shift;
 	 * @returns {pTone} object
 	 */
-	private calculateTone(chn: number, toneValue: number, toneShift: number, slideShift: number): pTone {
-		var pitch: number = toneValue + this.playParams[chn].globalPitch + toneShift;
+	private calculateTone(toneValue: number, globalShift: number, toneShift: number, slideShift: number): pTone {
+		var pitch: number = toneValue + globalShift + toneShift;
 
 		// base tone overflowing in tones range
 		while (pitch < 0)
@@ -911,10 +903,8 @@ class Player {
 			pitch -= 96;
 
 		// pick tone descriptor for base tone
-		var tone: pTone = this.tones[pitch];
-
-		// fix pitch of tone with fine tune frequency shift
-		pitch = tone.word + slideShift;
+		// and fix pitch of tone with fine tune frequency shift
+		pitch = this.tones[pitch].word + slideShift;
 
 		// freqency range overflowing in range
 		while (pitch < 0)
@@ -922,8 +912,7 @@ class Player {
 		while (pitch >= 2048)
 			pitch -= 2048;
 
-		tone.word = pitch;
-		return tone;
+		return new pTone(pitch);
 	}
 
 	/**
@@ -956,7 +945,7 @@ class Player {
 			l: number = this.position.length;
 
 		// if 'pos' wasn't specified, recursively calling itself for all positions
-		if (typeof pos === 'undefined' || pos < 0)
+		if (pos === void 0 || pos < 0)
 			for (i = 0; i < l; i++)
 				this.countPositionFrames(i);
 

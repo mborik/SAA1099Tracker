@@ -33,10 +33,12 @@ var pMode = {
 };
 // Tone parameters interface
 var pTone = (function () {
-    function pTone() {
+    function pTone(word) {
+        if (word === void 0) { word = 0; }
         this.cent = 0;
         this.oct = 0;
         this.txt = '---';
+        this.word = word;
     }
     Object.defineProperty(pTone.prototype, "word", {
         get: function () { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); },
@@ -130,7 +132,6 @@ var Player = (function () {
         this.clearSamples();
         this.clearOrnaments();
         this.loopMode = true;
-        this.lastEnabledFreq = this.lastEnabledNoise = this.lastNoiseCharacter = 0;
         this.stopChannel(0);
         this.mode = pMode.PM_NOT;
     }
@@ -188,9 +189,7 @@ var Player = (function () {
     Player.prototype.prepareFrame = function () {
         if (this.mode === pMode.PM_NOT)
             return;
-        var pp, wVol = new pVolume, height, val = 0, chn, chn2nd, chn3rd, oct = 0, noise, cmd, paramH, paramL, eMask, eFreq = this.lastEnabledFreq, eNoiz = this.lastEnabledNoise, eChar = this.lastNoiseCharacter;
-        // helper methods to selected sample/ornament data-on-cursor direct access:
-        var smpdat_at_cursor = function () { return pp.sample.data[pp.sample_cursor]; }, orndat_at_cursor = function () { return pp.ornament.data[pp.ornament_cursor]; };
+        var pp, wVol = new pVolume, height, val = 0, chn, chn2nd, chn3rd, oct = 0, noise, cmd, paramH, paramL, samp, tone, c, eMask, eFreq = 0, eNoiz = 0, eChar = 0;
         // We processing channels backward! It's because of SAA1099 register architecture
         // which expect settings for pairs or triplets of adjacent channels. We need
         // to know e.g. tone octave of every pair of channel and store to one register.
@@ -202,12 +201,13 @@ var Player = (function () {
             pp = this.playParams[chn];
             eMask = (1 << chn); // bit mask of channel
             chn2nd = (chn >> 1); // calculate pair of channels
-            chn3rd = (chn / 3); // calculate triple of channels
+            chn3rd = ((chn / 3) & 1); // calculate triple of channels
             if (pp.playing) {
                 // if playback in channel is enabled, fetch all smp/orn values...
-                wVol.byte = smpdat_at_cursor().volume.byte;
-                height = orndat_at_cursor();
-                noise = smpdat_at_cursor().noise_value | (smpdat_at_cursor().noise_value << 2);
+                samp = pp.sample.data[pp.sample_cursor];
+                wVol.byte = samp.volume.byte;
+                height = pp.ornament.data[pp.ornament_cursor];
+                noise = samp.noise_value | (samp.enable_noise << 2);
                 // get command on trackline and calculate nibbles of command parameter...
                 cmd = pp.command;
                 paramH = (pp.commandParam & 0xf0) >> 4;
@@ -294,7 +294,7 @@ var Player = (function () {
                         }
                         else {
                             pp.ornament_cursor = 0;
-                            height = orndat_at_cursor();
+                            height = pp.ornament.data[pp.ornament_cursor];
                             cmd = -1;
                         }
                         break;
@@ -311,7 +311,8 @@ var Player = (function () {
                         if (pp.commandParam > 0 &&
                             (pp.sample.releasable || pp.commandParam < pp.sample.end)) {
                             pp.sample_cursor = pp.commandParam;
-                            wVol = smpdat_at_cursor().volume;
+                            samp = pp.sample.data[pp.sample_cursor];
+                            wVol.byte = samp.volume.byte;
                         }
                         cmd = -1;
                         break;
@@ -395,12 +396,12 @@ var Player = (function () {
                 }
                 // apply attenuation...
                 wVol.L = Math.max(0, (wVol.L - pp.attenuation.L));
-                wVol.R = Math.max(0, (wVol.R - pp.attenuation.L));
+                wVol.R = Math.max(0, (wVol.R - pp.attenuation.R));
                 ///~ SAA1099 DATA 00-05: Amplitude controller 0-5
                 this.SAA1099.WriteAddressData(chn, wVol.byte);
                 // get tone from tracklist, calculate proper frequency to register...
                 if (pp.tone) {
-                    var tone = this.calculateTone(chn, pp.tone, height, (smpdat_at_cursor().shift + pp.slideShift));
+                    tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
                     ///~ SAA1099 DATA 08-0D: Tone generator 0-5
                     this.SAA1099.WriteAddressData(8 + chn, tone.cent);
                     oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
@@ -410,17 +411,17 @@ var Player = (function () {
                 ///~ SAA1099 DATA 10-12: Octave for generators 0-5
                 this.SAA1099.WriteAddressData(16 + chn2nd, oct);
                 // set frequency enable bit...
-                if (smpdat_at_cursor().enable_freq)
+                if (samp.enable_freq)
                     eFreq |= eMask;
                 // set proper noise enable bit and value...
                 if ((noise & 4)) {
                     eNoiz |= eMask;
-                    eMask = (chn3rd << 2);
-                    eChar = (eChar & (0xf0 >> eMask)) | ((noise & 3) << eMask);
+                    c = (chn3rd << 2);
+                    eChar = (eChar & (0xf0 >> c)) | ((noise & 3) << c);
                 }
                 // current sample cursor position handler...
                 if (pp.sample_cursor + 1 >= pp.sample.end) {
-                    var c = chn + 1;
+                    c = chn + 1;
                     // it had to be released?
                     if (pp.sample.releasable && pp.released) {
                         if (++pp.sample_cursor === 0)
@@ -493,7 +494,7 @@ var Player = (function () {
         }
         if (this.currentPosition >= this.position.length)
             return false;
-        if (typeof next === 'undefined' || next) {
+        if (next === void 0 || next) {
             this.currentLine++;
             this.changedLine = true;
         }
@@ -568,7 +569,7 @@ var Player = (function () {
                     pp.tone = pp.commandValue1;
                     pp.slideShift -= pp.commandValue2;
                 }
-                var base = this.calculateTone(chn, pp.tone, 0, pp.slideShift), target = this.calculateTone(chn, pl.tone, 0, 0), delta = target.word - base.word;
+                var base = this.calculateTone(pp.tone, 0, 0, pp.slideShift), target = this.calculateTone(pl.tone, 0, 0, 0), delta = target.word - base.word;
                 if (delta === 0) {
                     pp.tone = pl.tone;
                     pp.commandValue1 = pp.commandValue2 = 0;
@@ -628,11 +629,11 @@ var Player = (function () {
      * @returns {boolean} success or failure
      */
     Player.prototype.playPosition = function (fromStart, follow, resetLine) {
-        if (typeof fromStart === 'undefined' || fromStart)
+        if (fromStart === void 0 || fromStart)
             this.currentPosition = 0;
-        if (typeof resetLine === 'undefined' || resetLine)
+        if (resetLine === void 0 || resetLine)
             this.currentLine = 0;
-        if (typeof follow === 'undefined')
+        if (follow === void 0)
             follow = true;
         this.changedLine = true;
         this.changedPosition = true;
@@ -679,6 +680,7 @@ var Player = (function () {
      * @param chn Zero or channel number (1-6);
      */
     Player.prototype.stopChannel = function (chn) {
+        if (chn === void 0) { chn = 0; }
         if (chn < 0 || chn > 6)
             return;
         else if (chn === 0) {
@@ -696,30 +698,28 @@ var Player = (function () {
     /**
      * Calculate pTone object with actual frequency from a lot of parameters of player.
      * It takes into account all nuances which can occur in tracklist...
-     * @param chn Channel for global pattern tone shift;
      * @param toneValue Base tone on input;
+     * @param globalShift Global pattern tone shift;
      * @param toneShift Ornament tone shift;
      * @param slideShift Fine tune frequency shift;
      * @returns {pTone} object
      */
-    Player.prototype.calculateTone = function (chn, toneValue, toneShift, slideShift) {
-        var pitch = toneValue + this.playParams[chn].globalPitch + toneShift;
+    Player.prototype.calculateTone = function (toneValue, globalShift, toneShift, slideShift) {
+        var pitch = toneValue + globalShift + toneShift;
         // base tone overflowing in tones range
         while (pitch < 0)
             pitch += 96;
         while (pitch >= 96)
             pitch -= 96;
         // pick tone descriptor for base tone
-        var tone = this.tones[pitch];
-        // fix pitch of tone with fine tune frequency shift
-        pitch = tone.word + slideShift;
+        // and fix pitch of tone with fine tune frequency shift
+        pitch = this.tones[pitch].word + slideShift;
         // freqency range overflowing in range
         while (pitch < 0)
             pitch += 2048;
         while (pitch >= 2048)
             pitch -= 2048;
-        tone.word = pitch;
-        return tone;
+        return new pTone(pitch);
     };
     /**
      * Count how many times was particular pattern used in all positions.
@@ -746,7 +746,7 @@ var Player = (function () {
     Player.prototype.countPositionFrames = function (pos) {
         var i, chn, line, speed, ptr, l = this.position.length;
         // if 'pos' wasn't specified, recursively calling itself for all positions
-        if (typeof pos === 'undefined' || pos < 0)
+        if (pos === void 0 || pos < 0)
             for (i = 0; i < l; i++)
                 this.countPositionFrames(i);
         else if (pos < l) {
@@ -850,3 +850,4 @@ var Player = (function () {
     ];
     return Player;
 })();
+//# sourceMappingURL=Player.js.map
