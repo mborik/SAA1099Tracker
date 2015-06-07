@@ -50,16 +50,6 @@ module.exports = function(grunt) {
 			}
 		},
 		typescript: {
-			base: {
-				src: ['src/**/*.ts'],
-				dest: 'build/js',
-				options: {
-					newLine: '\n',
-					module: 'commonjs',
-					target: 'ES5',
-					preserveConstEnums: true
-				}
-			},
 			SAASound: {
 				src: [
 					'saa/SAASound.ts',
@@ -72,7 +62,19 @@ module.exports = function(grunt) {
 				options: {
 					module: 'commonjs',
 					target: 'ES5',
-					declaration: true
+					declaration: true,
+					sourceMap: true
+				}
+			},
+			base: {
+				src: ['src/**/*.ts'],
+				dest: 'build/js',
+				options: {
+					newLine: '\n',
+					module: 'commonjs',
+					target: 'ES5',
+					preserveConstEnums: true,
+					sourceMap: true
 				}
 			}
 		},
