@@ -4,7 +4,7 @@ var express = require('express'),
 	app = express();
 
 // all environments
-app.set('port', 80);
+app.set('port', process.env.PORT || 80);
 app.set("view options", {layout: false});
 app.use(express.logger('dev'));
 app.use(express.json());
@@ -16,6 +16,8 @@ app.use(express.static(__dirname + '/build'));
 if (app.get('env') === 'development')
 	app.use(express.errorHandler());
 
+app.use('/saa', express.static(__dirname + '/saa'));
+app.use('/src', express.static(__dirname + '/src'));
 app.get('/', function(req, res) {
 	res.render('index.html');
 });
