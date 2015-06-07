@@ -21,18 +21,15 @@
 			var saa = new SAASound(AudioDriver.sampleRate, AudioDriver.bufferSize);
 			var player = new Player(saa);
 
-			AudioDriver.setAudioSource({
-				getAudio: function(lb, rb, c) { saa.GenerateStereo(lb, rb, c) }
-			});
-
-			setInterval(function() { player.prepareFrame() }, 20);
+			AudioDriver.setAudioSource(player);
 			AudioDriver.play();
 
-            function play() { player.playPosition() }
-            function stop() { player.stopChannel() }
+			function play() { player.playPosition() }
+			function stop() { player.stopChannel() }
 
-			$.getJSON('demosongs/POPCORN.json', function(data) {
-				console.log('loaded: ' + data.title + ' (' + data.author + ')');
+			$.getJSON('demosongs/LIZARD.json', function(data) {
+				$('#songName').text(data.title + ' (' + data.author + ')');
+
 				for (var c, i = 0, j, k, p, s, d; i < 32; i++) {
 					if (s = data.samples[i]) {
 						p = player.sample[i];
@@ -84,17 +81,22 @@
 					d = atob(e.ch);
 					p = player.position[i] = new pPosition(e.length, e.speed);
 					for (j = 0, k = 0; j < 6; j++) {
-                        p.ch[j].pattern = (d.charCodeAt(k++) & 0xff);
-                        p.ch[j].pitch = d.charCodeAt(k++);
-                    }
+						p.ch[j].pattern = (d.charCodeAt(k++) & 0xff);
+						p.ch[j].pitch = d.charCodeAt(k++);
+					}
 				}
 				player.currentPosition = data.config.currentPosition;
 				player.repeatPosition = data.config.repeatPosition;
-			})
+			});
 		</script>
 	</head>
 	<body>
-		<button id="play" type="button" class="btn btn-success glyphicon glyphicon-play" onclick="play()"></button>
-		<button id="stop" type="button" class="btn btn-danger  glyphicon glyphicon-stop" onclick="stop()"></button>
+		<dl class="dl-horizontal">
+			<dt>
+				<button id="play" type="button" class="btn btn-success glyphicon glyphicon-play" onclick="play()"></button>
+				<button id="stop" type="button" class="btn btn-danger  glyphicon glyphicon-stop" onclick="stop()"></button>
+			</dt>
+			<dd id="songName"></dd>
+		</dl>
 	</body>
 </html>
