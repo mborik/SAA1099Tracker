@@ -159,7 +159,7 @@ interface pParams {
 }
 //---------------------------------------------------------------------------------------
 class Player {
-	private SAA1099: SAASound;
+	public SAA1099: SAASound;
 
 	public tones: pTone[];
 	public sample: pSample[];
@@ -203,19 +203,19 @@ class Player {
 		];
 
 		this.tones = [ new pTone ];
-		var i: number, o: number, p: number, c: number;
-		for (i = 1, o = 0, p = 1; i <= 96; i++, p++) {
-			this.tones[i] = new pTone;
-			this.tones[i].txt = tab_tones[p].substr(1) + (o + 1);
+		for (var i: number = 1, o: number = 0, p: number = 1, c: number, t: pTone; i <= 96; i++, p++) {
+			t = new pTone;
+			t.txt = tab_tones[p].substr(1) + (o + 1);
 
-			c = tab_tones[p].charCodeAt(0);
+			c = tab_tones[p].charCodeAt(0) & 0xff;
 			if (c === 0xff && o !== 7) {
 				o++;
 				p = 0;
 			}
 
-			this.tones[i].oct = o;
-			this.tones[i].cent = c;
+			t.oct = o;
+			t.cent = c;
+			this.tones[i] = t;
 		}
 
 		this.clearSong();
@@ -284,6 +284,18 @@ class Player {
 		return index;
 	}
 //---------------------------------------------------------------------------------------
+	/**
+	 * Method which provides audio data of both channels separately for AudioDriver
+	 * and calling prepareFrame(). Callout of this method should be every 20ms (50Hz).
+	 * @param leftBuf TypedArray of 32bit float type;
+	 * @param rightBuf TypedArray of 32bit float type;
+	 * @param length of buffer;
+	 */
+	public getAudio(leftBuf: Float32Array, rightBuf: Float32Array, length: number) {
+		this.SAA1099.output(leftBuf, rightBuf, length);
+		this.prepareFrame();
+	}
+
 	/**
 	 * Most important part of Player: Method needs to be called every interrupt/frame.
 	 * It handles all the pointers and settings to output values on SAA1099 registers.
@@ -512,7 +524,7 @@ class Player {
 							pp.commandParam ^= 0x82;
 
 							///~ SAA1099 DATA 18/19: Envelope generator 0/1
-							this.SAA1099.WriteAddressData(24 + chn3rd, pp.commandParam);
+							this.SAA1099.setRegData(24 + chn3rd, pp.commandParam);
 							cmd = -1;
 						}
 						break;
@@ -534,14 +546,14 @@ class Player {
 				wVol.R = Math.max(0, (wVol.R - pp.attenuation.R));
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-				this.SAA1099.WriteAddressData(chn, wVol.byte);
+				this.SAA1099.setRegData(chn, wVol.byte);
 
 				// get tone from tracklist, calculate proper frequency to register...
 				if (pp.tone) {
 					tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
 
 					///~ SAA1099 DATA 08-0D: Tone generator 0-5
-					this.SAA1099.WriteAddressData(8 + chn, tone.cent);
+					this.SAA1099.setRegData(8 + chn, tone.cent);
 
 					oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
 				}
@@ -549,7 +561,7 @@ class Player {
 					oct = 0;
 
 				///~ SAA1099 DATA 10-12: Octave for generators 0-5
-				this.SAA1099.WriteAddressData(16 + chn2nd, oct);
+				this.SAA1099.setRegData(16 + chn2nd, oct);
 
 				// set frequency enable bit...
 				if (samp.enable_freq)
@@ -599,11 +611,11 @@ class Player {
 					oct = 0;
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-				this.SAA1099.WriteAddressData(chn, 0);
+				this.SAA1099.setRegData(chn, 0);
 				///~ SAA1099 DATA 08-0D: Tone generator 0-5
-				this.SAA1099.WriteAddressData(8 + chn, 0);
+				this.SAA1099.setRegData(8 + chn, 0);
 				///~ SAA1099 DATA 10-12: Octave for generators 0-5
-				this.SAA1099.WriteAddressData(16 + chn2nd, oct);
+				this.SAA1099.setRegData(16 + chn2nd, oct);
 
 				eFreq &= (0xff ^ eMask);
 				eNoiz &= (0xff ^ eMask);
@@ -611,20 +623,20 @@ class Player {
 		}
 
 		///~ SAA1099 DATA 14: Frequency enable bits
-		this.SAA1099.WriteAddressData(20, eFreq);
+		this.SAA1099.setRegData(20, eFreq);
 		///~ SAA1099 DATA 15: Noise enable bits
-		this.SAA1099.WriteAddressData(21, eNoiz);
+		this.SAA1099.setRegData(21, eNoiz);
 		///~ SAA1099 DATA 16: Noise generator clock frequency select
-		this.SAA1099.WriteAddressData(21, eChar);
+		this.SAA1099.setRegData(22, eChar);
 
 		if ((this.mode & pMode.PM_SAMP_OR_LINE) && (eFreq | eNoiz) === 0) {
 			///~ SAA1099 DATA 1C: Master reset
-			this.SAA1099.WriteAddressData(28, 0);
+			this.SAA1099.setRegData(28, 0);
 			this.mode = pMode.PM_NOT;
 		}
 		else {
 			///~ SAA1099 DATA 1C: Enable output
-			this.SAA1099.WriteAddressData(28, 1);
+			this.SAA1099.setRegData(28, 1);
 
 			// is there time to next trackline?
 			if ((this.mode & pMode.PM_LINE) && this.currentTick > 0)
