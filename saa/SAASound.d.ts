@@ -1,148 +1,144 @@
 declare class SAASound {
-    static nSampleRate: number;
-    private nCurrentReg;
-    private bOutputEnabled;
-    private bAmpMuted;
-    private bSync;
-    private Env;
-    private Noise;
-    private Osc;
-    private Amp;
-    constructor(nSampleRate: number);
-    Clear(): void;
+    static sampleRate: number;
+    private register;
+    private enabled;
+    private ampMuted;
+    private sync;
+    private env;
+    private noise;
+    private freq;
+    private amp;
+    constructor(sampleRate: number);
+    clear(): void;
     /**
-     * route nData to the appropriate place by current register
-     * @param nData BYTE
+     * route data to the appropriate place by current register
+     * @param data BYTE
      */
-    WriteData(nData: number): void;
+    setData(data: number): void;
     /**
      * get current register
      * @returns {number} BYTE in range 0-31
      */
-    ReadAddress(): number;
+    getReg(): number;
     /**
      * set current register
-     * @param nReg BYTE in range 0-31
+     * @param reg BYTE in range 0-31
      */
-    WriteAddress(nReg: number): void;
+    setReg(reg: number): void;
     /**
      * combo!
-     * @param nReg
-     * @param nData
+     * @param reg
+     * @param data
      */
-    WriteAddressData(nReg: number, nData: number): void;
+    setRegData(reg: number, data: number): void;
     /**
      * channel mutation
-     * @param nChn channel number 0-5
-     * @param bMute boolean
+     * @param chn channel number 0-5
+     * @param mute boolean
      */
-    MuteAmp(nChn: number, bMute: boolean): void;
-    GenerateMono(pBuffer: Float32Array, nSamples: number): void;
-    GenerateStereo(pLeft: Float32Array, pRight: Float32Array, nSamples: number): void;
+    mute(chn: number, mute: boolean): void;
+    output(leftBuf: Float32Array, rightBuf: Float32Array, length: number): void;
 }
 declare class SAANoise {
-    private nCounter;
-    private nAdd;
-    private bSync;
-    private nRand;
-    private nSmpRate;
-    private nSource;
+    level: number;
+    private counter;
+    private add;
+    private sync;
+    private rand;
+    private smpRate;
+    private src;
     constructor(seed?: number);
-    Level(): number;
     /**
      * send command to noise generator
-     * @param nSource values 0 to 3
+     * @param src values 0 to 3
      */
-    SetSource(nSource: number): void;
+    set(src: number): void;
     /**
-     * Trigger only does anything useful when we're
+     * trigger() only does anything useful when we're
      * clocking from the frequency generator (i.e. SourceMode = 3).
      * So if we're clocking from the noise generator clock
      * (ie, SourceMode = 0, 1 or 2) then do nothing...
      */
-    Trigger(): void;
-    Tick(): number;
-    Sync(bSync: boolean): void;
-    private ChangeLevel();
+    trigger(): void;
+    tick(): number;
+    setSync(sync: boolean): void;
+    private rnd();
 }
 interface ENVDATA {
-    nPhases: number;
-    bLooping: boolean;
-    aLevels: number[][][];
+    plen: number;
+    loop: boolean;
+    data: number[][][];
 }
 declare class SAAEnv {
-    private nLeftLevel;
-    private nRightLevel;
-    private pEnvData;
-    private bEnabled;
-    private bStereo;
-    private nPhase;
-    private nPhasePosition;
-    private bEnded;
-    private bLooping;
-    private nPhases;
-    private nResolution;
-    private bNewData;
-    private nNextData;
-    private bOkForNewData;
-    private bClockExternally;
-    private cs_EnvData;
+    left: number;
+    right: number;
+    enabled: boolean;
+    private envdata;
+    private stereo;
+    private phase;
+    private position;
+    private ended;
+    private loop;
+    private phaseLen;
+    private res;
+    private newData;
+    private nextData;
+    private processData;
+    private extclock;
+    private envtable;
     constructor();
-    /** Do the Tick if envelope control is enabled and clock mode set to internal */
-    InternalClock(): void;
-    /** Do the Tick if envelope control is enabled and clock mode set to external */
-    ExternalClock(): void;
+    /** Do the tick if envelope control is enabled and clock mode set to internal */
+    tickInt(): void;
+    /** Do the tick if envelope control is enabled and clock mode set to external */
+    tickExt(): void;
     /**
      * send command to envgenerator
-     * @param nData BYTE
+     * @param data BYTE
      */
-    SetEnvControl(nData: number): void;
-    private Tick();
+    set(data: number): void;
+    private tick();
     /**
-     * set envgenerator's levels according to the nResolution:
+     * set envgenerator's levels according to the res:
      * Resolution of envelope waveform.
      *     true : 3-bit resolution;
      *     false: 4-bit resolution;
      */
-    private SetLevels();
+    private setLevels();
     /**
-     * loads envgenerator's registers according to the bits set in nData
-     * @param nData BYTE
+     * loads envgenerator's registers according to the bits set in 'data'
+     * @param data BYTE
      */
-    private SetNewEnvData(nData?);
-    LeftLevel(): number;
-    RightLevel(): number;
-    IsActive(): boolean;
+    private loadData(data?);
 }
 declare class SAAFreq {
-    private nLevel;
-    private nCounter;
-    private nAdd;
-    private nCurrentOffset;
-    private nCurrentOctave;
-    private nNextOffset;
-    private nNextOctave;
-    private bIgnoreOffsetData;
-    private bNewData;
-    private bSync;
-    private nSmpRate;
-    private nConnectedMode;
-    private pcConnectedNoiseGenerator;
-    private pcConnectedEnvGenerator;
+    level: number;
+    private counter;
+    private add;
+    private curOffset;
+    private curOctave;
+    private nextOffset;
+    private nextOctave;
+    private ignoreOffset;
+    private newdata;
+    private sync;
+    private smpRate;
+    private mode;
+    private noiseGen;
+    private envGen;
+    private freqs;
     constructor(pcNoise?: SAANoise, pcEnv?: SAAEnv);
-    Level(): number;
     /**
-     * @param nOffset between 0 and 255
+     * @param offset between 0 and 255
      */
-    SetFreqOffset(nOffset: number): void;
+    setOffset(offset: number): void;
     /**
-     * @param nOctave between 0 and 7
+     * @param octave between 0 and 7
      */
-    SetFreqOctave(nOctave: number): void;
+    setOctave(octave: number): void;
     /**
      * Loads the buffered new octave and new offset data into the current registers
-     * and sets up the new frequency for this frequency generator (i.e. sets up this.nAdd)
-     * - called during Sync, and called when waveform half-cycle completes...
+     * and sets up the new frequency for this frequency generator (i.e. sets up this.add)
+     * - called during sync, and called when waveform half-cycle completes...
      *
      * How the SAA-1099 really treats new data:
      * if only new octave data is present,
@@ -157,44 +153,36 @@ declare class SAAFreq {
      * signalling the offset data as 'new', so it will be acted upon next half-cycle.
      * Weird, I know. But that's how it works. Philips even documented as much...
      */
-    UpdateOctaveOffsetData(): void;
-    Tick(): number;
-    Sync(bSync: boolean): void;
-    private SetAdd();
-}
-interface stereolevel {
-    Left: number;
-    Right: number;
+    update(): void;
+    tick(): number;
+    setSync(sync: boolean): void;
 }
 declare class SAAAmp {
-    private last_level_byte;
-    private leftleveltimes16;
-    private leftleveltimes32;
-    private leftlevela0x0e;
-    private leftlevela0x0etimes2;
-    private rightleveltimes16;
-    private rightleveltimes32;
-    private rightlevela0x0e;
-    private rightlevela0x0etimes2;
-    private monoleveltimes16;
-    private monoleveltimes32;
-    private nOutputIntermediate;
-    private nMixMode;
-    private pcConnectedToneGenerator;
-    private pcConnectedNoiseGenerator;
-    private pcConnectedEnvGenerator;
-    private bUseEnvelope;
-    private bMute;
+    mute: boolean;
+    private lastlvl;
+    private leftx16;
+    private leftx32;
+    private lefta0E;
+    private lefta0Ex2;
+    private rightx16;
+    private rightx32;
+    private righta0E;
+    private righta0Ex2;
+    private out;
+    private mix;
+    private env;
+    private toneGen;
+    private noiseGen;
+    private envGen;
+    private levels;
     constructor(ToneGenerator: SAAFreq, NoiseGenerator: SAANoise, EnvGenerator?: SAAEnv);
     /**
      * Set amplitude, but if level unchanged since last call then do nothing.
-     * @param level_byte BYTE
+     * @param level BYTE
      */
-    SetAmpLevel(level_byte: number): void;
-    SetToneMixer(bEnabled: number): void;
-    SetNoiseMixer(bEnabled: number): void;
-    Tick(): void;
-    TickAndOutputMono(): number;
-    TickAndOutputStereo(): stereolevel;
-    Mute(bMute: boolean): void;
+    setLevel(level: number): void;
+    setFreqMixer(enable: number): void;
+    setNoiseMixer(enable: number): void;
+    tick(): void;
+    output(last: Float32Array): void;
 }

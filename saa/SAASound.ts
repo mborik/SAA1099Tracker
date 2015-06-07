@@ -23,172 +23,172 @@
  */
 //---------------------------------------------------------------------------------------
 class SAASound {
-	public static nSampleRate: number;
+	public static sampleRate: number;
 
-	private nCurrentReg: number = 0;
-	private bOutputEnabled: boolean = false;
-	private bAmpMuted: boolean[] = [ false, false, false, false, false, false ];
-	private bSync: boolean;
+	private register: number = 0;
+	private enabled: boolean = false;
+	private ampMuted: boolean[] = [ false, false, false, false, false, false ];
+	private sync: boolean;
 
-	private Env: SAAEnv[];
-	private Noise: SAANoise[];
-	private Osc: SAAFreq[];
-	private Amp: SAAAmp[];
+	private env: SAAEnv[];
+	private noise: SAANoise[];
+	private freq: SAAFreq[];
+	private amp: SAAAmp[];
 
-	constructor(nSampleRate: number) {
-		SAASound.nSampleRate = nSampleRate;
+	constructor(sampleRate: number) {
+		SAASound.sampleRate = sampleRate;
 
-		this.Env = [ new SAAEnv, new SAAEnv ];
+		this.env = [ new SAAEnv, new SAAEnv ];
 
-		this.Noise = [
+		this.noise = [
 			new SAANoise(0x14af5209),
 			new SAANoise(0x76a9b11e)
 		];
 
-		this.Osc = [
-			new SAAFreq(this.Noise[0]),
-			new SAAFreq(null, this.Env[0]),
+		this.freq = [
+			new SAAFreq(this.noise[0]),
+			new SAAFreq(null, this.env[0]),
 			new SAAFreq(),
-			new SAAFreq(this.Noise[1]),
-			new SAAFreq(null, this.Env[1]),
+			new SAAFreq(this.noise[1]),
+			new SAAFreq(null, this.env[1]),
 			new SAAFreq()
 		];
 
-		this.Amp = [
-			new SAAAmp(this.Osc[0], this.Noise[0]),
-			new SAAAmp(this.Osc[1], this.Noise[0]),
-			new SAAAmp(this.Osc[2], this.Noise[0], this.Env[0]),
-			new SAAAmp(this.Osc[3], this.Noise[1]),
-			new SAAAmp(this.Osc[4], this.Noise[1]),
-			new SAAAmp(this.Osc[5], this.Noise[1], this.Env[1])
+		this.amp = [
+			new SAAAmp(this.freq[0], this.noise[0]),
+			new SAAAmp(this.freq[1], this.noise[0]),
+			new SAAAmp(this.freq[2], this.noise[0], this.env[0]),
+			new SAAAmp(this.freq[3], this.noise[1]),
+			new SAAAmp(this.freq[4], this.noise[1]),
+			new SAAAmp(this.freq[5], this.noise[1], this.env[1])
 		];
 
-		this.Clear();
+		this.clear();
 	}
 
-	public Clear() {
+	public clear() {
 		// sets reg 28 to 0x02 - sync and disabled
-		this.WriteAddressData(28, 2);
+		this.setRegData(28, 2);
 
 		// sets regs 00-31 (except 28) to 0
 		for (var i = 31; i >= 0; i--) {
 			if (i != 28)
-				this.WriteAddressData(i, 0);
+				this.setRegData(i, 0);
 		}
 
 		// sets reg 28 to 0
-		this.WriteAddressData(28, 0);
+		this.setRegData(28, 0);
 
 		// sets current reg to 0
-		this.WriteAddress(0);
+		this.setReg(0);
 	}
 
 	/**
-	 * route nData to the appropriate place by current register
-	 * @param nData BYTE
+	 * route data to the appropriate place by current register
+	 * @param data BYTE
 	 */
-	public WriteData(nData: number) {
-		nData &= 0xff;
+	public setData(data: number) {
+		data &= 0xff;
 
-		var nReg: number = this.nCurrentReg;
-		switch(nReg) {
-		// Amplitude data (==> Amp)
+		var reg: number = this.register;
+		switch(reg) {
+		// Amplitude data (==> amp)
 			case 0:
 			case 1:
 			case 2:
 			case 3:
 			case 4:
 			case 5:
-				this.Amp[nReg].SetAmpLevel(nData);
+				this.amp[reg].setLevel(data);
 				break;
 
-		// Freq data (==> Osc)
+		// Freq data (==> freq)
 			case 8:
 			case 9:
 			case 10:
 			case 11:
 			case 12:
 			case 13:
-				this.Osc[(nReg & 0x07)].SetFreqOffset(nData);
+				this.freq[(reg & 0x07)].setOffset(data);
 				break;
 
-		// Freq octave data (==> Osc) for channels 0,1
+		// Freq octave data (==> freq) for channels 0,1
 			case 16:
-				this.Osc[0].SetFreqOctave(nData & 0x07);
-				this.Osc[1].SetFreqOctave((nData >> 4) & 0x07);
+				this.freq[0].setOctave(data & 0x07);
+				this.freq[1].setOctave((data >> 4) & 0x07);
 				break;
 
-		// Freq octave data (==> Osc) for channels 2,3
+		// Freq octave data (==> freq) for channels 2,3
 			case 17:
-				this.Osc[2].SetFreqOctave(nData & 0x07);
-				this.Osc[3].SetFreqOctave((nData >> 4) & 0x07);
+				this.freq[2].setOctave(data & 0x07);
+				this.freq[3].setOctave((data >> 4) & 0x07);
 				break;
 
-		// Freq octave data (==> Osc) for channels 4,5
+		// Freq octave data (==> freq) for channels 4,5
 			case 18:
-				this.Osc[4].SetFreqOctave(nData & 0x07);
-				this.Osc[5].SetFreqOctave((nData >> 4) & 0x07);
+				this.freq[4].setOctave(data & 0x07);
+				this.freq[5].setOctave((data >> 4) & 0x07);
 				break;
 
-		// Tone mixer control (==> Amp)
+		// Tone mixer control (==> amp)
 			case 20:
-				this.Amp[0].SetToneMixer(nData & 0x01);
-				this.Amp[1].SetToneMixer(nData & 0x02);
-				this.Amp[2].SetToneMixer(nData & 0x04);
-				this.Amp[3].SetToneMixer(nData & 0x08);
-				this.Amp[4].SetToneMixer(nData & 0x10);
-				this.Amp[5].SetToneMixer(nData & 0x20);
+				this.amp[0].setFreqMixer(data & 0x01);
+				this.amp[1].setFreqMixer(data & 0x02);
+				this.amp[2].setFreqMixer(data & 0x04);
+				this.amp[3].setFreqMixer(data & 0x08);
+				this.amp[4].setFreqMixer(data & 0x10);
+				this.amp[5].setFreqMixer(data & 0x20);
 				break;
 
-		// Noise mixer control (==> Amp)
+		// noise mixer control (==> amp)
 			case 21:
-				this.Amp[0].SetNoiseMixer(nData & 0x01);
-				this.Amp[1].SetNoiseMixer(nData & 0x02);
-				this.Amp[2].SetNoiseMixer(nData & 0x04);
-				this.Amp[3].SetNoiseMixer(nData & 0x08);
-				this.Amp[4].SetNoiseMixer(nData & 0x10);
-				this.Amp[5].SetNoiseMixer(nData & 0x20);
+				this.amp[0].setNoiseMixer(data & 0x01);
+				this.amp[1].setNoiseMixer(data & 0x02);
+				this.amp[2].setNoiseMixer(data & 0x04);
+				this.amp[3].setNoiseMixer(data & 0x08);
+				this.amp[4].setNoiseMixer(data & 0x10);
+				this.amp[5].setNoiseMixer(data & 0x20);
 				break;
 
-		// Noise frequency/source control (==> Noise)
+		// noise frequency/source control (==> noise)
 			case 22:
-				this.Noise[0].SetSource(nData & 0x03);
-				this.Noise[1].SetSource((nData >> 4) & 0x03);
+				this.noise[0].set(data & 0x03);
+				this.noise[1].set((data >> 4) & 0x03);
 				break;
 
-		// Envelope control data (==> Env) for envelope controller #0
+		// Envelope control data (==> env) for envelope controller #0
 			case 24:
-				this.Env[0].SetEnvControl(nData);
+				this.env[0].set(data);
 				break;
 
-		// Envelope control data (==> Env) for envelope controller #1
+		// Envelope control data (==> env) for envelope controller #1
 			case 25:
-				this.Env[1].SetEnvControl(nData);
+				this.env[1].set(data);
 				break;
 
-		// Sync/unsync all devices and reset them all to a known state
+		// sync/unsync all devices and reset them all to a known state
 			case 28:
 				var i;
-				var mute: boolean = !(nData & 0x01);
-				var sync: boolean = !!(nData & 0x02);
+				var mute: boolean = !(data & 0x01);
+				var sync: boolean = !!(data & 0x02);
 
 				for (i = 0; i < 6; i++)
-					this.Osc[i].Sync(sync);
-				this.Noise[0].Sync(sync);
-				this.Noise[1].Sync(sync);
-				this.bSync = sync;
+					this.freq[i].setSync(sync);
+				this.noise[0].setSync(sync);
+				this.noise[1].setSync(sync);
+				this.sync = sync;
 
 				// mute all amps
 				if (mute) {
 					for (i = 0; i < 6; i++)
-						this.Amp[i].Mute(mute);
-					this.bOutputEnabled = false;
+						this.amp[i].mute = mute;
+					this.enabled = false;
 				}
 				// unmute all amps - sound 'enabled'
 				else {
 					for (i = 0; i < 6; i++)
-						this.Amp[i].Mute(this.bAmpMuted[i]);
-					this.bOutputEnabled = true;
+						this.amp[i].mute = this.ampMuted[i];
+					this.enabled = true;
 				}
 				break;
 
@@ -201,87 +201,58 @@ class SAASound {
 	 * get current register
 	 * @returns {number} BYTE in range 0-31
 	 */
-	public ReadAddress(): number { return this.nCurrentReg; }
+	public getReg(): number { return this.register; }
 
 	/**
 	 * set current register
-	 * @param nReg BYTE in range 0-31
+	 * @param reg BYTE in range 0-31
 	 */
-	public WriteAddress(nReg: number) {
-		this.nCurrentReg = (nReg &= 0x1f);
+	public setReg(reg: number) {
+		this.register = (reg &= 0x1f);
 
-		if (nReg === 24)
-			this.Env[0].ExternalClock();
-		else if (nReg === 25)
-			this.Env[1].ExternalClock();
+		if (reg === 24)
+			this.env[0].tickExt();
+		else if (reg === 25)
+			this.env[1].tickExt();
 	}
 
 	/**
 	 * combo!
-	 * @param nReg
-	 * @param nData
+	 * @param reg
+	 * @param data
 	 */
-	public WriteAddressData(nReg: number, nData: number) {
-		this.WriteAddress(nReg);
-		this.WriteData(nData);
+	public setRegData(reg: number, data: number) {
+		this.setReg(reg);
+		this.setData(data);
 	}
 
 	/**
 	 * channel mutation
-	 * @param nChn channel number 0-5
-	 * @param bMute boolean
+	 * @param chn channel number 0-5
+	 * @param mute boolean
 	 */
-	public MuteAmp(nChn: number, bMute: boolean) {
-		if (nChn < 0 || nChn >= 6)
+	public mute(chn: number, mute: boolean) {
+		if (chn < 0 || chn >= 6)
 			return;
-		this.Amp[nChn].Mute((this.bAmpMuted[nChn] = bMute));
+		this.amp[chn].mute = (this.ampMuted[chn] = mute);
 	}
 
 //---------------------------------------------------------------------------------------
-	public GenerateMono(pBuffer: Float32Array, nSamples: number) {
-		var ptr: number = 0, val: number;
+	public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number) {
+		for (var ptr: number = 0, val: Float32Array; ptr < length; ptr++) {
+			this.noise[0].tick();
+			this.noise[1].tick();
 
-		while (ptr < nSamples) {
-			this.Noise[0].Tick();
-			this.Noise[1].Tick();
+			val = new Float32Array([0, 0]);
+			this.amp[0].output(val);
+			this.amp[1].output(val);
+			this.amp[2].output(val);
+			this.amp[3].output(val);
+			this.amp[4].output(val);
+			this.amp[5].output(val);
 
-			val = this.Amp[0].TickAndOutputMono()
-				+ this.Amp[1].TickAndOutputMono()
-				+ this.Amp[2].TickAndOutputMono()
-				+ this.Amp[3].TickAndOutputMono()
-				+ this.Amp[4].TickAndOutputMono()
-				+ this.Amp[5].TickAndOutputMono();
-
-			// force output into range 0 <= x < 1;
-			pBuffer[ptr++] = val / 12672;
-		}
-	}
-
-	public GenerateStereo(pLeft: Float32Array, pRight: Float32Array, nSamples: number) {
-		var ptr: number = 0,
-			val: stereolevel,
-			ampL: number, ampR: number;
-
-		while (ptr < nSamples) {
-			this.Noise[0].Tick();
-			this.Noise[1].Tick();
-
-			val = this.Amp[0].TickAndOutputStereo();
-			ampL = val.Left; ampR = val.Right;
-			val = this.Amp[1].TickAndOutputStereo();
-			ampL += val.Left; ampR += val.Right;
-			val = this.Amp[2].TickAndOutputStereo();
-			ampL += val.Left; ampR += val.Right;
-			val = this.Amp[3].TickAndOutputStereo();
-			ampL += val.Left; ampR += val.Right;
-			val = this.Amp[4].TickAndOutputStereo();
-			ampL += val.Left; ampR += val.Right;
-			val = this.Amp[5].TickAndOutputStereo();
-			ampL += val.Left; ampR += val.Right;
-
-			// force output into range 0 <= x < 1;
-			pRight[ptr]  = ampR / 2880;
-			pLeft[ptr++] = ampL / 2880;
+			leftBuf[ptr]  = val[0];
+			rightBuf[ptr] = val[1];
 		}
 	}
 }

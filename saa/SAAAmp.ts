@@ -1,169 +1,119 @@
 /*! SAAAmp: Tone/Noise mixing, Envelope application and amplification */
 //---------------------------------------------------------------------------------------
-interface stereolevel {
-	Left: number;
-	Right: number;
-}
-//---------------------------------------------------------------------------------------
 class SAAAmp {
-	private last_level_byte: number = 0;
-	private leftleveltimes16: number = 0;
-	private leftleveltimes32: number = 0;
-	private leftlevela0x0e: number = 0;
-	private leftlevela0x0etimes2: number = 0;
-	private rightleveltimes16: number = 0;
-	private rightleveltimes32: number = 0;
-	private rightlevela0x0e: number = 0;
-	private rightlevela0x0etimes2: number = 0;
-	private monoleveltimes16: number = 0;
-	private monoleveltimes32: number = 0;
+	public  mute: boolean;
 
-	private nOutputIntermediate: number = 0;
-	private nMixMode: number = 0;
+	private lastlvl: number = 0;
+	private leftx16: number = 0;
+	private leftx32: number = 0;
+	private lefta0E: number = 0;
+	private lefta0Ex2: number = 0;
+	private rightx16: number = 0;
+	private rightx32: number = 0;
+	private righta0E: number = 0;
+	private righta0Ex2: number = 0;
 
-	private pcConnectedToneGenerator: SAAFreq;
-	private pcConnectedNoiseGenerator: SAANoise;
-	private pcConnectedEnvGenerator: SAAEnv;
+	private out: number = 0;
+	private mix: number = 0;
+	private env: boolean;
 
-	private bUseEnvelope: boolean;
-	private bMute: boolean;
+	private toneGen: SAAFreq;
+	private noiseGen: SAANoise;
+	private envGen: SAAEnv;
+
+	private levels: Float32Array;
 
 	constructor(ToneGenerator: SAAFreq, NoiseGenerator: SAANoise, EnvGenerator?: SAAEnv) {
-		this.pcConnectedToneGenerator = ToneGenerator;
-		this.pcConnectedNoiseGenerator = NoiseGenerator;
-		this.pcConnectedEnvGenerator = EnvGenerator;
-		this.bUseEnvelope = !!EnvGenerator;
-		this.bMute = true;
+		this.toneGen = ToneGenerator;
+		this.noiseGen = NoiseGenerator;
+		this.envGen = EnvGenerator;
+		this.env = !!EnvGenerator;
+		this.mute = true;
+
+		// generate precalculated volume levels to Float32 for fast mix calculations...
+		this.levels = new Float32Array(512);
+		for (var i: number = 0; i < 512; i++)
+			this.levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
 	}
 
 	/**
 	 * Set amplitude, but if level unchanged since last call then do nothing.
-	 * @param level_byte BYTE
+	 * @param level BYTE
 	 */
-	public SetAmpLevel(level_byte: number) {
-		if ((level_byte &= 255) !== this.last_level_byte) {
-			this.last_level_byte = level_byte;
-			this.leftlevela0x0e = level_byte & 0x0e;
-			this.leftlevela0x0etimes2 = this.leftlevela0x0e << 1;
-			this.leftleveltimes16 = (level_byte & 0x0f) << 4;
-			this.leftleveltimes32 = this.leftleveltimes16 << 1;
+	public setLevel(level: number) {
+		if ((level &= 255) !== this.lastlvl) {
+			this.lastlvl = level;
+			this.lefta0E = level & 0xe;
+			this.lefta0Ex2 = this.lefta0E << 1;
+			this.leftx16 = (level & 0xf) << 4;
+			this.leftx32 = this.leftx16 << 1;
 
-			this.rightlevela0x0e = (level_byte >> 4) & 0x0e;
-			this.rightlevela0x0etimes2 = this.rightlevela0x0e << 1;
-			this.rightleveltimes16 = level_byte & 0xf0;
-			this.rightleveltimes32 = this.rightleveltimes16 << 1;
-
-			this.monoleveltimes16 = this.leftleveltimes16 + this.rightleveltimes16;
-			this.monoleveltimes32 = this.leftleveltimes32 + this.rightleveltimes32;
+			this.righta0E = (level >> 4) & 0xe;
+			this.righta0Ex2 = this.righta0E << 1;
+			this.rightx16 = level & 0xf0;
+			this.rightx32 = this.rightx16 << 1;
 		}
 	}
 
-	public SetToneMixer(bEnabled: number) {
-		if (!bEnabled)
-			this.nMixMode &= ~(0x01);
-		else
-			this.nMixMode |= 0x01;
-	}
+	public setFreqMixer (enable: number) { this.mix = enable ? (this.mix | 1) : (this.mix & 2) }
+	public setNoiseMixer(enable: number) { this.mix = enable ? (this.mix | 2) : (this.mix & 1) }
 
-	public SetNoiseMixer(bEnabled: number) {
-		if (!bEnabled)
-			this.nMixMode &= ~(0x02);
-		else
-			this.nMixMode |= 0x02;
-	}
-
-	public Tick() {
-		switch (this.nMixMode) {
+	public tick() {
+		switch (this.mix) {
 			case 0:
 				// no tones or noise for this channel
-				this.pcConnectedToneGenerator.Tick();
-				this.nOutputIntermediate = 0;
+				this.toneGen.tick();
+				this.out = 0;
 				break;
 			case 1:
 				// tones only for this channel
 				// NOTE: ConnectedToneGenerator returns either 0 or 2
-				this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
+				this.out = this.toneGen.tick();
 				break;
 			case 2:
 				// noise only for this channel
-				// NOTE: ConnectedNoiseFunction returns either 0 or 1 using .Level()
-				// and either 0 or 2 when using .LevelTimesTwo();
-				this.pcConnectedToneGenerator.Tick();
-				this.nOutputIntermediate = this.pcConnectedNoiseGenerator.Level();
+				this.toneGen.tick();
+				this.out = this.noiseGen.level;
 				break;
 			case 3:
 				// tones+noise for this channel ... mixing algorithm:
-				this.nOutputIntermediate = this.pcConnectedToneGenerator.Tick();
-				if (this.nOutputIntermediate === 2 && !!this.pcConnectedNoiseGenerator.Level())
-					this.nOutputIntermediate = 1;
+				this.out = this.toneGen.tick();
+				if (this.out === 2 && !!this.noiseGen.level)
+					this.out = 1;
 				break;
 		}
 	}
 
-	public TickAndOutputMono(): number {
-		this.Tick();
+	public output(last: Float32Array) {
+		this.tick();
 
-		if (this.bMute)
-			return 0;
-
-		var retval: number = 0;
-		var out: number = this.nOutputIntermediate;
+		if (this.mute)
+			return;
 
 		// now calculate the returned amplitude for this sample:
-		if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
-			if (out === 0) {
-				retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2)
-				       + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2);
-			}
-			else if (out === 1) {
-				retval = (this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e)
-				       + (this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e);
+		var e: boolean = (this.env && this.envGen.enabled);
+		if (this.out === 0) {
+			if (e) {
+				last[0] += this.levels[this.envGen.left * this.lefta0Ex2];
+				last[1] += this.levels[this.envGen.right * this.righta0Ex2];
 			}
 		}
-		else {
-			if (out === 1)
-				retval = this.monoleveltimes16;
-			else if (out === 2)
-				retval = this.monoleveltimes32;
+		else if (this.out === 1) {
+			if (e) {
+				last[0] += this.levels[this.envGen.left * this.lefta0E];
+				last[1] += this.levels[this.envGen.right * this.righta0E];
+			}
+			else {
+				last[0] += this.levels[this.leftx16];
+				last[1] += this.levels[this.rightx16];
+			}
 		}
-
-		return retval;
+		else if (this.out === 2) {
+			if (!e) {
+				last[0] += this.levels[this.leftx32];
+				last[1] += this.levels[this.rightx32];
+			}
+		}
 	}
-
-	public TickAndOutputStereo(): stereolevel {
-		this.Tick();
-
-		var retval: stereolevel = { Left: 0, Right: 0 };
-		var out: number = this.nOutputIntermediate;
-
-		if (this.bMute)
-			return retval;
-
-		// now calculate the returned amplitude for this sample:
-		if (this.bUseEnvelope && this.pcConnectedEnvGenerator.IsActive()) {
-			if (out === 0) {
-				retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0etimes2;
-				retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0etimes2;
-			}
-			else if (out === 1) {
-				retval.Left = this.pcConnectedEnvGenerator.LeftLevel() * this.leftlevela0x0e;
-				retval.Right = this.pcConnectedEnvGenerator.RightLevel() * this.rightlevela0x0e;
-			}
-		}
-		else {
-			if (out === 1) {
-				retval.Left = this.leftleveltimes16;
-				retval.Right = this.rightleveltimes16;
-			}
-			else if (out === 2) {
-				retval.Left = this.leftleveltimes32;
-				retval.Right = this.rightleveltimes32;
-			}
-		}
-
-		return retval;
-	}
-
-	public Mute(bMute: boolean) { this.bMute = bMute; }
 }
 //---------------------------------------------------------------------------------------
