@@ -4,15 +4,14 @@ var AudioDriver = (function () {
 		var scriptProcessor = null;
 		var audioContext = new (AudioContext || webkitAudioContext);
 		var audioEventHandler = function(event) {
-			var leftBuf = event.outputBuffer.getChannelData(0);
-			var rightBuf = event.outputBuffer.getChannelData(1);
-			audioSource.getAudio(leftBuf, rightBuf, event.outputBuffer.length);
+			var buf = event.outputBuffer;
+			audioSource.getAudio(buf.getChannelData(0), buf.getChannelData(1), buf.length);
 		}
 
-		if (audioContext.createJavaScriptNode != null)
-			scriptProcessor = audioContext.createJavaScriptNode(1024, 0, 2);
-		else if (audioContext.createScriptProcessor != null)
-			scriptProcessor = audioContext.createScriptProcessor(1024, 0, 2);
+		if (audioContext.createScriptProcessor != null)
+			scriptProcessor = audioContext.createScriptProcessor(0, 0, 2);
+		else if (audioContext.createJavaScriptNode != null)
+			scriptProcessor = audioContext.createJavaScriptNode(0, 0, 2);
 
 		this.sampleRate = audioContext.sampleRate;
 		this.bufferSize = scriptProcessor.bufferSize;
@@ -34,7 +33,7 @@ var AudioDriver = (function () {
 
 	function FFAudioDriver() {
 		this.sampleRate = 44100; // seems to sound best in Firefox
-		this.bufferSize = 1024;
+		this.bufferSize = 4096;
 
 		var audioContext = new Audio();
 		var buffer = new Float32Array(this.sampleRate >> 1); // 250ms
