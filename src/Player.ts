@@ -23,7 +23,6 @@
 /// <reference path='../saa/SAASound.d.ts' />
 //---------------------------------------------------------------------------------------
 var pMode = {
-	PM_NOT: 0,
 	PM_SONG: 1,
 	PM_POSITION: 2,
 	PM_SONG_OR_POS: 3,
@@ -157,6 +156,11 @@ interface pParams {
 	commandValue1: number;
 	commandValue2: number;
 }
+
+class pMixer {
+	index: number = 0;
+	length: number = 0;
+}
 //---------------------------------------------------------------------------------------
 class Player {
 	public SAA1099: SAASound;
@@ -178,6 +182,8 @@ class Player {
 
 	private mode: number;
 	private playParams: pParams[];
+
+	private mixer: pMixer = new pMixer;
 
 	constructor(SAA1099: SAASound) {
 		this.SAA1099 = SAA1099;
@@ -224,8 +230,10 @@ class Player {
 		this.clearOrnaments();
 
 		this.loopMode = true;
+		this.setInterrupt(50);
+
 		this.stopChannel(0);
-		this.mode = pMode.PM_NOT;
+		this.mode = 0;
 	}
 
 	/** Clear song (positions, patterns, pointers and playParams). */
@@ -266,6 +274,10 @@ class Player {
 	 * @param chn Channel number;
 	 */
 	private clearPlayParams(chn: number) {
+		if (this.playParams[chn]) {
+			delete this.playParams[chn].attenuation;
+			this.playParams[chn] = null;
+		}
 		this.playParams[chn] = { tone: 0, playing: false, sample: this.sample[0], ornament: this.ornament[0], sample_cursor: 0, ornament_cursor: 0, attenuation: new pVolume, slideShift: 0, globalPitch: 0, released: false, command: 0, commandParam: 0, commandPhase: 0, commandValue1: 0, commandValue2: 0 };
 	}
 
@@ -286,15 +298,39 @@ class Player {
 	}
 //---------------------------------------------------------------------------------------
 	/**
+	 * Set processor's interrupt of virtual pseudo-emulated 8bit computer to the mixer.
+	 * @param freq Interrupt frequency in Hz;
+	 */
+	public setInterrupt(freq: number) {
+		this.mixer.length = SAASound.sampleRate / freq;
+	}
+
+	/**
 	 * Method which provides audio data of both channels separately for AudioDriver
-	 * and calling prepareFrame(). Callout of this method should be every 20ms (50Hz).
+	 * and calling prepareFrame() every interrupt of 8bit processor.
 	 * @param leftBuf TypedArray of 32bit float type;
 	 * @param rightBuf TypedArray of 32bit float type;
 	 * @param length of buffer;
 	 */
 	public getAudio(leftBuf: Float32Array, rightBuf: Float32Array, length: number) {
-		this.SAA1099.output(leftBuf, rightBuf, length);
-		this.prepareFrame();
+		if (!this.mode)
+			return this.SAA1099.output(leftBuf, rightBuf, length);
+
+		var outi = 0, remain;
+		while (outi < length) {
+			if (this.mixer.index >= this.mixer.length) {
+				this.mixer.index = 0;
+				this.prepareFrame();
+			}
+
+			remain = this.mixer.length - this.mixer.index;
+			if ((outi + remain) > length)
+				remain = length - outi;
+
+			this.SAA1099.output(leftBuf, rightBuf, remain, outi);
+			this.mixer.index += remain;
+			outi += remain;
+		}
 	}
 
 	/**
@@ -302,11 +338,11 @@ class Player {
 	 * It handles all the pointers and settings to output values on SAA1099 registers.
 	 */
 	private prepareFrame(): void {
-		if (this.mode === pMode.PM_NOT)
+		if (!this.mode)
 			return;
 
 		var pp: pParams,
-			wVol: pVolume = new pVolume,
+			vol: pVolume = new pVolume,
 			height: number, val: number = 0,
 			chn: number, chn2nd: number, chn3rd: number,
 			oct: number = 0, noise: number, cmd: number, paramH: number, paramL: number,
@@ -330,7 +366,7 @@ class Player {
 			if (pp.playing) {
 				// if playback in channel is enabled, fetch all smp/orn values...
 				samp = pp.sample.data[pp.sample_cursor];
-				wVol.byte = samp.volume.byte;
+				vol.byte = samp.volume.byte;
 				height = pp.ornament.data[pp.ornament_cursor];
 				noise = samp.noise_value | (<any>samp.enable_noise << 2);
 
@@ -450,7 +486,7 @@ class Player {
 
 							pp.sample_cursor = pp.commandParam;
 							samp = pp.sample.data[pp.sample_cursor];
-							wVol.byte = samp.volume.byte;
+							vol.byte = samp.volume.byte;
 						}
 						cmd = -1;
 						break;
@@ -503,9 +539,9 @@ class Player {
 							}
 						}
 						else if ((paramL & 1)) {
-							pp.commandPhase = wVol.R;
-							wVol.R = wVol.L;
-							wVol.L = pp.commandPhase;
+							pp.commandPhase = vol.R;
+							vol.R = vol.L;
+							vol.L = pp.commandPhase;
 							pp.commandPhase = 0;
 						}
 						break;
@@ -543,11 +579,11 @@ class Player {
 				}
 
 				// apply attenuation...
-				wVol.L = Math.max(0, (wVol.L - pp.attenuation.L));
-				wVol.R = Math.max(0, (wVol.R - pp.attenuation.R));
+				vol.L = Math.max(0, (vol.L - pp.attenuation.L));
+				vol.R = Math.max(0, (vol.R - pp.attenuation.R));
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-				this.SAA1099.setRegData(chn, wVol.byte);
+				this.SAA1099.setRegData(chn, vol.byte);
 
 				// get tone from tracklist, calculate proper frequency to register...
 				if (pp.tone) {
@@ -557,6 +593,7 @@ class Player {
 					this.SAA1099.setRegData(8 + chn, tone.cent);
 
 					oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
+					tone = null;
 				}
 				else if ((chn & 1))
 					oct = 0;
@@ -633,7 +670,7 @@ class Player {
 		if ((this.mode & pMode.PM_SAMP_OR_LINE) && (eFreq | eNoiz) === 0) {
 			///~ SAA1099 DATA 1C: Master reset
 			this.SAA1099.setRegData(28, 0);
-			this.mode = pMode.PM_NOT;
+			this.mode = 0;
 		}
 		else {
 			///~ SAA1099 DATA 1C: Enable output
@@ -645,6 +682,8 @@ class Player {
 			else if ((this.mode & pMode.PM_SONG_OR_POS))
 				this.prepareLine();
 		}
+
+		vol = null;
 	}
 
 	/**
@@ -810,6 +849,7 @@ class Player {
 		if (this.mode === pMode.PM_LINE && this.currentTick > 0)
 			return false;
 
+		this.mixer.index = 0;
 		this.mode = pMode.PM_LINE;
 		this.currentTick = 0;
 		return this.prepareLine(false);
@@ -836,6 +876,7 @@ class Player {
 			return false;
 
 		this.stopChannel(0);
+		this.mixer.index = 0;
 		this.mode = follow ? pMode.PM_SONG : pMode.PM_POSITION;
 		this.currentSpeed = this.position[this.currentPosition].speed;
 
@@ -870,6 +911,7 @@ class Player {
 		this.playParams[chn].sample = this.sample[s];
 		this.playParams[chn].ornament = this.ornament[o];
 
+		this.mixer.index = 0;
 		this.mode = pMode.PM_SAMPLE;
 		return ++chn;
 	}

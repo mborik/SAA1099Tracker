@@ -23,7 +23,6 @@
 /// <reference path='../saa/SAASound.d.ts' />
 //---------------------------------------------------------------------------------------
 var pMode = {
-    PM_NOT: 0,
     PM_SONG: 1,
     PM_POSITION: 2,
     PM_SONG_OR_POS: 3,
@@ -93,9 +92,17 @@ var pPosition = (function () {
     };
     return pPosition;
 })();
+var pMixer = (function () {
+    function pMixer() {
+        this.index = 0;
+        this.length = 0;
+    }
+    return pMixer;
+})();
 //---------------------------------------------------------------------------------------
 var Player = (function () {
     function Player(SAA1099) {
+        this.mixer = new pMixer;
         this.SAA1099 = SAA1099;
         this.sample = [];
         this.ornament = [];
@@ -133,8 +140,9 @@ var Player = (function () {
         this.clearSamples();
         this.clearOrnaments();
         this.loopMode = true;
+        this.setInterrupt(50);
         this.stopChannel(0);
-        this.mode = pMode.PM_NOT;
+        this.mode = 0;
     }
     /** Clear song (positions, patterns, pointers and playParams). */
     Player.prototype.clearSong = function () {
@@ -169,6 +177,10 @@ var Player = (function () {
      * @param chn Channel number;
      */
     Player.prototype.clearPlayParams = function (chn) {
+        if (this.playParams[chn]) {
+            delete this.playParams[chn].attenuation;
+            this.playParams[chn] = null;
+        }
         this.playParams[chn] = { tone: 0, playing: false, sample: this.sample[0], ornament: this.ornament[0], sample_cursor: 0, ornament_cursor: 0, attenuation: new pVolume, slideShift: 0, globalPitch: 0, released: false, command: 0, commandParam: 0, commandPhase: 0, commandValue1: 0, commandValue2: 0 };
     };
     /**
@@ -184,24 +196,44 @@ var Player = (function () {
     };
     //---------------------------------------------------------------------------------------
     /**
+     * Set processor's interrupt of virtual pseudo-emulated 8bit computer to the mixer.
+     * @param freq Interrupt frequency in Hz;
+     */
+    Player.prototype.setInterrupt = function (freq) {
+        this.mixer.length = SAASound.sampleRate / freq;
+    };
+    /**
      * Method which provides audio data of both channels separately for AudioDriver
-     * and calling prepareFrame(). Callout of this method should be every 20ms (50Hz).
+     * and calling prepareFrame() every interrupt of 8bit processor.
      * @param leftBuf TypedArray of 32bit float type;
      * @param rightBuf TypedArray of 32bit float type;
      * @param length of buffer;
      */
     Player.prototype.getAudio = function (leftBuf, rightBuf, length) {
-        this.SAA1099.output(leftBuf, rightBuf, length);
-        this.prepareFrame();
+        if (!this.mode)
+            return this.SAA1099.output(leftBuf, rightBuf, length);
+        var outi = 0, remain;
+        while (outi < length) {
+            if (this.mixer.index >= this.mixer.length) {
+                this.mixer.index = 0;
+                this.prepareFrame();
+            }
+            remain = this.mixer.length - this.mixer.index;
+            if ((outi + remain) > length)
+                remain = length - outi;
+            this.SAA1099.output(leftBuf, rightBuf, remain, outi);
+            this.mixer.index += remain;
+            outi += remain;
+        }
     };
     /**
      * Most important part of Player: Method needs to be called every interrupt/frame.
      * It handles all the pointers and settings to output values on SAA1099 registers.
      */
     Player.prototype.prepareFrame = function () {
-        if (this.mode === pMode.PM_NOT)
+        if (!this.mode)
             return;
-        var pp, wVol = new pVolume, height, val = 0, chn, chn2nd, chn3rd, oct = 0, noise, cmd, paramH, paramL, samp, tone, c, eMask, eFreq = 0, eNoiz = 0, eChar = 0;
+        var pp, vol = new pVolume, height, val = 0, chn, chn2nd, chn3rd, oct = 0, noise, cmd, paramH, paramL, samp, tone, c, eMask, eFreq = 0, eNoiz = 0, eChar = 0;
         // We processing channels backward! It's because of SAA1099 register architecture
         // which expect settings for pairs or triplets of adjacent channels. We need
         // to know e.g. tone octave of every pair of channel and store to one register.
@@ -217,7 +249,7 @@ var Player = (function () {
             if (pp.playing) {
                 // if playback in channel is enabled, fetch all smp/orn values...
                 samp = pp.sample.data[pp.sample_cursor];
-                wVol.byte = samp.volume.byte;
+                vol.byte = samp.volume.byte;
                 height = pp.ornament.data[pp.ornament_cursor];
                 noise = samp.noise_value | (samp.enable_noise << 2);
                 // get command on trackline and calculate nibbles of command parameter...
@@ -324,7 +356,7 @@ var Player = (function () {
                             (pp.sample.releasable || pp.commandParam < pp.sample.end)) {
                             pp.sample_cursor = pp.commandParam;
                             samp = pp.sample.data[pp.sample_cursor];
-                            wVol.byte = samp.volume.byte;
+                            vol.byte = samp.volume.byte;
                         }
                         cmd = -1;
                         break;
@@ -373,9 +405,9 @@ var Player = (function () {
                             }
                         }
                         else if ((paramL & 1)) {
-                            pp.commandPhase = wVol.R;
-                            wVol.R = wVol.L;
-                            wVol.L = pp.commandPhase;
+                            pp.commandPhase = vol.R;
+                            vol.R = vol.L;
+                            vol.L = pp.commandPhase;
                             pp.commandPhase = 0;
                         }
                         break;
@@ -407,16 +439,17 @@ var Player = (function () {
                     pp.commandPhase = 0;
                 }
                 // apply attenuation...
-                wVol.L = Math.max(0, (wVol.L - pp.attenuation.L));
-                wVol.R = Math.max(0, (wVol.R - pp.attenuation.R));
+                vol.L = Math.max(0, (vol.L - pp.attenuation.L));
+                vol.R = Math.max(0, (vol.R - pp.attenuation.R));
                 ///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-                this.SAA1099.setRegData(chn, wVol.byte);
+                this.SAA1099.setRegData(chn, vol.byte);
                 // get tone from tracklist, calculate proper frequency to register...
                 if (pp.tone) {
                     tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
                     ///~ SAA1099 DATA 08-0D: Tone generator 0-5
                     this.SAA1099.setRegData(8 + chn, tone.cent);
                     oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
+                    tone = null;
                 }
                 else if ((chn & 1))
                     oct = 0;
@@ -481,7 +514,7 @@ var Player = (function () {
         if ((this.mode & pMode.PM_SAMP_OR_LINE) && (eFreq | eNoiz) === 0) {
             ///~ SAA1099 DATA 1C: Master reset
             this.SAA1099.setRegData(28, 0);
-            this.mode = pMode.PM_NOT;
+            this.mode = 0;
         }
         else {
             ///~ SAA1099 DATA 1C: Enable output
@@ -492,6 +525,7 @@ var Player = (function () {
             else if ((this.mode & pMode.PM_SONG_OR_POS))
                 this.prepareLine();
         }
+        vol = null;
     };
     /**
      * Another very important part of Player, sibling to prepareFrame():
@@ -629,6 +663,7 @@ var Player = (function () {
     Player.prototype.playLine = function () {
         if (this.mode === pMode.PM_LINE && this.currentTick > 0)
             return false;
+        this.mixer.index = 0;
         this.mode = pMode.PM_LINE;
         this.currentTick = 0;
         return this.prepareLine(false);
@@ -652,6 +687,7 @@ var Player = (function () {
         if (this.currentPosition >= this.position.length)
             return false;
         this.stopChannel(0);
+        this.mixer.index = 0;
         this.mode = follow ? pMode.PM_SONG : pMode.PM_POSITION;
         this.currentSpeed = this.position[this.currentPosition].speed;
         return this.prepareLine(false);
@@ -682,6 +718,7 @@ var Player = (function () {
         this.playParams[chn].tone = ++tone;
         this.playParams[chn].sample = this.sample[s];
         this.playParams[chn].ornament = this.ornament[o];
+        this.mixer.index = 0;
         this.mode = pMode.PM_SAMPLE;
         return ++chn;
     };
