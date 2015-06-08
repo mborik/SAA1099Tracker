@@ -44,7 +44,7 @@ var pTone = (function () {
         get: function () { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); },
         set: function (v) {
             this.cent = (v & 0xff);
-            this.oct = (v >> 8) & 0x07;
+            this.oct = (v & 0x700) >> 8;
         },
         enumerable: true,
         configurable: true
@@ -119,10 +119,11 @@ var Player = (function () {
         for (var i = 1, o = 0, p = 1, c, t; i <= 96; i++, p++) {
             t = new pTone;
             t.txt = tab_tones[p].substr(1) + (o + 1);
-            c = tab_tones[p].charCodeAt(0) & 0xff;
-            if (c === 0xff && o !== 7) {
+            c = tab_tones[p].charCodeAt(0);
+            if (c === 0xff && o < 7) {
                 o++;
                 p = 0;
+                c = tab_tones[p].charCodeAt(0);
             }
             t.oct = o;
             t.cent = c;
@@ -664,7 +665,6 @@ var Player = (function () {
      * @returns {number} channel (1-6) where the sample has been played or 0 if error
      */
     Player.prototype.playSample = function (s, o, tone, chn) {
-        var pp;
         if (!chn) {
             // first free channel detection
             for (chn = 0; chn < 6; chn++)
@@ -675,13 +675,13 @@ var Player = (function () {
         }
         else if (--chn > 5)
             return 0;
-        else if ((pp = this.playParams[chn]).playing)
+        else if (this.playParams[chn].playing)
             return 0;
         this.clearPlayParams(chn);
-        pp.playing = true;
-        pp.tone = ++tone;
-        pp.sample = this.sample[s];
-        pp.ornament = this.ornament[o];
+        this.playParams[chn].playing = true;
+        this.playParams[chn].tone = ++tone;
+        this.playParams[chn].sample = this.sample[s];
+        this.playParams[chn].ornament = this.ornament[o];
         this.mode = pMode.PM_SAMPLE;
         return ++chn;
     };

@@ -43,7 +43,7 @@ class pTone {
 	get word(): number { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); }
 	set word(v: number) {
 		this.cent = (v & 0xff);
-		this.oct = (v >> 8) & 0x07;
+		this.oct = (v & 0x700) >> 8;
 	}
 }
 
@@ -207,10 +207,11 @@ class Player {
 			t = new pTone;
 			t.txt = tab_tones[p].substr(1) + (o + 1);
 
-			c = tab_tones[p].charCodeAt(0) & 0xff;
-			if (c === 0xff && o !== 7) {
+			c = tab_tones[p].charCodeAt(0);
+			if (c === 0xff && o < 7) {
 				o++;
 				p = 0;
+				c = tab_tones[p].charCodeAt(0);
 			}
 
 			t.oct = o;
@@ -850,7 +851,6 @@ class Player {
 	 * @returns {number} channel (1-6) where the sample has been played or 0 if error
 	 */
 	public playSample(s: number, o: number, tone: number, chn?: number): number {
-		var pp: pParams;
 		if (!chn) {
 			// first free channel detection
 			for (chn = 0; chn < 6; chn++)
@@ -861,14 +861,14 @@ class Player {
 		}
 		else if (--chn > 5)
 			return 0;
-		else if ((pp = this.playParams[chn]).playing)
+		else if (this.playParams[chn].playing)
 			return 0;
 
 		this.clearPlayParams(chn);
-		pp.playing = true;
-		pp.tone = ++tone;
-		pp.sample = this.sample[s];
-		pp.ornament = this.ornament[o];
+		this.playParams[chn].playing = true;
+		this.playParams[chn].tone = ++tone;
+		this.playParams[chn].sample = this.sample[s];
+		this.playParams[chn].ornament = this.ornament[o];
 
 		this.mode = pMode.PM_SAMPLE;
 		return ++chn;

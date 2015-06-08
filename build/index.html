@@ -42,7 +42,7 @@
 							p.data[k].volume.byte = (d.charCodeAt(j) & 0xff);
 							p.data[k].enable_freq = !!(c & 0x80);
 							p.data[k].enable_noise = !!(c & 0x40);
-							p.data[k].noise_value = (c & 0x30);
+							p.data[k].noise_value = (c & 0x30) >> 4;
 							p.data[k].shift = (c & 7) | (d.charCodeAt(j + 2) & 0xff);
 							if (c & 8)
 								p.data[k].shift *= -1;
@@ -71,7 +71,7 @@
 							p.data[k].orn_release = !!(d.charCodeAt(j + 1) & 0x80);
 							p.data[k].volume.byte = (d.charCodeAt(j + 2) & 0xff);
 							p.data[k].orn = (d.charCodeAt(j + 3) & 0x0f);
-							p.data[k].cmd = (d.charCodeAt(j + 3) & 0xf0);
+							p.data[k].cmd = (d.charCodeAt(j + 3) & 0xf0) >> 4;
 							p.data[k].cmd_data = (d.charCodeAt(j + 4) & 0xff);
 						}
 					}
