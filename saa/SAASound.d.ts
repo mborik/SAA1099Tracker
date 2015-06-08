@@ -37,7 +37,7 @@ declare class SAASound {
      * @param mute boolean
      */
     mute(chn: number, mute: boolean): void;
-    output(leftBuf: Float32Array, rightBuf: Float32Array, length: number): void;
+    output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset?: number): void;
 }
 declare class SAANoise {
     level: number;

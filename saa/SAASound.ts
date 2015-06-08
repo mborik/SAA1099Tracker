@@ -238,12 +238,17 @@ class SAASound {
 	}
 
 //---------------------------------------------------------------------------------------
-	public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number) {
-		for (var ptr: number = 0, val: Float32Array; ptr < length; ptr++) {
+	public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset?: number) {
+		var i: number = 0,
+			ptr: number = (offset || 0),
+			len: number = length + ptr,
+			val: Float32Array = new Float32Array([0, 0]);
+
+		for (; ptr < len; ptr++) {
 			this.noise[0].tick();
 			this.noise[1].tick();
 
-			val = new Float32Array([0, 0]);
+			val[0] = val[1] = 0;
 			this.amp[0].output(val);
 			this.amp[1].output(val);
 			this.amp[2].output(val);
@@ -254,6 +259,8 @@ class SAASound {
 			leftBuf[ptr]  = val[0];
 			rightBuf[ptr] = val[1];
 		}
+
+		val = null;
 	}
 }
 //---------------------------------------------------------------------------------------

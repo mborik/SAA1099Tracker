@@ -198,11 +198,12 @@ var SAASound = (function () {
         this.amp[chn].mute = (this.ampMuted[chn] = mute);
     };
     //---------------------------------------------------------------------------------------
-    SAASound.prototype.output = function (leftBuf, rightBuf, length) {
-        for (var ptr = 0, val; ptr < length; ptr++) {
+    SAASound.prototype.output = function (leftBuf, rightBuf, length, offset) {
+        var i = 0, ptr = (offset || 0), len = length + ptr, val = new Float32Array([0, 0]);
+        for (; ptr < len; ptr++) {
             this.noise[0].tick();
             this.noise[1].tick();
-            val = new Float32Array([0, 0]);
+            val[0] = val[1] = 0;
             this.amp[0].output(val);
             this.amp[1].output(val);
             this.amp[2].output(val);
@@ -212,6 +213,7 @@ var SAASound = (function () {
             leftBuf[ptr] = val[0];
             rightBuf[ptr] = val[1];
         }
+        val = null;
     };
     return SAASound;
 })();
