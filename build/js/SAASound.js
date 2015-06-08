@@ -531,7 +531,7 @@ var SAAFreq = (function () {
         for (var o = 0, i; o < 8; o++) {
             this.freqs[o] = [];
             for (i = 0; i < 256; i++)
-                this.freqs[o][i] = Math.round(((128e6 << o) >>> 0) / (511 - i));
+                this.freqs[o][i] = Math.round(((32e6 << o) >>> 0) / (511 - i)) << 2;
         }
         this.add = this.freqs[this.curOctave][this.curOffset];
     }
