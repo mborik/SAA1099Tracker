@@ -1,17 +1,40 @@
+/*!
+ * Audio: Audio driver and sound output.
+ * Copyright (c) 2016 Martin Borik <mborik@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom
+ * the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
+ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+//---------------------------------------------------------------------------------------
 var AudioDriver = (function () {
 	function WebAPIAudioDriver() {
 		var audioSource = null;
 		var scriptProcessor = null;
-		var audioContext = new (AudioContext || webkitAudioContext);
+		var audioContext = getCompatible(window, 'AudioContext', true);
 		var audioEventHandler = function(event) {
 			var buf = event.outputBuffer;
 			audioSource.getAudio(buf.getChannelData(0), buf.getChannelData(1), buf.length);
 		}
 
-		if (audioContext.createScriptProcessor != null)
+		if (audioContext.createScriptProcessor !== null)
 			scriptProcessor = audioContext.createScriptProcessor(0, 0, 2);
-		else if (audioContext.createJavaScriptNode != null)
+		else if (audioContext.createJavaScriptNode !== null)
 			scriptProcessor = audioContext.createJavaScriptNode(0, 0, 2);
+		scriptProcessor.onaudioprocess = null;
 
 		this.sampleRate = audioContext.sampleRate;
 		this.bufferSize = scriptProcessor.bufferSize;
@@ -19,7 +42,7 @@ var AudioDriver = (function () {
 		this.setAudioSource = function(audioSrc) { audioSource = audioSrc; }
 
 		this.play = function() {
-			if (!(audioSource && audioSource.getAudio))
+			if (!(audioSource && audioSource.getAudio) || scriptProcessor.onaudioprocess)
 				return;
 			scriptProcessor.onaudioprocess = audioEventHandler;
 			scriptProcessor.connect(audioContext.destination);
@@ -31,7 +54,7 @@ var AudioDriver = (function () {
 		}
 	}
 
-	function FFAudioDriver() {
+	function FallbackAudioDriver() {
 		this.sampleRate = 44100; // seems to sound best in Firefox
 		this.bufferSize = 4096;
 
@@ -84,10 +107,10 @@ var AudioDriver = (function () {
 		}
 	}
 
-	if (AudioContext || webkitAudioContext)
+	if (getCompatible(window, 'AudioContext', false, false))
 		return new WebAPIAudioDriver();
 	else if (typeof(Audio) !== 'undefined')
-		return new FFAudioDriver();
+		return new FallbackAudioDriver();
 	else
 		throw 'Error: No audio driver found (incompatible or obsolete browser)';
 })();

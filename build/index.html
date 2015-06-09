@@ -7,6 +7,7 @@
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/Commons.min.js"></script>
 		<script type="text/javascript" src="js/Audio.min.js"></script>
 		<script type="text/javascript" src="js/Player.min.js"></script>
 		<script type="text/javascript" src="js/SAASound.min.js"></script>
@@ -22,12 +23,17 @@
 			var player = new Player(saa);
 
 			AudioDriver.setAudioSource(player);
-			AudioDriver.play();
 
-			function play() { player.playPosition() }
-			function stop() { player.stopChannel() }
+			function play() {
+                AudioDriver.play();
+			    player.playPosition();
+			}
+			function stop() {
+			    player.stopChannel();
+                setTimeout(function() { AudioDriver.stop() }, 1000);
+			}
 
-			$.getJSON('demosongs/LIZARD.json', function(data) {
+			$.getJSON('demosongs/MAAORAVA.json', function(data) {
 				$('#songName').text(data.title + ' (' + data.author + ')');
 
 				for (var c, i = 0, j, k, p, s, d; i < 32; i++) {
