@@ -44,6 +44,10 @@ module.exports = function(grunt) {
 					}
 				]
 			},
+			"commons": {
+				src: 'src/Commons.js',
+				dest: 'build/js/Commons.js'
+			},
 			"audio": {
 				src: 'src/Audio.js',
 				dest: 'build/js/Audio.js'
@@ -87,6 +91,7 @@ module.exports = function(grunt) {
 				files: {
 					'build/js/SAASound.min.js': 'build/js/SAASound.js',
 					'build/js/Player.min.js': 'build/js/Player.js',
+					'build/js/Commons.min.js': 'build/js/Commons.js',
 					'build/js/Audio.min.js': 'build/js/Audio.js'
 				}
 			}
