@@ -1,6 +1,6 @@
 /*!
  * Audio: Audio driver and sound output.
- * Copyright (c) 2016 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),

@@ -1,6 +1,6 @@
 /*!
  * Commons: Common functions and helpers.
- * Copyright (c) 2016 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -104,3 +104,8 @@ var SyncTimer = (function() {
 
 	return this;
 })();
+
+Number.prototype.toWidth = function(w) {
+	var a = '' + (this.valueOf() >> 0);
+	return ('0000000000' + a).substr(-Math.max(w || 0, a.length));
+}
