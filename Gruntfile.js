@@ -24,9 +24,9 @@ module.exports = function(grunt) {
 				files: [
 					{
 						expand: true,
-						cwd: 'bower_components/bootstrap/dist/',
+						cwd: 'bower_components/bootstrap/dist/fonts/',
 						src: '**',
-						dest: 'build',
+						dest: 'build/fonts/',
 						flatten: false,
 						filter: 'isFile'
 					}
@@ -53,6 +53,19 @@ module.exports = function(grunt) {
 				dest: 'build/js/Audio.js'
 			}
 		},
+		concat: {
+			options: {
+				separator: '\n'
+			},
+			"bootstrap.js": {
+				src: [
+					'bower_components/bootstrap/dist/js/bootstrap.js',
+					'bower_components/bootstrap-touchspin/src/jquery.bootstrap-touchspin.js',
+					'bower_components/bootstrap-toggle/js/bootstrap-toggle.js'
+				],
+				dest: 'build/js/bootstrap.js'
+			}
+		},
 		typescript: {
 			SAASound: {
 				src: [
@@ -74,11 +87,20 @@ module.exports = function(grunt) {
 				src: ['src/**/*.ts'],
 				dest: 'build/js',
 				options: {
-					newLine: '\n',
 					module: 'commonjs',
 					target: 'ES5',
 					preserveConstEnums: true,
 					sourceMap: true
+				}
+			}
+		},
+		less: {
+			'styles': {
+				options: {
+					paths: ['less', 'bower_components/bootstrap/less']
+				},
+				files: {
+					'build/css/bootstrap.css': 'styles/bootstrap.less'
 				}
 			}
 		},
@@ -90,15 +112,22 @@ module.exports = function(grunt) {
 			'scripts': {
 				files: {
 					'build/js/SAASound.min.js': 'build/js/SAASound.js',
+					'build/js/Tracker.min.js': 'build/js/Tracker.js',
 					'build/js/Player.min.js': 'build/js/Player.js',
 					'build/js/Commons.min.js': 'build/js/Commons.js',
-					'build/js/Audio.min.js': 'build/js/Audio.js'
+					'build/js/Audio.min.js': 'build/js/Audio.js',
+					'build/js/bootstrap.min.js': 'build/js/bootstrap.js'
 				}
 			}
 		},
-		concat: {
-			options: {
-				separator: '\n'
+		cssmin: {
+			'styles': {
+				options: {
+					sourceMap: true
+				},
+				files: {
+					'build/css/bootstrap.min.css': 'build/css/bootstrap.css'
+				}
 			}
 		},
 		rename: {
@@ -116,6 +145,7 @@ module.exports = function(grunt) {
 	// Load required modules
 	grunt.loadNpmTasks('grunt-typescript');
 	grunt.loadNpmTasks('grunt-contrib-copy');
+	grunt.loadNpmTasks('grunt-contrib-less');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -123,6 +153,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-rename');
 
 	// Task definitions
-	grunt.registerTask('default', [ 'typescript','copy','uglify','concat','rename' ]);
+	grunt.registerTask('default', [ 'typescript','copy','concat','less','uglify','cssmin','rename' ]);
+	grunt.registerTask('styles', [ 'less','uglify','cssmin' ]);
 	grunt.registerTask('test', [ 'jshint' ]);
 };

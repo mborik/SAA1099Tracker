@@ -1,0 +1,231 @@
+/**
+ * SAA1099Tracker modifications and custom styles
+ */
+.make-my-panel-column(@width) {
+	position: relative;
+	width: (@width * 1px);
+	padding: 0 (@grid-gutter-width / 2);
+	float: left;
+}
+.make-my-column(@width, @height) {
+	position: relative;
+	width: (@width * 1px);
+	height: (@height * 1px);
+	padding: 0 0 @grid-gutter-width @grid-gutter-width;
+	float: left;
+}
+.border-my-column() {
+	padding: 0 @grid-gutter-width @grid-gutter-width @grid-gutter-width;
+	border-right: 1px solid #eee;
+	margin-right: @grid-gutter-width;
+}
+
+body {
+	.user-select(none);
+}
+button {
+	cursor: default !important;
+}
+
+.navbar-brand-custom {
+	font-size: 16px;
+	font-weight: bold;
+}
+.header-fixwidth {
+	width: 160px;
+}
+.songinfo-padding {
+	padding: 16px 0 24px 0;
+}
+.nav-tabs > li {
+	font-weight: bold;
+}
+.panel-heading {
+	border-color: #eee;
+	#gradient.vertical(@body-bg, #f4f4f4);
+	h3 { font-size: @font-size-base }
+}
+
+.glyphicon-play-song {
+	.glyphicon-play();
+}
+.glyphicon-play-song-start {
+	.glyphicon-eject();
+	.rotate(90deg);
+}
+.glyphicon-play-pattern {
+	.glyphicon-play();
+	.rotate(90deg);
+}
+.glyphicon-play-pattern-start {
+	.glyphicon-eject();
+	.rotate(180deg);
+}
+.glyphicon-undo {
+	.glyphicon-share-alt();
+	.scaleX(-1);
+}
+.glyphicon-redo {
+	.glyphicon-share-alt();
+}
+
+.fixed-container {
+	margin: 0 auto;
+	width: 1118px;
+}
+.tab-panel {
+	padding: 0 (@grid-gutter-width / 2);
+}
+.fixed-column {
+	label { margin: (@grid-gutter-width / 2) 0; }
+	input { font-weight: bold }
+}
+.row.separator {
+	margin: 0 0 @grid-gutter-width 0;
+	padding: 0;
+	border-bottom: 1px solid #eee;
+}
+.btn-half {
+	width: 48%;
+}
+.form-control[disabled], label.toggle-off {
+	color: @gray-light !important;
+}
+.col-label {
+	.make-my-column(67, 28);
+}
+.col-buttons {
+	.make-my-column(90, 28);
+	.border-my-column();
+	button { height: 24px }
+}
+.col-edt {
+	.make-my-panel-column(162);
+}
+.col-edt-input {
+	.make-my-column(60, 28);
+}
+.col-pat {
+	.make-my-panel-column(246);
+}
+.col-pos {
+	.make-my-panel-column(238);
+	padding-right: 0;
+}
+.col-pp-input {
+	.make-my-column(60, 28);
+}
+.col-rem {
+	.make-my-panel-column(715);
+}
+.col-chn {
+	.make-my-panel-column(448);
+}
+.col-pos-total {
+	.make-my-column(50, 28);
+	padding: 0;
+
+	&:before {
+		content: "/";
+		display: inline;
+		margin-left: -12px;
+		vertical-align: middle;
+		color: #ccc;
+		font-weight: bold;
+	}
+	input {
+		display: inline;
+	}
+}
+.col-infopanel {
+	width: 370px;
+	height: 22px;
+	border: 1px solid #ccc;
+	margin-left: 74px;
+	margin-top: -2px;
+	font-family: @font-family-monospace;
+	font-weight: bold;
+	padding: 4px 12px;
+	cursor: default;
+
+	#stInfoPanelBPM {
+		float: left;
+		color: @gray-light;
+	}
+	#stInfoPanelTime {
+		float: right;
+		padding: 0 8px;
+	}
+	#stInfoPanelFrames {
+		float: right;
+		color: @gray-light;
+	}
+}
+.col-chn-label {
+	.make-my-column(68, 28);
+	margin-left: 5px;
+}
+.col-chn-buttons {
+	.make-my-column(60, 28);
+	padding: 0 0 0 1px;
+}
+.col-chn-input {
+	.make-my-column(60, 28);
+	padding-left: 1px;
+}
+.row-chn-brd {
+	padding: @grid-gutter-width @grid-gutter-width 0;
+	border: 1px solid #eee;
+	margin-bottom: -@grid-gutter-width;
+}
+
+// TouchSpin extension
+.bootstrap-touchspin .input-group-btn-vertical {
+	position: relative;
+	white-space: nowrap;
+	width: 1%;
+	vertical-align: middle;
+	display: table-cell;
+}
+.bootstrap-touchspin {
+	input {
+		border-top-left-radius: @border-radius-base !important;
+		border-bottom-left-radius: @border-radius-base !important;
+	}
+
+	.input-group-btn-vertical {
+		&>.btn {
+			display: block;
+			float: none;
+			width: 100%;
+			max-width: 100%;
+			padding: 5px 8px;
+			margin-left: -1px;
+			position: relative;
+		}
+		.bootstrap-touchspin-up {
+			border-radius: 0;
+			border-top-right-radius: 4px;
+		}
+		.bootstrap-touchspin-down {
+			margin-top: -2px;
+			border-radius: 0;
+			border-bottom-right-radius: 4px;
+		}
+		i {
+			position: absolute;
+			top: 2px;
+			left: 5px;
+			font-size: 7px;
+			font-weight: normal;
+		}
+	}
+}
+
+@import (inline) "../bower_components/bootstrap-toggle/css/bootstrap-toggle.css";
+
+.toggle-group label {
+	margin: 0;
+	padding: 4px 0 0 0 !important;
+	font-weight: bold;
+}
