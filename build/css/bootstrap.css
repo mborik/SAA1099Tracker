@@ -7200,16 +7200,27 @@ label.toggle-off {
   border: 1px solid #eee;
   margin-bottom: -5px;
 }
+.col-tracklist {
+  position: relative;
+  width: 100%;
+  padding: 0 2.5px;
+  float: left;
+}
+.col-tracklist canvas {
+  display: block;
+  margin: 0 auto;
+  width: 1032px;
+}
+.bootstrap-touchspin input {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+}
 .bootstrap-touchspin .input-group-btn-vertical {
   position: relative;
   white-space: nowrap;
   width: 1%;
   vertical-align: middle;
   display: table-cell;
-}
-.bootstrap-touchspin input {
-  border-top-left-radius: 4px !important;
-  border-bottom-left-radius: 4px !important;
 }
 .bootstrap-touchspin .input-group-btn-vertical > .btn {
   display: block;
@@ -7221,13 +7232,11 @@ label.toggle-off {
   position: relative;
 }
 .bootstrap-touchspin .input-group-btn-vertical .bootstrap-touchspin-up {
-  border-radius: 0;
-  border-top-right-radius: 4px;
+  border-radius: 0 4px 0 0;
 }
 .bootstrap-touchspin .input-group-btn-vertical .bootstrap-touchspin-down {
   margin-top: -2px;
-  border-radius: 0;
-  border-bottom-right-radius: 4px;
+  border-radius: 0 0 4px 0;
 }
 .bootstrap-touchspin .input-group-btn-vertical i {
   position: absolute;
@@ -7235,6 +7244,11 @@ label.toggle-off {
   left: 5px;
   font-size: 7px;
   font-weight: normal;
+}
+.toggle-group label {
+  margin: 0 !important;
+  padding: 4px 0 0 0 !important;
+  font-weight: bold !important;
 }
 /*! ========================================================================
  * Bootstrap Toggle: bootstrap-toggle.css v2.2.0
@@ -7320,8 +7334,3 @@ label.toggle-off {
 .toggle-off.btn-xs { padding-left: 12px; }
 
 
-.toggle-group label {
-  margin: 0;
-  padding: 4px 0 0 0 !important;
-  font-weight: bold;
-}
