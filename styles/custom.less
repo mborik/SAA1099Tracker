@@ -3,13 +3,13 @@
  */
 .make-my-panel-column(@width) {
 	position: relative;
-	width: (@width * 1px);
+	width: @width;
 	padding: 0 (@grid-gutter-width / 2);
 	float: left;
 }
 .make-my-column(@width, @height) {
 	position: relative;
-	width: (@width * 1px);
+	width: @width;
 	height: (@height * 1px);
 	padding: 0 0 @grid-gutter-width @grid-gutter-width;
 	float: left;
@@ -92,37 +92,37 @@ button {
 	color: @gray-light !important;
 }
 .col-label {
-	.make-my-column(67, 28);
+	.make-my-column(67px, 28);
 }
 .col-buttons {
-	.make-my-column(90, 28);
+	.make-my-column(90px, 28);
 	.border-my-column();
 	button { height: 24px }
 }
 .col-edt {
-	.make-my-panel-column(162);
+	.make-my-panel-column(162px);
 }
 .col-edt-input {
-	.make-my-column(60, 28);
+	.make-my-column(60px, 28);
 }
 .col-pat {
-	.make-my-panel-column(246);
+	.make-my-panel-column(246px);
 }
 .col-pos {
-	.make-my-panel-column(238);
+	.make-my-panel-column(238px);
 	padding-right: 0;
 }
 .col-pp-input {
-	.make-my-column(60, 28);
+	.make-my-column(60px, 28);
 }
 .col-rem {
-	.make-my-panel-column(715);
+	.make-my-panel-column(715px);
 }
 .col-chn {
-	.make-my-panel-column(448);
+	.make-my-panel-column(448px);
 }
 .col-pos-total {
-	.make-my-column(50, 28);
+	.make-my-column(50px, 28);
 	padding: 0;
 
 	&:before {
@@ -162,15 +162,15 @@ button {
 	}
 }
 .col-chn-label {
-	.make-my-column(68, 28);
+	.make-my-column(68px, 28);
 	margin-left: 5px;
 }
 .col-chn-buttons {
-	.make-my-column(60, 28);
+	.make-my-column(60px, 28);
 	padding: 0 0 0 1px;
 }
 .col-chn-input {
-	.make-my-column(60, 28);
+	.make-my-column(60px, 28);
 	padding-left: 1px;
 }
 .row-chn-brd {
@@ -178,15 +178,17 @@ button {
 	border: 1px solid #eee;
 	margin-bottom: -@grid-gutter-width;
 }
+.col-tracklist {
+	.make-my-panel-column(100%);
+
+	canvas {
+		display: block;
+		margin: 0 auto;
+		width: 1032px;
+	}
+}
 
 // TouchSpin extension
-.bootstrap-touchspin .input-group-btn-vertical {
-	position: relative;
-	white-space: nowrap;
-	width: 1%;
-	vertical-align: middle;
-	display: table-cell;
-}
 .bootstrap-touchspin {
 	input {
 		border-top-left-radius: @border-radius-base !important;
@@ -194,6 +196,12 @@ button {
 	}
 
 	.input-group-btn-vertical {
+		position: relative;
+		white-space: nowrap;
+		width: 1%;
+		vertical-align: middle;
+		display: table-cell;
+
 		&>.btn {
 			display: block;
 			float: none;
@@ -204,13 +212,11 @@ button {
 			position: relative;
 		}
 		.bootstrap-touchspin-up {
-			border-radius: 0;
-			border-top-right-radius: 4px;
+			border-radius: 0 4px 0 0;
 		}
 		.bootstrap-touchspin-down {
 			margin-top: -2px;
-			border-radius: 0;
-			border-bottom-right-radius: 4px;
+			border-radius: 0 0 4px 0;
 		}
 		i {
 			position: absolute;
@@ -222,10 +228,11 @@ button {
 	}
 }
 
-@import (inline) "../bower_components/bootstrap-toggle/css/bootstrap-toggle.css";
-
+// Toggle Button extension
 .toggle-group label {
-	margin: 0;
+	margin: 0 !important;
 	padding: 4px 0 0 0 !important;
-	font-weight: bold;
+	font-weight: bold !important;
 }
+
+@import (inline) "../bower_components/bootstrap-toggle/css/bootstrap-toggle.css";
