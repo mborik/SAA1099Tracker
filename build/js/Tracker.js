@@ -83,8 +83,10 @@ var Tracker = (function () {
                 if (app.player.changedPosition)
                     app.updatePanelPosition();
                 app.updatePanelInfo();
+                app.player.changedPosition = false;
+                app.player.changedLine = false;
             }
-        }, 40);
+        }, 20);
     }
     Tracker.prototype.populateGUI = function () {
         var i, app = this, populatedElementsTable = [
@@ -102,14 +104,16 @@ var Tracker = (function () {
                 selector: '#scAutoSmp',
                 method: 'TouchSpin',
                 data: {
-                    initval: '-',
+                    initval: '0',
+                    radix: 32,
                     min: 0, max: 31
                 }
             }, {
                 selector: '#scAutoOrn',
                 method: 'TouchSpin',
                 data: {
-                    initval: '-',
+                    initval: '0',
+                    radix: 16,
                     min: 0, max: 15
                 }
             }, {
