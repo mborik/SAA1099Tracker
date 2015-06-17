@@ -64,6 +64,14 @@ module.exports = function(grunt) {
 					'bower_components/bootstrap-toggle/js/bootstrap-toggle.js'
 				],
 				dest: 'build/js/bootstrap.js'
+			},
+			"Tracker.js": {
+				src: [
+					'src/Tracker.js',
+					'src/Tracker.controls.js',
+					'src/Tracker.gui.js'
+				],
+				dest: 'build/js/Tracker.js'
 			}
 		},
 		typescript: {
