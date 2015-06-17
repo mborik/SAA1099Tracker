@@ -70,13 +70,19 @@ var Tracker = (function() {
 
 		this.settings = {
 			tracklistLines: 15,
-			tracklistZoom: 2,
+			tracklistLineHeight: 8,
 			hexTracklines: true,
 			hexSampleFreq: false,
 			audioInterrupt: 50,
 			audioBuffers: 0
 		};
 
+		this.tracklist = { obj: null, ctx: null };
+		this.smpedit   = { obj: null, ctx: null };
+		this.ornedit   = { obj: null, ctx: null };
+
+
+	// constructor {
 		this.player = new Player(new SAASound(AudioDriver.sampleRate));
 
 		AudioDriver.setAudioSource(this.player);
@@ -96,6 +102,7 @@ var Tracker = (function() {
 				app.player.changedLine = false;
 			}
 		}, 20);
+	// }
 	}
 
 	Tracker.prototype.loadDemosong = function (name) {

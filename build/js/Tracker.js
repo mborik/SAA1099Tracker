@@ -70,13 +70,19 @@ var Tracker = (function() {
 
 		this.settings = {
 			tracklistLines: 15,
-			tracklistZoom: 2,
+			tracklistLineHeight: 8,
 			hexTracklines: true,
 			hexSampleFreq: false,
 			audioInterrupt: 50,
 			audioBuffers: 0
 		};
 
+		this.tracklist = { obj: null, ctx: null };
+		this.smpedit   = { obj: null, ctx: null };
+		this.ornedit   = { obj: null, ctx: null };
+
+
+	// constructor {
 		this.player = new Player(new SAASound(AudioDriver.sampleRate));
 
 		AudioDriver.setAudioSource(this.player);
@@ -96,6 +102,7 @@ var Tracker = (function() {
 				app.player.changedLine = false;
 			}
 		}, 20);
+	// }
 	}
 
 	Tracker.prototype.loadDemosong = function (name) {
@@ -340,6 +347,28 @@ Tracker.prototype.updatePanelPosition = function () {
 Tracker.prototype.populateGUI = function () {
 	var i, app = this, populatedElementsTable = [
 		{
+			selector: 'canvas',
+			method:   'each',
+			handler:  function(i, el) {
+				var name = el.id, o = app[name];
+				if (o !== undefined) {
+					o.obj = el;
+					o.ctx = el.getContext('2d');
+
+					// first height initialization
+					if (name === 'tracklist') {
+						o.setHeight = function(height) {
+							if (height === void 0)
+								height = app.settings.tracklistLines;
+							height *= app.settings.tracklistLineHeight;
+							$(this.obj).prop('height', height).css({ 'height': height * 2 });
+						}
+
+						o.setHeight();
+					}
+				}
+			}
+		}, {
 			selector: '[data-toggle="tooltip"]',
 			method:   'tooltip'
 		}, {

@@ -3,6 +3,28 @@
 Tracker.prototype.populateGUI = function () {
 	var i, app = this, populatedElementsTable = [
 		{
+			selector: 'canvas',
+			method:   'each',
+			handler:  function(i, el) {
+				var name = el.id, o = app[name];
+				if (o !== undefined) {
+					o.obj = el;
+					o.ctx = el.getContext('2d');
+
+					// first height initialization
+					if (name === 'tracklist') {
+						o.setHeight = function(height) {
+							if (height === void 0)
+								height = app.settings.tracklistLines;
+							height *= app.settings.tracklistLineHeight;
+							$(this.obj).prop('height', height).css({ 'height': height * 2 });
+						}
+
+						o.setHeight();
+					}
+				}
+			}
+		}, {
 			selector: '[data-toggle="tooltip"]',
 			method:   'tooltip'
 		}, {
