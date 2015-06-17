@@ -7144,6 +7144,7 @@ label.toggle-off {
   vertical-align: middle;
   color: #ccc;
   font-weight: bold;
+  padding-right: 4px;
 }
 .col-pos-total input {
   display: inline;
@@ -7206,10 +7207,22 @@ label.toggle-off {
   padding: 0 2.5px;
   float: left;
 }
+.col-tracklist > .tracklist-panel {
+  border: 1px solid #dddddd;
+  margin-right: -5px;
+  padding: 5px;
+}
 .col-tracklist canvas {
   display: block;
   margin: 0 auto;
   width: 1032px;
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
 }
 .bootstrap-touchspin input {
   border-top-left-radius: 4px !important;

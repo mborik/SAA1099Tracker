@@ -132,6 +132,7 @@ button {
 		vertical-align: middle;
 		color: #ccc;
 		font-weight: bold;
+		padding-right: 4px;
 	}
 	input {
 		display: inline;
@@ -181,10 +182,23 @@ button {
 .col-tracklist {
 	.make-my-panel-column(100%);
 
+	&>.tracklist-panel {
+		border: 1px solid @table-border-color;
+		margin-right: -@grid-gutter-width;
+		padding: @grid-gutter-width;
+	}
+
 	canvas {
 		display: block;
 		margin: 0 auto;
 		width: 1032px;
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		image-rendering: crisp-edges;
+		image-rendering: pixelated;
+		-ms-interpolation-mode: nearest-neighbor;
 	}
 }
 
