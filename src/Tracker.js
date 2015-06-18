@@ -42,9 +42,6 @@ var TracklistPosition = (function () {
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker() {
-		this.isActive = false;
-		this.isInitialized = false;
-
 		this.modePlay = false;
 		this.modeEdit = false;
 		this.modeEditChannel = 0;
@@ -70,13 +67,14 @@ var Tracker = (function() {
 
 		this.settings = {
 			tracklistLines: 15,
-			tracklistLineHeight: 8,
+			tracklistLineHeight: 9,
 			hexTracklines: true,
 			hexSampleFreq: false,
 			audioInterrupt: 50,
 			audioBuffers: 0
 		};
 
+		this.pixelfont = { obj: null, ctx: null };
 		this.tracklist = { obj: null, ctx: null };
 		this.smpedit   = { obj: null, ctx: null };
 		this.ornedit   = { obj: null, ctx: null };

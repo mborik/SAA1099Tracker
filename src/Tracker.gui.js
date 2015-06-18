@@ -21,6 +21,7 @@ Tracker.prototype.populateGUI = function () {
 						}
 
 						o.setHeight();
+						app.initPixelFont();
 					}
 				}
 			}
