@@ -3,6 +3,22 @@
 Tracker.prototype.populateGUI = function () {
 	var i, app = this, populatedElementsTable = [
 		{
+			selector: '[data-toggle="tooltip"]',
+			method:   'tooltip',
+			data:     {
+				animation: false,
+				container: '.tooltip-target',
+				viewport:  { selector: '.tooltip-target', padding: 0 },
+				template:  '<div class="tooltip tooltip-custom" role="tooltip"><div class="tooltip-inner"></div></div>'
+			}
+		}, {
+			selector: 'img.pixelfont',
+			method:   'load',
+			handler:  function(e) {
+				app.initPixelFont(e.target);
+				app.updateTracklist();
+			}
+		}, {
 			selector: 'canvas',
 			method:   'each',
 			handler:  function(i, el) {
@@ -21,18 +37,8 @@ Tracker.prototype.populateGUI = function () {
 						}
 
 						o.setHeight();
-						app.initPixelFont(function() { app.updateTracklist() });
 					}
 				}
-			}
-		}, {
-			selector: '[data-toggle="tooltip"]',
-			method:   'tooltip',
-			data:     {
-				animation: false,
-				container: '.tooltip-target',
-				viewport: { selector: '.tooltip-target', padding: 0 },
-				template: '<div class="tooltip tooltip-custom" role="tooltip"><div class="tooltip-inner"></div></div>'
 			}
 		}, {
 			selector: '#scOctave',
@@ -118,6 +124,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.currentPosition = $(this).val() - 1;
 				app.updatePanelInfo();
 				app.updatePanelPosition();
+				app.updateTracklist();
 			}
 		}, {
 			selector: '#scPattern',

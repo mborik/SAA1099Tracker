@@ -13,64 +13,56 @@
  *   8 - [ fg: WHITE, bg: DARKRED ]
  *   9 - [ fg:  GRAY, bg: DARKRED ]
  */
-Tracker.prototype.initPixelFont = function (callback) {
+Tracker.prototype.initPixelFont = function (font) {
 	// backgrounds (white, red, hilite, block)
 	var bg = [ '#fff', '#f00', '#38c', '#000', '#800' ],
-		o = this.pixelfont, i, l = bg.length * 10, w, copy, copyctx,
-		font = $('.pixelfont')[0];
+		o = this.pixelfont, i, l = bg.length * 10,
+		w = font.width, copy, copyctx;
 
-	font.onload = function() {
-		w = font.width;
+	o.obj = document.createElement('canvas');
+	o.obj.width = w;
+	o.obj.height = l;
+	o.ctx = o.obj.getContext('2d');
 
-		o.obj = document.createElement('canvas');
-		o.obj.width = w;
-		o.obj.height = l;
-		o.ctx = o.obj.getContext('2d');
-
-		for (i = 0; i < l; i += 10) {
-			o.ctx.fillStyle = bg[i / 10];
-			o.ctx.fillRect(0, i, w, 10);
-		}
-
-		copy = document.createElement('canvas');
-		copy.width = w;
-		copy.height = 5;
-		copyctx = copy.getContext('2d');
-
-		copyctx.save();
-		copyctx.clearRect(0, 0, w, 5);
-		copyctx.drawImage(font, 0, 0);
-
-		copyctx.fillStyle = '#fff';
-		copyctx.globalCompositeOperation = "source-in";
-		copyctx.fillRect(0, 0, w, 5);
-		copyctx.restore();
-
-		for (i = 0; i < l; i += 10)
-			o.ctx.drawImage(copy, 0, i);
-
-		copyctx.save();
-		copyctx.clearRect(0, 0, w, 5);
-		copyctx.drawImage(font, 0, 0);
-
-		copyctx.fillStyle = '#aaa';
-		copyctx.globalCompositeOperation = "source-in";
-		copyctx.fillRect(0, 0, w, 5);
-		copyctx.restore();
-
-		for (i = 5; i < l; i += 10)
-			o.ctx.drawImage(copy, 0, i);
-
-		o.ctx.drawImage(font, 0, 0);
-
-		// fire callback if needed
-		if (callback !== void 0)
-			callback();
-
-		// throw it to the garbage...
-		copyctx = null;
-		copy = null;
+	for (i = 0; i < l; i += 10) {
+		o.ctx.fillStyle = bg[i / 10];
+		o.ctx.fillRect(0, i, w, 10);
 	}
+
+	copy = document.createElement('canvas');
+	copy.width = w;
+	copy.height = 5;
+	copyctx = copy.getContext('2d');
+
+	copyctx.save();
+	copyctx.clearRect(0, 0, w, 5);
+	copyctx.drawImage(font, 0, 0);
+
+	copyctx.fillStyle = '#fff';
+	copyctx.globalCompositeOperation = "source-in";
+	copyctx.fillRect(0, 0, w, 5);
+	copyctx.restore();
+
+	for (i = 0; i < l; i += 10)
+		o.ctx.drawImage(copy, 0, i);
+
+	copyctx.save();
+	copyctx.clearRect(0, 0, w, 5);
+	copyctx.drawImage(font, 0, 0);
+
+	copyctx.fillStyle = '#aaa';
+	copyctx.globalCompositeOperation = "source-in";
+	copyctx.fillRect(0, 0, w, 5);
+	copyctx.restore();
+
+	for (i = 5; i < l; i += 10)
+		o.ctx.drawImage(copy, 0, i);
+
+	o.ctx.drawImage(font, 0, 0);
+
+	// throw it to the garbage...
+	copyctx = null;
+	copy = null;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateTracklist = function () {
@@ -103,8 +95,8 @@ Tracker.prototype.updateTracklist = function () {
 
 		if (line >= 0 && line < pp.length) {
 			buf = ('0' + line.toString(hexdec)).substr(-2);
-			ctx.drawImage(font, charFromBuf(0), ccb, 6, 5, center, y, 6, 5);
-			ctx.drawImage(font, charFromBuf(1), ccb, 6, 5, center + 6, y, 6, 5);
+			ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, center, y, 5, 5);
+			ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, center + 6, y, 5, 5);
 		}
 		else {
 			ctx.fillStyle = '#fff';
@@ -136,9 +128,9 @@ Tracker.prototype.updateTracklist = function () {
 
 					ctx.fillStyle = '#800';
 					if (j)
-						ctx.fillRect(x, y - vpad, 7, lineHeight);
+						ctx.fillRect(x - 1, y - vpad, 7, lineHeight);
 					else
-						ctx.fillRect(x - 2, y - vpad, 23, lineHeight);
+						ctx.fillRect(x - 2, y - vpad, 22, lineHeight);
 
 					cc = 40; // col.combination: 6:WHITE|DARKRED
 				}
@@ -188,7 +180,7 @@ Tracker.prototype.updateTracklist = function () {
 					}
 
 					buf = (k < 0) ? '\x7f' : k.toString(36);
-					ctx.drawImage(font, charFromBuf(), cc, 6, 5, x, y, 6, 5);
+					ctx.drawImage(font, charFromBuf(), cc, 5, 5, x, y, 5, 5);
 				}
 				else {
 					buf = '---';
@@ -198,9 +190,9 @@ Tracker.prototype.updateTracklist = function () {
 					else if (k.tone)
 						buf = player.tones[k.tone].txt;
 
-					ctx.drawImage(font, charFromBuf(0), cc, 6, 5, x, y, 6, 5);
-					ctx.drawImage(font, charFromBuf(1), cc, 6, 5, x + 6, y, 6, 5);
-					ctx.drawImage(font, charFromBuf(2), cc, 6, 5, x + 12, y, 6, 5);
+					ctx.drawImage(font, charFromBuf(0), cc, 5, 5, x, y, 5, 5);
+					ctx.drawImage(font, charFromBuf(1), cc, 5, 5, x + 6, y, 5, 5);
+					ctx.drawImage(font, charFromBuf(2), cc, 5, 5, x + 12, y, 5, 5);
 				}
 			}
 		}
