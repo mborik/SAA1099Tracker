@@ -69,7 +69,7 @@ Tracker.prototype.initPixelFont = function () {
 		font = null;
 	}
 
-	font.src = 'fonts/tracklist.png';
+	font.src = 'img/tracklist.png';
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.editorRepaint = function () {
