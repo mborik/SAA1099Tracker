@@ -21,18 +21,18 @@
 				<div class="navbar-brand header-fixwidth navbar-brand-custom">SAA1099Tracker</div>
 				<div>
 					<ul class="nav navbar-nav">
-						<li><a id="miFileNew" data-toggle="tooltip" data-placement="bottom" title="New [Ctrl+N]"><span class="glyphicon glyphicon-file"></span></a></li>
-						<li><a id="miFileOpen" data-toggle="tooltip" data-placement="bottom" title="Open [Ctrl+O]"><span class="glyphicon glyphicon-folder-open"></span></a></li>
-						<li><a id="miFileSave" data-toggle="tooltip" data-placement="bottom" title="Save [Ctrl+S]"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
-						<li><a id="miFileSaveAs" data-toggle="tooltip" data-placement="bottom" title="Save&nbsp;as..."><span class="glyphicon glyphicon-floppy-save"></span>&ensp;</a></li>
+						<li><a id="miFileNew" data-toggle="tooltip" title="New [Ctrl+N]"><span class="glyphicon glyphicon-file"></span></a></li>
+						<li><a id="miFileOpen" data-toggle="tooltip" title="Open [Ctrl+O]"><span class="glyphicon glyphicon-folder-open"></span></a></li>
+						<li><a id="miFileSave" data-toggle="tooltip" title="Save [Ctrl+S]"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
+						<li><a id="miFileSaveAs" data-toggle="tooltip" title="Save as..."><span class="glyphicon glyphicon-floppy-save"></span>&ensp;</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-import"></span>&ensp;Import&nbsp;<span class="caret"></span></a>
-							<ul class="dropdown-menu">
-								<li><a id="miFileImportPT2">ProTracker II module...</a></li>
-								<li><a id="miFileImportETrack">E-Tracker module...</a></li>
+							<ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+								<li><a id="miFileImportPT2" data-toggle="tooltip" title="Create new file converting from song module of ProTracker II (Sam Coupé)...">ProTracker II module...</a></li>
+								<li><a id="miFileImportETrack" data-toggle="tooltip" title="Create new file converting from song module of E-Tracker (Sam Coupé)...">E-Tracker module...</a></li>
 								<li class="divider"></li>
 								<li class="dropdown-submenu">
-									<a href="#">Demosong</a>
+									<a id="miFileImportDemosong">Demosong</a>
 									<ul class="dropdown-menu">
 										<li><a id="miFileImportDemo1" data-filename="MAAORAVA">Maaorava</a></li>
 										<li><a id="miFileImportDemo6" data-filename="LIZARD">Lizard</a></li>
@@ -46,21 +46,21 @@
 						</li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-export"></span>&ensp;Export&nbsp;<span class="caret"></span>&ensp;</a>
-							<ul class="dropdown-menu">
-								<li><a id="miFileExportCompile">Binary compilation...</a></li>
+							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+								<li><a id="miFileExportCompile" data-toggle="tooltip" title="Create binary compilation of this song for specific platform...">Binary compilation...</a></li>
 							</ul>
 						</li>
 						<li class="divider-vertical"></li>
-						<li><a id="miEditCut" data-toggle="tooltip" data-placement="bottom" title="Cut [Ctrl+X]"><span class="glyphicon glyphicon-scissors"></span></a></li>
-						<li><a id="miEditCopy" data-toggle="tooltip" data-placement="bottom" title="Copy [Ctrl+C]"><span class="glyphicon glyphicon-copy"></span></a></li>
-						<li><a id="miEditPaste" data-toggle="tooltip" data-placement="bottom" title="Paste [Ctrl+V]"><span class="glyphicon glyphicon-paste"></span></a></li>
-						<li><a id="miEditClear" data-toggle="tooltip" data-placement="bottom" title="Clear [Ctrl+D]"><span class="glyphicon glyphicon-trash"></span></a></li>
+						<li><a id="miEditCut" data-toggle="tooltip" title="Cut [Ctrl+X]"><span class="glyphicon glyphicon-scissors"></span></a></li>
+						<li><a id="miEditCopy" data-toggle="tooltip" title="Copy [Ctrl+C]"><span class="glyphicon glyphicon-copy"></span></a></li>
+						<li><a id="miEditPaste" data-toggle="tooltip" title="Paste [Ctrl+V]"><span class="glyphicon glyphicon-paste"></span></a></li>
+						<li><a id="miEditClear" data-toggle="tooltip" title="Clear [Ctrl+D]"><span class="glyphicon glyphicon-trash"></span></a></li>
 						<li class="divider-vertical"></li>
-						<li><a id="miEditUndo" data-toggle="tooltip" data-placement="bottom" title="Undo [Ctrl+Z]"><span class="glyphicon glyphicon-undo"></span></a></li>
-						<li><a id="miEditRedo" data-toggle="tooltip" data-placement="bottom" title="Redo [Ctrl+Y,Ctrl+Shift+Z]"><span class="glyphicon glyphicon-redo"></span></a></li>
+						<li><a id="miEditUndo" data-toggle="tooltip" title="Undo [Ctrl+Z]"><span class="glyphicon glyphicon-undo"></span></a></li>
+						<li><a id="miEditRedo" data-toggle="tooltip" title="Redo [Ctrl+Y, Ctrl+Shift+Z]"><span class="glyphicon glyphicon-redo"></span></a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
-						<li><a id="miSpecialLogin"><span class="glyphicon glyphicon-user"></span>&ensp;Login</a></li>
+						<li><a id="miSpecialLogin" data-toggle="tooltip" title="Login to SAA-1099 cloud for musicians..."><span class="glyphicon glyphicon-user"></span>&ensp;Login</a></li>
 					</ul>
 				</div>
 			</div>
@@ -68,15 +68,15 @@
 				<div class="navbar-brand header-fixwidth"></div>
 				<div>
 					<ul class="nav navbar-nav">
-						<li><a id="miStop" data-toggle="tooltip" data-placement="bottom" title="Stop [Esc]"><span class="glyphicon glyphicon-stop"></span></a></li>
-						<li><a id="miSongPlay" data-toggle="tooltip" data-placement="bottom" title="Play&nbsp;song [F5]"><span class="glyphicon glyphicon-play-song"></span></a></li>
-						<li><a id="miSongPlayStart" data-toggle="tooltip" data-placement="bottom" title="Play&nbsp;song&nbsp;from&nbsp;start [F6]"><span class="glyphicon glyphicon-play-song-start"></span></a></li>
-						<li><a id="miPosPlay" data-toggle="tooltip" data-placement="bottom" title="Play&nbsp;position [F7]"><span class="glyphicon glyphicon-play-pattern"></span></a></li>
-						<li><a id="miPosPlayStart" data-toggle="tooltip" data-placement="bottom" title="Play&nbsp;position&nbsp;from&nbsp;start [F8]"><span class="glyphicon glyphicon-play-pattern-start"></span></a></li>
-						<li><a id="miToggleLoop" data-toggle="tooltip" data-placement="bottom" title="Toggle&nbsp;repeat [F11]"><span class="glyphicon glyphicon-repeat"></span></a></li>
+						<li><a id="miStop" data-toggle="tooltip" title="Stop [Esc]"><span class="glyphicon glyphicon-stop"></span></a></li>
+						<li><a id="miSongPlay" data-toggle="tooltip" title="Play song [F5]"><span class="glyphicon glyphicon-play-song"></span></a></li>
+						<li><a id="miSongPlayStart" data-toggle="tooltip" title="Play song from start [F6]"><span class="glyphicon glyphicon-play-song-start"></span></a></li>
+						<li><a id="miPosPlay" data-toggle="tooltip" title="Play position [F7]"><span class="glyphicon glyphicon-play-pattern"></span></a></li>
+						<li><a id="miPosPlayStart" data-toggle="tooltip" title="Play position from start [F8]"><span class="glyphicon glyphicon-play-pattern-start"></span></a></li>
+						<li><a id="miToggleLoop" data-toggle="tooltip" title="Toggle repeat [F11]"><span class="glyphicon glyphicon-repeat"></span></a></li>
 						<li class="divider-vertical"></li>
-						<li><a id="miManager" data-toggle="tooltip" data-placement="bottom" title="Track&nbsp;manager [F4]"><span class="glyphicon glyphicon-tasks"></span></a></li>
-						<li><a id="miPreferences" data-toggle="tooltip" data-placement="bottom" title="Preferences [F9]"><span class="glyphicon glyphicon-wrench"></span></a></li>
+						<li><a id="miManager" data-toggle="tooltip" title="Track manager [F4]"><span class="glyphicon glyphicon-tasks"></span></a></li>
+						<li><a id="miPreferences" data-toggle="tooltip" title="Preferences [F9]"><span class="glyphicon glyphicon-wrench"></span></a></li>
 					</ul>
 				</div>
 			</div>
@@ -230,6 +230,13 @@
 					</div>
 				</div>
 			</div>
+		</div>
+		<div id="statusbar" class="tooltip-target"></div>
+		<div id="imgstore" hidden>
+			<img src="img/tracklist.png" class="pixelfont" />
+			<img src="img/smpedit_amp.png" class="smpedit" />
+			<img src="img/smpedit_noise.png" class="smpedit" />
+			<img src="img/smpedit_range.png" class="smpedit" />
 		</div>
 	</body>
 </html>

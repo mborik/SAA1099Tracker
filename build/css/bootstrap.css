@@ -6981,7 +6981,7 @@ button {
   width: 160px;
 }
 .songinfo-padding {
-  padding: 16px 0 24px 0;
+  padding: 6px 0 18px 0;
 }
 .nav-tabs > li {
   font-weight: bold;
@@ -7212,6 +7212,9 @@ label.toggle-off {
   margin-right: -5px;
   padding: 5px;
 }
+.col-tracklist > .tracklist-panel.edit {
+  border: 2px solid #ff0000;
+}
 .col-tracklist canvas {
   display: block;
   margin: 0 auto;
@@ -7223,6 +7226,44 @@ label.toggle-off {
   image-rendering: crisp-edges;
   image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
+}
+#statusbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  width: 100%;
+  height: 24px;
+  min-height: 24px;
+  background: #fcfcff;
+  border-top: 1px solid #dbdbff;
+  z-index: 1000;
+}
+#statusbar .tooltip-custom {
+  font-size: 12px !important;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-weight: bold;
+  position: relative !important;
+  left: inherit !important;
+  right: inherit !important;
+  top: inherit !important;
+  bottom: inherit !important;
+  display: block !important;
+  width: 1118px;
+  height: 24px;
+  margin: 0 auto;
+  padding: 5px;
+  overflow: hidden;
+  opacity: 1 !important;
+}
+#statusbar .tooltip-inner {
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  color: #000000 !important;
+  max-width: inherit !important;
+  display: inline !important;
 }
 .bootstrap-touchspin input {
   border-top-left-radius: 4px !important;

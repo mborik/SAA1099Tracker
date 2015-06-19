@@ -20,6 +20,9 @@
 	margin-right: @grid-gutter-width;
 }
 
+@tracker-base-width: 1118px;
+
+//---------------------------------------------------------------------------------------
 body {
 	.user-select(none);
 }
@@ -35,7 +38,7 @@ button {
 	width: 160px;
 }
 .songinfo-padding {
-	padding: 16px 0 24px 0;
+	padding: 6px 0 18px 0;
 }
 .nav-tabs > li {
 	font-weight: bold;
@@ -71,7 +74,7 @@ button {
 
 .fixed-container {
 	margin: 0 auto;
-	width: 1118px;
+	width: @tracker-base-width;
 }
 .tab-panel {
 	padding: 0 (@grid-gutter-width / 2);
@@ -186,6 +189,8 @@ button {
 		border: 1px solid @table-border-color;
 		margin-right: -@grid-gutter-width;
 		padding: @grid-gutter-width;
+
+		&.edit { border: 2px solid #f00 }
 	}
 
 	canvas {
@@ -199,6 +204,46 @@ button {
 		image-rendering: crisp-edges;
 		image-rendering: pixelated;
 		-ms-interpolation-mode: nearest-neighbor;
+	}
+}
+
+#statusbar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 1px;
+	width: 100%;
+	height: @navbar-height / 4 * 3;
+	min-height: @navbar-height / 4 * 3;
+	background: @navbar-default-bg;
+	border-top: 1px solid @navbar-default-border;
+	z-index: 1000;
+
+	.tooltip-custom {
+		font-size: @font-size-base !important;
+		font-family: @font-family-monospace;
+		font-weight: bold;
+		position: relative !important;
+		left: inherit !important;
+		right: inherit !important;
+		top: inherit !important;
+		bottom: inherit !important;
+		display: block !important;
+		width: @tracker-base-width;
+		height: @navbar-height / 4 * 3;
+		margin: 0 auto;
+		padding: @grid-gutter-width;
+		overflow: hidden;
+		opacity: 1 !important;
+	}
+	.tooltip-inner {
+		border: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		background: none !important;
+		color: @text-color !important;
+		max-width: inherit !important;
+		display: inline !important;
 	}
 }
 

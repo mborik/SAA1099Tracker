@@ -13,11 +13,11 @@
  *   8 - [ fg: WHITE, bg: DARKRED ]
  *   9 - [ fg:  GRAY, bg: DARKRED ]
  */
-Tracker.prototype.initPixelFont = function () {
+Tracker.prototype.initPixelFont = function (callback) {
 	// backgrounds (white, red, hilite, block)
 	var bg = [ '#fff', '#f00', '#38c', '#000', '#800' ],
 		o = this.pixelfont, i, l = bg.length * 10, w, copy, copyctx,
-		font = new Image();
+		font = $('.pixelfont')[0];
 
 	font.onload = function() {
 		w = font.width;
@@ -63,16 +63,17 @@ Tracker.prototype.initPixelFont = function () {
 
 		o.ctx.drawImage(font, 0, 0);
 
+		// fire callback if needed
+		if (callback !== void 0)
+			callback();
+
 		// throw it to the garbage...
 		copyctx = null;
 		copy = null;
-		font = null;
 	}
-
-	font.src = 'img/tracklist.png';
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.editorRepaint = function () {
+Tracker.prototype.updateTracklist = function () {
 	var columns = [ 0, 4, 5, 6, 7, 9, 10, 11 ],
 		selWidth = 78, // (12 columns + 1 padding) * fontWidth
 		lineWidth = 516, // (((12 columns + 2 padding) * 6 channels) + 2 tracknumber) * fontWidth
@@ -134,7 +135,11 @@ Tracker.prototype.editorRepaint = function () {
 					this.modeEditColumn === j) {
 
 					ctx.fillStyle = '#800';
-					ctx.fillRect(x - 2, y - vpad, j ? 10 : 22, lineHeight);
+					if (j)
+						ctx.fillRect(x, y - vpad, 7, lineHeight);
+					else
+						ctx.fillRect(x - 2, y - vpad, 23, lineHeight);
+
 					cc = 40; // col.combination: 6:WHITE|DARKRED
 				}
 

@@ -66,7 +66,7 @@ var Tracker = (function() {
 		this.selectionLen = 0;
 
 		this.settings = {
-			tracklistLines: 15,
+			tracklistLines: 17,
 			tracklistLineHeight: 9,
 			hexTracklines: true,
 			hexSampleFreq: false,
@@ -95,7 +95,7 @@ var Tracker = (function() {
 				if (app.player.changedPosition)
 					app.updatePanelPosition();
 				app.updatePanelInfo();
-				app.editorRepaint();
+				app.updateTracklist();
 
 				app.player.changedPosition = false;
 				app.player.changedLine = false;
@@ -188,6 +188,7 @@ var Tracker = (function() {
 			tracker.ctrlRowStep = data.config.ctrlRowStep;
 
 			tracker.updatePanels();
+			tracker.updateTracklist();
 		});
 	};
 
