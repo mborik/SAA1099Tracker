@@ -95,6 +95,7 @@ var Tracker = (function() {
 				if (app.player.changedPosition)
 					app.updatePanelPosition();
 				app.updatePanelInfo();
+				app.editorRepaint();
 
 				app.player.changedPosition = false;
 				app.player.changedLine = false;
