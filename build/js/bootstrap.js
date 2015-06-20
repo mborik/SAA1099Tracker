@@ -2753,14 +2753,15 @@ if (typeof jQuery === 'undefined') {
 				});
 
 				originalinput.on('mousewheel DOMMouseScroll', function(ev) {
-					if (!settings.mousewheel || !originalinput.is(':focus'))
+					if (!settings.mousewheel)
 						return;
-
 					var delta = ev.originalEvent.wheelDelta || -ev.originalEvent.deltaY || -ev.originalEvent.detail;
 
 					ev.stopPropagation();
 					ev.preventDefault();
 
+					if (!originalinput.is(':focus'))
+						originalinput.focus();
 					if (delta < 0)
 						downOnce();
 					else
