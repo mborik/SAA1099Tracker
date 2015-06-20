@@ -1,8 +1,26 @@
 /** Tracker.gui submodule - element populator with jQuery */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
-	var i, app = this, populatedElementsTable = [
+	var app = this, populatedElementsTable = [
 		{
+			global:   'document',
+			method:   'bind',
+			param:    'contextmenu',
+			handler:  function(e) {
+				e.preventDefault();
+				return false;
+			}
+		}, {
+			global:   'window',
+			method:   'resize',
+			handler:  function() {
+				var c = app.tracklist.countTracklines();
+				if (c !== app.settings.tracklistLineHeight) {
+					app.tracklist.setHeight(c);
+					app.updateTracklist();
+				}
+			}
+		}, {
 			selector: '[data-toggle="tooltip"]',
 			method:   'tooltip',
 			data:     {
@@ -28,17 +46,29 @@ Tracker.prototype.populateGUI = function () {
 					o.ctx = el.getContext('2d');
 
 					// first height initialization
-					if (name === 'tracklist') {
-						o.setHeight = function(height) {
-							if (height === void 0)
-								height = app.settings.tracklistLines;
-							height *= app.settings.tracklistLineHeight;
-							$(this.obj).prop('height', height).css({ 'height': height * 2 });
-						}
-
+					if (name === 'tracklist')
 						o.setHeight();
-					}
 				}
+			}
+		}, {
+			selector: '#tracklist',
+			method:   'on',
+			param:    'mousewheel DOMMouseScroll',
+			handler:  function(e) {
+				if (!app.player.position.length || app.modePlay)
+					return;
+
+				var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || -e.originalEvent.detail;
+
+				e.stopPropagation();
+				e.preventDefault();
+				e.target.focus();
+
+				if (delta < 0)
+					app.tracklist.moveCurrentline(1);
+				else if (delta > 0)
+					app.tracklist.moveCurrentline(-1);
+				app.updateTracklist();
 			}
 		}, {
 			selector: '#scOctave',
@@ -187,13 +217,11 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
-	for (i in populatedElementsTable) {
-		if (!populatedElementsTable.hasOwnProperty(i))
-			continue;
-
+	for (var i = 0, l = populatedElementsTable.length; i < l; i++) {
 		var obj = populatedElementsTable[i],
-			param = obj.handler || obj.data;
-		eval("$('" + obj.selector + "')." + (obj.param
+			param = obj.handler || obj.data,
+			selector = (obj.selector) ? "'" + obj.selector + "'" : obj.global;
+		eval("$(" + selector + ")." + (obj.param
 			? (obj.method + "('" + obj.param + "', param)")
 			: (obj.method + "(param)")));
 	}

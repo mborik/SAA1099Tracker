@@ -20,7 +20,10 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function () { window.Tracker = new Tracker });
+$(document).ready(function() { window.Tracker = new Tracker });
+//---------------------------------------------------------------------------------------
+
+/** Tracker.tracklist submodule */
 //---------------------------------------------------------------------------------------
 var TracklistPosition = (function () {
 	function TracklistPosition() {
@@ -31,14 +34,63 @@ var TracklistPosition = (function () {
 		this.start = { x: 0, y: 0 };
 		this.compare = function (p) {
 			return (this.y === p.y &&
-					this.line === p.line &&
-					this.channel === p.channel &&
-					this.column === p.column);
+			this.line === p.line &&
+			this.channel === p.channel &&
+			this.column === p.column);
 		}
 	}
 
 	return TracklistPosition;
 })();
+//---------------------------------------------------------------------------------------
+var Tracklist = (function () {
+	function Tracklist(app) {
+		this.obj = null;
+		this.ctx = null;
+		this.zoom = 2;
+
+		this.countTracklines = function() {
+			var a = $('#statusbar').offset(),
+				b = $('#tracklist').offset(),
+				c = app.settings.tracklistLineHeight;
+			return Math.max(((((a.top - b.top) / c / this.zoom) | 1) - 2), 9);
+		};
+
+		this.setHeight = function(height) {
+			if (height === void 0) {
+				height = app.settings.tracklistAutosize
+					? this.countTracklines()
+					: app.settings.tracklistLines;
+			}
+
+			app.settings.tracklistLines = height;
+			height *= app.settings.tracklistLineHeight;
+
+			$(this.obj).prop('height', height).css({ 'height': height * this.zoom });
+		};
+
+		this.moveCurrentline = function(delta) {
+			if (!app.player.position.length || app.modePlay)
+				return;
+
+			var line = app.player.currentLine + delta,
+				pos = app.player.currentPosition,
+				pp = app.player.position[pos];
+
+			if (line < 0)
+				line += pp.length;
+			else if (line >= pp.length)
+				line -= pp.length;
+
+			app.player.currentLine = line;
+		}
+	}
+
+	return Tracklist;
+})();
+//---------------------------------------------------------------------------------------
+
+/** Tracker.core submodule */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker() {
@@ -66,6 +118,7 @@ var Tracker = (function() {
 		this.selectionLen = 0;
 
 		this.settings = {
+			tracklistAutosize: true,
 			tracklistLines: 17,
 			tracklistLineHeight: 9,
 			hexTracklines: true,
@@ -74,8 +127,8 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
+		this.tracklist = new Tracklist(this);
 		this.pixelfont = { obj: null, ctx: null };
-		this.tracklist = { obj: null, ctx: null };
 		this.smpedit   = { obj: null, ctx: null };
 		this.ornedit   = { obj: null, ctx: null };
 
@@ -530,7 +583,7 @@ Tracker.prototype.updateTracklist = function () {
 					buf = '---';
 					k = pt.data[line];
 					if (k.release)
-						buf = 'R--';
+						buf[0] = 'R';
 					else if (k.tone)
 						buf = player.tones[k.tone].txt;
 
@@ -550,8 +603,26 @@ Tracker.prototype.updateTracklist = function () {
 /** Tracker.gui submodule - element populator with jQuery */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
-	var i, app = this, populatedElementsTable = [
+	var app = this, populatedElementsTable = [
 		{
+			global:   'document',
+			method:   'bind',
+			param:    'contextmenu',
+			handler:  function(e) {
+				e.preventDefault();
+				return false;
+			}
+		}, {
+			global:   'window',
+			method:   'resize',
+			handler:  function() {
+				var c = app.tracklist.countTracklines();
+				if (c !== app.settings.tracklistLineHeight) {
+					app.tracklist.setHeight(c);
+					app.updateTracklist();
+				}
+			}
+		}, {
 			selector: '[data-toggle="tooltip"]',
 			method:   'tooltip',
 			data:     {
@@ -577,17 +648,29 @@ Tracker.prototype.populateGUI = function () {
 					o.ctx = el.getContext('2d');
 
 					// first height initialization
-					if (name === 'tracklist') {
-						o.setHeight = function(height) {
-							if (height === void 0)
-								height = app.settings.tracklistLines;
-							height *= app.settings.tracklistLineHeight;
-							$(this.obj).prop('height', height).css({ 'height': height * 2 });
-						}
-
+					if (name === 'tracklist')
 						o.setHeight();
-					}
 				}
+			}
+		}, {
+			selector: '#tracklist',
+			method:   'on',
+			param:    'mousewheel DOMMouseScroll',
+			handler:  function(e) {
+				if (!app.player.position.length || app.modePlay)
+					return;
+
+				var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || -e.originalEvent.detail;
+
+				e.stopPropagation();
+				e.preventDefault();
+				e.target.focus();
+
+				if (delta < 0)
+					app.tracklist.moveCurrentline(1);
+				else if (delta > 0)
+					app.tracklist.moveCurrentline(-1);
+				app.updateTracklist();
 			}
 		}, {
 			selector: '#scOctave',
@@ -736,13 +819,11 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
-	for (i in populatedElementsTable) {
-		if (!populatedElementsTable.hasOwnProperty(i))
-			continue;
-
+	for (var i = 0, l = populatedElementsTable.length; i < l; i++) {
 		var obj = populatedElementsTable[i],
-			param = obj.handler || obj.data;
-		eval("$('" + obj.selector + "')." + (obj.param
+			param = obj.handler || obj.data,
+			selector = (obj.selector) ? "'" + obj.selector + "'" : obj.global;
+		eval("$(" + selector + ")." + (obj.param
 			? (obj.method + "('" + obj.param + "', param)")
 			: (obj.method + "(param)")));
 	}
