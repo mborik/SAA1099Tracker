@@ -78,7 +78,7 @@ Tracker.prototype.updateTracklist = function () {
 		font = this.pixelfont.obj,
 		ctx = this.tracklist.ctx,
 		pos = player.currentPosition, pt,
-		pp = ((player.position.length) ? player.position[pos] : new pPosition(64)),
+		pp = ((player.position.length) ? player.position[pos] : player.nullPosition),
 		half = lines >> 1,
 		line = player.currentLine - half,
 		center = ((w - lineWidth) >> 1),
@@ -197,8 +197,5 @@ Tracker.prototype.updateTracklist = function () {
 			}
 		}
 	}
-
-	if (!player.position.length)
-		pp = null;
 };
 //---------------------------------------------------------------------------------------

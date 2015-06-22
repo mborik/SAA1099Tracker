@@ -170,6 +170,7 @@ class Player {
 	public ornament: pOrnament[];
 	public pattern: pPattern[];
 	public position: pPosition[];
+	public nullPosition: pPosition;
 
 	public loopMode: boolean;
 	public changedLine: boolean;
@@ -191,6 +192,7 @@ class Player {
 		this.sample = [];
 		this.ornament = [];
 		this.playParams = [];
+		this.nullPosition = new pPosition(64, 6);
 
 		var tab_tones: string[] = [
 			"\x05B-",

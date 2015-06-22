@@ -107,6 +107,7 @@ var Player = (function () {
         this.sample = [];
         this.ornament = [];
         this.playParams = [];
+        this.nullPosition = new pPosition(64, 6);
         var tab_tones = [
             "\x05B-",
             "\x21C-",

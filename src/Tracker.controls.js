@@ -102,7 +102,7 @@ Tracker.prototype.updatePanelPattern = function() {
 Tracker.prototype.updatePanelPosition = function () {
 	var a = [ '#scPosCurrent', '#scPosLength', '#scPosSpeed', '#txPosTotal', '#scPosRepeat' ],
 		lastState = $(a[0]).prop('disabled'),
-		pos = null, buf,
+		pos = this.player.nullPosition, buf,
 		len = this.player.position.length,
 		p = this.player.currentPosition,
 		d = true, i;
@@ -119,8 +119,6 @@ Tracker.prototype.updatePanelPosition = function () {
 	else {
 		$(a[0] + ',' + a[4]).val(0).trigger('touchspin.updatesettings', { min: 0, max: 0 });
 		$(a[3]).val(0);
-
-		pos = new pPosition(64, 6);
 	}
 
 	$(a[1]).val(pos.length);
