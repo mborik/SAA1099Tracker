@@ -160,6 +160,12 @@
 @btn-danger-border: darken(@btn-danger-bg, 5%);
 @btn-link-disabled-color: @gray-light;
 
+// Allows for customizing button radius independently from global border radius
+@btn-border-radius-base:         @border-radius-base;
+@btn-border-radius-large:        @border-radius-large;
+@btn-border-radius-small:        @border-radius-small;
+
+
 //== Forms
 
 //** `<input>` background color
@@ -413,6 +419,8 @@
 @jumbotron-bg: darken(@body-bg, 3%);
 @jumbotron-heading-color: inherit;
 @jumbotron-font-size: ceil((@font-size-base * 1.5));
+@jumbotron-heading-font-size:    ceil((@font-size-base * 4.5));
+
 
 //== Form states and alerts
 @state-success-text: rgb(70, 136, 71);
@@ -706,7 +714,7 @@
 @breadcrumb-separator: "|";
 
 //== Carousel
-@carousel-text-shadow: rgba(0, 0, 0, 0.6);
+@carousel-text-shadow: 0 1px 2px rgba(0,0,0,.6);
 @carousel-control-color: rgb(255, 255, 255);
 @carousel-control-width: 15%;
 @carousel-control-opacity: .5;
