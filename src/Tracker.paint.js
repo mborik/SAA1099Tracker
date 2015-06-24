@@ -67,6 +67,7 @@ Tracker.prototype.initPixelFont = function (font) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateTracklist = function (update) {
 	var o = this.tracklist.canvasData,
+		offs = this.tracklist.offsets,
 		player = this.player,
 		hexdec = this.settings.hexTracklines ? 16 : 10,
 		font = this.pixelfont.obj,
@@ -86,9 +87,13 @@ Tracker.prototype.updateTracklist = function (update) {
 		o.center = ((w - o.lineWidth) >> 1);
 		o.vpad = Math.round((h - 5) / 2);
 		o.trkOffset = o.center + 24; // (2 trackline numbers + 2 padding) * fontWidth
+		offs.y = [];
 	}
 
 	for (i = 0, y = 0, ypad = o.vpad; i < lines; i++, line++, ypad += h, y += h) {
+		if (update)
+			offs.y[i] = y;
+
 		if (i !== half)
 			ccb = 0; // basic color combination
 		else if (this.modeEdit) {
@@ -123,6 +128,14 @@ Tracker.prototype.updateTracklist = function (update) {
 				x = o.trkOffset       // center + (4 * fontWidth)
 				  + chn * o.chnWidth  // channel * ((12 columns + 2 padding) * fontWidth)
 				  + o.columns[j];     // column offset premulitplied by fontWidth
+
+				if (update) {
+					offs.x[chn][j] = x;
+
+					// overlapping area between channels
+					if (!j && chn)
+						offs.x[chn - 1][8] = x;
+				}
 
 				cc = ccb;
 				if (!j && !(i === half && this.modeEdit) &&
@@ -207,6 +220,13 @@ Tracker.prototype.updateTracklist = function (update) {
 				}
 			}
 		}
+	}
+
+	if (update) {
+		// expand offsets to full canvas width and height
+		offs.x[5][8] = w;
+		offs.x[0][0] = 0;
+		offs.y[i] = y;
 	}
 };
 //---------------------------------------------------------------------------------------
