@@ -24,11 +24,46 @@ var Tracklist = (function () {
 		this.ctx = null;
 		this.zoom = 2;
 
+		// fontWidth = 6 : default width of pixelfont
+		this.canvasData = {
+			// offsets to column positions in channel data premultiplied by fontWidth:
+			//         0   4567 9AB
+			//        "A-4 ABFF C01"
+			columns: [ 0, 24, 30, 36, 42, 54, 60, 66 ],
+
+			// selection width: (12 columns + 1 padding) * fontWidth
+			selWidth : (12 + 1) * 6,
+
+			// channel width: (12 columns + 2 padding) * fontWidth
+			chnWidth : (12 + 2) * 6,
+
+			// trackline width:
+			// (((12 columns + 2 padding) * 6 channels) + 2 tracknum.columns) * fontWidth
+			lineWidth: (((12 + 2) * 6) + 2) * 6,
+
+			// horizontal centering of trackline to canvas width
+			center   : 0,
+
+			// trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
+			trkOffset: 0,
+
+			// vertical padding of pixelfont in trackline height
+			vpad     : 0
+		};
+
+		// calculated absolute positions of X:channels/columns and Y:tracklines in canvas
+		this.offsets = {
+			// 6 channels of 8 column (+1 padding) positions
+			x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
+			y: []
+		}
+
+//---------------------------------------------------------------------------------------
 		this.countTracklines = function() {
-			var a = $('#statusbar').offset(),
-				b = $('#tracklist').offset(),
-				c = app.settings.tracklistLineHeight;
-			return Math.max(((((a.top - b.top) / c / this.zoom) | 1) - 2), 9);
+			var s = $('#statusbar').offset(),
+				t = $('#tracklist').offset(),
+				h = app.settings.tracklistLineHeight;
+			return Math.max(((((s.top - t.top) / h / this.zoom) | 1) - 2), 5);
 		};
 
 		this.setHeight = function(height) {
