@@ -17,7 +17,7 @@ Tracker.prototype.populateGUI = function () {
 				var c = app.tracklist.countTracklines();
 				if (c !== app.settings.tracklistLineHeight) {
 					app.tracklist.setHeight(c);
-					app.updateTracklist();
+					app.updateTracklist(true);
 				}
 			}
 		}, {
@@ -34,7 +34,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'load',
 			handler:  function(e) {
 				app.initPixelFont(e.target);
-				app.updateTracklist();
+				app.updateTracklist(true);
 			}
 		}, {
 			selector: 'canvas',

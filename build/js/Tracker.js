@@ -49,11 +49,46 @@ var Tracklist = (function () {
 		this.ctx = null;
 		this.zoom = 2;
 
+		// fontWidth = 6 : default width of pixelfont
+		this.canvasData = {
+			// offsets to column positions in channel data premultiplied by fontWidth:
+			//         0   4567 9AB
+			//        "A-4 ABFF C01"
+			columns: [ 0, 24, 30, 36, 42, 54, 60, 66 ],
+
+			// selection width: (12 columns + 1 padding) * fontWidth
+			selWidth : (12 + 1) * 6,
+
+			// channel width: (12 columns + 2 padding) * fontWidth
+			chnWidth : (12 + 2) * 6,
+
+			// trackline width:
+			// (((12 columns + 2 padding) * 6 channels) + 2 tracknum.columns) * fontWidth
+			lineWidth: (((12 + 2) * 6) + 2) * 6,
+
+			// horizontal centering of trackline to canvas width
+			center   : 0,
+
+			// trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
+			trkOffset: 0,
+
+			// vertical padding of pixelfont in trackline height
+			vpad     : 0
+		};
+
+		// calculated absolute positions of X:channels/columns and Y:tracklines in canvas
+		this.offsets = {
+			// 6 channels of 8 column (+1 padding) positions
+			x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
+			y: []
+		}
+
+//---------------------------------------------------------------------------------------
 		this.countTracklines = function() {
-			var a = $('#statusbar').offset(),
-				b = $('#tracklist').offset(),
-				c = app.settings.tracklistLineHeight;
-			return Math.max(((((a.top - b.top) / c / this.zoom) | 1) - 2), 9);
+			var s = $('#statusbar').offset(),
+				t = $('#tracklist').offset(),
+				h = app.settings.tracklistLineHeight;
+			return Math.max(((((s.top - t.top) / h / this.zoom) | 1) - 2), 5);
 		};
 
 		this.setHeight = function(height) {
@@ -460,52 +495,64 @@ Tracker.prototype.initPixelFont = function (font) {
 	copy = null;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.updateTracklist = function () {
-	var columns = [ 0, 4, 5, 6, 7, 9, 10, 11 ],
-		selWidth = 78, // (12 columns + 1 padding) * fontWidth
-		lineWidth = 516, // (((12 columns + 2 padding) * 6 channels) + 2 tracknumber) * fontWidth
-		lineHeight = this.settings.tracklistLineHeight,
-		lines = this.settings.tracklistLines,
-		hexdec = this.settings.hexTracklines ? 16 : 10,
+Tracker.prototype.updateTracklist = function (update) {
+	var o = this.tracklist.canvasData,
 		player = this.player,
-		w = this.tracklist.obj.width,
-		buf, cc, ccb, chn, i, j, k, x, y,
+		hexdec = this.settings.hexTracklines ? 16 : 10,
 		font = this.pixelfont.obj,
 		ctx = this.tracklist.ctx,
-		pos = player.currentPosition, pt,
-		pp = ((player.position.length) ? player.position[pos] : player.nullPosition),
+		pos = player.currentPosition,
+		pp = player.position[pos] || player.nullPosition,
+		pt, dat,
+		w = this.tracklist.obj.width,
+		h = this.settings.tracklistLineHeight,
+		lines = this.settings.tracklistLines,
 		half = lines >> 1,
 		line = player.currentLine - half,
-		center = ((w - lineWidth) >> 1),
-		vpad = Math.round((lineHeight - 6) / 2),
+		buf, cc, ccb, chn, i, j, k, x, ypad, y,
 		charFromBuf = function(i) { return (buf.charCodeAt(i || 0) - 32) * 6 };
 
-	for (i = 0, y = vpad; i < lines; i++, line++, y += lineHeight) {
-		if (i === half) {
-			ctx.fillStyle = this.modeEdit ? '#f00' : '#38c';
-			ctx.fillRect(0, y - vpad, w, lineHeight);
-			ccb = this.modeEdit ? 10 : 20; // col.combination: 2:WHITE|RED, or 4:WHITE|HILITE
+	if (update) {
+		o.center = ((w - o.lineWidth) >> 1);
+		o.vpad = Math.round((h - 5) / 2);
+		o.trkOffset = o.center + 24; // (2 trackline numbers + 2 padding) * fontWidth
+	}
+
+	for (i = 0, y = 0, ypad = o.vpad; i < lines; i++, line++, ypad += h, y += h) {
+		if (i !== half)
+			ccb = 0; // basic color combination
+		else if (this.modeEdit) {
+			ccb = 10; // col.combination: 2:WHITE|RED
+			ctx.fillStyle = '#f00';
+			ctx.fillRect(0, y, w, h);
 		}
-		else ccb = 0; // basic color combination
+		else {
+			ccb = 20; // col.combination: 4:WHITE|HILITE
+			if (update) {
+				ctx.fillStyle = '#38c';
+				ctx.fillRect(0, y, w, h);
+			}
+		}
 
 		if (line >= 0 && line < pp.length) {
 			buf = ('0' + line.toString(hexdec)).substr(-2);
-			ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, center, y, 5, 5);
-			ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, center + 6, y, 5, 5);
+			ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center, ypad, 5, 5);
+			ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center + 6, ypad, 5, 5);
 		}
 		else {
 			ctx.fillStyle = '#fff';
-			ctx.fillRect(0, y - vpad, w, lineHeight);
+			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
 			continue; // TODO prev/next position hints
 		}
 
 		for (chn = 0; chn < 6; chn++) {
 			pt = player.pattern[pp.ch[chn].pattern];
+			dat = pt.data[line];
 
 			for (j = 0; j < 8; j++) {
-				x = center + 24      // (4 * fontWidth)
-				  + (chn * 84)       // channel * ((12 columns + 2 padding) * fontWidth)
-				  + (columns[j] * 6);
+				x = o.trkOffset       // center + (4 * fontWidth)
+				  + chn * o.chnWidth  // channel * ((12 columns + 2 padding) * fontWidth)
+				  + o.columns[j];     // column offset premulitplied by fontWidth
 
 				cc = ccb;
 				if (!j && !(i === half && this.modeEdit) &&
@@ -514,18 +561,18 @@ Tracker.prototype.updateTracklist = function () {
 					line <= (this.selectionLine + this.selectionLen)) {
 
 					ctx.fillStyle = '#000';
-					ctx.fillRect(x - 3, y - vpad, selWidth, lineHeight);
+					ctx.fillRect(x - 3, y, o.selWidth, h);
 					cc = 30; // col.combination: 6:WHITE|BLACK
 				}
 				else if (i === half && this.modeEdit &&
-					this.modeEditChannel === chn &&
-					this.modeEditColumn === j) {
+						this.modeEditChannel === chn &&
+						this.modeEditColumn === j) {
 
 					ctx.fillStyle = '#800';
 					if (j)
-						ctx.fillRect(x - 1, y - vpad, 7, lineHeight);
+						ctx.fillRect(x - 1, y,  7, h);
 					else
-						ctx.fillRect(x - 2, y - vpad, 22, lineHeight);
+						ctx.fillRect(x - 2, y, 22, h);
 
 					cc = 40; // col.combination: 6:WHITE|DARKRED
 				}
@@ -537,57 +584,56 @@ Tracker.prototype.updateTracklist = function () {
 					k = -1;
 					switch (j) {
 						case 1:
-							if (pt.data[line].smp)
-								k = pt.data[line].smp;
+							if (dat.smp)
+								k = dat.smp;
 							break;
 
 						case 2:
-							if (pt.data[line].orn_release)
+							if (dat.orn_release)
 								k = 33; // ('X' - 'A') + 10;
-							else if (pt.data[line].orn)
-								k = pt.data[line].orn;
+							else if (dat.orn)
+								k = dat.orn;
 							break;
 
 						case 3:
-							if (pt.data[line].volume.byte)
-								k = pt.data[line].volume.L;
+							if (dat.volume.byte)
+								k = dat.volume.L;
 							break;
 
 						case 4:
-							if (pt.data[line].volume.byte)
-								k = pt.data[line].volume.R;
+							if (dat.volume.byte)
+								k = dat.volume.R;
 							break;
 
 						case 5:
-							if (pt.data[line].cmd || pt.data[line].cmd_data)
-								k = pt.data[line].cmd;
+							if (dat.cmd || dat.cmd_data)
+								k = dat.cmd;
 							break;
 
 						case 6:
-							if (pt.data[line].cmd || pt.data[line].cmd_data)
-								k = ((pt.data[line].cmd_data & 0xf0) >> 4);
+							if (dat.cmd || dat.cmd_data)
+								k = ((dat.cmd_data & 0xf0) >> 4);
 							break;
 
 						case 7:
-							if (pt.data[line].cmd || pt.data[line].cmd_data)
-								k = (pt.data[line].cmd_data & 0x0f);
+							if (dat.cmd || dat.cmd_data)
+								k = (dat.cmd_data & 0x0f);
 							break;
 					}
 
 					buf = (k < 0) ? '\x7f' : k.toString(36);
-					ctx.drawImage(font, charFromBuf(), cc, 5, 5, x, y, 5, 5);
+					ctx.drawImage(font, charFromBuf(), cc, 5, 5, x, ypad, 5, 5);
 				}
 				else {
 					buf = '---';
-					k = pt.data[line];
-					if (k.release)
+					if (dat.release)
 						buf = 'R--';
-					else if (k.tone)
-						buf = player.tones[k.tone].txt;
+					else if (dat.tone)
+						buf = player.tones[dat.tone].txt;
 
-					ctx.drawImage(font, charFromBuf(0), cc, 5, 5, x, y, 5, 5);
-					ctx.drawImage(font, charFromBuf(1), cc, 5, 5, x + 6, y, 5, 5);
-					ctx.drawImage(font, charFromBuf(2), cc, 5, 5, x + 12, y, 5, 5);
+					ctx.drawImage(font, charFromBuf(0), cc, 5, 5, x, ypad, 5, 5);
+					ctx.drawImage(font, charFromBuf(1), cc, 5, 5, x + 6, ypad, 5, 5);
+					ctx.drawImage(font, charFromBuf(2), cc, 5, 5, x + 12, ypad, 5, 5);
 				}
 			}
 		}
@@ -614,7 +660,7 @@ Tracker.prototype.populateGUI = function () {
 				var c = app.tracklist.countTracklines();
 				if (c !== app.settings.tracklistLineHeight) {
 					app.tracklist.setHeight(c);
-					app.updateTracklist();
+					app.updateTracklist(true);
 				}
 			}
 		}, {
@@ -631,7 +677,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'load',
 			handler:  function(e) {
 				app.initPixelFont(e.target);
-				app.updateTracklist();
+				app.updateTracklist(true);
 			}
 		}, {
 			selector: 'canvas',
