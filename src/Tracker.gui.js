@@ -167,7 +167,7 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function() {
 				if (app.player.pattern.length <= 1)
 					return;
-				app.workingPattern = $(this).val();
+				app.workingPattern = $(this).val() - 0;
 				app.updatePanelPattern();
 			}
 		}, {
