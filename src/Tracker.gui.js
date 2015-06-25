@@ -21,6 +21,11 @@ Tracker.prototype.populateGUI = function () {
 				}
 			}
 		}, {
+			global:   'window',
+			method:   'bind',
+			param:    'keyup keydown keypress',
+			handler:  function(e) { return app.handleKeyEvent(e.originalEvent) }
+		}, {
 			selector: '[data-toggle="tooltip"]',
 			method:   'tooltip',
 			data:     {
