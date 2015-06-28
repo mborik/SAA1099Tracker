@@ -23,7 +23,7 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			global:   'window',
 			method:   'bind',
-			param:    'keyup keydown keypress',
+			param:    'keyup keydown',
 			handler:  function(e) { return app.handleKeyEvent(e.originalEvent) }
 		}, {
 			selector: '[data-toggle="tooltip"]',
@@ -167,57 +167,42 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function() {
 				if (app.player.pattern.length <= 1)
 					return;
-				app.workingPattern = $(this).val();
+				app.workingPattern = $(this).val() - 0;
 				app.updatePanelPattern();
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',
 			method:   'click',
-			handler:  function() { app.loadDemosong($(this).data().filename) }
+			handler:  function() {
+				var data = $(this).data(), fn = data.filename;
+				if (!fn)
+					return false;
+				app.loadDemosong(fn);
+			}
 		}, {
 			selector: '#miStop',
 			method:   'click',
-			handler:  function() {
-				app.player.stopChannel();
-				app.modePlay = false;
-			}
+			handler:  function() { app.onCmdStop() }
 		}, {
 			selector: '#miSongPlay',
 			method:   'click',
-			handler:  function() {
-				app.modePlay = app.player.playPosition(false, true, true);
-			}
+			handler:  function() { app.onCmdSongPlay() }
 		}, {
 			selector: '#miSongPlayStart',
 			method:   'click',
-			handler:  function() {
-				app.modePlay = app.player.playPosition(true, true, true);
-			}
+			handler:  function() { app.onCmdSongPlayStart() }
 		}, {
 			selector: '#miPosPlay',
 			method:   'click',
-			handler:  function() {
-				app.modePlay = app.player.playPosition(false, false, false);
-			}
+			handler:  function() { app.onCmdPosPlay() }
 		}, {
 			selector: '#miPosPlayStart',
 			method:   'click',
-			handler:  function() {
-				app.modePlay = app.player.playPosition(false, false, true);
-			}
+			handler:  function() { app.onCmdPosPlayStart() }
 		}, {
 			selector: '#miToggleLoop',
 			method:   'click',
-			handler:  function() {
-				var state = app.player.loopMode = !app.player.loopMode,
-					el = $(this).find('span'),
-					icon1 = 'glyphicon-repeat', icon2 = 'glyphicon-remove-circle',
-					glyph = state ? icon1 : icon2,
-					color = state ? '#000' : '#ccc';
-
-				el.removeClass(icon1 + ' ' + icon2);
-				el.addClass(glyph).css({ 'color': color });
-			}
+			handler:  function() { app.onCmdToggleLoop() }
 		}
 	];
 

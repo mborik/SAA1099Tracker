@@ -141,3 +141,40 @@ Tracker.prototype.updatePanelPosition = function () {
 	pos = null;
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdStop = function () {
+	this.player.stopChannel();
+	this.modePlay = false;
+	this.globalKeyState.lastPlayMode = 0;
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSongPlay = function () {
+	if (this.globalKeyState.lastPlayMode === 2)
+		return;
+	this.modePlay = this.player.playPosition(false, true, true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSongPlayStart = function () {
+	this.modePlay = this.player.playPosition(true, true, true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosPlay = function () {
+	if (this.globalKeyState.lastPlayMode === 1)
+		return;
+	this.modePlay = this.player.playPosition(false, false, false);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosPlayStart = function () {
+	this.modePlay = this.player.playPosition(false, false, true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdToggleLoop = function () {
+	var state = (this.player.loopMode = !this.player.loopMode),
+		el = $('a#miToggleLoop>span'),
+		icon1 = 'glyphicon-repeat', icon2 = 'glyphicon-remove-circle',
+		glyph = state ? icon1 : icon2,
+		color = state ? '#000' : '#ccc';
+
+	el.removeClass(icon1 + ' ' + icon2);
+	el.addClass(glyph).css({ 'color': color });
+};
+//---------------------------------------------------------------------------------------
