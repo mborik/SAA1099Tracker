@@ -19,9 +19,12 @@ var Tracker = (function() {
 		this.songTitle = '';
 		this.songAuthor = '';
 
-		this.globalKeyModifiers = 0;
-		this.globalKeyModHandled = false;
-		this.globalKeyPlayMode = 0;
+		this.globalKeyState = {
+			mods: 0,
+			modsHandled: false,
+			lastPlayMode: 0,
+			map: { length: 0 }
+		};
 
 		this.selectionPoint = new TracklistPosition;
 		this.selectionStarted = false;
