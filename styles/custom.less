@@ -29,6 +29,27 @@ body {
 button {
 	cursor: default !important;
 }
+.btn-default {
+	&, &:hover {
+		border-color: #ccc;
+	}
+}
+.btn-half {
+	float: left;
+	width: 50%;
+	padding-left: 9px;
+	padding-top: 3px;
+
+	&.left {
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		border-right: 0;
+	}
+	&.right {
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+}
 
 .navbar-brand-custom {
 	font-size: 16px;
@@ -87,9 +108,6 @@ button {
 	margin: 0 0 @grid-gutter-width 0;
 	padding: 0;
 	border-bottom: 1px solid #eee;
-}
-.btn-half {
-	width: 48%;
 }
 .form-control[disabled], label.toggle-off {
 	color: @gray-light !important;

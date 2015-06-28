@@ -3276,25 +3276,25 @@ fieldset[disabled] a.btn {
 .btn-default {
   color: #000000;
   background-color: #eeeeee;
-  border-color: #777777;
+  border-color: #eeeeee;
 }
 .btn-default:focus,
 .btn-default.focus {
   color: #000000;
   background-color: #d5d5d5;
-  border-color: #373737;
+  border-color: #afafaf;
 }
 .btn-default:hover {
   color: #000000;
   background-color: #d5d5d5;
-  border-color: #585858;
+  border-color: #d0d0d0;
 }
 .btn-default:active,
 .btn-default.active,
 .open > .dropdown-toggle.btn-default {
   color: #000000;
   background-color: #d5d5d5;
-  border-color: #585858;
+  border-color: #d0d0d0;
 }
 .btn-default:active:hover,
 .btn-default.active:hover,
@@ -3307,7 +3307,7 @@ fieldset[disabled] a.btn {
 .open > .dropdown-toggle.btn-default.focus {
   color: #000000;
   background-color: #c3c3c3;
-  border-color: #373737;
+  border-color: #afafaf;
 }
 .btn-default:active,
 .btn-default.active,
@@ -3333,7 +3333,7 @@ fieldset[disabled] .btn-default:active,
 .btn-default[disabled].active,
 fieldset[disabled] .btn-default.active {
   background-color: #eeeeee;
-  border-color: #777777;
+  border-color: #eeeeee;
 }
 .btn-default .badge {
   color: #eeeeee;
@@ -7188,6 +7188,25 @@ body {
 button {
   cursor: default !important;
 }
+.btn-default,
+.btn-default:hover {
+  border-color: #ccc;
+}
+.btn-half {
+  float: left;
+  width: 50%;
+  padding-left: 9px;
+  padding-top: 3px;
+}
+.btn-half.left {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: 0;
+}
+.btn-half.right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
 .navbar-brand-custom {
   font-size: 16px;
   font-weight: bold;
@@ -7271,9 +7290,6 @@ button {
   margin: 0 0 5px 0;
   padding: 0;
   border-bottom: 1px solid #eee;
-}
-.btn-half {
-  width: 48%;
 }
 .form-control[disabled],
 label.toggle-off {

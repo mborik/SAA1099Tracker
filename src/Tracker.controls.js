@@ -64,21 +64,20 @@ Tracker.prototype.updatePanelPattern = function() {
 		lastState = $(a[0]).prop('disabled'),
 		pat = this.workingPattern,
 		len = this.player.pattern.length,
+		min = 0, max = 0,
 		d = true, i;
 
+	len--;
 	if (len) {
-		len--;
-		$(a[0]).trigger('touchspin.updatesettings', { min: 1, max: len });
-		if (pat > len)
-			pat = len;
+		min = 1;
+		max = len;
+		pat = Math.max(Math.min(pat, max), min);
 	}
-	else {
-		$(a[0]).trigger('touchspin.updatesettings', { min: 0, max: 0 });
+	else
 		pat = 0;
-	}
 
 	for (i = 1; i <= 6; i++)
-		$('#scChnPattern' + i).trigger('touchspin.updatesettings', { min: 0, max: len });
+		$('#scChnPattern' + i).trigger('touchspin.updatesettings', { min: 0, max: max });
 
 	if (pat) {
 		d = false;
@@ -87,11 +86,11 @@ Tracker.prototype.updatePanelPattern = function() {
 	else
 		$(a[1]).val(64);
 
-	$(a[0]).val(pat);
+	this.workingPattern = pat;
+	$(a[0]).trigger('touchspin.updatesettings', { min: min, max: max, initval: pat }).val(pat);
+
 	$('#txPatternUsed').val(this.player.countPatternUsage(pat));
 	$('#txPatternTotal').val(len);
-
-	this.workingPattern = pat;
 
 	if (d !== lastState) {
 		for (i = 0, len = a.length; i < len; i++)
