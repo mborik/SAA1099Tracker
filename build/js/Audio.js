@@ -21,6 +21,18 @@
  */
 //---------------------------------------------------------------------------------------
 var AudioDriver = (function () {
+	var defaultSamplerate = 44100;
+	var streammsec = 20 * 4; // 50Hz * 4 buffers
+
+	function getAdjustSamples(samplerate) {
+		var samples, bits;
+		samplerate = samplerate || defaultSamplerate;
+		samples = streammsec / 1000 * samplerate;
+		bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+		bits = (bits < 8) ? 8 : (bits > 14) ? 14 : bits;
+		return 1 << bits;
+	}
+
 	function WebAPIAudioDriver() {
 		var audioSource = null;
 		var scriptProcessor = null;
@@ -30,15 +42,16 @@ var AudioDriver = (function () {
 			audioSource.getAudio(buf.getChannelData(0), buf.getChannelData(1), buf.length);
 		}
 
+		this.sampleRate = audioContext.sampleRate;
+		this.bufferSize = getAdjustSamples(audioContext.sampleRate);
+
 		if (audioContext.createScriptProcessor !== null)
-			scriptProcessor = audioContext.createScriptProcessor(0, 0, 2);
+			scriptProcessor = audioContext.createScriptProcessor(this.bufferSize, 0, 2);
 		else if (audioContext.createJavaScriptNode !== null)
-			scriptProcessor = audioContext.createJavaScriptNode(0, 0, 2);
+			scriptProcessor = audioContext.createJavaScriptNode(this.bufferSize, 0, 2);
 		scriptProcessor.onaudioprocess = null;
 
-		this.sampleRate = audioContext.sampleRate;
 		this.bufferSize = scriptProcessor.bufferSize;
-
 		this.setAudioSource = function(audioSrc) { audioSource = audioSrc; }
 
 		this.play = function() {
@@ -55,8 +68,8 @@ var AudioDriver = (function () {
 	}
 
 	function FallbackAudioDriver() {
-		this.sampleRate = 44100; // seems to sound best in Firefox
-		this.bufferSize = 4096;
+		this.sampleRate = defaultSamplerate;
+		this.bufferSize = getAdjustSamples(audioContext.sampleRate);
 
 		var audioContext = new Audio();
 		var buffer = new Float32Array(this.sampleRate >> 1); // 250ms

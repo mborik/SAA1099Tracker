@@ -29,20 +29,15 @@
 			if (c >= 'a' && c <= 'z')
 				prop = c.toUpperCase() + prop.substr(1);
 
-			for (c = 0; c < alts.length; c++)
-				if (obj = base[alts[c] + prop])
+			for (c = 0; c < alts.length; c++) {
+				n = alts[c] + prop;
+				if (obj = base[n])
 					break;
-		}
-
-		if (obj && retnew) {
-			if (!(n = obj.name || obj.constructor.name)) {
-				c = obj.toString();
-				if ((n = c.match(/^function (\w+)\(/)) || (n = c.match(/^\[object (\w+)]$/)))
-					n = n[1];
 			}
-
-			return new base[n];
 		}
+
+		if (obj && retnew)
+			return new base[n];
 		else if (obj)
 			return obj;
 		else if (fallback)
