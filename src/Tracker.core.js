@@ -20,10 +20,8 @@ var Tracker = (function() {
 		this.songAuthor = '';
 
 		this.globalKeyState = {
-			mods: 0,
-			modsHandled: false,
 			lastPlayMode: 0,
-			map: { length: 0 }
+			length: 0
 		};
 
 		this.selectionPoint = new TracklistPosition;

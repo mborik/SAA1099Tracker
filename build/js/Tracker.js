@@ -147,10 +147,8 @@ var Tracker = (function() {
 		this.songAuthor = '';
 
 		this.globalKeyState = {
-			mods: 0,
-			modsHandled: false,
 			lastPlayMode: 0,
-			map: { length: 0 }
+			length: 0
 		};
 
 		this.selectionPoint = new TracklistPosition;
@@ -473,49 +471,87 @@ Tracker.prototype.onCmdToggleLoop = function () {
 
 /** Tracker.keyboard submodule */
 //---------------------------------------------------------------------------------------
+/*
+	JavaScript KeyboardEvent keymap:
+		  8      Backspace
+		  9      Tab
+		 13      Enter
+		 16      Shift
+		 17      Ctrl
+		 18      Alt
+		 19      Pause
+		 20      CapsLock
+		 27      Esc
+		 32      Space
+		 33      PageUp
+		 34      PageDown
+		 35      End
+		 36      Home
+		 37      Left
+		 38      Up
+		 39      Right
+		 40      Down
+		 44      PrtScr
+		 45      Insert
+		 46      Delete
+		 48-57   0 to 9
+		 65-90   A to Z
+		 91      Win (left)
+		 92      Win (right)
+		 93      Menu
+		 96-105  Num0 to Num9
+		106      Numpad *
+		107      Numpad +
+		109      Numpad -
+		110      Numpad .
+		111      Numpad /
+		112-123  F1 to F12
+		144      NumLock
+		145      ScrLock
+		173      Mute    (Firefox: 181)
+		174      VolDown (Firefox: 182)
+		175      VolUp   (Firefox: 183)
+		186      ; :     (Firefox:  59)
+		187      = +     (Firefox:  61)
+		189      - _     (Firefox: 173)
+		188      , <
+		190      . >
+		191      / ?
+		192      ` ~
+		219      [ {     (Opera: Win)
+		220      \ |
+		221      ] }
+		222      ' "
+*/
+//---------------------------------------------------------------------------------------
 Tracker.prototype.handleKeyEvent = function (e) {
 	if (e.target && (e.target.type === 'text' || /input|textarea|select/i.test(e.target.nodeName || e.target.tagName)))
 		return true;
 
 	var o = this.globalKeyState,
 		key = e.which || e.charCode || e.keyCode,
-		loc = e.location || 0,
-		rot = loc === 2 ? 4 : 0;
+		canPlay = !!this.player.position.length;
 
 	if (e.type === 'keydown') {
-		if (!o.map[key]) {
-			o.map[key] = true;
-			o.map.length++;
+		if ([ 16, 17, 18, 91].indexOf(key) >= 0 && e.location === 2)
+			key += 256;
+
+		// add new key to the keymapper
+		if (!o[key]) {
+			o[key] = true;
+			o.length++;
 		}
 
-		if (key === 18)
-			o.mods |= loc ? (0x1 << rot) : 0x11; // ALT
-		else if (key === 17)
-			o.mods |= loc ? (0x2 << rot) : 0x22; // CTRL
-		else if (key === 16)
-			o.mods |= loc ? (0x4 << rot) : 0x44; // SHIFT
-		else if (key === 91 || key === 92)
-			o.mods |= loc ? (0x8 << rot) : 0x88; // WIN
-		else if (key === 93)
-			o.mods |= 0x80;                      // MENU
-
-		if (o.mods)
-			o.modsHandled = false;
 		// ENTER (hold to play position at current line)
-		else if (key === 13 && o.map.length === 1 && !this.modePlay && !o.lastPlayMode) {
+		if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
 			this.modePlay = this.player.playPosition(false, false, false);
 			o.lastPlayMode = 3;
 		}
 	}
 	else if (e.type === 'keyup') {
-		if (o.map[key]) {
-			delete o.map[key];
-			o.map.length--;
-		}
-
-		if (!o.modsHandled) {
+		if (o.length === 1 && canPlay) {
 			// RIGHT SHIFT (play position)
-			if (key === 16 && o.mods & 0x40) {
+			if (o[272]) {
 				if (this.modePlay && o.lastPlayMode === 1) {
 					this.modePlay = false;
 					this.player.stopChannel();
@@ -526,11 +562,10 @@ Tracker.prototype.handleKeyEvent = function (e) {
 					this.modePlay = this.player.playPosition(false, false, true);
 					o.lastPlayMode = 1;
 				}
-
-				o.modsHandled = true;
 			}
+
 			// RIGHT CTRL (play song)
-			else if (key === 17 && o.mods & 0x20) {
+			else if (o[273]) {
 				if (this.modePlay && o.lastPlayMode === 2) {
 					this.modePlay = false;
 					this.player.stopChannel();
@@ -541,31 +576,30 @@ Tracker.prototype.handleKeyEvent = function (e) {
 					this.modePlay = this.player.playPosition(false, true, true);
 					o.lastPlayMode = 2;
 				}
+			}
 
-				o.modsHandled = true;
+			// ENTER (hold to play position at current line)
+			else if (o[13] && o.lastPlayMode === 3) {
+				this.modePlay = false;
+				this.player.stopChannel();
+				this.updateTracklist();
+				o.lastPlayMode = 0;
 			}
 		}
 
-		// ENTER (hold to play position at current line)
-		if (key === 13 && o.lastPlayMode === 3) {
-			this.modePlay = false;
-			this.player.stopChannel();
-			this.updateTracklist();
-			o.lastPlayMode = 0;
+		// remove entry from the keymapper
+		if (o[key]) {
+			delete o[key];
+			if (o.length)
+				o.length--;
+		} else if (o[key + 256]) {
+			delete o[key + 256];
+			if (o.length)
+				o.length--;
 		}
-
-		if (key === 18)
-			o.mods &= 0xff ^ (loc ? (0x1 << rot) : 0x11); // ALT
-		else if (key === 17)
-			o.mods &= 0xff ^ (loc ? (0x2 << rot) : 0x22); // CTRL
-		else if (key === 16)
-			o.mods &= 0xff ^ (loc ? (0x4 << rot) : 0x44); // SHIFT
-		else if (key === 91 || key === 92)
-			o.mods &= 0xff ^ (loc ? (0x8 << rot) : 0x88); // WIN
-		else if (key === 93)
-			o.mods &= 0x7f;                               // MENU
 	}
 
+	e.preventDefault();
 	return false;
 };
 //---------------------------------------------------------------------------------------
