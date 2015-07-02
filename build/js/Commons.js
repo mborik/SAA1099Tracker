@@ -31,13 +31,15 @@
 
 			for (c = 0; c < alts.length; c++) {
 				n = alts[c] + prop;
-				if (obj = base[n])
+				if (obj = base[n]) {
+					prop = n;
 					break;
+				}
 			}
 		}
 
 		if (obj && retnew)
-			return new base[n];
+			return new base[prop];
 		else if (obj)
 			return obj;
 		else if (fallback)
