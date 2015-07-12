@@ -20,6 +20,7 @@ var Tracker = (function() {
 		this.songAuthor = '';
 
 		this.globalKeyState = {
+			modsHandled: false,
 			lastPlayMode: 0,
 			length: 0
 		};

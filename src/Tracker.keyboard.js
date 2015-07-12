@@ -54,16 +54,29 @@
 */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleKeyEvent = function (e) {
-	if (e.target && (e.target.type === 'text' || /input|textarea|select/i.test(e.target.nodeName || e.target.tagName)))
-		return true;
-
 	var o = this.globalKeyState,
+		isInput = (e.target && (e.target.type === 'text')),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
+	// cross-platform fixes
+	if (browser.isOpera && key === 219)
+		key = 91;
+	else if (browser.isFirefox) switch (key) {
+ 		case 59:
+ 			key = 186; break;
+ 		case 61:
+ 			key = 187; break;
+ 		case 173:
+ 			key = 189; break;
+ 	}
+
 	if (e.type === 'keydown') {
-		if ([ 16, 17, 18, 91].indexOf(key) >= 0 && e.location === 2)
-			key += 256;
+		if (key >= 16 && key <= 18) {
+			o.modsHandled = false;
+			if (e.location === 2)
+				key += 256;
+		}
 
 		// add new key to the keymapper
 		if (!o[key]) {
@@ -71,16 +84,28 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
+		if (isInput)
+			return true;
+
 		// ENTER (hold to play position at current line)
 		if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
 			this.modePlay = this.player.playPosition(false, false, false);
 			o.lastPlayMode = 3;
 		}
+		else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
+			this.modePlay = false;
+			this.player.stopChannel();
+			this.updateTracklist();
+			o.lastPlayMode = 0;
+		}
 	}
 	else if (e.type === 'keyup') {
-		if (o.length === 1 && canPlay) {
+		if (isInput)
+			o.modsHandled = true;
+
+		if (!o.modsHandled && canPlay) {
 			// RIGHT SHIFT (play position)
-			if (o[272]) {
+			if (o.length === 1 && o[272]) {
 				if (this.modePlay && o.lastPlayMode === 1) {
 					this.modePlay = false;
 					this.player.stopChannel();
@@ -91,10 +116,11 @@ Tracker.prototype.handleKeyEvent = function (e) {
 					this.modePlay = this.player.playPosition(false, false, true);
 					o.lastPlayMode = 1;
 				}
-			}
 
+				o.modsHandled = true;
+			}
 			// RIGHT CTRL (play song)
-			else if (o[273]) {
+			else if (o.length === 1 && o[273]) {
 				if (this.modePlay && o.lastPlayMode === 2) {
 					this.modePlay = false;
 					this.player.stopChannel();
@@ -105,15 +131,17 @@ Tracker.prototype.handleKeyEvent = function (e) {
 					this.modePlay = this.player.playPosition(false, true, true);
 					o.lastPlayMode = 2;
 				}
-			}
 
-			// ENTER (hold to play position at current line)
-			else if (o[13] && o.lastPlayMode === 3) {
-				this.modePlay = false;
-				this.player.stopChannel();
-				this.updateTracklist();
-				o.lastPlayMode = 0;
+				o.modsHandled = true;
 			}
+		}
+
+		// ENTER (hold to play position at current line)
+		if (o[13] && this.modePlay && o.lastPlayMode === 3) {
+			this.modePlay = false;
+			this.player.stopChannel();
+			this.updateTracklist();
+			o.lastPlayMode = 0;
 		}
 
 		// remove entry from the keymapper
@@ -121,11 +149,15 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			delete o[key];
 			if (o.length)
 				o.length--;
-		} else if (o[key + 256]) {
+		}
+		if (o[key + 256]) {
 			delete o[key + 256];
 			if (o.length)
 				o.length--;
 		}
+
+		if (isInput)
+			return true;
 	}
 
 	e.preventDefault();
