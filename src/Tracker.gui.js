@@ -73,7 +73,9 @@ Tracker.prototype.populateGUI = function () {
 					app.tracklist.moveCurrentline(1);
 				else if (delta > 0)
 					app.tracklist.moveCurrentline(-1);
+
 				app.updateTracklist();
+				app.updatePanelInfo();
 			}
 		}, {
 			selector: '#scOctave',
