@@ -100,6 +100,8 @@ Tracker.prototype.handleKeyEvent = function (e) {
 		}
 	}
 	else if (e.type === 'keyup') {
+		if (this.handleTrackerHotkeys(key))
+			isInput = false;
 		if (isInput)
 			o.modsHandled = true;
 
@@ -162,5 +164,57 @@ Tracker.prototype.handleKeyEvent = function (e) {
 
 	e.preventDefault();
 	return false;
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.handleTrackerHotkeys = function (key) {
+	var o = this.globalKeyState,
+		done = false;
+
+	if (o[17]) switch (key) {
+		case 67:		// Ctrl+C - Copy
+			done = true;
+			break;
+
+		case 68:		// Ctrl+D - Clear
+			done = true;
+			break;
+
+		case 78:		// Ctrl+N - New
+			done = true;
+			break;
+
+		case 79:		// Ctrl+O - Open
+			done = true;
+			break;
+
+		case 83:		// Ctrl+S - Save
+			done = true;
+			break;
+
+		case 86:		// Ctrl+V - Paste
+			done = true;
+			break;
+
+		case 88:		// Ctrl+X - Cut
+			done = true;
+			break;
+
+		case 90:		// Ctrl+Z - Undo
+			if (!o[16]) {
+				done = true;
+				break;
+			}
+		case 89:		// Ctrl+Y / Ctrl+Shift+Z - Redo
+			done = true;
+			break;
+
+		default:
+			break;
+	}
+
+	if (done)
+		o.modsHandled = true;
+
+	return done;
 };
 //---------------------------------------------------------------------------------------
