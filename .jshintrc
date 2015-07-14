@@ -1,4 +1,6 @@
 {
+	"asi": true,
+	"boss": true,
 	"curly": true,
 	"eqeqeq": true,
 	"immed": true,
@@ -20,5 +22,6 @@
 		"exports": true,
 		"_": true,
 		"$": true
-	}
+	},
+	"-W099": true
 }

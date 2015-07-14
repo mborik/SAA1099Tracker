@@ -1,48 +1,38 @@
 module.exports = function(grunt) {
-	// Project configuration.
 	grunt.initConfig({
-		pkg: grunt.file.readJSON('package.json'),
-		today: grunt.template.today("yyyy"),
-		banner:
-			'/*\n' +
-			' * <%= pkg.name %> v<%= pkg.version %>\n' +
-			' * Copyright (c) 2011-<%= today %> <%= pkg.author.name %> <<%= pkg.author.email %>>\n' +
-			' */',
-
 		jshint: {
 			jshintrc: '.jshintrc',
 			gruntfile: {
 				src: 'Gruntfile.js'
 			},
 			files: [
-				'src/Audio.js',
-				'src/Player.js'
+				'build/js/Audio.js',
+				'build/js/Commons.js',
+				'build/js/Player.js',
+				'build/js/SAASound.js',
+				'build/js/Tracker.js'
 			]
 		},
 		copy: {
 			'bootstrap': {
-				files: [
-					{
-						expand: true,
-						cwd: 'bower_components/bootstrap/dist/fonts/',
-						src: '**',
-						dest: 'build/fonts/',
-						flatten: false,
-						filter: 'isFile'
-					}
-				]
+				files: [{
+					expand: true,
+					cwd: 'bower_components/bootstrap/dist/fonts/',
+					src: '**',
+					dest: 'build/fonts/',
+					flatten: false,
+					filter: 'isFile'
+				}]
 			},
 			'jquery': {
-				files: [
-					{
-						expand: true,
-						cwd: 'bower_components/jquery/dist/',
-						src: '**',
-						dest: 'build/js',
-						flatten: true,
-						filter: 'isFile'
-					}
-				]
+				files: [{
+					expand: true,
+					cwd: 'bower_components/jquery/dist/',
+					src: '**',
+					dest: 'build/js',
+					flatten: true,
+					filter: 'isFile'
+				}]
 			},
 			"commons": {
 				src: 'src/Commons.js',
@@ -95,9 +85,9 @@ module.exports = function(grunt) {
 					sourceMap: true
 				}
 			},
-			base: {
-				src: ['src/**/*.ts'],
-				dest: 'build/js',
+			Player: {
+				src: ['src/Player.ts'],
+				dest: 'build/js/Player.js',
 				options: {
 					module: 'commonjs',
 					target: 'ES5',
@@ -112,23 +102,26 @@ module.exports = function(grunt) {
 					paths: ['less', 'bower_components/bootstrap/less']
 				},
 				files: {
-					'build/css/bootstrap.css': 'styles/bootstrap.less'
+					'build/css/styles.css': 'styles/bootstrap.less'
 				}
 			}
 		},
 		uglify: {
 			options: {
+				compress: { drop_console: true },
 				preserveComments: 'some',
+				ASCIIOnly: true,
 				screwIE8: true
 			},
 			'scripts': {
 				files: {
-					'build/js/SAASound.min.js': 'build/js/SAASound.js',
-					'build/js/Tracker.min.js': 'build/js/Tracker.js',
-					'build/js/Player.min.js': 'build/js/Player.js',
+					'build/init.js': 'src/init.js',
+					'build/js/bootstrap.min.js': 'build/js/bootstrap.js',
 					'build/js/Commons.min.js': 'build/js/Commons.js',
 					'build/js/Audio.min.js': 'build/js/Audio.js',
-					'build/js/bootstrap.min.js': 'build/js/bootstrap.js'
+					'build/js/SAASound.min.js': 'build/js/SAASound.js',
+					'build/js/Player.min.js': 'build/js/Player.js',
+					'build/js/Tracker.min.js': 'build/js/Tracker.js'
 				}
 			}
 		},
@@ -138,7 +131,7 @@ module.exports = function(grunt) {
 					sourceMap: true
 				},
 				files: {
-					'build/css/bootstrap.min.css': 'build/css/bootstrap.css'
+					'build/css/styles.min.css': 'build/css/styles.css'
 				}
 			}
 		},
