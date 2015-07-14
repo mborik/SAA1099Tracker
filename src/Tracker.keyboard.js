@@ -55,7 +55,7 @@
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
-		isInput = (e.target && (e.target.type === 'text')),
+		isInput = (e.target && e.target.type === 'text'),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -84,7 +84,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if (isInput)
+		if (isInput && !this.handleTrackerHotkeys(key, true))
 			return true;
 
 		// ENTER (hold to play position at current line)
@@ -102,8 +102,6 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	else if (e.type === 'keyup') {
 		if (this.handleTrackerHotkeys(key))
 			isInput = false;
-		if (isInput)
-			o.modsHandled = true;
 
 		if (!o.modsHandled && canPlay) {
 			// RIGHT SHIFT (play position)
@@ -166,55 +164,152 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleTrackerHotkeys = function (key) {
-	var o = this.globalKeyState,
-		done = false;
+Tracker.prototype.handleTrackerHotkeys = function (key, testOnly) {
+	var o = this.globalKeyState, app = this,
+		fn = false;
 
 	if (o[17]) switch (key) {
-		case 67:		// Ctrl+C - Copy
-			done = true;
+		case 79: // O
+			fn = function() {
+				console.log('TrackerHotkey: Ctrl+O - Open');
+			};
 			break;
 
-		case 68:		// Ctrl+D - Clear
-			done = true;
+		case 83: // S
+			fn = function() {
+				console.log('TrackerHotkey: Ctrl+S - Save');
+			};
 			break;
 
-		case 78:		// Ctrl+N - New
-			done = true;
-			break;
-
-		case 79:		// Ctrl+O - Open
-			done = true;
-			break;
-
-		case 83:		// Ctrl+S - Save
-			done = true;
-			break;
-
-		case 86:		// Ctrl+V - Paste
-			done = true;
-			break;
-
-		case 88:		// Ctrl+X - Cut
-			done = true;
-			break;
-
-		case 90:		// Ctrl+Z - Undo
+		case 90: // Z
 			if (!o[16]) {
-				done = true;
+				fn = function() {
+					console.log('TrackerHotkey: Ctrl+Z - Undo');
+				};
 				break;
 			}
-		case 89:		// Ctrl+Y / Ctrl+Shift+Z - Redo
-			done = true;
+		case 89: // Y
+			fn = function() {
+				console.log('TrackerHotkey: Ctrl+Y / Ctrl+Shift+Z - Redo');
+			};
+			break;
+
+		case 97: case 98: case 99:
+		case 100: case 101: case 102: // Num1..Num6
+			fn = function() {
+				var chn = key - 96;
+				console.log('TrackerHotkey: Ctrl+Num' + chn + ' - Toggle channel');
+				$('#scChnButton' + chn).bootstrapToggle('toggle');
+			};
+			break;
+
+		case 82:  // R
+		case 116: // F5
+			fn = testOnly = true; // disable refresh browser hotkeys
+			break;
+
+		default:
+			break;
+	}
+	else if (o.length === 1) switch (key) {
+		case 27:
+			fn = function() {
+				console.log('TrackerHotkey: Esc - Stop');
+				app.onCmdStop();
+			};
+			break;
+
+		case 112:
+			fn = function() {
+				console.log('TrackerHotkey: F1 - About');
+			};
+			break;
+
+		case 113:
+			fn = function() {
+				console.log('TrackerHotkey: F2 - Tracklist Editor');
+				$('#tab-tracker-editor').click();
+			};
+			break;
+
+		case 114:
+			fn = function() {
+				console.log('TrackerHotkey: F3 - Sample Editor');
+				$('#tab-sample-editor').click();
+			};
+			break;
+
+		case 115:
+			fn = function() {
+				console.log('TrackerHotkey: F4 - Ornament Editor');
+				$('#tab-ornament-editor').click();
+			};
+			break;
+
+		case 116:
+			fn = function() {
+				console.log('TrackerHotkey: F5 - Play song');
+				app.onCmdSongPlay();
+			};
+			break;
+
+		case 117:
+			fn = function() {
+				console.log('TrackerHotkey: F6 - Play song from start');
+				app.onCmdSongPlayStart();
+			};
+			break;
+
+		case 118:
+			fn = function() {
+				console.log('TrackerHotkey: F7 - Play position');
+				app.onCmdPosPlay();
+			};
+			break;
+
+		case 119:
+			fn = function() {
+				console.log('TrackerHotkey: F8 - Play position from start');
+				app.onCmdPosPlayStart();
+			};
+			break;
+	
+		case 120:
+			fn = function() {
+				console.log('TrackerHotkey: F9 - Track manager');
+			};
+			break;
+
+		case 121:
+			fn = function() {
+				console.log('TrackerHotkey: F10 - Preferences');
+			};
+			break;
+
+		case 122:
+			fn = function() {
+				console.log('TrackerHotkey: F11 - Toggle loop');
+				app.onCmdToggleLoop();
+			};
+			break;
+
+		case 123:
+			fn = function() {
+				console.log('TrackerHotkey: F12 - Unimplemented');
+			};
 			break;
 
 		default:
 			break;
 	}
 
-	if (done)
-		o.modsHandled = true;
+	if (fn) {
+		if (!testOnly) {
+			fn();
+			o.modsHandled = true;
+		}
 
-	return done;
+		return true;
+	}
 };
 //---------------------------------------------------------------------------------------
