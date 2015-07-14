@@ -194,32 +194,32 @@ class Player {
 		this.playParams = [];
 		this.nullPosition = new pPosition(64, 6);
 
-		var tab_tones: string[] = [
-			"\x05B-",
-			"\x21C-",
-			"\x3CC#",
-			"\x55D-",
-			"\x6DD#",
-			"\x84E-",
-			"\x99F-",
-			"\xADF#",
-			"\xC0G-",
-			"\xD2G#",
-			"\xE3A-",
-			"\xF3A#",
-			"\xFFB-"
+		var tab_tones: any[] = [
+			{ freq: 0x05, prefix: 'B-' },
+			{ freq: 0x21, prefix: 'C-' },
+			{ freq: 0x3C, prefix: 'C#' },
+			{ freq: 0x55, prefix: 'D-' },
+			{ freq: 0x6D, prefix: 'D#' },
+			{ freq: 0x84, prefix: 'E-' },
+			{ freq: 0x99, prefix: 'F-' },
+			{ freq: 0xAD, prefix: 'F#' },
+			{ freq: 0xC0, prefix: 'G-' },
+			{ freq: 0xD2, prefix: 'G#' },
+			{ freq: 0xE3, prefix: 'A-' },
+			{ freq: 0xF3, prefix: 'A#' },
+			{ freq: 0xFF, prefix: 'B-' }
 		];
 
 		this.tones = [ new pTone ];
 		for (var i: number = 1, o: number = 0, p: number = 1, c: number, t: pTone; i <= 96; i++, p++) {
 			t = new pTone;
-			t.txt = tab_tones[p].substr(1) + (o + 1);
+			t.txt = tab_tones[p].prefix + (o + 1);
 
-			c = tab_tones[p].charCodeAt(0);
+			c = tab_tones[p].freq;
 			if (c === 0xff && o < 7) {
 				o++;
 				p = 0;
-				c = tab_tones[p].charCodeAt(0);
+				c = tab_tones[p].freq;
 			}
 
 			t.oct = o;
