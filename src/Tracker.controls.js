@@ -177,3 +177,15 @@ Tracker.prototype.onCmdToggleLoop = function () {
 	el.addClass(glyph).css({ 'color': color });
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdToggleEditMode = function () {
+	var state = (this.modeEdit = !this.modeEdit),
+		el = $('.tracklist-panel');
+
+	if (state)
+		el.addClass('edit');
+	else
+		el.removeClass('edit');
+
+	this.updateTracklist(true);
+};
+//---------------------------------------------------------------------------------------

@@ -208,7 +208,10 @@ button {
 		margin-right: -@grid-gutter-width;
 		padding: @grid-gutter-width;
 
-		&.edit { border: 2px solid #f00 }
+		&.edit {
+			border: 2px solid #f00;
+			padding: (@grid-gutter-width - 1);
+		}
 	}
 
 	canvas {

@@ -7444,7 +7444,8 @@ label.toggle-off {
   padding: 5px;
 }
 .col-tracklist > .tracklist-panel.edit {
-  border: 2px solid #ff0000;
+  border: 2px solid #f00;
+  padding: 4px;
 }
 .col-tracklist canvas {
   display: block;

@@ -53,117 +53,6 @@
 		222      ' "
 */
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleKeyEvent = function (e) {
-	var o = this.globalKeyState,
-		isInput = (e.target && e.target.type === 'text'),
-		key = e.which || e.charCode || e.keyCode,
-		canPlay = !!this.player.position.length;
-
-	// cross-platform fixes
-	if (browser.isOpera && key === 219)
-		key = 91;
-	else if (browser.isFirefox) switch (key) {
- 		case 59:
- 			key = 186; break;
- 		case 61:
- 			key = 187; break;
- 		case 173:
- 			key = 189; break;
- 	}
-
-	if (e.type === 'keydown') {
-		if (key >= 16 && key <= 18) {
-			o.modsHandled = false;
-			if (e.location === 2)
-				key += 256;
-		}
-
-		// add new key to the keymapper
-		if (!o[key]) {
-			o[key] = true;
-			o.length++;
-		}
-
-		if (isInput && !this.handleTrackerHotkeys(key, true))
-			return true;
-
-		// ENTER (hold to play position at current line)
-		if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
-			this.modePlay = this.player.playPosition(false, false, false);
-			o.lastPlayMode = 3;
-		}
-		else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
-			this.modePlay = false;
-			this.player.stopChannel();
-			this.updateTracklist();
-			o.lastPlayMode = 0;
-		}
-	}
-	else if (e.type === 'keyup') {
-		if (this.handleTrackerHotkeys(key))
-			isInput = false;
-
-		if (!o.modsHandled && canPlay) {
-			// RIGHT SHIFT (play position)
-			if (o.length === 1 && o[272]) {
-				if (this.modePlay && o.lastPlayMode === 1) {
-					this.modePlay = false;
-					this.player.stopChannel();
-					this.updateTracklist();
-					o.lastPlayMode = 0;
-				}
-				else {
-					this.modePlay = this.player.playPosition(false, false, true);
-					o.lastPlayMode = 1;
-				}
-
-				o.modsHandled = true;
-			}
-			// RIGHT CTRL (play song)
-			else if (o.length === 1 && o[273]) {
-				if (this.modePlay && o.lastPlayMode === 2) {
-					this.modePlay = false;
-					this.player.stopChannel();
-					this.updateTracklist();
-					o.lastPlayMode = 0;
-				}
-				else {
-					this.modePlay = this.player.playPosition(false, true, true);
-					o.lastPlayMode = 2;
-				}
-
-				o.modsHandled = true;
-			}
-		}
-
-		// ENTER (hold to play position at current line)
-		if (o[13] && this.modePlay && o.lastPlayMode === 3) {
-			this.modePlay = false;
-			this.player.stopChannel();
-			this.updateTracklist();
-			o.lastPlayMode = 0;
-		}
-
-		// remove entry from the keymapper
-		if (o[key]) {
-			delete o[key];
-			if (o.length)
-				o.length--;
-		}
-		if (o[key + 256]) {
-			delete o[key + 256];
-			if (o.length)
-				o.length--;
-		}
-
-		if (isInput)
-			return true;
-	}
-
-	e.preventDefault();
-	return false;
-};
-//---------------------------------------------------------------------------------------
 Tracker.prototype.hotkeyMap = function (group, key) {
 	var app = this;
 
@@ -187,8 +76,11 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 		case 'globalFs':
 			return {
 				27: function() {
-//					console.log('TrackerHotkey: Esc - Stop');
-					app.onCmdStop();
+					console.log('TrackerHotkey: Esc - Stop');
+					if (app.modePlay)
+						app.onCmdStop();
+					else if (app.modeEdit)
+						app.onCmdToggleEditMode();
 				},
 				112: function() {
 					console.log('TrackerHotkey: F1 - About');
@@ -276,16 +168,176 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 				}
 			}[key];
 
+		case 'editorShift':
+			return {
+				9: function () {
+					console.log('TrackerHotkey: Shift+Tab - Previous channel');
+
+					if (!app.modeEdit)
+						return;
+					if (app.modeEditChannel > 0)
+						app.modeEditChannel--;
+					else
+						app.modeEditChannel = 5;
+
+					app.updateTracklist();
+				}
+			}[key];
+
+		case 'editorKeys':
+			return {
+				9: function () {
+					console.log('TrackerHotkey: Tab - Next channel');
+
+					if (!app.modeEdit)
+						return;
+					if (app.modeEditChannel < 5)
+						app.modeEditChannel++;
+					else
+						app.modeEditChannel = 0;
+
+					app.updateTracklist();
+				},
+				32: function() {
+					console.log('TrackerHotkey: Space - Edit mode');
+					if (app.modePlay)
+						app.onCmdStop();
+					if (app.player.position.length)
+						app.onCmdToggleEditMode();
+				}
+			}[key];
+
 		default:
 			return undefined;
 	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.handleKeyEvent = function (e) {
+	var o = this.globalKeyState,
+		isInput = (e.target && e.target.type === 'text'),
+		key = e.which || e.charCode || e.keyCode,
+		canPlay = !!this.player.position.length;
+
+	// cross-platform fixes
+	if (browser.isOpera && key === 219)
+		key = 91;
+	else if (browser.isFirefox) switch (key) {
+ 		case 59:
+ 			key = 186; break;
+ 		case 61:
+ 			key = 187; break;
+ 		case 173:
+ 			key = 189; break;
+ 	}
+
+	if (e.type === 'keydown') {
+		if (key >= 16 && key <= 18) {
+			o.modsHandled = false;
+			if (e.location === 2)
+				key += 256;
+		}
+
+		// add new key to the keymapper
+		if (!o[key]) {
+			o[key] = true;
+			o.length++;
+		}
+
+		if (isInput && !this.handleTrackerHotkeys(key, true))
+			return true;
+
+		if (this.activeTab === 0) {
+			// ENTER (hold to play position at current line)
+			if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
+				this.modePlay = this.player.playPosition(false, false, false);
+				o.lastPlayMode = 3;
+			}
+			else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
+				this.modePlay = false;
+				this.player.stopChannel();
+				this.updateTracklist();
+				o.lastPlayMode = 0;
+			}
+
+			if (isInput && o[9]) {
+				delete o[9];
+				o.length--;
+				e.target.blur();
+			}
+		}
+	}
+	else if (e.type === 'keyup') {
+		if (o[key] && this.handleTrackerHotkeys(key))
+			isInput = false;
+
+		if (!o.modsHandled && canPlay) {
+			// RIGHT SHIFT (play position)
+			if (o.length === 1 && o[272]) {
+				if (this.modePlay && o.lastPlayMode === 1) {
+					this.modePlay = false;
+					this.player.stopChannel();
+					this.updateTracklist();
+					o.lastPlayMode = 0;
+				}
+				else {
+					this.modePlay = this.player.playPosition(false, false, true);
+					o.lastPlayMode = 1;
+				}
+
+				o.modsHandled = true;
+			}
+			// RIGHT CTRL (play song)
+			else if (o.length === 1 && o[273]) {
+				if (this.modePlay && o.lastPlayMode === 2) {
+					this.modePlay = false;
+					this.player.stopChannel();
+					this.updateTracklist();
+					o.lastPlayMode = 0;
+				}
+				else {
+					this.modePlay = this.player.playPosition(false, true, true);
+					o.lastPlayMode = 2;
+				}
+
+				o.modsHandled = true;
+			}
+		}
+
+		if (this.activeTab === 0) {
+			// ENTER (hold to play position at current line)
+			if (o[13] && this.modePlay && o.lastPlayMode === 3) {
+				this.modePlay = false;
+				this.player.stopChannel();
+				this.updateTracklist();
+				o.lastPlayMode = 0;
+			}
+		}
+
+		// remove entry from the keymapper
+		if (o[key]) {
+			delete o[key];
+			if (o.length)
+				o.length--;
+		}
+		if (o[key + 256]) {
+			delete o[key + 256];
+			if (o.length)
+				o.length--;
+		}
+
+		if (isInput)
+			return true;
+	}
+
+	e.preventDefault();
+	return false;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleTrackerHotkeys = function (key, testOnly) {
 	var o = this.globalKeyState,
 		fn = false;
 
-	if (o[17]) { // handle Ctrl+
+	if (o[17] && key !== 17) { // handle Ctrl+
 		if (key === 90 && o[16]) { // convert Ctrl+Shift+Z to Ctrl+Y
 			key = 89;
 			delete o[key];
@@ -309,8 +361,16 @@ Tracker.prototype.handleTrackerHotkeys = function (key, testOnly) {
 		else if (o.length === 3 && o[16] && this.activeTab === 0)
 			fn = this.hotkeyMap('trackerCtrlShift', key);
 	}
-	else if (o.length === 1)
-		fn = this.hotkeyMap('globalFs', key);
+	else if (o[16] && key !== 16 && o.length === 2 && this.activeTab === 0)
+		fn = this.hotkeyMap('editorShift', key);
+	else if (o.length === 1) {
+		if (!(fn = this.hotkeyMap('globalFs', key))) {
+			if (this.activeTab === 0)
+				fn = this.hotkeyMap('editorKeys', key);
+			else
+				fn = this.hotkeyMap('smpornKeys', key);
+		}
+	}
 
 	if (fn) {
 		if (!testOnly) {
