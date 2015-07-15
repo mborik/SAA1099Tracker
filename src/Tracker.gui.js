@@ -56,6 +56,13 @@ Tracker.prototype.populateGUI = function () {
 				}
 			}
 		}, {
+			selector: '#main-tabpanel a',
+			method:   'bind',
+			param:    'click',
+			handler:  function(e) {
+				app.activeTab = parseInt($(this).data().value);
+			}
+		}, {
 			selector: '#tracklist',
 			method:   'on',
 			param:    'mousewheel DOMMouseScroll',

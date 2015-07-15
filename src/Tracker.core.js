@@ -2,6 +2,8 @@
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker() {
+		this.activeTab = 0;
+
 		this.modePlay = false;
 		this.modeEdit = false;
 		this.modeEditChannel = 0;
