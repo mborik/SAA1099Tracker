@@ -31,7 +31,7 @@
 
 			for (c = 0; c < alts.length; c++) {
 				n = alts[c] + prop;
-				if (obj = base[n]) {
+				if (!!(obj = base[n])) {
 					prop = n;
 					break;
 				}
@@ -105,7 +105,7 @@ var SyncTimer = (function() {
 		});
 
 		return true;
-	}
+	};
 
 	this.end = function() { enabled = false }
 
@@ -116,7 +116,7 @@ var SyncTimer = (function() {
 			return false;
 		this.callback();
 		lastT = t;
-	}
+	};
 
 	return this;
 })();
@@ -124,4 +124,4 @@ var SyncTimer = (function() {
 Number.prototype.toWidth = function(w) {
 	var a = '' + (this.valueOf() >> 0);
 	return ('0000000000' + a).substr(-Math.max(w || 0, a.length));
-}
+};

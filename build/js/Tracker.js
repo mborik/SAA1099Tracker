@@ -129,6 +129,8 @@ var Tracklist = (function () {
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker() {
+		this.activeTab = 0;
+
 		this.modePlay = false;
 		this.modeEdit = false;
 		this.modeEditChannel = 0;
@@ -527,7 +529,7 @@ Tracker.prototype.onCmdToggleLoop = function () {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
-		isInput = (e.target && (e.target.type === 'text')),
+		isInput = (e.target && e.target.type === 'text'),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -556,7 +558,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if (isInput)
+		if (isInput && !this.handleTrackerHotkeys(key, true))
 			return true;
 
 		// ENTER (hold to play position at current line)
@@ -574,8 +576,6 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	else if (e.type === 'keyup') {
 		if (this.handleTrackerHotkeys(key))
 			isInput = false;
-		if (isInput)
-			o.modsHandled = true;
 
 		if (!o.modsHandled && canPlay) {
 			// RIGHT SHIFT (play position)
@@ -638,56 +638,162 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleTrackerHotkeys = function (key) {
-	var o = this.globalKeyState,
-		done = false;
+Tracker.prototype.hotkeyMap = function (group, key) {
+	var app = this;
 
-	if (o[17]) switch (key) {
-		case 67:		// Ctrl+C - Copy
-			done = true;
-			break;
+	switch (group) {
+		case 'globalCtrl':
+			return {
+				79: function() {
+					console.log('TrackerHotkey: Ctrl+O - Open');
+				},
+				83: function() {
+					console.log('TrackerHotkey: Ctrl+S - Save');
+				},
+				89: function() {
+					console.log('TrackerHotkey: Ctrl+Y - Redo');
+				},
+				90: function() {
+					console.log('TrackerHotkey: Ctrl+Z - Undo');
+				}
+			}[key];
 
-		case 68:		// Ctrl+D - Clear
-			done = true;
-			break;
+		case 'globalFs':
+			return {
+				27: function() {
+//					console.log('TrackerHotkey: Esc - Stop');
+					app.onCmdStop();
+				},
+				112: function() {
+					console.log('TrackerHotkey: F1 - About');
+				},
+				113: function() {
+					console.log('TrackerHotkey: F2 - Tracklist Editor');
+					$('#tab-tracker').trigger('click');
+				},
+				114: function() {
+					console.log('TrackerHotkey: F3 - Sample Editor');
+					$('#tab-smpedit').trigger('click');
+				},
+				115: function() {
+					console.log('TrackerHotkey: F4 - Ornament Editor');
+					$('#tab-ornedit').trigger('click');
+				},
+				116: function() {
+					console.log('TrackerHotkey: F5 - Play song');
+					app.onCmdSongPlay();
+				},
+				117: function() {
+					console.log('TrackerHotkey: F6 - Play song from start');
+					app.onCmdSongPlayStart();
+				},
+				118: function() {
+					console.log('TrackerHotkey: F7 - Play position');
+					app.onCmdPosPlay();
+				},
+				119: function() {
+					console.log('TrackerHotkey: F8 - Play position from start');
+					app.onCmdPosPlayStart();
+				},
+				120: function() {
+					console.log('TrackerHotkey: F9 - Track manager');
+				},
+				121: function() {
+					console.log('TrackerHotkey: F10 - Preferences');
+				},
+				122: function() {
+					console.log('TrackerHotkey: F11 - Toggle loop');
+					app.onCmdToggleLoop();
+				},
+				123: function() {
+					console.log('TrackerHotkey: F12 - Unimplemented');
+				}
+			}[key];
 
-		case 78:		// Ctrl+N - New
-			done = true;
-			break;
+		case 'trackerCtrl':
+			if (key > 96 && key < 103)
+				key = 96;
+			else if (key > 48 && key < 57)
+				key = 56;
 
-		case 79:		// Ctrl+O - Open
-			done = true;
-			break;
+			return {
+				48: function () {
+					console.log('TrackerHotkey: Ctrl+0 - Increase rowstep');
+					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.uponce').val(), 10);
+				},
+				56: function (oct) {
+					oct -= 48;
+					console.log('TrackerHotkey: Ctrl+' + oct + ' - Set octave');
+					$('#scOctave').val(oct);
+					app.ctrlOctave = oct;
+				},
+				57: function () {
+					console.log('TrackerHotkey: Ctrl+9 - Decrease rowstep');
+					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.downonce').val(), 10);
+				},
+				96: function (chn) {
+					chn -= 96;
+					console.log('TrackerHotkey: Ctrl+Num' + chn + ' - Toggle channel');
+					$('#scChnButton' + chn).bootstrapToggle('toggle');
+				}
+			}[key];
 
-		case 83:		// Ctrl+S - Save
-			done = true;
-			break;
-
-		case 86:		// Ctrl+V - Paste
-			done = true;
-			break;
-
-		case 88:		// Ctrl+X - Cut
-			done = true;
-			break;
-
-		case 90:		// Ctrl+Z - Undo
-			if (!o[16]) {
-				done = true;
-				break;
-			}
-		case 89:		// Ctrl+Y / Ctrl+Shift+Z - Redo
-			done = true;
-			break;
+		case 'trackerCtrlShift':
+			return {
+				37: function () {
+					console.log('TrackerHotkey: Ctrl+Shift+Left - Previous position');
+					$('#scPosCurrent').trigger('touchspin.downonce');
+				},
+				39: function () {
+					console.log('TrackerHotkey: Ctrl+Shift+Right - Next position');
+					$('#scPosCurrent').trigger('touchspin.uponce');
+				}
+			}[key];
 
 		default:
-			break;
+			return undefined;
 	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.handleTrackerHotkeys = function (key, testOnly) {
+	var o = this.globalKeyState,
+		fn = false;
 
-	if (done)
-		o.modsHandled = true;
+	if (o[17]) { // handle Ctrl+
+		if (key === 90 && o[16]) { // convert Ctrl+Shift+Z to Ctrl+Y
+			key = 89;
+			delete o[key];
+			delete o[16];
+			if (o.length)
+				o.length--;
+		}
 
-	return done;
+		if (o.length === 2) {
+			if (key === 82 || key === 116)
+				fn = testOnly = true; // disable refresh browser hotkeys
+			else if (!(fn = this.hotkeyMap('globalCtrl', key))) {
+				if (this.activeTab === 0 && !(fn = this.hotkeyMap('trackerCtrl', key)))
+					fn = this.hotkeyMap('editorCtrl', key);
+				else if (this.activeTab === 1)
+					fn = this.hotkeyMap('smpeditCtrl', key);
+				else if (this.activeTab === 2)
+					fn = this.hotkeyMap('orneditCtrl', key);
+			}
+		}
+		else if (o.length === 3 && o[16] && this.activeTab === 0)
+			fn = this.hotkeyMap('trackerCtrlShift', key);
+	}
+	else if (o.length === 1)
+		fn = this.hotkeyMap('globalFs', key);
+
+	if (fn) {
+		if (!testOnly) {
+			fn(key);
+			o.modsHandled = true;
+		}
+
+		return true;
+	}
 };
 //---------------------------------------------------------------------------------------
 
@@ -980,6 +1086,13 @@ Tracker.prototype.populateGUI = function () {
 					if (name === 'tracklist')
 						o.setHeight();
 				}
+			}
+		}, {
+			selector: '#main-tabpanel a',
+			method:   'bind',
+			param:    'click',
+			handler:  function(e) {
+				app.activeTab = parseInt($(this).data().value);
 			}
 		}, {
 			selector: '#tracklist',
