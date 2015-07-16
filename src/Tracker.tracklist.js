@@ -79,7 +79,7 @@ var Tracklist = (function () {
 			$(this.obj).prop('height', height).css({ 'height': height * this.zoom });
 		};
 
-		this.moveCurrentline = function(delta) {
+		this.moveCurrentline = function(delta, noWrap) {
 			if (!app.player.position.length || app.modePlay)
 				return;
 
@@ -87,7 +87,9 @@ var Tracklist = (function () {
 				pos = app.player.currentPosition,
 				pp = app.player.position[pos];
 
-			if (line < 0)
+			if (noWrap)
+				line = Math.min(Math.max(line, 0), pp.length - 1);
+			else if (line < 0)
 				line += pp.length;
 			else if (line >= pp.length)
 				line -= pp.length;
