@@ -26,6 +26,17 @@ Tracker.prototype.populateGUI = function () {
 			param:    'keyup keydown',
 			handler:  function(e) { return app.handleKeyEvent(e.originalEvent) }
 		}, {
+			global:   'window',
+			method:   'bind',
+			param:    'blur',
+			handler:  function(e) {
+				var i, o = app.globalKeyState;
+				for (i in o) if ((i - 0)) {
+					delete o[i];
+					o.length--;
+				}
+			}
+		}, {
 			selector: '[data-toggle="tooltip"]',
 			method:   'tooltip',
 			data:     {
@@ -162,9 +173,11 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scPosCurrent',
 			method:   'change',
-			handler:  function() {
-				if (!app.player.position.length)
+			handler:  function(e) {
+				if (!app.player.position.length || app.modePlay) {
+					e.preventDefault();
 					return;
+				}
 				app.player.currentPosition = $(this).val() - 1;
 				app.updatePanelInfo();
 				app.updatePanelPosition();
