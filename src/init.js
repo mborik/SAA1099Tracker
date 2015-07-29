@@ -52,4 +52,6 @@
 			el.appendChild(s);
 		}
 	}
+
+	window.dev = !dev;
 })();

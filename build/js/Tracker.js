@@ -554,16 +554,16 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			return {
 				79: function () {
-					console.log('TrackerHotkey: Ctrl+O - Open');
+					console.logHotkey('Ctrl+O - Open');
 				},
 				83: function () {
-					console.log('TrackerHotkey: Ctrl+S - Save');
+					console.logHotkey('Ctrl+S - Save');
 				},
 				89: function () {
-					console.log('TrackerHotkey: Ctrl+Y - Redo');
+					console.logHotkey('Ctrl+Y - Redo');
 				},
 				90: function () {
-					console.log('TrackerHotkey: Ctrl+Z - Undo');
+					console.logHotkey('Ctrl+Z - Undo');
 				}
 			}[key];
 
@@ -573,55 +573,55 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			return {
 				27: function () {
-					console.log('TrackerHotkey: Esc - Stop');
+					console.logHotkey('Esc - Stop');
 					if (app.modePlay)
 						app.onCmdStop();
 					else if (app.modeEdit)
 						app.onCmdToggleEditMode();
 				},
 				112: function () {
-					console.log('TrackerHotkey: F1 - About');
+					console.logHotkey('F1 - About');
 				},
 				113: function () {
-					console.log('TrackerHotkey: F2 - Tracklist Editor');
+					console.logHotkey('F2 - Tracklist Editor');
 					$('#tab-tracker').trigger('click');
 				},
 				114: function () {
-					console.log('TrackerHotkey: F3 - Sample Editor');
+					console.logHotkey('F3 - Sample Editor');
 					$('#tab-smpedit').trigger('click');
 				},
 				115: function () {
-					console.log('TrackerHotkey: F4 - Ornament Editor');
+					console.logHotkey('F4 - Ornament Editor');
 					$('#tab-ornedit').trigger('click');
 				},
 				116: function () {
-					console.log('TrackerHotkey: F5 - Play song');
+					console.logHotkey('F5 - Play song');
 					app.onCmdSongPlay();
 				},
 				117: function () {
-					console.log('TrackerHotkey: F6 - Play song from start');
+					console.logHotkey('F6 - Play song from start');
 					app.onCmdSongPlayStart();
 				},
 				118: function () {
-					console.log('TrackerHotkey: F7 - Play position');
+					console.logHotkey('F7 - Play position');
 					app.onCmdPosPlay();
 				},
 				119: function () {
-					console.log('TrackerHotkey: F8 - Play position from start');
+					console.logHotkey('F8 - Play position from start');
 					app.onCmdPosPlayStart();
 				},
 				120: function () {
-					console.log('TrackerHotkey: F9 - Track manager');
+					console.logHotkey('F9 - Track manager');
 				},
 				121: function () {
-					console.log('TrackerHotkey: F10 - Preferences');
+					console.logHotkey('F10 - Preferences');
 				},
 				122: function () {
-					console.log('TrackerHotkey: F11 - Toggle loop');
+					console.logHotkey('F11 - Toggle loop');
 					app.onCmdToggleLoop();
 				},
 				123: function () {
-					console.log('TrackerHotkey: F12 - Unimplemented');
+					console.logHotkey('F12 - Unimplemented');
 				}
 			}[key];
 
@@ -636,22 +636,22 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			return {
 				48: function () {
-					console.log('TrackerHotkey: Ctrl+0 - Increase rowstep');
+					console.logHotkey('Ctrl+0 - Increase rowstep');
 					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.uponce').val(), 10);
 				},
 				56: function (oct) {
 					oct -= 48;
-					console.log('TrackerHotkey: Ctrl+' + oct + ' - Set octave');
+					console.logHotkey('Ctrl+' + oct + ' - Set octave');
 					$('#scOctave').val(oct);
 					app.ctrlOctave = oct;
 				},
 				57: function () {
-					console.log('TrackerHotkey: Ctrl+9 - Decrease rowstep');
+					console.logHotkey('Ctrl+9 - Decrease rowstep');
 					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.downonce').val(), 10);
 				},
 				96: function (chn) {
 					chn -= 96;
-					console.log('TrackerHotkey: Ctrl+Num' + chn + ' - Toggle channel');
+					console.logHotkey('Ctrl+Num' + chn + ' - Toggle channel');
 					$('#scChnButton' + chn).bootstrapToggle('toggle');
 				}
 			}[key];
@@ -662,11 +662,11 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			return {
 				37: function () {
-					console.log('TrackerHotkey: Ctrl+Shift+Left - Previous position');
+					console.logHotkey('Ctrl+Shift+Left - Previous position');
 					$('#scPosCurrent').trigger('touchspin.downonce');
 				},
 				39: function () {
-					console.log('TrackerHotkey: Ctrl+Shift+Right - Next position');
+					console.logHotkey('Ctrl+Shift+Right - Next position');
 					$('#scPosCurrent').trigger('touchspin.uponce');
 				}
 			}[key];
@@ -677,7 +677,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			return {
 				9: function () {
-					console.log('TrackerHotkey: Shift+Tab - Previous channel');
+					console.logHotkey('Shift+Tab - Previous channel');
 					if (app.modeEditChannel > 0)
 						app.modeEditChannel--;
 					else
@@ -703,7 +703,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					if (!app.player.position.length || !app.modeEdit)
 						return;
 
-					console.log('TrackerHotkey: Tab - Next channel');
+					console.logHotkey('Tab - Next channel');
 					if (app.modeEditChannel < 5)
 						app.modeEditChannel++;
 					else
@@ -712,29 +712,29 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					app.updateTracklist();
 				},
 				32: function () {
-					console.log('TrackerHotkey: Space - Edit mode');
+					console.logHotkey('Space - Edit mode');
 					if (app.modePlay)
 						app.onCmdStop();
 					if (app.player.position.length)
 						app.onCmdToggleEditMode();
 				},
 				33: function () {
-					console.log('TrackerHotkey: PageUp - Move cursor up by half of tracklines');
+					console.logHotkey('PageUp - Move cursor up by half of tracklines');
 					app.tracklist.moveCurrentline(-(app.settings.tracklistLines >> 1), true);
 					app.updateTracklist();
 				},
 				34: function () {
-					console.log('TrackerHotkey: PageDown - Move cursor down by half of tracklines');
+					console.logHotkey('PageDown - Move cursor down by half of tracklines');
 					app.tracklist.moveCurrentline((app.settings.tracklistLines >> 1), true);
 					app.updateTracklist();
 				},
 				35: function () {
-					console.log('TrackerHotkey: End - Move cursor to end of the position');
+					console.logHotkey('End - Move cursor to end of the position');
 					app.tracklist.moveCurrentline(96, true);
 					app.updateTracklist();
 				},
 				36: function () {
-					console.log('TrackerHotkey: Home - Move cursor to start of the position');
+					console.logHotkey('Home - Move cursor to start of the position');
 					app.tracklist.moveCurrentline(-96, true);
 					app.updateTracklist();
 				},
@@ -742,7 +742,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					if (!app.modeEdit)
 						return;
 
-					console.log('TrackerHotkey: Left - Cursor movement');
+					console.logHotkey('Left - Cursor movement');
 					if (app.modeEditColumn > 0)
 						app.modeEditColumn--;
 					else {
@@ -756,7 +756,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					app.updateTracklist();
 				},
 				38: function () {
-					console.log('TrackerHotkey: Up - Cursor movement');
+					console.logHotkey('Up - Cursor movement');
 					app.tracklist.moveCurrentline(-1);
 					app.updateTracklist();
 				},
@@ -764,7 +764,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					if (!app.modeEdit)
 						return;
 
-					console.log('TrackerHotkey: Right - Cursor movement');
+					console.logHotkey('Right - Cursor movement');
 					if (app.modeEditColumn < 7)
 						app.modeEditColumn++;
 					else {
@@ -778,7 +778,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					app.updateTracklist();
 				},
 				40: function () {
-					console.log('TrackerHotkey: Down - Cursor movement');
+					console.logHotkey('Down - Cursor movement');
 					app.tracklist.moveCurrentline(1);
 					app.updateTracklist();
 				},
@@ -824,10 +824,10 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if (isInput && !this.handleTrackerHotkeys('test', key))
+		if (isInput && !this.handleHotkeys('test', key))
 			return true;
 
-		if (!this.handleTrackerHotkeys(type, key)) {
+		if (!this.handleHotkeys(type, key)) {
 			if (this.activeTab === 0) {
 				// ENTER (hold to play position at current line)
 				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
@@ -850,7 +850,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 		}
 	}
 	else if (type === 'keyup') {
-		if (o[key] && this.handleTrackerHotkeys(type, key))
+		if (o[key] && this.handleHotkeys(type, key))
 			isInput = false;
 
 		if (!o.modsHandled && canPlay) {
@@ -916,7 +916,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleTrackerHotkeys = function (type, key) {
+Tracker.prototype.handleHotkeys = function (type, key) {
 	var o = this.globalKeyState,
 		fn = false;
 

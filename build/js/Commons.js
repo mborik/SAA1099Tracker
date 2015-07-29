@@ -78,6 +78,20 @@
 
 		return browser;
 	})(window);
+
+	// developer's extensions
+	if (window.dev) console.log((function DeveloperMode() {
+		window.dev = {
+			logHotkeys: false
+		};
+
+		console.logHotkey = function(s) {
+			if (window.dev.logHotkeys)
+				console.log('TrackerHotkey: ' + s);
+		};
+
+		return '### DEVELOPER MODE ACTIVE ###';
+	})());
 }(window));
 
 var SyncTimer = (function() {
