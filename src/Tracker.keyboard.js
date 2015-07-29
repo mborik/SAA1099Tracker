@@ -53,11 +53,17 @@
 		222      ' "
 */
 //---------------------------------------------------------------------------------------
-Tracker.prototype.hotkeyMap = function (group, key) {
-	var app = this;
+Tracker.prototype.hotkeyMap = function (type, group, key) {
+	var app = this,
+		cursors = (key > 32 && key < 41),
+		keyup = /keyup|test/.test(type),
+		keydown = /keydown|test/.test(type);
 
 	switch (group) {
 		case 'globalCtrl':
+			if (!keyup)
+				return;
+
 			return {
 				79: function () {
 					console.log('TrackerHotkey: Ctrl+O - Open');
@@ -74,6 +80,9 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 			}[key];
 
 		case 'globalFs':
+			if (!keydown)
+				return;
+
 			return {
 				27: function () {
 					console.log('TrackerHotkey: Esc - Stop');
@@ -129,6 +138,9 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 			}[key];
 
 		case 'trackerCtrl':
+			if (!((type === 'repeat' && (key === 48 || key === 57) || type === 'keydown' || type === 'test')))
+				return;
+
 			if (key > 96 && key < 103)
 				key = 96;
 			else if (key > 48 && key < 57)
@@ -157,6 +169,9 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 			}[key];
 
 		case 'trackerCtrlShift':
+			if (!keyup)
+				return;
+
 			return {
 				37: function () {
 					console.log('TrackerHotkey: Ctrl+Shift+Left - Previous position');
@@ -169,7 +184,7 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 			}[key];
 
 		case 'editorShift':
-			if (!app.modeEdit || !app.player.position.length)
+			if (!keydown || !app.modeEdit || !app.player.position.length)
 				return;
 
 			return {
@@ -185,10 +200,13 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 			}[key];
 
 		case 'editorKeys':
-			if (key > 32 && key < 41) {
-				if (app.modeEdit && app.modePlay)
+			if (!(keydown || (type === 'repeat' && cursors)))
+				return;
+
+			if (cursors) {
+				if (app.modePlay)
 					app.onCmdStop();
-				else if (!app.player.position.length || !app.modeEdit && app.modePlay)
+				else if (!app.player.position.length || (!app.modeEdit && app.modePlay))
 					return;
 			}
 
@@ -285,7 +303,8 @@ Tracker.prototype.hotkeyMap = function (group, key) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
-		isInput = (e.target && e.target.type === 'text'),
+		type = e.type,
+		isInput = (e.target && e.target.type === 'text' && e.target.tabIndex > 0),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -301,33 +320,38 @@ Tracker.prototype.handleKeyEvent = function (e) {
  			key = 189; break;
  	}
 
-	if (e.type === 'keydown') {
+	if (type === 'keydown') {
 		if (key >= 16 && key <= 18) {
 			o.modsHandled = false;
 			if (e.location === 2)
 				key += 256;
 		}
 
+		if (e.repeat)
+			type = 'repeat';
+
 		// add new key to the keymapper
-		if (!o[key]) {
+		else if (!o[key]) {
 			o[key] = true;
 			o.length++;
 		}
 
-		if (isInput && !this.handleTrackerHotkeys(key, true))
+		if (isInput && !this.handleTrackerHotkeys('test', key))
 			return true;
 
-		if (this.activeTab === 0) {
-			// ENTER (hold to play position at current line)
-			if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
-				this.modePlay = this.player.playPosition(false, false, false);
-				o.lastPlayMode = 3;
-			}
-			else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
-				this.modePlay = false;
-				this.player.stopChannel();
-				this.updateTracklist();
-				o.lastPlayMode = 0;
+		if (!this.handleTrackerHotkeys(type, key)) {
+			if (this.activeTab === 0) {
+				// ENTER (hold to play position at current line)
+				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
+					this.modePlay = this.player.playPosition(false, false, false);
+					o.lastPlayMode = 3;
+				}
+				else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
+					this.modePlay = false;
+					this.player.stopChannel();
+					this.updateTracklist();
+					o.lastPlayMode = 0;
+				}
 			}
 
 			if (isInput && o[9]) {
@@ -337,8 +361,8 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			}
 		}
 	}
-	else if (e.type === 'keyup') {
-		if (o[key] && this.handleTrackerHotkeys(key))
+	else if (type === 'keyup') {
+		if (o[key] && this.handleTrackerHotkeys(type, key))
 			isInput = false;
 
 		if (!o.modsHandled && canPlay) {
@@ -404,47 +428,49 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleTrackerHotkeys = function (key, testOnly) {
+Tracker.prototype.handleTrackerHotkeys = function (type, key) {
 	var o = this.globalKeyState,
 		fn = false;
 
 	if (o[17] && key !== 17) { // handle Ctrl+
 		if (key === 90 && o[16]) { // convert Ctrl+Shift+Z to Ctrl+Y
-			key = 89;
 			delete o[key];
 			delete o[16];
 			if (o.length)
 				o.length--;
+			o[--key] = true;
 		}
 
 		if (o.length === 2) {
-			if (key === 82 || key === 116)
-				fn = testOnly = true; // disable refresh browser hotkeys
-			else if (!(fn = this.hotkeyMap('globalCtrl', key))) {
-				if (this.activeTab === 0 && !(fn = this.hotkeyMap('trackerCtrl', key)))
-					fn = this.hotkeyMap('editorCtrl', key);
+			if (key === 82 || key === 116) {
+				fn = true; // disable refresh browser hotkeys
+				type = 'test';
+			}
+			else if (!(fn = this.hotkeyMap(type, 'globalCtrl', key))) {
+				if (this.activeTab === 0 && !(fn = this.hotkeyMap(type, 'trackerCtrl', key)))
+					fn = this.hotkeyMap(type, 'editorCtrl', key);
 				else if (this.activeTab === 1)
-					fn = this.hotkeyMap('smpeditCtrl', key);
+					fn = this.hotkeyMap(type, 'smpeditCtrl', key);
 				else if (this.activeTab === 2)
-					fn = this.hotkeyMap('orneditCtrl', key);
+					fn = this.hotkeyMap(type, 'orneditCtrl', key);
 			}
 		}
 		else if (o.length === 3 && o[16] && this.activeTab === 0)
-			fn = this.hotkeyMap('trackerCtrlShift', key);
+			fn = this.hotkeyMap(type, 'trackerCtrlShift', key);
 	}
 	else if (o[16] && key !== 16 && o.length === 2 && this.activeTab === 0)
-		fn = this.hotkeyMap('editorShift', key);
+		fn = this.hotkeyMap(type, 'editorShift', key);
 	else if (o.length === 1) {
-		if (!(fn = this.hotkeyMap('globalFs', key))) {
+		if (!(fn = this.hotkeyMap(type, 'globalFs', key))) {
 			if (this.activeTab === 0)
-				fn = this.hotkeyMap('editorKeys', key);
+				fn = this.hotkeyMap(type, 'editorKeys', key);
 			else
-				fn = this.hotkeyMap('smpornKeys', key);
+				fn = this.hotkeyMap(type, 'smpornKeys', key);
 		}
 	}
 
 	if (fn) {
-		if (!testOnly) {
+		if (type !== 'test') {
 			fn(key);
 			o.modsHandled = true;
 		}
