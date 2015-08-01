@@ -80,14 +80,20 @@
 	})(window);
 
 	// developer's extensions
-	if (window.dev) console.log((function DeveloperMode() {
+	if (window.dev) console.info((function() {
 		window.dev = {
+			logAll: true,
 			logHotkeys: false
 		};
 
-		console.logHotkey = function(s) {
-			if (window.dev.logHotkeys)
-				console.log('TrackerHotkey: ' + s);
+		console.log = function() {
+			if (window.dev.logAll && arguments.length)
+			 	this.apply(console, arguments);
+		}.bind(console.log);
+
+		console.logHotkey = function() {
+			if (window.dev.logHotkeys && arguments.length)
+				console.log.apply(console, ['%cTrackerHotkey: ' + arguments[0], 'color:tan' ].concat(Array.prototype.slice.call(arguments, 1)));
 		};
 
 		return '### DEVELOPER MODE ACTIVE ###';
