@@ -178,7 +178,10 @@ Tracker.prototype.populateGUI = function () {
 					e.preventDefault();
 					return;
 				}
+
 				app.player.currentPosition = $(this).val() - 1;
+				app.player.currentLine = 0;
+
 				app.updatePanelInfo();
 				app.updatePanelPosition();
 				app.updateTracklist();
