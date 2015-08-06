@@ -722,21 +722,25 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					console.logHotkey('PageUp - Move cursor up by half of tracklines');
 					app.tracklist.moveCurrentline(-(app.settings.tracklistLines >> 1), true);
 					app.updateTracklist();
+					app.updatePanelInfo();
 				},
 				34: function () {
 					console.logHotkey('PageDown - Move cursor down by half of tracklines');
 					app.tracklist.moveCurrentline((app.settings.tracklistLines >> 1), true);
 					app.updateTracklist();
+					app.updatePanelInfo();
 				},
 				35: function () {
 					console.logHotkey('End - Move cursor to end of the position');
 					app.tracklist.moveCurrentline(96, true);
 					app.updateTracklist();
+					app.updatePanelInfo();
 				},
 				36: function () {
 					console.logHotkey('Home - Move cursor to start of the position');
 					app.tracklist.moveCurrentline(-96, true);
 					app.updateTracklist();
+					app.updatePanelInfo();
 				},
 				37: function () {
 					if (!app.modeEdit)
@@ -759,6 +763,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					console.logHotkey('Up - Cursor movement');
 					app.tracklist.moveCurrentline(-1);
 					app.updateTracklist();
+					app.updatePanelInfo();
 				},
 				39: function () {
 					if (!app.modeEdit)
@@ -781,8 +786,230 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					console.logHotkey('Down - Cursor movement');
 					app.tracklist.moveCurrentline(1);
 					app.updateTracklist();
-				},
+					app.updatePanelInfo();
+				}
 			}[key];
+
+		case 'editorEdit':
+			if (!keydown)
+				return;
+
+			var cl = app.player.currentLine,
+				hl = (app.settings.tracklistLines >> 1) + 1,
+				pp = app.player.position[app.player.currentPosition] || app.player.nullPosition,
+				cp = pp.ch[app.modeEditChannel].pattern,
+				pt = app.player.pattern[cp],
+				pl = pt.data[cl];
+
+			if (cl < pt.end) switch (key) {
+				case 8:
+					return function () { // TODO FIXME
+						console.logHotkey('Backspace - Delete trackline from pattern');
+
+						var i = cl, line = cl + 1;
+						for (; line < 96; i++, line++)
+							pt.data[i] = pt.data[line];
+						pt.data[i].tone = pt.data[i].smp = pt.data[i].orn = 0;
+						pt.data[i].release = pt.data[i].orn_release = false;
+						pt.data[i].cmd = pt.data[i].cmd_data = pt.data[i].volume.byte = 0;
+
+						app.updateTracklist();
+					};
+
+				case 45:
+					return function () { // TODO FIXME
+						console.logHotkey('Insert - New trackline into pattern');
+
+						var len = 96 - cl, i = len - 1, line = 94;
+						for (; line >= cl; i--, line--)
+							pt.data[i] = pt.data[line];
+						pt.data[i].tone = pt.data[i].smp = pt.data[i].orn = 0;
+						pt.data[i].release = pt.data[i].orn_release = false;
+						pt.data[i].cmd = pt.data[i].cmd_data = pt.data[i].volume.byte = 0;
+
+						app.updateTracklist();
+					};
+
+				case 46:
+					return function () {
+						console.logHotkey('Delete - Clear trackline data');
+
+						switch (app.modeEditColumn) {
+							default: case 0:		// NOTE column
+								pl.tone = 0;
+								pl.release = 0;
+								break;
+							case 1: 				// SAMPLE column
+								pl.smp = 0;
+								break;
+							case 2: 				// ORNAMENT column
+								pl.orn = 0;
+								pl.orn_release = 0;
+								break;
+							case 3: case 4:			// ATTENUATION columns
+								pl.volume.byte = 0;
+								break;
+							case 5: 				// COMMAND column
+								pl.cmd = 0;
+								pl.cmd_data = 0;
+								break;
+							case 6: 				// COMMAND DATA 1 column
+								pl.cmd_data &= 0x0F;
+								break;
+							case 7: 				// COMMAND DATA 2 column
+								pl.cmd_data &= 0xF0;
+								break;
+						}
+
+						app.tracklist.moveCurrentline(app.ctrlRowStep);
+						app.updateTracklist();
+						app.updatePanelInfo();
+					};
+
+				default:
+					return {
+					// NOTE column
+						0: function () {
+							var tone = app.getKeynote(key);
+
+							if (tone < 0)
+								return;
+							else if (tone > 0) {
+								pl.release = false;
+								pl.tone = tone;
+								if (app.ctrlSample && !pl.smp)
+									pl.smp = app.ctrlSample;
+								if (app.ctrlOrnament && !pl.orn) {
+									pl.orn = app.ctrlOrnament;
+									pl.orn_release = false;
+								}
+
+								app.tracklist.moveCurrentline(app.ctrlRowStep);
+								app.updatePanelInfo();
+							}
+							else {
+								pl.release = true;
+								pl.tone = 0;
+								pl.smp = 0;
+								pl.orn = 0;
+								pl.orn_release = false;
+							}
+
+							app.updateTracklist();
+						},
+					// SAMPLE column
+						1: function () {
+							if (key >= 48 && key <= 57) // 0 - 9
+								pl.smp = (key - 48);
+							else if (key >= 65 && key <= 86) // A - V
+								pl.smp = (key - 55);
+							else return;
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						},
+					// ORNAMENT column
+						2: function () {
+							if (key >= 48 && key <= 57) { // 0 - 9
+								pl.orn_release = false;
+								pl.orn = (key - 48);
+							}
+							else if (key >= 65 && key <= 70) { // A - F
+								pl.orn_release = false;
+								pl.orn = (key - 55);
+							}
+							else if (key === 88 || key === 189) { // X | -
+								pl.orn_release = true;
+								pl.orn = 0;
+							}
+							else return;
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						},
+					// ATTENUATION 1 column
+						3: function () {
+							if (key >= 48 && key <= 57) // 0 - 9
+								pl.volume.L = (key - 48);
+							else if (key >= 65 && key <= 70) // A - F
+								pl.volume.L = (key - 55);
+							else return;
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						},
+					// ATTENUATION 2 column
+						4: function () {
+							if (key >= 48 && key <= 57) // 0 - 9
+								pl.volume.R = (key - 48);
+							else if (key >= 65 && key <= 70) // A - F
+								pl.volume.R = (key - 55);
+							else return;
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						},
+					// COMMAND column
+						5: function () {
+							if (key >= 48 && key <= 57) // 0 - 9
+								pl.cmd = (key - 48);
+							else if (key >= 65 && key <= 70) { // A - F
+								pl.cmd = (key - 55);
+
+								// recalculate position frames if we changing speed
+								if (pl.cmd == 0xF && pl.cmd_data)
+									app.player.countPositionFrames(app.player.currentPosition);
+							}
+							else return;
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						},
+					// COMMAND DATA 1 column
+						6: function () {
+							if (key >= 48 && key <= 57) // 0 - 9
+								key -= 48;
+							else if (key >= 65 && key <= 70) // A - F
+								key -= 55;
+							else return;
+
+							pl.cmd_data &= 0x0F;
+							pl.cmd_data |= key << 4;
+
+							// recalculate position frames if we changing speed
+							if (pl.cmd == 0xF && pl.cmd_data)
+								app.player.countPositionFrames(app.player.currentPosition);
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						},
+					// COMMAND DATA 2 column
+						7: function () {
+							if (key >= 48 && key <= 57) // 0 - 9
+								key -= 48;
+							else if (key >= 65 && key <= 70) // A - F
+								key -= 55;
+							else return;
+
+							pl.cmd_data &= 0xF0;
+							pl.cmd_data |= key;
+
+							// recalculate position frames if we changing speed
+							if (pl.cmd == 0xF && pl.cmd_data)
+								app.player.countPositionFrames(app.player.currentPosition);
+
+							app.tracklist.moveCurrentline(app.ctrlRowStep);
+							app.updateTracklist();
+							app.updatePanelInfo();
+						}
+					}[app.modeEditColumn];
+			}
 
 		default:
 			return;
@@ -950,8 +1177,10 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 		fn = this.hotkeyMap(type, 'editorShift', key);
 	else if (o.length === 1) {
 		if (!(fn = this.hotkeyMap(type, 'globalFs', key))) {
-			if (this.activeTab === 0)
-				fn = this.hotkeyMap(type, 'editorKeys', key);
+			if (this.activeTab === 0) {
+				if (!(fn = this.hotkeyMap(type, 'editorKeys', key)) && this.player.position.length && this.modeEdit)
+					fn = this.hotkeyMap(type, 'editorEdit', key);
+			}
 			else
 				fn = this.hotkeyMap(type, 'smpornKeys', key);
 		}
@@ -965,6 +1194,28 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 
 		return true;
 	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.getKeynote = function (key) {
+	var t = ((this.ctrlOctave - 1) * 12),
+		c = String.fromCharCode(key),
+		i = ' ZSXDCVGBHNJMQ2W3ER5T6Y7UI9O0P'.indexOf(c);
+
+	return (i > 0) ? (t + i) : {
+		49 : 0,      // 1
+		65 : 0,      // A
+		192: 0,      // `
+		189: 0,      // -
+		222: 0,      // '
+		188: t + 13, // ,
+		76 : t + 14, // L
+		190: t + 15, // .
+		186: t + 16, // ;
+		191: t + 17, // /
+		219: t + 30, // [
+		187: t + 31, // =
+		221: t + 32  // ]
+	}[key];
 };
 //---------------------------------------------------------------------------------------
 
