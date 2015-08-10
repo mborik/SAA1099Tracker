@@ -310,6 +310,12 @@ Tracker.prototype.updatePanels = function () {
 	this.updatePanelPosition();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.updateEditorCombo = function (step) {
+	this.tracklist.moveCurrentline(step || this.ctrlRowStep);
+	this.updateTracklist();
+	this.updatePanelInfo();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelInfo = function () {
 	var int = this.settings.audioInterrupt,
 		buf, pos = null, posi = null,
@@ -861,19 +867,19 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 								break;
 						}
 
-						app.tracklist.moveCurrentline(app.ctrlRowStep);
-						app.updateTracklist();
-						app.updatePanelInfo();
+						app.updateEditorCombo();
 					};
 
 				default:
-					return {
+					var columnHandler = {
 					// NOTE column
-						0: function () {
+						0: function (key, test) {
 							var tone = app.getKeynote(key);
 
 							if (tone < 0)
-								return;
+								return false;
+							else if (test)
+								return true;
 							else if (tone > 0) {
 								pl.release = false;
 								pl.tone = tone;
@@ -898,66 +904,102 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 							app.updateTracklist();
 						},
 					// SAMPLE column
-						1: function () {
-							if (key >= 48 && key <= 57) // 0 - 9
-								pl.smp = (key - 48);
-							else if (key >= 65 && key <= 86) // A - V
-								pl.smp = (key - 55);
-							else return;
+						1: function (key, test) {
+							if (key >= 48 && key <= 57) { // 0 - 9
+								if (test)
+									return true;
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+								pl.smp = (key - 48);
+							}
+							else if (key >= 65 && key <= 86) { // A - V
+								if (test)
+									return true;
+
+								pl.smp = (key - 55);
+							}
+							else
+								return false;
+
+							app.updateEditorCombo();
 						},
 					// ORNAMENT column
-						2: function () {
+						2: function (key, test) {
 							if (key >= 48 && key <= 57) { // 0 - 9
+								if (test)
+									return true;
+
 								pl.orn_release = false;
 								pl.orn = (key - 48);
 							}
 							else if (key >= 65 && key <= 70) { // A - F
+								if (test)
+									return true;
+
 								pl.orn_release = false;
 								pl.orn = (key - 55);
 							}
 							else if (key === 88 || key === 189) { // X | -
+								if (test)
+									return true;
+
 								pl.orn_release = true;
 								pl.orn = 0;
 							}
-							else return;
+							else
+								return false;
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+							app.updateEditorCombo();
 						},
 					// ATTENUATION 1 column
-						3: function () {
-							if (key >= 48 && key <= 57) // 0 - 9
-								pl.volume.L = (key - 48);
-							else if (key >= 65 && key <= 70) // A - F
-								pl.volume.L = (key - 55);
-							else return;
+						3: function (key, test) {
+							if (key >= 48 && key <= 57) { // 0 - 9
+								if (test)
+									return true;
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+								pl.volume.L = (key - 48);
+							}
+							else if (key >= 65 && key <= 70) { // A - F
+								if (test)
+									return true;
+
+								pl.volume.L = (key - 55);
+							}
+							else
+								return false;
+
+							app.updateEditorCombo();
 						},
 					// ATTENUATION 2 column
-						4: function () {
-							if (key >= 48 && key <= 57) // 0 - 9
-								pl.volume.R = (key - 48);
-							else if (key >= 65 && key <= 70) // A - F
-								pl.volume.R = (key - 55);
-							else return;
+						4: function (key, test) {
+							if (key >= 48 && key <= 57) { // 0 - 9
+								if (test)
+									return true;
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+								pl.volume.R = (key - 48);
+							}
+							else if (key >= 65 && key <= 70) { // A - F
+								if (test)
+									return true;
+
+								pl.volume.R = (key - 55);
+							}
+							else
+								return false;
+
+							app.updateEditorCombo();
 						},
 					// COMMAND column
-						5: function () {
-							if (key >= 48 && key <= 57) // 0 - 9
+						5: function (key, test) {
+							if (key >= 48 && key <= 57) { // 0 - 9
+								if (test)
+									return true;
+
 								pl.cmd = (key - 48);
+							}
 							else if (key >= 65 && key <= 70) { // A - F
+								if (test)
+									return true;
+
 								pl.cmd = (key - 55);
 
 								// recalculate position frames if we changing speed
@@ -966,17 +1008,19 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 							}
 							else return;
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+							app.updateEditorCombo();
 						},
 					// COMMAND DATA 1 column
-						6: function () {
+						6: function (key, test) {
 							if (key >= 48 && key <= 57) // 0 - 9
 								key -= 48;
 							else if (key >= 65 && key <= 70) // A - F
 								key -= 55;
-							else return;
+							else
+								return false;
+
+							if (test)
+								return true;
 
 							pl.cmd_data &= 0x0F;
 							pl.cmd_data |= key << 4;
@@ -985,17 +1029,19 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 							if (pl.cmd == 0xF && pl.cmd_data)
 								app.player.countPositionFrames(app.player.currentPosition);
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+							app.updateEditorCombo();
 						},
 					// COMMAND DATA 2 column
-						7: function () {
+						7: function (key, test) {
 							if (key >= 48 && key <= 57) // 0 - 9
 								key -= 48;
 							else if (key >= 65 && key <= 70) // A - F
 								key -= 55;
-							else return;
+							else
+								return false;
+
+							if (test)
+								return true;
 
 							pl.cmd_data &= 0xF0;
 							pl.cmd_data |= key;
@@ -1004,11 +1050,11 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 							if (pl.cmd == 0xF && pl.cmd_data)
 								app.player.countPositionFrames(app.player.currentPosition);
 
-							app.tracklist.moveCurrentline(app.ctrlRowStep);
-							app.updateTracklist();
-							app.updatePanelInfo();
+							app.updateEditorCombo();
 						}
 					}[app.modeEditColumn];
+
+					return (columnHandler(key, true)) ? columnHandler : undefined;
 			}
 
 		default:
@@ -1215,7 +1261,7 @@ Tracker.prototype.getKeynote = function (key) {
 		219: t + 30, // [
 		187: t + 31, // =
 		221: t + 32  // ]
-	}[key];
+	}[key] || -1;
 };
 //---------------------------------------------------------------------------------------
 

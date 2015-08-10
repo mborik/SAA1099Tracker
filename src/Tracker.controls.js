@@ -14,6 +14,12 @@ Tracker.prototype.updatePanels = function () {
 	this.updatePanelPosition();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.updateEditorCombo = function (step) {
+	this.tracklist.moveCurrentline(step || this.ctrlRowStep);
+	this.updateTracklist();
+	this.updatePanelInfo();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelInfo = function () {
 	var int = this.settings.audioInterrupt,
 		buf, pos = null, posi = null,
