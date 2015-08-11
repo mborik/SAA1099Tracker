@@ -200,20 +200,29 @@ Tracker.prototype.populateGUI = function () {
 			method:   'change',
 			handler:  function(e) {
 				var el = e.target,
+					pp = app.player.currentPosition,
 					chn = el.id.substr(-1) - 1,
-					pos = app.player.position[app.player.currentPosition];
+					pos = app.player.position[pp],
+					val = el.value - 0,
+					prev = pos.ch[chn].pattern;
 
 				if (!app.player.position.length) {
 					e.preventDefault();
 					return false;
 				}
 				else if (app.modePlay) {
-					el.value = pos.ch[chn].pattern;
+					el.value = prev;
 					e.preventDefault();
 					return false;
 				}
-				else
-					pos.ch[chn].pattern = el.value - 0;
+
+				pos.ch[chn].pattern = val;
+
+				if (app.workingPattern === val || app.workingPattern === prev)
+					app.updatePanelPattern();
+
+				app.player.countPositionFrames(pp);
+				app.updateEditorCombo();
 			}
 		}, {
 			selector: 'input[id^="scChnTrans"]',
@@ -270,6 +279,27 @@ Tracker.prototype.populateGUI = function () {
 			data: {
 				initval: '6',
 				min: 1, max: 31
+			}
+		}, {
+			selector: '#scPosSpeed',
+			method:   'change',
+			handler:  function(e) {
+				var pp = app.player.currentPosition,
+					pos = app.player.position[pp];
+
+				if (!app.player.position.length) {
+					e.preventDefault();
+					return false;
+				}
+				else if (app.modePlay) {
+					$(this).val(pos.speed);
+					e.preventDefault();
+					return false;
+				}
+
+				pos.speed = $(this).val() - 0;
+				app.player.countPositionFrames(pp);
+				app.updateEditorCombo();
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',
