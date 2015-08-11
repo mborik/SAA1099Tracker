@@ -1603,6 +1603,10 @@ Tracker.prototype.populateGUI = function () {
 				min: 1, max: 8
 			}
 		}, {
+			selector: '#scOctave',
+			method:   'change',
+			handler:  function() { app.ctrlOctave = $(this).val() - 0 }
+		}, {
 			selector: '#scAutoSmp',
 			method:   'TouchSpin',
 			data: {
@@ -1610,6 +1614,10 @@ Tracker.prototype.populateGUI = function () {
 				radix: 32,
 				min: 0, max: 31
 			}
+		}, {
+			selector: '#scAutoSmp',
+			method:   'change',
+			handler:  function() { app.ctrlSample = parseInt($(this).val(), 16) }
 		}, {
 			selector: '#scAutoOrn',
 			method:   'TouchSpin',
@@ -1619,12 +1627,20 @@ Tracker.prototype.populateGUI = function () {
 				min: 0, max: 15
 			}
 		}, {
+			selector: '#scAutoOrn',
+			method:   'change',
+			handler:  function() { app.ctrlOrnament = parseInt($(this).val(), 32) }
+		}, {
 			selector: '#scRowStep',
 			method:   'TouchSpin',
 			data: {
 				initval: '0',
 				min: 0, max: 8
 			}
+		}, {
+			selector: '#scRowStep',
+			method:   'change',
+			handler:  function() { app.ctrlRowStep = $(this).val() - 0 }
 		}, {
 			selector: '#scPattern,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
 			method:   'TouchSpin',
@@ -1633,25 +1649,96 @@ Tracker.prototype.populateGUI = function () {
 				min: 0, max: 0
 			}
 		}, {
-			selector: '#scPatternLen,#scPosLength',
-			method:   'TouchSpin',
-			data: {
-				initval: '64',
-				min: 1, max: 96
+			selector: '#scPattern',
+			method:   'change',
+			handler:  function() {
+				if (app.player.pattern.length <= 1)
+					return false;
+
+				app.workingPattern = $(this).val() - 0;
+				app.updatePanelPattern();
 			}
 		}, {
-			selector: '#scPosSpeed',
-			method:   'TouchSpin',
-			data: {
-				initval: '6',
-				min: 1, max: 31
+			selector: '#scPosCurrent',
+			method:   'change',
+			handler:  function(e) {
+				if (!app.player.position.length) {
+					e.preventDefault();
+					return false;
+				}
+				else if (app.modePlay) {
+					$(this).val(app.player.currentPosition + 1);
+					e.preventDefault();
+					return false;
+				}
+
+				app.player.currentPosition = $(this).val() - 1;
+				app.player.currentLine = 0;
+
+				app.updatePanelInfo();
+				app.updatePanelPosition();
+				app.updateTracklist();
+			}
+		}, {
+			selector: '#scPosRepeat',
+			method:   'change',
+			handler:  function(e) {
+				if (!app.player.position.length) {
+					e.preventDefault();
+					return false;
+				}
+				else if (app.modePlay) {
+					$(this).val(app.player.repeatPosition + 1);
+					e.preventDefault();
+					return false;
+				}
+				else
+					app.player.repeatPosition = $(this).val() - 1;
+			}
+		}, {
+			selector: 'input[id^="scChnPattern"]',
+			method:   'change',
+			handler:  function(e) {
+				var el = e.target,
+					chn = el.id.substr(-1) - 1,
+					pos = app.player.position[app.player.currentPosition];
+
+				if (!app.player.position.length) {
+					e.preventDefault();
+					return false;
+				}
+				else if (app.modePlay) {
+					el.value = pos.ch[chn].pattern;
+					e.preventDefault();
+					return false;
+				}
+				else
+					pos.ch[chn].pattern = el.value - 0;
 			}
 		}, {
 			selector: 'input[id^="scChnTrans"]',
-			method:   'TouchSpin',
-			data: {
-				initval: '0',
-				min: -24, max: 24
+			method:   'each',
+			handler:  function(i, el) {
+				$(this).TouchSpin({
+					initval: '0',
+					min: -24, max: 24
+				}).change(function(e) {
+					var el = e.target,
+						chn = el.id.substr(-1) - 1,
+						pos = app.player.position[app.player.currentPosition];
+
+					if (!app.player.position.length) {
+						e.preventDefault();
+						return false;
+					}
+					else if (app.modePlay) {
+						el.value = pos.ch[chn].pitch;
+						e.preventDefault();
+						return false;
+					}
+					else
+						pos.ch[chn].pitch = el.value - 0;
+				});
 			}
 		}, {
 			selector: 'input[id^="scChnButton"]',
@@ -1671,29 +1758,18 @@ Tracker.prototype.populateGUI = function () {
 				});
 			}
 		}, {
-			selector: '#scPosCurrent',
-			method:   'change',
-			handler:  function(e) {
-				if (!app.player.position.length || app.modePlay) {
-					e.preventDefault();
-					return;
-				}
-
-				app.player.currentPosition = $(this).val() - 1;
-				app.player.currentLine = 0;
-
-				app.updatePanelInfo();
-				app.updatePanelPosition();
-				app.updateTracklist();
+			selector: '#scPatternLen,#scPosLength',
+			method:   'TouchSpin',
+			data: {
+				initval: '64',
+				min: 1, max: 96
 			}
 		}, {
-			selector: '#scPattern',
-			method:   'change',
-			handler:  function() {
-				if (app.player.pattern.length <= 1)
-					return;
-				app.workingPattern = $(this).val() - 0;
-				app.updatePanelPattern();
+			selector: '#scPosSpeed',
+			method:   'TouchSpin',
+			data: {
+				initval: '6',
+				min: 1, max: 31
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',
