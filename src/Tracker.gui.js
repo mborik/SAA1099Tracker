@@ -168,13 +168,12 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scPatternLen',
 			method:   'change',
-			handler:  function(e) {
+			handler:  function() {
 				var pp = app.player.pattern[app.workingPattern];
 				if (app.player.pattern.length <= 1)
 					return false;
 				else if (app.modePlay) {
 					$(this).val(pp.end);
-					e.preventDefault();
 					return false;
 				}
 
@@ -187,14 +186,11 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scPosCurrent',
 			method:   'change',
-			handler:  function(e) {
-				if (!app.player.position.length) {
-					e.preventDefault();
+			handler:  function() {
+				if (!app.player.position.length)
 					return false;
-				}
 				else if (app.modePlay) {
 					$(this).val(app.player.currentPosition + 1);
-					e.preventDefault();
 					return false;
 				}
 
@@ -208,17 +204,14 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scPosLength',
 			method:   'change',
-			handler:  function(e) {
+			handler:  function() {
 				var pp = app.player.currentPosition,
 					pos = app.player.position[pp];
 
-				if (!app.player.position.length) {
-					e.preventDefault();
+				if (!app.player.position.length)
 					return false;
-				}
 				else if (app.modePlay) {
 					$(this).val(pos.length);
-					e.preventDefault();
 					return false;
 				}
 
@@ -241,17 +234,14 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scPosSpeed',
 			method:   'change',
-			handler:  function(e) {
+			handler:  function() {
 				var pp = app.player.currentPosition,
 					pos = app.player.position[pp];
 
-				if (!app.player.position.length) {
-					e.preventDefault();
+				if (!app.player.position.length)
 					return false;
-				}
 				else if (app.modePlay) {
 					$(this).val(pos.speed);
-					e.preventDefault();
 					return false;
 				}
 
@@ -264,14 +254,11 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scPosRepeat',
 			method:   'change',
-			handler:  function(e) {
-				if (!app.player.position.length) {
-					e.preventDefault();
+			handler:  function() {
+				if (!app.player.position.length)
 					return false;
-				}
 				else if (app.modePlay) {
 					$(this).val(app.player.repeatPosition + 1);
-					e.preventDefault();
 					return false;
 				}
 				else
@@ -288,13 +275,10 @@ Tracker.prototype.populateGUI = function () {
 					val = el.value - 0,
 					prev = pos.ch[chn].pattern;
 
-				if (!app.player.position.length) {
-					e.preventDefault();
+				if (!app.player.position.length)
 					return false;
-				}
 				else if (app.modePlay) {
 					el.value = prev;
-					e.preventDefault();
 					return false;
 				}
 
@@ -319,13 +303,10 @@ Tracker.prototype.populateGUI = function () {
 						chn = el.id.substr(-1) - 1,
 						pos = app.player.position[app.player.currentPosition];
 
-					if (!app.player.position.length) {
-						e.preventDefault();
+					if (!app.player.position.length)
 						return false;
-					}
 					else if (app.modePlay) {
 						el.value = pos.ch[chn].pitch;
-						e.preventDefault();
 						return false;
 					}
 					else
