@@ -423,9 +423,6 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 									pl.orn = app.ctrlOrnament;
 									pl.orn_release = false;
 								}
-
-								app.tracklist.moveCurrentline(app.ctrlRowStep);
-								app.updatePanelInfo();
 							}
 							else {
 								pl.release = true;
@@ -435,7 +432,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 								pl.orn_release = false;
 							}
 
-							app.updateTracklist();
+							app.updateEditorCombo();
 						},
 					// SAMPLE column
 						1: function (key, test) {
@@ -781,7 +778,9 @@ Tracker.prototype.getKeynote = function (key) {
 		c = String.fromCharCode(key),
 		i = ' ZSXDCVGBHNJMQ2W3ER5T6Y7UI9O0P'.indexOf(c);
 
-	return (i > 0) ? (t + i) : {
+	if (i > 0)
+		return (t + i);
+	else if ((i = {
 		49 : 0,      // 1
 		65 : 0,      // A
 		192: 0,      // `
@@ -795,6 +794,9 @@ Tracker.prototype.getKeynote = function (key) {
 		219: t + 30, // [
 		187: t + 31, // =
 		221: t + 32  // ]
-	}[key] || -1;
+	}[key]) >= 0)
+		return i;
+
+	return -1;
 };
 //---------------------------------------------------------------------------------------
