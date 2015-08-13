@@ -138,7 +138,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			}[key];
 
 		case 'trackerCtrl':
-			if (!((type === 'repeat' && (key === 48 || key === 57) || type === 'keydown' || type === 'test')))
+			if (!((type === 'repeat' && ([38,40,48,57].indexOf(key) >= 0) || type === 'keydown' || type === 'test')))
 				return;
 
 			if (key > 96 && key < 103)
@@ -165,6 +165,34 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					chn -= 96;
 					console.logHotkey('Ctrl+Num' + chn + ' - Toggle channel');
 					$('#scChnButton' + chn).bootstrapToggle('toggle');
+				},
+				38: function () {
+					console.logHotkey('Up - Cursor movement backward to every 16th line (signature)');
+
+					var cl = app.player.currentLine;
+					if (cl >= 16 && (cl & 0xf0) === cl)
+						cl = 16;
+					else
+						cl = (cl & 0x0f);
+
+					if (!cl)
+						return false;
+
+					app.updateEditorCombo(-cl);
+				},
+				40: function () {
+					console.logHotkey('Down - Cursor movement forward to every 16th line (signature)');
+
+					var pp = app.player.position[app.player.currentPosition] || app.player.nullPosition,
+						cl = app.player.currentLine,
+						pl = pp.length;
+
+					if (cl < (pl - 16))
+						cl = 16 - (cl & 0x0f);
+					else
+						cl = pl - cl - 1;
+
+					app.updateEditorCombo(cl);
 				}
 			}[key];
 
@@ -232,13 +260,17 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				33: function () {
 					console.logHotkey('PageUp - Move cursor up by half of tracklines');
-					app.tracklist.moveCurrentline(-(app.settings.tracklistLines >> 1), true);
+
+					var lines = app.settings.tracklistLines + 1;
+					app.tracklist.moveCurrentline(-(lines >> 1), true);
 					app.updateTracklist();
 					app.updatePanelInfo();
 				},
 				34: function () {
 					console.logHotkey('PageDown - Move cursor down by half of tracklines');
-					app.tracklist.moveCurrentline((app.settings.tracklistLines >> 1), true);
+
+					var lines = app.settings.tracklistLines + 1;
+					app.tracklist.moveCurrentline((lines >> 1), true);
 					app.updateTracklist();
 					app.updatePanelInfo();
 				},
@@ -273,9 +305,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				38: function () {
 					console.logHotkey('Up - Cursor movement');
-					app.tracklist.moveCurrentline(-1);
-					app.updateTracklist();
-					app.updatePanelInfo();
+					app.updateEditorCombo(-1);
 				},
 				39: function () {
 					if (!app.modeEdit)
@@ -296,9 +326,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				40: function () {
 					console.logHotkey('Down - Cursor movement');
-					app.tracklist.moveCurrentline(1);
-					app.updateTracklist();
-					app.updatePanelInfo();
+					app.updateEditorCombo(1);
 				}
 			}[key];
 
