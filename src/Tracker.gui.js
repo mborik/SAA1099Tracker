@@ -149,6 +149,13 @@ Tracker.prototype.populateGUI = function () {
 				min: 0, max: 0
 			}
 		}, {
+			selector: '#scPatternLen,#scPosLength',
+			method:   'TouchSpin',
+			data: {
+				initval: '64',
+				min: 1, max: 96
+			}
+		}, {
 			selector: '#scPattern',
 			method:   'change',
 			handler:  function() {
@@ -157,6 +164,25 @@ Tracker.prototype.populateGUI = function () {
 
 				app.workingPattern = $(this).val() - 0;
 				app.updatePanelPattern();
+			}
+		}, {
+			selector: '#scPatternLen',
+			method:   'change',
+			handler:  function(e) {
+				var pp = app.player.pattern[app.workingPattern];
+				if (app.player.pattern.length <= 1)
+					return false;
+				else if (app.modePlay) {
+					$(this).val(pp.end);
+					e.preventDefault();
+					return false;
+				}
+
+				pp.end = $(this).val() - 0;
+				app.player.countPositionFrames();
+				app.updatePanelPattern();
+				app.updateTracklist();
+				app.updatePanelInfo();
 			}
 		}, {
 			selector: '#scPosCurrent',
@@ -178,6 +204,62 @@ Tracker.prototype.populateGUI = function () {
 				app.updatePanelInfo();
 				app.updatePanelPosition();
 				app.updateTracklist();
+			}
+		}, {
+			selector: '#scPosLength',
+			method:   'change',
+			handler:  function(e) {
+				var pp = app.player.currentPosition,
+					pos = app.player.position[pp];
+
+				if (!app.player.position.length) {
+					e.preventDefault();
+					return false;
+				}
+				else if (app.modePlay) {
+					$(this).val(pos.length);
+					e.preventDefault();
+					return false;
+				}
+
+				pos.length = $(this).val() - 0;
+
+				if (app.player.currentLine >= pos.length)
+					app.player.currentLine = pos.length - 1;
+
+				app.player.countPositionFrames(pp);
+				app.updateTracklist();
+				app.updatePanelInfo();
+			}
+		}, {
+			selector: '#scPosSpeed',
+			method:   'TouchSpin',
+			data: {
+				initval: '6',
+				min: 1, max: 31
+			}
+		}, {
+			selector: '#scPosSpeed',
+			method:   'change',
+			handler:  function(e) {
+				var pp = app.player.currentPosition,
+					pos = app.player.position[pp];
+
+				if (!app.player.position.length) {
+					e.preventDefault();
+					return false;
+				}
+				else if (app.modePlay) {
+					$(this).val(pos.speed);
+					e.preventDefault();
+					return false;
+				}
+
+				pos.speed = $(this).val() - 0;
+
+				app.player.countPositionFrames(pp);
+				app.updateTracklist();
+				app.updatePanelInfo();
 			}
 		}, {
 			selector: '#scPosRepeat',
@@ -222,7 +304,8 @@ Tracker.prototype.populateGUI = function () {
 					app.updatePanelPattern();
 
 				app.player.countPositionFrames(pp);
-				app.updateEditorCombo();
+				app.updateTracklist();
+				app.updatePanelInfo();
 			}
 		}, {
 			selector: 'input[id^="scChnTrans"]',
@@ -265,41 +348,6 @@ Tracker.prototype.populateGUI = function () {
 					var el = e.target;
 					app.player.SAA1099.mute((el.value - 1), !el.checked);
 				});
-			}
-		}, {
-			selector: '#scPatternLen,#scPosLength',
-			method:   'TouchSpin',
-			data: {
-				initval: '64',
-				min: 1, max: 96
-			}
-		}, {
-			selector: '#scPosSpeed',
-			method:   'TouchSpin',
-			data: {
-				initval: '6',
-				min: 1, max: 31
-			}
-		}, {
-			selector: '#scPosSpeed',
-			method:   'change',
-			handler:  function(e) {
-				var pp = app.player.currentPosition,
-					pos = app.player.position[pp];
-
-				if (!app.player.position.length) {
-					e.preventDefault();
-					return false;
-				}
-				else if (app.modePlay) {
-					$(this).val(pos.speed);
-					e.preventDefault();
-					return false;
-				}
-
-				pos.speed = $(this).val() - 0;
-				app.player.countPositionFrames(pp);
-				app.updateEditorCombo();
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',
