@@ -138,7 +138,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			}[key];
 
 		case 'trackerCtrl':
-			if (!((type === 'repeat' && ([38,40,48,57].indexOf(key) >= 0) || type === 'keydown' || type === 'test')))
+			if (!((type === 'repeat' && ([38,40,48,57].indexOf(key) >= 0)) || keydown))
 				return;
 
 			if (key > 96 && key < 103)
@@ -147,25 +147,6 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				key = 56;
 
 			return {
-				48: function () {
-					console.logHotkey('Ctrl+0 - Increase rowstep');
-					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.uponce').val(), 10);
-				},
-				56: function (oct) {
-					oct -= 48;
-					console.logHotkey('Ctrl+' + oct + ' - Set octave');
-					$('#scOctave').val(oct);
-					app.ctrlOctave = oct;
-				},
-				57: function () {
-					console.logHotkey('Ctrl+9 - Decrease rowstep');
-					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.downonce').val(), 10);
-				},
-				96: function (chn) {
-					chn -= 96;
-					console.logHotkey('Ctrl+Num' + chn + ' - Toggle channel');
-					$('#scChnButton' + chn).bootstrapToggle('toggle');
-				},
 				38: function () {
 					console.logHotkey('Up - Cursor movement backward to every 16th line (signature)');
 
@@ -193,6 +174,25 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 						cl = pl - cl - 1;
 
 					app.updateEditorCombo(cl);
+				},
+				48: function () {
+					console.logHotkey('Ctrl+0 - Increase rowstep');
+					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.uponce').val(), 10);
+				},
+				56: function (oct) {
+					oct -= 48;
+					console.logHotkey('Ctrl+' + oct + ' - Set octave');
+					$('#scOctave').val(oct);
+					app.ctrlOctave = oct;
+				},
+				57: function () {
+					console.logHotkey('Ctrl+9 - Decrease rowstep');
+					app.ctrlRowStep = parseInt($('#scRowStep').trigger('touchspin.downonce').val(), 10);
+				},
+				96: function (chn) {
+					chn -= 96;
+					console.logHotkey('Ctrl+Num' + chn + ' - Toggle channel');
+					$('#scChnButton' + chn).bootstrapToggle('toggle');
 				}
 			}[key];
 
@@ -335,7 +335,6 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				return;
 
 			var cl = app.player.currentLine,
-				hl = (app.settings.tracklistLines >> 1) + 1,
 				pp = app.player.position[app.player.currentPosition] || app.player.nullPosition,
 				cp = pp.ch[app.modeEditChannel].pattern,
 				pt = app.player.pattern[cp],
@@ -596,7 +595,8 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
 		type = e.type,
-		isInput = (e.target && e.target.type === 'text' && e.target.tabIndex > 0),
+		isInput = (e.target && e.target.type === 'text'),
+		isSpin = (isInput && /touchspin/.test(e.target.parentElement.className)),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -628,7 +628,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if (isInput && !this.handleHotkeys('test', key))
+		if ((isSpin && !this.handleHotkeys('test', key)) || (!isSpin && isInput && !o[9]))
 			return true;
 
 		if (!this.handleHotkeys(type, key)) {
@@ -645,12 +645,12 @@ Tracker.prototype.handleKeyEvent = function (e) {
 					o.lastPlayMode = 0;
 				}
 			}
+		}
 
-			if (isInput && o[9]) {
-				delete o[9];
-				o.length--;
-				e.target.blur();
-			}
+		if (isInput && o[9]) {
+			delete o[9];
+			o.length--;
+			e.target.blur();
 		}
 	}
 	else if (type === 'keyup') {
