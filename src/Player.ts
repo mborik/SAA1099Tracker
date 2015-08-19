@@ -909,7 +909,7 @@ class Player {
 
 		this.clearPlayParams(chn);
 		this.playParams[chn].playing = true;
-		this.playParams[chn].tone = ++tone;
+		this.playParams[chn].tone = tone;
 		this.playParams[chn].sample = this.sample[s];
 		this.playParams[chn].ornament = this.ornament[o];
 

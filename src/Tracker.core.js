@@ -10,7 +10,7 @@ var Tracker = (function() {
 		this.modeEditColumn = 0;
 		this.workingPattern = 0;
 		this.workingSample = 1;
-		this.workingSampleTone = 36;
+		this.workingSampleTone = 37;
 		this.workingOrnament = 1;
 
 		this.ctrlOctave = 2;

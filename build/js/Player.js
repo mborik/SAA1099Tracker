@@ -716,7 +716,7 @@ var Player = (function () {
             return 0;
         this.clearPlayParams(chn);
         this.playParams[chn].playing = true;
-        this.playParams[chn].tone = ++tone;
+        this.playParams[chn].tone = tone;
         this.playParams[chn].sample = this.sample[s];
         this.playParams[chn].ornament = this.ornament[o];
         this.mixer.index = 0;
