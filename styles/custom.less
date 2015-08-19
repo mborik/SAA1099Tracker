@@ -227,6 +227,37 @@ button {
 		-ms-interpolation-mode: nearest-neighbor;
 	}
 }
+.margin {
+	border-right: 1px solid #eee;
+	height: 22px + (2 * 8);
+	width: 1px;
+	padding: 0 (@grid-gutter-width / 2);
+	margin: -8px auto;
+}
+
+#txSampleTone {
+	position: relative;
+
+	&>input {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 22px;
+		text-align: center;
+		.user-select(none);
+
+		&:first-child {
+			z-index: 0;
+			color: @input-color;
+			background: @input-bg;
+		}
+		&:last-child {
+			z-index: 5;
+			color: transparent;
+			background: transparent;
+		}
+	}
+}
 
 #statusbar {
 	position: absolute;

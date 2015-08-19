@@ -331,6 +331,35 @@ Tracker.prototype.populateGUI = function () {
 				});
 			}
 		}, {
+			selector: '#scSampleNumber',
+			method:   'TouchSpin',
+			data: {
+				initval: '1',
+				radix: 32,
+				min: 1, max: 31
+			}
+		}, {
+			selector: '#scSampleTone',
+			method:   'each',
+			handler:  function(i, el) {
+				var cc = 'tx' + el.id.substr(2);
+				$(this).TouchSpin({
+					initval: app.workingSampleTone,
+					min: 1, max: 96
+				}).change(function(e) {
+					var el = e.target, val = el.value - 0;
+					app.workingSampleTone = val;
+					$(this).prev().val(app.player.tones[val].txt);
+				}).wrapAll('<div id="' + cc + '"/>')
+				  .removeAttr('style')
+				  .prop('readonly', true)
+				  .clone(false)
+				  .removeAttr('id')
+				  .insertBefore(this);
+
+				$(this).trigger('change');
+			}
+		}, {
 			selector: 'a[id^="miFileImportDemo"]',
 			method:   'click',
 			handler:  function() {

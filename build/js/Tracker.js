@@ -139,7 +139,7 @@ var Tracker = (function() {
 		this.modeEditColumn = 0;
 		this.workingPattern = 0;
 		this.workingSample = 1;
-		this.workingSampleTone = 36;
+		this.workingSampleTone = 37;
 		this.workingOrnament = 1;
 
 		this.ctrlOctave = 2;
@@ -1859,6 +1859,35 @@ Tracker.prototype.populateGUI = function () {
 					var el = e.target;
 					app.player.SAA1099.mute((el.value - 1), !el.checked);
 				});
+			}
+		}, {
+			selector: '#scSampleNumber',
+			method:   'TouchSpin',
+			data: {
+				initval: '1',
+				radix: 32,
+				min: 1, max: 31
+			}
+		}, {
+			selector: '#scSampleTone',
+			method:   'each',
+			handler:  function(i, el) {
+				var cc = 'tx' + el.id.substr(2);
+				$(this).TouchSpin({
+					initval: app.workingSampleTone,
+					min: 1, max: 96
+				}).change(function(e) {
+					var el = e.target, val = el.value - 0;
+					app.workingSampleTone = val;
+					$(this).prev().val(app.player.tones[val].txt);
+				}).wrapAll('<div id="' + cc + '"/>')
+				  .removeAttr('style')
+				  .prop('readonly', true)
+				  .clone(false)
+				  .removeAttr('id')
+				  .insertBefore(this);
+
+				$(this).trigger('change');
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',

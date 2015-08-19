@@ -7459,6 +7459,37 @@ label.toggle-off {
   image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
 }
+.margin {
+  border-right: 1px solid #eee;
+  height: 38px;
+  width: 1px;
+  padding: 0 2.5px;
+  margin: -8px auto;
+}
+#txSampleTone {
+  position: relative;
+}
+#txSampleTone > input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 22px;
+  text-align: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+#txSampleTone > input:first-child {
+  z-index: 0;
+  color: #000000;
+  background: #ffffff;
+}
+#txSampleTone > input:last-child {
+  z-index: 5;
+  color: transparent;
+  background: transparent;
+}
 #statusbar {
   position: absolute;
   left: 0;
