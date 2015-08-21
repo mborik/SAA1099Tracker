@@ -93,7 +93,7 @@
 				<div role="tabpanel" class="tab-pane active" id="tracker">
 					<div class="row">
 						<div class="fixed-column col-edt">
-							<div class="panel">
+							<div class="panel panel-default tabs-top">
 								<div class="panel-heading"><h3 class="panel-title">Editor:</h3></div>
 								<div class="panel-body">
 									<div class="row">
@@ -117,7 +117,7 @@
 							</div>
 						</div>
 						<div class="fixed-column col-pat">
-							<div class="panel">
+							<div class="panel panel-default tabs-top">
 								<div class="panel-heading"><h3 class="panel-title text-left">Patterns:</h3></div>
 								<div class="panel-body">
 									<div class="row">
@@ -145,7 +145,7 @@
 							</div>
 						</div>
 						<div class="fixed-column col-rem">
-							<div class="panel">
+							<div class="panel panel-default tabs-top">
 								<div class="panel-heading"><h3 class="panel-title text-left">Positions:</h3></div>
 								<div class="panel-body">
 									<div class="row">
@@ -228,7 +228,7 @@
 				<div role="tabpanel" class="tab-pane" id="smpedit">
 					<div class="row">
 						<div class="fixed-column col-sm-18">
-							<div class="panel">
+							<div class="panel panel-default tabs-top">
 								<div class="panel-heading"><h3 class="panel-title">Sample:</h3></div>
 								<div class="panel-body">
 									<div class="row">
@@ -240,13 +240,82 @@
 												<button id="btSamplePlay" type="button" class="btn btn-default btn-half left"><span class="glyphicon glyphicon-play"></span></button>
 												<button id="btSampleStop" type="button" class="btn btn-default btn-half right"><span class="glyphicon glyphicon-stop"></span></button>
 											</div>
-											<div class="col-xs-1 margin"></div>
 										</div>
-										<div class="col-sm-2"><button id="btSmpClear" type="button" class="btn btn-default btn-block">Clear</button></div>
+										<div class="col-smpactions"><button id="btSampleClear" type="button" class="btn btn-default btn-block">Clear</button></div>
 									</div>
 								</div>
 							</div>
 						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-18">
+							<div class="panel panel-default tabs-bottom">
+								<div class="panel-body tab-content">
+									<div role="tabpanel" class="tab-pane active" id="sampledata">
+										<div class="row">
+											<div class="col-sm-16">
+												<canvas id="cvSampleAmp" width="960" height="312"></canvas>
+												<canvas id="cvSampleNoise" width="960" height="48"></canvas>
+												<canvas id="cvSampleRange" width="960" height="24"></canvas>
+												<div id="sbSampleEdit"><div class="scrollbar"></div></div>
+											</div>
+											<div class="col-smpactions">
+												<div class="actions-amp">
+													<div class="rowcell"><button id="btSampleSwap" type="button" class="btn btn-default btn-block">Swap L&nbsp;&#x21cc;&nbsp;R</button></div>
+													<div class="rowcell middle">
+														<div class="btnpair">
+															<button id="btSampleLVolUp" type="button" class="btn btn-default btn-half left"><span class="glyphicon glyphicon-chevron-up"></span></button>
+															<button id="btSampleLVolDown" type="button" class="btn btn-default btn-half right"><span class="glyphicon glyphicon-chevron-down"></span></button>
+														</div>
+														<button id="btSampleCopyLR" type="button" class="btn btn-default btn-block">Copy L&nbsp;&#x21d2;&nbsp;R</button>
+														<div class="separator"></div>
+														<button id="btSampleCopyRL" type="button" class="btn btn-default btn-block">Copy L&nbsp;&#x21d0;&nbsp;R</button>
+														<div class="btnpair">
+															<button id="btSampleRVolUp" type="button" class="btn btn-default btn-half left"><span class="glyphicon glyphicon-chevron-up"></span></button>
+															<button id="btSampleRVolDown" type="button" class="btn btn-default btn-half right"><span class="glyphicon glyphicon-chevron-down"></span></button>
+														</div>
+													</div>
+													<div class="rowcell bottom">
+														<div class="btnpair">
+															<button id="btSampleRotL" type="button" class="btn btn-default btn-half left"><span class="glyphicon glyphicon-chevron-left"></span></button>
+															<button id="btSampleRotR" type="button" class="btn btn-default btn-half right"><span class="glyphicon glyphicon-chevron-right"></span></button>
+														</div>
+														<div class="btnpair">
+															<button id="btSampleEnable" type="button" class="btn btn-default btn-half left"><span class="glyphicon glyphicon-unchecked"></span></button>
+															<button id="btSampleDisable" type="button" class="btn btn-default btn-half right"><span class="glyphicon glyphicon-check"></span></button>
+														</div>
+													</div>
+												</div>
+												<div class="actions-range">
+													<div class="bottom">
+														<div class="checkbox-inline"><label><input id="chSampleRelease" type="checkbox">RELEASABLE</label></div>
+														<div class="separator"></div>
+														<div class="halfing">
+															<input id="scSampleLength" name="scSampleLength" type="text" class="form-control" />
+															<input id="scSampleRepeat" name="scSampleRepeat" type="text" class="form-control" />
+														</div>
+														<div class="halfing">
+															<label for="scSampleLength" class="small">LENGTH</label>
+															<label for="scSampleRepeat" class="small right">REPEAT</label>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div role="tabpanel" class="tab-pane" id="pitchshift">
+										<div class="row">
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="sample-tabpanel" class="row tab-panel tabs-bottom" role="tabpanel">
+						<ul class="nav nav-tabs" role="tablist">
+							<li role="presentation" class="active"><a href="#sampledata" id="tab-sampledata" aria-controls="sampledata" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span>&ensp;Sample data</a></li>
+							<li role="presentation"><a href="#pitchshift" id="tab-pitchshift" aria-controls="pitchshift" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-resize-full"></span>&ensp;Pitch-shift</a></li>
+						</ul>
 					</div>
 				</div>
 				<div role="tabpanel" class="tab-pane" id="ornedit">

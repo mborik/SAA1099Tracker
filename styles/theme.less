@@ -198,12 +198,41 @@ label {
 // Containers =================================================================
 
 .panel {
-	border-color: @nav-tabs-border-color;
-	border-top: 0;
+//	border-color: @nav-tabs-border-color;
+
+	&.tabs-top {
+		border-top: 0;
+	}
+	&.tabs-bottom {
+		border-bottom: 0;
+		margin-bottom: 0;
+	}
 }
 
-@media (max-width: 767px) {
-	.navbar-collapse .nav > .divider-vertical {
-		display: none;
+/* custom inclusion of right, left and below tabs */
+
+.tabs-bottom > .nav-tabs {
+	border-bottom: 0;
+	border-top: 1px solid @nav-tabs-border-color;
+
+	> li {
+		margin-top: -1px;
+		margin-bottom: 0;
+
+		> a {
+			border: 1px solid transparent;
+			border-radius: 0 0 @border-radius-base @border-radius-base;
+
+			&:hover {
+				border-top-color: @nav-tabs-border-color;
+			}
+		}
+
+	    // Active state, and its :hover to override normal :hover
+	    &.active > a {
+	    	&, &:hover, &:focus {
+	    		border-color: transparent @nav-tabs-active-link-hover-border-color @nav-tabs-active-link-hover-border-color @nav-tabs-active-link-hover-border-color;
+	    	}
+	    }
 	}
 }

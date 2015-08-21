@@ -7167,14 +7167,33 @@ label {
 .pager .disabled > a {
   border-color: #dddddd;
 }
-.panel {
-  border-color: #dddddd;
+.panel.tabs-top {
   border-top: 0;
 }
-@media (max-width: 767px) {
-  .navbar-collapse .nav > .divider-vertical {
-    display: none;
-  }
+.panel.tabs-bottom {
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+/* custom inclusion of right, left and below tabs */
+.tabs-bottom > .nav-tabs {
+  border-bottom: 0;
+  border-top: 1px solid #dddddd;
+}
+.tabs-bottom > .nav-tabs > li {
+  margin-top: -1px;
+  margin-bottom: 0;
+}
+.tabs-bottom > .nav-tabs > li > a {
+  border: 1px solid transparent;
+  border-radius: 0 0 4px 4px;
+}
+.tabs-bottom > .nav-tabs > li > a:hover {
+  border-top-color: #dddddd;
+}
+.tabs-bottom > .nav-tabs > li.active > a,
+.tabs-bottom > .nav-tabs > li.active > a:hover,
+.tabs-bottom > .nav-tabs > li.active > a:focus {
+  border-color: transparent #dddddd #dddddd #dddddd;
 }
 /**
  * SAA1099Tracker modifications and custom styles
@@ -7459,12 +7478,85 @@ label.toggle-off {
   image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
 }
-.margin {
-  border-right: 1px solid #eee;
-  height: 38px;
-  width: 1px;
-  padding: 0 2.5px;
-  margin: -8px auto;
+.col-smpactions {
+  position: relative;
+  float: right;
+  width: 120px;
+  padding: 8px 0 8px 5px;
+  border-left: 1px solid #eee;
+  margin: -8px 0;
+}
+.col-smpactions button {
+  height: 24px;
+}
+.col-smpactions .actions-amp {
+  position: relative;
+  width: 100%;
+  height: 312px;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 5px;
+}
+.col-smpactions .actions-amp > .rowcell {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.col-smpactions .actions-amp > .rowcell.middle {
+  top: 50%;
+  margin-top: -50%;
+}
+.col-smpactions .actions-amp > .rowcell.middle > .separator {
+  height: 1px;
+  border-bottom: 1px solid #eee;
+  margin: 5px -5px;
+}
+.col-smpactions .actions-amp > .rowcell.bottom {
+  bottom: 0;
+}
+.col-smpactions .actions-amp > .rowcell .btnpair {
+  display: inline-block;
+  width: 100%;
+  margin: 2px 0;
+}
+.col-smpactions .actions-range {
+  position: relative;
+  width: 100%;
+  height: 108px;
+  padding: 0;
+  margin: 0;
+}
+.col-smpactions .actions-range > .bottom {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.col-smpactions .actions-range > .bottom input[type=checkbox] {
+  margin-top: 0;
+}
+.col-smpactions .actions-range > .bottom > .separator {
+  height: 1px;
+  border-bottom: 1px solid #eee;
+  margin: 5px -5px;
+}
+.col-smpactions .actions-range > .bottom > .halfing > * {
+  float: left;
+  width: 50%;
+  margin: 0;
+  margin-top: 2.5px;
+  padding-right: 1px;
+}
+.col-smpactions .actions-range > .bottom > .halfing > *.right {
+  float: right;
+  width: auto;
+}
+.col-smpactions .actions-range > .bottom > .halfing > * .input-group-btn-vertical > button {
+  height: 50%;
 }
 #txSampleTone {
   position: relative;
@@ -7489,6 +7581,25 @@ label.toggle-off {
   z-index: 5;
   color: transparent;
   background: transparent;
+}
+#sampledata canvas {
+  border: 1px solid #eee;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 5px;
+}
+#sbSampleEdit {
+  padding: 0;
+  margin: 0;
+  margin-bottom: 5px;
+  width: 976px;
+  height: 16px;
+  overflow: scroll !important;
+}
+#sbSampleEdit > .scrollbar {
+  display: block;
+  width: 3961px;
+  height: 16px;
 }
 #statusbar {
   position: absolute;
