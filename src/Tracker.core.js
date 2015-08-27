@@ -43,10 +43,9 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
-		this.tracklist = new Tracklist(this);
-		this.pixelfont = { obj: null, ctx: null };
-		this.smpedit   = { obj: null, ctx: null };
-		this.ornedit   = { obj: null, ctx: null };
+		this.pixelfont  = { obj: null, ctx: null };
+		this.tracklist  = new Tracklist(this);
+		this.smpornedit = new SmpOrnEditor(this);
 
 
 	// constructor {

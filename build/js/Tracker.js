@@ -127,6 +127,67 @@ var Tracklist = (function () {
 })();
 //---------------------------------------------------------------------------------------
 
+/** Tracker.smporn submodule */
+//---------------------------------------------------------------------------------------
+var SmpOrnEditor = (function () {
+	function SmpOrnEditor(app) {
+		this.amp = { obj: null, ctx: null };
+		this.noise = { obj: null, ctx: null };
+		this.range = { obj: null, ctx: null };
+
+		this.smpeditOffset = 0;
+
+		this.columnWidth = 13;
+
+//---------------------------------------------------------------------------------------
+		this.drawHeaders = function(img) {
+			var parts = [ 'amp', 'noise', 'range' ],
+				i, l, o, ctx, w, h, half;
+
+			for (i = 0, l = parts.length; i < l; i++) {
+				o = this[parts[i]];
+
+				ctx = o.ctx;
+				w = o.obj.width;
+				h = o.obj.height;
+				half = h >> 1;
+
+				ctx.fillStyle = '#fff';
+				ctx.fillRect(22, 0, w - 22, h);
+				ctx.fillStyle = '#fcfcfc';
+				ctx.fillRect(0, 0, 22, h);
+				ctx.fillStyle = '#ccc';
+				ctx.fillRect(22, 0, 1, h);
+
+				if (i === 0) {
+					half -= 12;
+					this.columnWidth = ((w - 26) / 64) | 0;
+
+					ctx.fillRect(22, half, w - 22, 1);
+					ctx.fillRect(22, 286, w - 22, 1);
+
+					ctx.save();
+					ctx.font = $('label').css('font');
+					ctx.translate(12, half);
+					ctx.rotate(-Math.PI / 2);
+					ctx.textBaseline = "middle";
+					ctx.fillStyle = '#888';
+					ctx.textAlign = "right";
+					ctx.fillText("RIGHT", -16, 0);
+					ctx.textAlign = "left";
+					ctx.fillText("LEFT", 16, 0);
+					ctx.restore();
+				}
+
+				ctx.drawImage(img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
+			}
+		};
+	}
+
+	return SmpOrnEditor;
+})();
+//---------------------------------------------------------------------------------------
+
 /** Tracker.core submodule */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
@@ -172,10 +233,9 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
-		this.tracklist = new Tracklist(this);
-		this.pixelfont = { obj: null, ctx: null };
-		this.smpedit   = { obj: null, ctx: null };
-		this.ornedit   = { obj: null, ctx: null };
+		this.pixelfont  = { obj: null, ctx: null };
+		this.tracklist  = new Tracklist(this);
+		this.smpornedit = new SmpOrnEditor(this);
 
 
 	// constructor {
@@ -1576,6 +1636,27 @@ Tracker.prototype.populateGUI = function () {
 				template:  '<div class="tooltip tooltip-custom" role="tooltip"><div class="tooltip-inner"></div></div>'
 			}
 		}, {
+			selector: 'canvas',
+			method:   'each',
+			handler:  function(i, el) {
+				var name = el.className, o = app[name];
+
+				if (name === 'tracklist') {
+					o.obj = el;
+					o.ctx = el.getContext('2d');
+
+					// first height initialization
+					o.setHeight();
+				}
+				else if (name === 'smpornedit') {
+					var id = el.id.replace('smpedit_', ''),
+						child = o[id];
+
+					child.obj = el;
+					child.ctx = el.getContext('2d');
+				}
+			}
+		}, {
 			selector: 'img.pixelfont',
 			method:   'load',
 			handler:  function(e) {
@@ -1583,19 +1664,9 @@ Tracker.prototype.populateGUI = function () {
 				app.updateTracklist(true);
 			}
 		}, {
-			selector: 'canvas',
-			method:   'each',
-			handler:  function(i, el) {
-				var name = el.id, o = app[name];
-				if (o !== undefined) {
-					o.obj = el;
-					o.ctx = el.getContext('2d');
-
-					// first height initialization
-					if (name === 'tracklist')
-						o.setHeight();
-				}
-			}
+			selector: 'img.smpedit',
+			method:   'load',
+			handler:  function(e) { app.smpornedit.drawHeaders(e.target) }
 		}, {
 			selector: '#main-tabpanel a',
 			method:   'bind',
@@ -1624,6 +1695,12 @@ Tracker.prototype.populateGUI = function () {
 
 				app.updateTracklist();
 				app.updatePanelInfo();
+			}
+		}, {
+			selector: '#smpedit_scrollbar',
+			method:   'scroll',
+			handler:  function(e) {
+				app.smpornedit.smpeditOffset = ((e.target.scrollLeft/ 1000) * 64) | 0;
 			}
 		}, {
 			selector: '#scOctave',
@@ -1888,6 +1965,13 @@ Tracker.prototype.populateGUI = function () {
 				  .insertBefore(this);
 
 				$(this).trigger('change');
+			}
+		}, {
+			selector: '#scSampleLength,#scSampleRepeat',
+			method:   'TouchSpin',
+			data: {
+				initval: '0',
+				min: 0, max: 0
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',

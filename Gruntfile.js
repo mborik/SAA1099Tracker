@@ -59,6 +59,7 @@ module.exports = function(grunt) {
 				src: [
 					'src/Tracker.init.js',
 					'src/Tracker.tracklist.js',
+					'src/Tracker.smporn.js',
 					'src/Tracker.core.js',
 					'src/Tracker.controls.js',
 					'src/Tracker.keyboard.js',

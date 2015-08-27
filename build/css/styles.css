@@ -7466,7 +7466,7 @@ label.toggle-off {
   border: 2px solid #f00;
   padding: 4px;
 }
-.col-tracklist canvas {
+.col-tracklist canvas.tracklist {
   display: block;
   margin: 0 auto;
   width: 1104px;
@@ -7582,13 +7582,13 @@ label.toggle-off {
   color: transparent;
   background: transparent;
 }
-#sampledata canvas {
-  border: 1px solid #eee;
+#sampledata canvas.smpornedit {
+  border: 1px solid #ccc;
   padding: 0;
   margin: 0;
   margin-bottom: 5px;
 }
-#sbSampleEdit {
+#smpedit_scrollbar {
   padding: 0;
   margin: 0;
   margin-bottom: 5px;
@@ -7596,7 +7596,7 @@ label.toggle-off {
   height: 16px;
   overflow: scroll !important;
 }
-#sbSampleEdit > .scrollbar {
+#smpedit_scrollbar > .scrollbar {
   display: block;
   width: 3961px;
   height: 16px;

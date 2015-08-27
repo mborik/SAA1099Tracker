@@ -46,6 +46,27 @@ Tracker.prototype.populateGUI = function () {
 				template:  '<div class="tooltip tooltip-custom" role="tooltip"><div class="tooltip-inner"></div></div>'
 			}
 		}, {
+			selector: 'canvas',
+			method:   'each',
+			handler:  function(i, el) {
+				var name = el.className, o = app[name];
+
+				if (name === 'tracklist') {
+					o.obj = el;
+					o.ctx = el.getContext('2d');
+
+					// first height initialization
+					o.setHeight();
+				}
+				else if (name === 'smpornedit') {
+					var id = el.id.replace('smpedit_', ''),
+						child = o[id];
+
+					child.obj = el;
+					child.ctx = el.getContext('2d');
+				}
+			}
+		}, {
 			selector: 'img.pixelfont',
 			method:   'load',
 			handler:  function(e) {
@@ -53,19 +74,9 @@ Tracker.prototype.populateGUI = function () {
 				app.updateTracklist(true);
 			}
 		}, {
-			selector: 'canvas',
-			method:   'each',
-			handler:  function(i, el) {
-				var name = el.id, o = app[name];
-				if (o !== undefined) {
-					o.obj = el;
-					o.ctx = el.getContext('2d');
-
-					// first height initialization
-					if (name === 'tracklist')
-						o.setHeight();
-				}
-			}
+			selector: 'img.smpedit',
+			method:   'load',
+			handler:  function(e) { app.smpornedit.drawHeaders(e.target) }
 		}, {
 			selector: '#main-tabpanel a',
 			method:   'bind',
@@ -94,6 +105,12 @@ Tracker.prototype.populateGUI = function () {
 
 				app.updateTracklist();
 				app.updatePanelInfo();
+			}
+		}, {
+			selector: '#smpedit_scrollbar',
+			method:   'scroll',
+			handler:  function(e) {
+				app.smpornedit.smpeditOffset = ((e.target.scrollLeft/ 1000) * 64) | 0;
 			}
 		}, {
 			selector: '#scOctave',
@@ -358,6 +375,13 @@ Tracker.prototype.populateGUI = function () {
 				  .insertBefore(this);
 
 				$(this).trigger('change');
+			}
+		}, {
+			selector: '#scSampleLength,#scSampleRepeat',
+			method:   'TouchSpin',
+			data: {
+				initval: '0',
+				min: 0, max: 0
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',
