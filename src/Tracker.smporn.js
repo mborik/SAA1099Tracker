@@ -7,8 +7,9 @@ var SmpOrnEditor = (function () {
 		this.range = { obj: null, ctx: null };
 
 		this.smpeditOffset = 0;
-
-		this.columnWidth = 13;
+		this.columnWidth = 0;
+		this.halfing = 0;
+		this.centering = 0;
 
 //---------------------------------------------------------------------------------------
 		this.drawHeaders = function(img) {
@@ -23,16 +24,16 @@ var SmpOrnEditor = (function () {
 				h = o.obj.height;
 				half = h >> 1;
 
-				ctx.fillStyle = '#fff';
-				ctx.fillRect(22, 0, w - 22, h);
+				ctx.miterLimit = 0;
 				ctx.fillStyle = '#fcfcfc';
 				ctx.fillRect(0, 0, 22, h);
 				ctx.fillStyle = '#ccc';
 				ctx.fillRect(22, 0, 1, h);
 
 				if (i === 0) {
-					half -= 12;
+					this.halfing = (half -= 12);
 					this.columnWidth = ((w - 26) / 64) | 0;
+					this.centering = 26 + (w - (this.columnWidth * 64)) >> 1;
 
 					ctx.fillRect(22, half, w - 22, 1);
 					ctx.fillRect(22, 286, w - 22, 1);
@@ -52,6 +53,8 @@ var SmpOrnEditor = (function () {
 
 				ctx.drawImage(img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
 			}
+
+			app.updateSampleEditor(true);
 		};
 	}
 

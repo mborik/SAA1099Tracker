@@ -157,6 +157,7 @@ var Tracker = (function() {
 
 			tracker.updatePanels();
 			tracker.updateTracklist();
+			tracker.updateSampleEditor(true);
 		});
 	};
 

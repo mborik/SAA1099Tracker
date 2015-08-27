@@ -111,6 +111,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'scroll',
 			handler:  function(e) {
 				app.smpornedit.smpeditOffset = ((e.target.scrollLeft/ 1000) * 64) | 0;
+				app.updateSampleEditor();
 			}
 		}, {
 			selector: '#scOctave',
@@ -134,7 +135,7 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scAutoSmp',
 			method:   'change',
-			handler:  function() { app.ctrlSample = parseInt($(this).val(), 16) }
+			handler:  function() { app.ctrlSample = parseInt($(this).val(), 32) }
 		}, {
 			selector: '#scAutoOrn',
 			method:   'TouchSpin',
@@ -146,7 +147,7 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#scAutoOrn',
 			method:   'change',
-			handler:  function() { app.ctrlOrnament = parseInt($(this).val(), 32) }
+			handler:  function() { app.ctrlOrnament = parseInt($(this).val(), 16) }
 		}, {
 			selector: '#scRowStep',
 			method:   'TouchSpin',
@@ -356,6 +357,13 @@ Tracker.prototype.populateGUI = function () {
 				min: 1, max: 31
 			}
 		}, {
+			selector: '#scSampleNumber',
+			method:   'change',
+			handler:  function() {
+				app.workingSample = parseInt($(this).val(), 32);
+				app.updateSampleEditor(true);
+			}
+		}, {
 			selector: '#scSampleTone',
 			method:   'each',
 			handler:  function(i, el) {
@@ -381,7 +389,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'TouchSpin',
 			data: {
 				initval: '0',
-				min: 0, max: 0
+				min: 0, max: 255
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',

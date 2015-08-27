@@ -7311,7 +7311,8 @@ button {
   border-bottom: 1px solid #eee;
 }
 .form-control[disabled],
-label.toggle-off {
+label.toggle-off,
+label.disabled {
   color: #777777 !important;
 }
 .col-label {
@@ -7478,11 +7479,17 @@ label.toggle-off {
   image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
 }
+.col-smpedit {
+  position: relative;
+  float: left;
+  width: 935px;
+  padding: 0;
+}
 .col-smpactions {
   position: relative;
   float: right;
-  width: 120px;
-  padding: 8px 0 8px 5px;
+  width: 160px;
+  padding: 8px 0 8px 8px;
   border-left: 1px solid #eee;
   margin: -8px 0;
 }
@@ -7492,10 +7499,9 @@ label.toggle-off {
 .col-smpactions .actions-amp {
   position: relative;
   width: 100%;
-  height: 312px;
+  height: 325px;
   padding: 0;
   margin: 0;
-  margin-bottom: 5px;
 }
 .col-smpactions .actions-amp > .rowcell {
   position: absolute;
@@ -7524,7 +7530,7 @@ label.toggle-off {
 .col-smpactions .actions-range {
   position: relative;
   width: 100%;
-  height: 108px;
+  height: 100px;
   padding: 0;
   margin: 0;
 }
@@ -7592,13 +7598,14 @@ label.toggle-off {
   padding: 0;
   margin: 0;
   margin-bottom: 5px;
-  width: 976px;
+  width: 928px;
   height: 16px;
   overflow: scroll !important;
+  -webkit-logical-width: 944px;
 }
 #smpedit_scrollbar > .scrollbar {
   display: block;
-  width: 3961px;
+  width: 3929px;
   height: 16px;
 }
 #statusbar {
