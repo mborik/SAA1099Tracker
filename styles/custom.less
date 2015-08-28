@@ -1,6 +1,13 @@
 /**
  * SAA1099Tracker modifications and custom styles
  */
+
+// defines ------------------------------------------------------------------------------
+@border-soft: #eee;
+@border-mild: #ccc;
+@tracker-base-width: 1118px;
+
+// mixins -------------------------------------------------------------------------------
 .make-my-panel-column(@width) {
 	position: relative;
 	width: @width;
@@ -16,11 +23,23 @@
 }
 .border-my-column() {
 	padding: 0 @grid-gutter-width @grid-gutter-width @grid-gutter-width;
-	border-right: 1px solid #eee;
+	border-right: 1px solid @border-soft;
 	margin-right: @grid-gutter-width;
 }
-
-@tracker-base-width: 1118px;
+.flexbox(@flow, @justify: initial, @flex: none) {
+	display: -webkit-flex;
+	-webkit-flex: @flex;
+	-webkit-flex-flow: @flow;
+	-webkit-justify-content: @justify;
+	display: -moz-flex;
+	-moz-box-flex:  @flex;
+	-moz-flex-flow:  @flow;
+	-moz-justify-content: @justify;
+	display: flex;
+	flex: @flex;
+	flex-flow: @flow;
+	justify-content: @justify;
+}
 
 //---------------------------------------------------------------------------------------
 body {
@@ -31,7 +50,7 @@ button {
 }
 .btn-default {
 	&, &:hover {
-		border-color: #ccc;
+		border-color: @border-mild;
 	}
 }
 .btn-half {
@@ -65,7 +84,7 @@ button {
 	font-weight: bold;
 }
 .panel-heading {
-	border-color: #eee;
+	border-color: @border-soft;
 	#gradient.vertical(@body-bg, #f4f4f4);
 	h3 { font-size: @font-size-base }
 }
@@ -97,6 +116,16 @@ button {
 	margin: 0 auto;
 	width: @tracker-base-width;
 }
+.scrollable-container {
+	width: 100%;
+	position: relative;
+	height: 424px;
+	padding: 0;
+	margin: 0;
+	margin-bottom: @grid-gutter-width;
+	overflow: hidden;
+	overflow-x: scroll;
+}
 .tab-panel {
 	padding: 0 (@grid-gutter-width / 2);
 }
@@ -107,7 +136,7 @@ button {
 .row.separator {
 	margin: 0 0 @grid-gutter-width 0;
 	padding: 0;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid @border-soft;
 }
 .form-control[disabled], label.toggle-off, label.disabled {
 	color: @gray-light !important;
@@ -151,7 +180,7 @@ button {
 		display: inline;
 		margin-left: -12px;
 		vertical-align: middle;
-		color: #ccc;
+		color: @border-mild;
 		font-weight: bold;
 		padding-right: 4px;
 	}
@@ -162,7 +191,7 @@ button {
 .col-infopanel {
 	width: 370px;
 	height: 22px;
-	border: 1px solid #ccc;
+	border: 1px solid @border-mild;
 	margin-left: 74px;
 	margin-top: -2px;
 	font-family: @font-family-monospace;
@@ -197,7 +226,7 @@ button {
 }
 .row-chn-brd {
 	padding: @grid-gutter-width @grid-gutter-width 0;
-	border: 1px solid #eee;
+	border: 1px solid @border-soft;
 	margin-bottom: -@grid-gutter-width;
 }
 .col-tracklist {
@@ -239,7 +268,7 @@ button {
 	float: right;
 	width: 160px;
 	padding: 8px 0 8px 8px;
-	border-left: 1px solid #eee;
+	border-left: 1px solid @border-soft;
 	margin: -8px 0;
 
 	button { height: 24px }
@@ -265,7 +294,7 @@ button {
 
 				> .separator {
 					height: 1px;
-					border-bottom: 1px solid #eee;
+					border-bottom: 1px solid @border-soft;
 					margin: @grid-gutter-width -@grid-gutter-width;
 				}
 			}
@@ -300,7 +329,7 @@ button {
 
 			> .separator {
 				height: 1px;
-				border-bottom: 1px solid #eee;
+				border-bottom: 1px solid @border-soft;
 				margin: @grid-gutter-width -@grid-gutter-width;
 			}
 			> .halfing > * {
@@ -345,13 +374,13 @@ button {
 	}
 }
 #sampledata canvas.smpornedit {
-	border: 1px solid #ccc;
+	border: 1px solid @border-mild;
 	padding: 0;
 	margin: 0;
 	margin-bottom: @grid-gutter-width;
 }
 
-#smpedit_scrollbar {
+#sbSampleScroll {
 	padding: 0;
 	margin: 0;
 	margin-bottom: @grid-gutter-width;
@@ -364,6 +393,39 @@ button {
 		display: block;
 		width: (928px + 3000 + 1);
 		height: 16px;
+	}
+}
+#fxSampleShift {
+	.flexbox(column wrap, space-between);
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+	height: 408px;
+
+	> .cell {
+		width: 117px;
+		height: 25px;
+		min-height: 25px;
+		padding: 0;
+		margin: 0;
+		padding-right: @grid-gutter-width;
+		margin-right: @grid-gutter-width;
+		border-right: 1px solid @border-soft;
+
+		span.bootstrap-touchspin-prefix { font-size: 11px; }
+
+		input {
+			text-align: right;
+			font-weight: bold;
+			border-radius: 0 !important;
+			background-color: @input-group-addon-bg;
+		}
+
+		&.on input { background-color: @input-bg; }
+		&.on span.bootstrap-touchspin-prefix { background-color: @input-bg-disabled; }
+
+		&.loop input { background-color:  lighten(#38c, 40%); }
+		&.loop span.bootstrap-touchspin-prefix { background-color:  lighten(#38c, 35%); }
 	}
 }
 

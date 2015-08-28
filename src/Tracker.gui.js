@@ -107,13 +107,6 @@ Tracker.prototype.populateGUI = function () {
 				app.updatePanelInfo();
 			}
 		}, {
-			selector: '#smpedit_scrollbar',
-			method:   'scroll',
-			handler:  function(e) {
-				app.smpornedit.smpeditOffset = ((e.target.scrollLeft/ 1000) * 64) | 0;
-				app.updateSampleEditor();
-			}
-		}, {
 			selector: '#scOctave',
 			method:   'TouchSpin',
 			data: {
@@ -383,6 +376,13 @@ Tracker.prototype.populateGUI = function () {
 				  .insertBefore(this);
 
 				$(this).trigger('change');
+			}
+		}, {
+			selector: '#sbSampleScroll',
+			method:   'scroll',
+			handler:  function(e) {
+				app.smpornedit.smpeditOffset = 0 | ((e.target.scrollLeft/ 1000) * 64);
+				app.updateSampleEditor();
 			}
 		}, {
 			selector: '#scSampleLength,#scSampleRepeat',

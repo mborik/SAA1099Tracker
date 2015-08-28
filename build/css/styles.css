@@ -7209,7 +7209,7 @@ button {
 }
 .btn-default,
 .btn-default:hover {
-  border-color: #ccc;
+  border-color: #cccccc;
 }
 .btn-half {
   float: left;
@@ -7240,7 +7240,7 @@ button {
   font-weight: bold;
 }
 .panel-heading {
-  border-color: #eee;
+  border-color: #eeeeee;
   background-image: -webkit-linear-gradient(top, #ffffff 0%, #f4f4f4 100%);
   background-image: -o-linear-gradient(top, #ffffff 0%, #f4f4f4 100%);
   background-image: linear-gradient(to bottom, #ffffff 0%, #f4f4f4 100%);
@@ -7296,6 +7296,16 @@ button {
   margin: 0 auto;
   width: 1118px;
 }
+.scrollable-container {
+  width: 100%;
+  position: relative;
+  height: 424px;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 5px;
+  overflow: hidden;
+  overflow-x: scroll;
+}
 .tab-panel {
   padding: 0 2.5px;
 }
@@ -7308,7 +7318,7 @@ button {
 .row.separator {
   margin: 0 0 5px 0;
   padding: 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eeeeee;
 }
 .form-control[disabled],
 label.toggle-off,
@@ -7329,7 +7339,7 @@ label.disabled {
   padding: 0 0 5px 5px;
   float: left;
   padding: 0 5px 5px 5px;
-  border-right: 1px solid #eee;
+  border-right: 1px solid #eeeeee;
   margin-right: 5px;
 }
 .col-buttons button {
@@ -7393,7 +7403,7 @@ label.disabled {
   display: inline;
   margin-left: -12px;
   vertical-align: middle;
-  color: #ccc;
+  color: #cccccc;
   font-weight: bold;
   padding-right: 4px;
 }
@@ -7403,7 +7413,7 @@ label.disabled {
 .col-infopanel {
   width: 370px;
   height: 22px;
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
   margin-left: 74px;
   margin-top: -2px;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
@@ -7449,7 +7459,7 @@ label.disabled {
 }
 .row-chn-brd {
   padding: 5px 5px 0;
-  border: 1px solid #eee;
+  border: 1px solid #eeeeee;
   margin-bottom: -5px;
 }
 .col-tracklist {
@@ -7490,7 +7500,7 @@ label.disabled {
   float: right;
   width: 160px;
   padding: 8px 0 8px 8px;
-  border-left: 1px solid #eee;
+  border-left: 1px solid #eeeeee;
   margin: -8px 0;
 }
 .col-smpactions button {
@@ -7516,7 +7526,7 @@ label.disabled {
 }
 .col-smpactions .actions-amp > .rowcell.middle > .separator {
   height: 1px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eeeeee;
   margin: 5px -5px;
 }
 .col-smpactions .actions-amp > .rowcell.bottom {
@@ -7547,7 +7557,7 @@ label.disabled {
 }
 .col-smpactions .actions-range > .bottom > .separator {
   height: 1px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eeeeee;
   margin: 5px -5px;
 }
 .col-smpactions .actions-range > .bottom > .halfing > * {
@@ -7589,12 +7599,12 @@ label.disabled {
   background: transparent;
 }
 #sampledata canvas.smpornedit {
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
   padding: 0;
   margin: 0;
   margin-bottom: 5px;
 }
-#smpedit_scrollbar {
+#sbSampleScroll {
   padding: 0;
   margin: 0;
   margin-bottom: 5px;
@@ -7603,10 +7613,59 @@ label.disabled {
   overflow: scroll !important;
   -webkit-logical-width: 944px;
 }
-#smpedit_scrollbar > .scrollbar {
+#sbSampleScroll > .scrollbar {
   display: block;
   width: 3929px;
   height: 16px;
+}
+#fxSampleShift {
+  display: -webkit-flex;
+  -webkit-flex: none;
+  -webkit-flex-flow: column wrap;
+  -webkit-justify-content: space-between;
+  display: -moz-flex;
+  -moz-box-flex: none;
+  -moz-flex-flow: column wrap;
+  -moz-justify-content: space-between;
+  display: flex;
+  flex: none;
+  flex-flow: column wrap;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  height: 408px;
+}
+#fxSampleShift > .cell {
+  width: 117px;
+  height: 25px;
+  min-height: 25px;
+  padding: 0;
+  margin: 0;
+  padding-right: 5px;
+  margin-right: 5px;
+  border-right: 1px solid #eeeeee;
+}
+#fxSampleShift > .cell span.bootstrap-touchspin-prefix {
+  font-size: 11px;
+}
+#fxSampleShift > .cell input {
+  text-align: right;
+  font-weight: bold;
+  border-radius: 0 !important;
+  background-color: #eeeeee;
+}
+#fxSampleShift > .cell.on input {
+  background-color: #ffffff;
+}
+#fxSampleShift > .cell.on span.bootstrap-touchspin-prefix {
+  background-color: #fcfcfc;
+}
+#fxSampleShift > .cell.loop input {
+  background-color: #d6e7f5;
+}
+#fxSampleShift > .cell.loop span.bootstrap-touchspin-prefix {
+  background-color: #c2dbf0;
 }
 #statusbar {
   position: absolute;

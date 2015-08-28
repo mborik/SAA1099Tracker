@@ -10,6 +10,7 @@ var SmpOrnEditor = (function () {
 		this.columnWidth = 0;
 		this.halfing = 0;
 		this.centering = 0;
+		this.radix = 10;
 
 //---------------------------------------------------------------------------------------
 		this.drawHeaders = function(img) {
@@ -39,7 +40,7 @@ var SmpOrnEditor = (function () {
 					ctx.fillRect(22, 286, w - 22, 1);
 
 					ctx.save();
-					ctx.font = $('label').css('font');
+					ctx.font = $('label').first().css('font');
 					ctx.translate(12, half);
 					ctx.rotate(-Math.PI / 2);
 					ctx.textBaseline = "middle";
@@ -54,7 +55,29 @@ var SmpOrnEditor = (function () {
 				ctx.drawImage(img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
 			}
 
+			this.createPitchShiftTable();
 			app.updateSampleEditor(true);
+		};
+
+		this.createPitchShiftTable = function () {
+			var i, s,
+				el = $('#fxSampleShift').empty(),
+				cell = $('<div class="cell"/>'),
+				spin = $('<input type="text" class="form-control">');
+
+			for (i = 0; i < 256; i++) {
+				s = spin.clone();
+				cell.clone().append(s).appendTo(el);
+
+				s.TouchSpin({
+					prefix:  i.toWidth(3),
+					radix: (this.radix = app.settings.hexSampleFreq ? 16 : 10),
+					initval: 0, min: -2047, max: 2047
+				})
+				.change({ index: i }, function(e) {
+					console.log('pitchshift spin %d changed', e.data.index);
+				});
+			}
 		};
 	}
 
