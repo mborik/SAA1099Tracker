@@ -392,6 +392,38 @@ Tracker.prototype.populateGUI = function () {
 				min: 0, max: 255
 			}
 		}, {
+			selector: '#scSampleLength',
+			method:   'change',
+			handler:  function(e) {
+				var sample = app.player.sample[app.workingSample],
+					offset = parseInt(e.target.value, 10) - sample.end,
+					looper = (sample.loop += offset);
+
+				sample.end += offset;
+				sample.loop = ((sample.end - looper) < 0) ? 0 : looper;
+
+				app.updateSampleEditor(true);
+			}
+		}, {
+			selector: '#scSampleRepeat',
+			method:   'change',
+			handler:  function(e) {
+				var sample = app.player.sample[app.workingSample],
+					value = parseInt(e.target.value, 10);
+
+				sample.loop = sample.end - value;
+				app.updateSampleEditor(true);
+			}
+		}, {
+			selector: '#chSampleRelease',
+			method:   'change',
+			handler:  function(e) {
+				var sample = app.player.sample[app.workingSample];
+				if (sample.end !== sample.loop)
+					sample.releasable = e.target.checked;
+				app.updateSampleEditor(true);
+			}
+		}, {
 			selector: 'a[id^="miFileImportDemo"]',
 			method:   'click',
 			handler:  function() {
@@ -401,7 +433,7 @@ Tracker.prototype.populateGUI = function () {
 				app.loadDemosong(fn);
 			}
 		}, {
-			selector: '#miStop',
+			selector: '#miStop,#btSampleStop,#btOrnamentStop',
 			method:   'click',
 			handler:  function() { app.onCmdStop() }
 		}, {
@@ -420,6 +452,14 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#miPosPlayStart',
 			method:   'click',
 			handler:  function() { app.onCmdPosPlayStart() }
+		}, {
+			selector: '#btSamplePlay',
+			method:   'click',
+			handler:  function() { app.player.playSample(app.workingSample, 0, app.workingSampleTone) }
+		}, {
+			selector: '#btOrnamentPlay',
+			method:   'click',
+			handler:  function() { app.player.playSample(app.workingSample, app.workingOrnament, app.workingSampleTone) }
 		}, {
 			selector: '#miToggleLoop',
 			method:   'click',

@@ -75,7 +75,12 @@ var SmpOrnEditor = (function () {
 					initval: 0, min: -2047, max: 2047
 				})
 				.change({ index: i }, function(e) {
-					console.log('pitchshift spin %d changed', e.data.index);
+					var radix = app.settings.hexSampleFreq ? 16 : 10,
+						sample = app.player.sample[app.workingSample],
+						data = sample.data,
+						el = e.target;
+
+					data[e.data.index].shift = parseInt(el.value, radix);
 				});
 			}
 		};
