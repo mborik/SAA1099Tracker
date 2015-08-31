@@ -1,0 +1,86 @@
+== TRACKER COMMANDS EXPLAINED =================================================
+===============================================================================
+
+[1xy] - PORTAMENTO UP
+        x - period of change (in ticks)
+        y - pitch change in period (in cents)
+
+[2xy] - PORTAMENTO DOWN
+        x - period of change (in ticks)
+        y - pitch change in period (in cents)
+
+[3xy] - GLISSANDO TO GIVEN NOTE
+        x - period of change (in ticks)
+        y - pitch change in period (in cents)
+
+[4xy] - VIBRATO ON CURRENT NOTE
+        x - period of change (in ticks)
+        y - pitch change in period (in cents)
+
+[5xy] - TREMOLO ON CURRENT NOTE
+        x - period of change (in ticks)
+        y - pitch change in period (in cents)
+
+[6xx] - DELAY ORNAMENT
+        xx - delay (in ticks)
+
+[7xx] - ORNAMENT OFFSET
+        xx - offset (in ticks)
+
+[8xx] - DELAY SAMPLE
+        xx - delay (in ticks)
+
+[9xx] - SAMPLE OFFSET
+        xx - offset (in ticks)
+
+[Axy] - VOLUME SLIDE
+        x - period of change (in ticks)
+        y - volume change in period (signed)
+            [- 9-F ... 1-7 +]
+
+[Bxx] - BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
+        xx - trackline of current channel-pattern
+
+[Cxy] - SPECIAL COMMAND
+        [C00] - disable last command
+        [CF1] - swap stereo channels
+        [CFx] - reseved
+        [Cxy] - false chord
+                (for example C37 is ornament 0,3,7 - minor)
+
+[Dxx] - DELAY LISTING ON CURRENT LINE
+        xx - delay (in ticks)
+
+[Exy] - SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL
+        x: enable/disable envelope control
+           0 - enable
+           1 - enable (but base tone not muted)
+           D - disable
+
+        y: envelope generator shape and false-stereo effect
+          (only meaningful and repetitive shapes was available)
+
+           0 - full amplitude   (bass 4-bit resolution)   ----
+           2 - decay saw        (bass 4-bit resolution)   \\\\
+           4 - triangular saw   (bass 4-bit resolution)   /\/\
+           6 - attack saw       (bass 4-bit resolution)   ////
+           8 - full amplitude   (std. 3-bit resolution)   ----
+           A - decay saw        (std. 3-bit resolution)   \\\\
+           C - triangular saw   (std. 3-bit resolution)   /\/\
+           E - attack saw       (std. 3-bit resolution)   ////
+
+          (every odd value enables false-stereo effect)
+
+[E2x] - SOUNDCHIP NOISE CHANNEL CONTROL
+        x - direct noise generator value control for channel-triplet:
+           0 - noise generetor frequency: 31.25 kHz
+           1 - noise generetor frequency: 15.6 kHz
+           2 - noise generetor frequency: 7.8 kHz
+           3 - noise generetor controlled by frequency from channel 1 / 4
+           4 - disable noise generator
+
+[Fxx] - CHANGE GLOBAL SPEED
+        x (00 - 1F) - constant speed
+
+[Fxy] - CHANGE GLOBAL SPEED
+        x/y - swing mode

@@ -1,0 +1,152 @@
+== SONG DATA (POINTERS) =======================================================
+===============================================================================
+
+32x WORD pointer to samples [0 - 31]
+         (not used samples points to empty Sample-0)
+
+16x WORD pointer to ornaments [0 - 15]
+         (not used ornament points to empty Ornament-0)
+
+ +  position data...
+
+
+== POSITION DATA ==============================================================
+===============================================================================
+
+ 0. | position length                  # normal position
+ 1. | default position speed
+ 2. | CH1 | WORD pattern pointer
+ 4. | CH1 | signed pitch-shift
+ 5. | CH2 | WORD pattern pointer
+ 7. | CH2 | signed pitch-shift
+ 8. | CH3 | WORD pattern pointer
+10. | CH3 | signed pitch-shift
+11. | CH4 | WORD pattern pointer
+13. | CH4 | signed pitch-shift
+14. | CH5 | WORD pattern pointer
+16. | CH5 | signed pitch-shift
+17. | CH6 | WORD pattern pointer
+19. | CH6 | signed pitch-shift
+
+...
+
+ 0. | 0 |                              # end of position table
+ 1. | WORD pointer to loop pattern
+    |       0 for no loop
+
+
+== PATTERN DATA ===============================================================
+===============================================================================
+
+    | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    |---|---|---|---|---|---|---|---|
+ 0. | 1 | X | X | X | X | X | X | X |  # bit.7 set for controller byte
+    |---|---|---|---|---|---|---|---|
+...
+    |---|---|---|---|---|---|---|---|
+ 1. | 0 | T | T | T | T | T | T | T |  # bit.0 not set for pattern data
+    |---|---|---|---|---|---|---|---|
+ 2. | V | P |   | S | S | S | S | S |
+    |---|---|---|---|---|---|---|---|
+ 3. | C | C | C | C | O | O | O | O |
+    |---|---|---|---|---|---|---|---|
+...
+    |---|---|---|---|---|---|---|---|
+(4) | L | L | L | L | R | R | R | R |
+    |---|---|---|---|---|---|---|---|
+(5) | D | D | D | D | D | D | D | D |
+    |---|---|---|---|---|---|---|---|
+
+X - controller:
+    [0] - no changing line, skip to next
+    [127] - end of pattern
+
+T - tone number:
+    [0] - no change
+    [1 - 96] - tones (C-1 - B-8)
+    [127] - release flag
+
+S - sample number:
+    [0] - no change
+    [1 - 31] - samples (1 - V)
+
+O - ornament number:
+    [0] - no change
+    [1 - 15] - ornaments (1 - F)
+
+P - ornament release:
+    [1] - release current ornament
+
+C - command:
+    [0] - no change
+    [1 - 15] - description in "commands.txt"
+
+V - volume change flag
+    [1] - channel volume will be changed
+
+L \ _ volume change value
+R /   (if V flag is set)
+
+D - data for command
+    (if C command isn't null, description in "commands.txt")
+
+
+== ORNAMENT DATA ==============================================================
+===============================================================================
+
+    | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    |---|---|---|---|---|---|---|---|
+1.  | C | D | D | D | D | D | D | D |
+    |---|---|---|---|---|---|---|---|
+
+C - control flag
+    [0] - ornament data
+    [1] - controller
+
+D - ornament data:
+    [003] - +3 semitones
+    [123] - -5 semitones
+
+  - controller:
+    [000] - end of ornament
+    [125] - set cursor to -3 lines back and continue (loop)
+
+
+== SAMPLE DATA ================================================================
+===============================================================================
+
+    | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    |---|---|---|---|---|---|---|---|
+1.  | 0 | E | N | N | L | L | L | L |
+    |---|---|---|---|---|---|---|---|
+2.  | H | H | H | H | R | R | R | R |
+    |---|---|---|---|---|---|---|---|
+3.  | F | F | F | F | F | F | F | F |
+    |---|---|---|---|---|---|---|---|
+...
+    |---|---|---|---|---|---|---|---|
+END | 1 | C | C | C | C | C | C | C |
+    |---|---|---|---|---|---|---|---|
+
+E - frequency enable bit
+
+N - noise enable and type (in inverse logic against reg.22):
+    [0] - disabled
+    [1] - enabled, on 7.8 kHz
+    [2] - enabled, on 15.6 kHz
+    [3] - enabled, on 31.25 kHz
+
+L - left channel amplitude
+R - right channel amplitude
+
+H - octave shift:
+    [01] - +1 octave
+    [14] - -2 octaves
+
+F - frequency shift in octave:
+    [158] - +158 cents
+    [158] - -98 cents (depends on significant bit of H)
+
+C - controller:
+    [000] - end of sample
+    [242] - set cursor to -14 lines back and continue (loop)
