@@ -42,7 +42,7 @@
         xx - trackline of current channel-pattern
 
 [Cxy] - SPECIAL COMMAND
-        [C00] - disable last command
+        [C00] - disable last command (whatever)
         [CF1] - swap stereo channels
         [CFx] - reseved
         [Cxy] - false chord
@@ -73,10 +73,10 @@
 
 [E2x] - SOUNDCHIP NOISE CHANNEL CONTROL
         x - direct noise generator value control for channel-triplet:
-           0 - noise generetor frequency: 31.25 kHz
-           1 - noise generetor frequency: 15.6 kHz
-           2 - noise generetor frequency: 7.8 kHz
-           3 - noise generetor controlled by frequency from channel 1 / 4
+           0 - enabled, on 31.25 kHz
+           1 - enabled, on 15.6 kHz
+           2 - enabled, on 7.8 kHz
+           3 - enabled, controlled by frequency from channel 1 / 4
            4 - disable noise generator
 
 [Fxx] - CHANGE GLOBAL SPEED

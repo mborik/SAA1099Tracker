@@ -1,38 +1,53 @@
-== SONG DATA (POINTERS) =======================================================
+STMF - SAA1099Tracker Module Format is fully relocable and pointer based,
+focusing on shortest data length. All pointers in header are offsets from the
+0th byte of data.
+
+== HEADER =====================================================================
 ===============================================================================
 
-32x WORD pointer to samples [0 - 31]
-         (not used samples points to empty Sample-0)
+ 0. | DWORD signature: "STMF"
 
-16x WORD pointer to ornaments [0 - 15]
-         (not used ornament points to empty Ornament-0)
+ 4. | WORD pointer to sample pointer list
+ 6. | WORD pointer to ornament pointer list
+ 8. | WORD pointer to pattern pointer list
+10. | WORD pointer to position data
 
- +  position data...
+12. | BYTE file version number in BCD code (current file version is 1.0: 0x10)
+13. | STRING: module title           (only if title specified)
+    | STRING: " by " + module author (only if title & author specified)
+    | BYTE delimiter: 0x10           (only if title or author specified)
+
+== POINTER LISTS ==============================================================
+===============================================================================
+
+ Nx | WORD pointers to samples
+ Nx | WORD pointers to ornaments
+ Nx | WORD pointers to patterns
 
 
 == POSITION DATA ==============================================================
 ===============================================================================
 
- 0. | position length                  # normal position
+ 0. | position length
  1. | default position speed
- 2. | CH1 | WORD pattern pointer
- 4. | CH1 | signed pitch-shift
- 5. | CH2 | WORD pattern pointer
- 7. | CH2 | signed pitch-shift
- 8. | CH3 | WORD pattern pointer
-10. | CH3 | signed pitch-shift
-11. | CH4 | WORD pattern pointer
-13. | CH4 | signed pitch-shift
-14. | CH5 | WORD pattern pointer
-16. | CH5 | signed pitch-shift
-17. | CH6 | WORD pattern pointer
-19. | CH6 | signed pitch-shift
+ 2. | CH1 | pattern number
+ 3. | CH1 | signed pitch-shift
+ 4. | CH2 | pattern number
+ 5. | CH2 | signed pitch-shift
+ 6. | CH3 | pattern number
+ 7. | CH3 | signed pitch-shift
+ 8. | CH4 | pattern number
+ 9. | CH4 | signed pitch-shift
+10. | CH5 | pattern number
+11. | CH5 | signed pitch-shift
+12. | CH6 | pattern number
+13. | CH6 | signed pitch-shift
 
 ...
 
- 0. | 0 |                              # end of position table
- 1. | WORD pointer to loop pattern
-    |       0 for no loop
+ ?. | 0 - end of position table
+    | WORD pointer to loop position
+    |   or 0 for no loop
 
 
 == PATTERN DATA ===============================================================
@@ -44,7 +59,7 @@
     |---|---|---|---|---|---|---|---|
 ...
     |---|---|---|---|---|---|---|---|
- 1. | 0 | T | T | T | T | T | T | T |  # bit.0 not set for pattern data
+ 1. | 0 | T | T | T | T | T | T | T |  # bit.7 not set for pattern data
     |---|---|---|---|---|---|---|---|
  2. | V | P |   | S | S | S | S | S |
     |---|---|---|---|---|---|---|---|
@@ -119,7 +134,7 @@ D - ornament data:
     |---|---|---|---|---|---|---|---|
 1.  | 0 | E | N | N | L | L | L | L |
     |---|---|---|---|---|---|---|---|
-2.  | H | H | H | H | R | R | R | R |
+2.  | M | H | H | H | R | R | R | R |
     |---|---|---|---|---|---|---|---|
 3.  | F | F | F | F | F | F | F | F |
     |---|---|---|---|---|---|---|---|
@@ -130,22 +145,25 @@ END | 1 | C | C | C | C | C | C | C |
 
 E - frequency enable bit
 
-N - noise enable and type (in inverse logic against reg.22):
-    [0] - disabled
-    [1] - enabled, on 7.8 kHz
-    [2] - enabled, on 15.6 kHz
-    [3] - enabled, on 31.25 kHz
+M - noise enable bit
+
+N - noise generetor frequency:
+    [0] - 31.25 kHz
+    [1] - 15.6 kHz
+    [2] - 7.8 kHz
+    [3] - controlled by frequency from channel 1 / 4
 
 L - left channel amplitude
 R - right channel amplitude
 
-H - octave shift:
-    [01] - +1 octave
-    [14] - -2 octaves
+H - octave shift (in two's complement):
+    [1] - +1 octave
+    [0] - base octave
+    [6] - -2 octaves
 
 F - frequency shift in octave:
     [158] - +158 cents
-    [158] - -98 cents (depends on significant bit of H)
+    [158] - -98 cents (depends on significancy of H)
 
 C - controller:
     [000] - end of sample
