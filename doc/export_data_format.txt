@@ -6,16 +6,19 @@ focusing on shortest data length. All pointers in header are offsets from the
 ===============================================================================
 
  0. | DWORD signature: "STMF"
+ 1. | BYTE file version number in BCD code
+      (current format specification is 1.0 = 0x10)
 
- 4. | WORD pointer to sample pointer list
- 6. | WORD pointer to ornament pointer list
- 8. | WORD pointer to pattern pointer list
-10. | WORD pointer to position data
+ 5. | WORD pointer to sample pointer list
+ 7. | WORD pointer to ornament pointer list
+ 9. | WORD pointer to pattern pointer list
+11. | WORD pointer to position data
 
-12. | BYTE file version number in BCD code (current file version is 1.0: 0x10)
-13. | STRING: module title           (only if title specified)
-    | STRING: " by " + module author (only if title & author specified)
-    | BYTE delimiter: 0x10           (only if title or author specified)
+      (this sequence is defined only if title or author are specified)
+13. | BYTE delimiter: CR = 0x0D
+    | STRING: module title           (if title is specified)
+    | STRING: " by " + module author (if title & author are specified)
+    | BYTE delimiter: CR = 0x0D
 
 == POINTER LISTS ==============================================================
 ===============================================================================
@@ -47,7 +50,7 @@ focusing on shortest data length. All pointers in header are offsets from the
 
  ?. | 0 - end of position table
     | WORD pointer to loop position
-    |   or 0 for no loop
+      (or 0 for no loop)
 
 
 == PATTERN DATA ===============================================================
