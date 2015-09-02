@@ -1,18 +1,33 @@
 /** Tracker.tracklist submodule */
 //---------------------------------------------------------------------------------------
 var TracklistPosition = (function () {
-	function TracklistPosition() {
-		this.y = 0;
-		this.line = 0;
-		this.channel = 0;
-		this.column = 0;
-		this.start = { x: 0, y: 0 };
+	function TracklistPosition(y, line, channel, column, sx, sy) {
+		this.y = y || 0;
+		this.line = line || 0;
+		this.channel = channel || 0;
+		this.column = column || 0;
+		this.start = { x: (sx || 0), y: (sy || 0) };
+
+		this.set = function(p) {
+			if (!(p instanceof TracklistPosition))
+				throw 'invalid object type';
+
+			this.y = p.y;
+			this.line = p.line;
+			this.channel = p.channel;
+			this.column = p.column;
+			this.start.x = p.start.x;
+			this.start.y = p.start.y;
+		};
+
 		this.compare = function (p) {
-			return (this.y === p.y &&
-			this.line === p.line &&
-			this.channel === p.channel &&
-			this.column === p.column);
-		}
+			if (p instanceof TracklistPosition)
+				return (this.y === p.y &&
+				        this.line === p.line &&
+				        this.channel === p.channel &&
+				        this.column === p.column);
+		};
+
 	}
 
 	return TracklistPosition;
@@ -67,25 +82,28 @@ var Tracklist = (function () {
 		};
 
 		this.setHeight = function(height) {
+			var sett = app.settings;
+
 			if (height === void 0) {
-				height = app.settings.tracklistAutosize
+				height = sett.tracklistAutosize
 					? this.countTracklines()
-					: app.settings.tracklistLines;
+					: sett.tracklistLines;
 			}
 
-			app.settings.tracklistLines = height;
-			height *= app.settings.tracklistLineHeight;
+			sett.tracklistLines = height;
+			height *= sett.tracklistLineHeight;
 
 			$(this.obj).prop('height', height).css({ 'height': height * this.zoom });
 		};
 
 		this.moveCurrentline = function(delta, noWrap) {
-			if (!app.player.position.length || app.modePlay)
-				return;
+			var player = app.player,
+				line = player.currentLine + delta,
+				pos = player.currentPosition,
+				pp = player.position[pos];
 
-			var line = app.player.currentLine + delta,
-				pos = app.player.currentPosition,
-				pp = app.player.position[pos];
+			if (app.modePlay || pp === void 0)
+				return;
 
 			if (noWrap)
 				line = Math.min(Math.max(line, 0), pp.length - 1);
@@ -94,8 +112,28 @@ var Tracklist = (function () {
 			else if (line >= pp.length)
 				line -= pp.length;
 
-			app.player.currentLine = line;
-		}
+			player.currentLine = line;
+		};
+
+		this.pointToTracklist = function(x, y) {
+			var i, j, chl,
+				lines = app.settings.tracklistLines,
+				half = lines >> 1,
+				ln = app.player.currentLine - half;
+
+			for (i = 0; i < lines; i++, ln++) {
+				if (y >= this.offsets.y[i] && y <= this.offsets.y[i + 1]) {
+					for (chl = 0; chl < 6; chl++) {
+						if (x >= this.offsets.x[chl][0] && x <= this.offsets.x[chl][8]) {
+							for (j = 0; j < 8; j++) {
+								if (x >= this.offsets.x[chl][j] && x <= this.offsets.x[chl][j + 1])
+									return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
+							}
+						}
+					}
+				}
+			}
+		};
 	}
 
 	return Tracklist;
