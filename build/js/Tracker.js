@@ -88,7 +88,10 @@ var Tracklist = (function () {
 			trkOffset: 0,
 
 			// vertical padding of pixelfont in trackline height
-			vpad     : 0
+			vpad     : 0,
+
+			// jQuery offset object
+			offset   : null
 		};
 
 		// calculated absolute positions of X:channels/columns and Y:tracklines in canvas
@@ -119,6 +122,7 @@ var Tracklist = (function () {
 			height *= sett.tracklistLineHeight;
 
 			$(this.obj).prop('height', height).css({ 'height': height * this.zoom });
+			this.canvasData.offset = $(this.obj).offset();
 		};
 
 		this.moveCurrentline = function(delta, noWrap) {
@@ -143,15 +147,16 @@ var Tracklist = (function () {
 		this.pointToTracklist = function(x, y) {
 			var i, j, chl,
 				lines = app.settings.tracklistLines,
+				tx = x / this.zoom, ty = y / this.zoom,
 				half = lines >> 1,
 				ln = app.player.currentLine - half;
 
 			for (i = 0; i < lines; i++, ln++) {
-				if (y >= this.offsets.y[i] && y <= this.offsets.y[i + 1]) {
+				if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
 					for (chl = 0; chl < 6; chl++) {
-						if (x >= this.offsets.x[chl][0] && x <= this.offsets.x[chl][8]) {
+						if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
 							for (j = 0; j < 8; j++) {
-								if (x >= this.offsets.x[chl][j] && x <= this.offsets.x[chl][j + 1])
+								if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1])
 									return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
 							}
 						}
@@ -1425,6 +1430,87 @@ Tracker.prototype.getKeynote = function (key) {
 };
 //---------------------------------------------------------------------------------------
 
+/** Tracker.keyboard submodule */
+//---------------------------------------------------------------------------------------
+Tracker.prototype.handleMouseEvent = function (part, obj, e) {
+    if (part === 'tracklist') {
+        var redraw = false,
+            p = this.player,
+            sel = this.selectionPoint,
+            pp = p.position[p.currentPosition],
+            offset = obj.canvasData.offset,
+            point = obj.pointToTracklist(e.pageX - offset.left, e.pageY - offset.top),
+            line = p.currentLine,
+            type = e.type, i;
+
+        if (this.modePlay || !pp || !point)
+            return;
+
+        point.line = Math.min(point.line, pp.length - 1);
+
+        if (type === 'mousewheel') {
+			e.target.focus();
+
+			if (e.delta < 0)
+				obj.moveCurrentline(1);
+			else if (e.delta > 0)
+				obj.moveCurrentline(-1);
+			redraw = true;
+        }
+        else if (type === 'mousedown') {
+            e.target.focus();
+
+            if (e.which === 1 && point.line < pp.length)
+                sel.set(point);
+        }
+        else if (type === 'mouseup' && e.which === 1) {
+            if (this.selectionStarted) {
+                this.selectionLine = sel.line;
+                this.selectionChannel = sel.channel;
+                this.selectionLen = point.line - sel.line;
+                this.selectionStarted = false;
+                redraw = true;
+            }
+            else if (point.line === line) {
+                this.modeEditChannel = sel.channel;
+                this.modeEditColumn = sel.column;
+                redraw = true;
+            }
+        }
+        else if (type === 'dblclick' && e.which === 1) {
+            this.selectionLine = point.line;
+            this.selectionChannel = point.channel;
+            this.selectionLen = 0;
+            this.selectionStarted = false;
+            this.modeEditChannel = sel.channel;
+            this.modeEditColumn = sel.column;
+            p.currentLine = point.line;
+            redraw = true;
+        }
+        else if (/mouse(move|out)/.test(type) && e.which === 1 && !sel.compare(point)) {
+            i = point.line - sel.line;
+
+            if (i > 0) {
+                this.selectionLine = sel.line;
+                this.selectionChannel = sel.channel;
+                this.selectionLen = i;
+                this.selectionStarted = true;
+            }
+
+            if (point.y === (this.settings.tracklistLines - 1))
+                obj.moveCurrentline(1, true);
+
+            redraw = true;
+        }
+
+        if (redraw) {
+			this.updateTracklist();
+			this.updatePanelInfo();
+        }
+    }
+}
+//---------------------------------------------------------------------------------------
+
 /** Tracker.paint submodule */
 //---------------------------------------------------------------------------------------
 /*
@@ -1841,12 +1927,24 @@ Tracker.prototype.populateGUI = function () {
 					o.setHeight();
 				}
 				else if (name === 'smpornedit') {
-					var id = el.id.replace('smpedit_', ''),
-						child = o[id];
+					name = el.id.replace('smpedit_', '');
 
-					child.obj = el;
-					child.ctx = el.getContext('2d');
+					o[name].obj = el;
+					o[name].ctx = el.getContext('2d');
 				}
+
+				$(this).bind('mousedown mouseup mousemove mouseout dblclick mousewheel DOMMouseScroll', function (e) {
+					var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || (e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
+					if (delta) {
+						e.stopPropagation();
+						e.preventDefault();
+
+						e.delta = delta;
+						e.type = 'mousewheel';
+					}
+
+					app.handleMouseEvent(name, o, e);
+				});
 			}
 		}, {
 			selector: 'img.pixelfont',
@@ -1865,28 +1963,6 @@ Tracker.prototype.populateGUI = function () {
 			param:    'click',
 			handler:  function(e) {
 				app.activeTab = parseInt($(this).data().value);
-			}
-		}, {
-			selector: '#tracklist',
-			method:   'on',
-			param:    'mousewheel DOMMouseScroll',
-			handler:  function(e) {
-				if (!app.player.position.length || app.modePlay)
-					return;
-
-				var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || -e.originalEvent.detail;
-
-				e.stopPropagation();
-				e.preventDefault();
-				e.target.focus();
-
-				if (delta < 0)
-					app.tracklist.moveCurrentline(1);
-				else if (delta > 0)
-					app.tracklist.moveCurrentline(-1);
-
-				app.updateTracklist();
-				app.updatePanelInfo();
 			}
 		}, {
 			selector: '#scOctave',

@@ -59,12 +59,24 @@ Tracker.prototype.populateGUI = function () {
 					o.setHeight();
 				}
 				else if (name === 'smpornedit') {
-					var id = el.id.replace('smpedit_', ''),
-						child = o[id];
+					name = el.id.replace('smpedit_', '');
 
-					child.obj = el;
-					child.ctx = el.getContext('2d');
+					o[name].obj = el;
+					o[name].ctx = el.getContext('2d');
 				}
+
+				$(this).bind('mousedown mouseup mousemove mouseout dblclick mousewheel DOMMouseScroll', function (e) {
+					var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || (e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
+					if (delta) {
+						e.stopPropagation();
+						e.preventDefault();
+
+						e.delta = delta;
+						e.type = 'mousewheel';
+					}
+
+					app.handleMouseEvent(name, o, e);
+				});
 			}
 		}, {
 			selector: 'img.pixelfont',
@@ -83,28 +95,6 @@ Tracker.prototype.populateGUI = function () {
 			param:    'click',
 			handler:  function(e) {
 				app.activeTab = parseInt($(this).data().value);
-			}
-		}, {
-			selector: '#tracklist',
-			method:   'on',
-			param:    'mousewheel DOMMouseScroll',
-			handler:  function(e) {
-				if (!app.player.position.length || app.modePlay)
-					return;
-
-				var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || -e.originalEvent.detail;
-
-				e.stopPropagation();
-				e.preventDefault();
-				e.target.focus();
-
-				if (delta < 0)
-					app.tracklist.moveCurrentline(1);
-				else if (delta > 0)
-					app.tracklist.moveCurrentline(-1);
-
-				app.updateTracklist();
-				app.updatePanelInfo();
 			}
 		}, {
 			selector: '#scOctave',

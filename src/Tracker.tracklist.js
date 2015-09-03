@@ -63,7 +63,10 @@ var Tracklist = (function () {
 			trkOffset: 0,
 
 			// vertical padding of pixelfont in trackline height
-			vpad     : 0
+			vpad     : 0,
+
+			// jQuery offset object
+			offset   : null
 		};
 
 		// calculated absolute positions of X:channels/columns and Y:tracklines in canvas
@@ -94,6 +97,7 @@ var Tracklist = (function () {
 			height *= sett.tracklistLineHeight;
 
 			$(this.obj).prop('height', height).css({ 'height': height * this.zoom });
+			this.canvasData.offset = $(this.obj).offset();
 		};
 
 		this.moveCurrentline = function(delta, noWrap) {
@@ -118,15 +122,16 @@ var Tracklist = (function () {
 		this.pointToTracklist = function(x, y) {
 			var i, j, chl,
 				lines = app.settings.tracklistLines,
+				tx = x / this.zoom, ty = y / this.zoom,
 				half = lines >> 1,
 				ln = app.player.currentLine - half;
 
 			for (i = 0; i < lines; i++, ln++) {
-				if (y >= this.offsets.y[i] && y <= this.offsets.y[i + 1]) {
+				if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
 					for (chl = 0; chl < 6; chl++) {
-						if (x >= this.offsets.x[chl][0] && x <= this.offsets.x[chl][8]) {
+						if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
 							for (j = 0; j < 8; j++) {
-								if (x >= this.offsets.x[chl][j] && x <= this.offsets.x[chl][j + 1])
+								if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1])
 									return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
 							}
 						}
