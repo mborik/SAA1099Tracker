@@ -238,6 +238,27 @@ var SmpOrnEditor = (function () {
 			app.updateSampleEditor(true);
 		};
 
+		this.updateSamplePitchShift = function () {
+			var sample = app.player.sample[app.workingSample],
+				noloop = (sample.end === sample.loop),
+				data;
+
+			$('#fxSampleShift>.cell').each(function (i, el) {
+				data = sample.data[i];
+
+				if (i >= sample.end && !sample.releasable)
+					el.className = 'cell';
+				else if (!noloop && i >= sample.loop && i < sample.end)
+					el.className = 'cell loop';
+				else
+					el.className = 'cell on';
+
+				$(el).find('input').val(parseInt(data.shift, this.radix));
+			});
+
+			$('#fxSampleShift').parent().scrollLeft(0);
+		};
+
 		this.createPitchShiftTable = function () {
 			var i, s,
 				el = $('#fxSampleShift').empty(),
@@ -1441,8 +1462,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			sel = obj.selection,
 			offset = obj.canvasData.offset,
 			point = obj.pointToTracklist(e.pageX - offset.left, e.pageY - offset.top),
-			line = p.currentLine, i,
-			type = e.type.replace('mouse', '');
+			line = p.currentLine, i;
 
 		if (this.modePlay || !pp || !point)
 			return;
@@ -1450,7 +1470,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 		point.line = Math.min(point.line, pp.length - 1);
 		i = point.line - sel.start.line;
 
-		if (type === 'mousewheel') {
+		if (e.type === 'mousewheel') {
 			e.target.focus();
 
 			if (e.delta < 0)
@@ -1459,13 +1479,13 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				obj.moveCurrentline(-1);
 			redraw = true;
 		}
-		else if (type === 'mousedown') {
+		else if (e.type === 'mousedown') {
 			e.target.focus();
 
 			if (e.which === 1 && point.line < pp.length)
 				sel.start.set(point);
 		}
-		else if (type === 'mouseup' && e.which === 1) {
+		else if (e.type === 'mouseup' && e.which === 1) {
 			if (sel.isDragging) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -1479,7 +1499,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				redraw = true;
 			}
 		}
-		else if (type === 'dblclick' && e.which === 1) {
+		else if (e.type === 'dblclick' && e.which === 1) {
 			sel.len = 0;
 			sel.line = point.line;
 			sel.channel = point.channel;
@@ -1490,7 +1510,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			p.currentLine = point.line;
 			redraw = true;
 		}
-		else if (type === 'mousemove' && e.which === 1 && !point.compare(sel.start)) {
+		else if (e.type === 'mousemove' && e.which === 1 && !point.compare(sel.start)) {
 			if (i > 0) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -1849,21 +1869,7 @@ Tracker.prototype.updateSampleEditor = function (update) {
 		$('#chSampleRelease').prop('checked', sample.releasable);
 		$('#chSampleRelease').prop('disabled', l).parent()[l ? 'addClass' : 'removeClass']('disabled');
 
-		$('#fxSampleShift>.cell').each(function (i, el) {
-			data = sample.data[i];
-
-			if (i >= sample.end && !sample.releasable)
-				el.className = 'cell';
-			else if (!l && i >= sample.loop && i < sample.end)
-				el.className = 'cell loop';
-			else
-				el.className = 'cell on';
-
-			$(el).find('input').val(parseInt(data.shift, o.radix));
-		});
-
 		$('#sbSampleScroll').scrollLeft(0);
-		$('#fxSampleShift').parent().scrollLeft(0);
 	}
 };
 //---------------------------------------------------------------------------------------
@@ -2282,6 +2288,15 @@ Tracker.prototype.populateGUI = function () {
 				if (sample.end !== sample.loop)
 					sample.releasable = e.target.checked;
 				app.updateSampleEditor(true);
+			}
+		}, {
+			selector: '#sample-tabpanel a[data-toggle="tab"]',
+			method:   'on',
+			param:    'show.bs.tab',
+			handler:  function(e) {
+				console.log(e.target.id + ' | ' + e.relatedTarget.id);
+				if (e.target.id === 'tab-pitchshift' && e.relatedTarget.id === 'tab-sampledata')
+					app.smpornedit.updateSamplePitchShift();
 			}
 		}, {
 			selector: 'a[id^="miFileImportDemo"]',

@@ -414,6 +414,15 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 			}
 		}, {
+			selector: '#sample-tabpanel a[data-toggle="tab"]',
+			method:   'on',
+			param:    'show.bs.tab',
+			handler:  function(e) {
+				console.log(e.target.id + ' | ' + e.relatedTarget.id);
+				if (e.target.id === 'tab-pitchshift' && e.relatedTarget.id === 'tab-sampledata')
+					app.smpornedit.updateSamplePitchShift();
+			}
+		}, {
 			selector: 'a[id^="miFileImportDemo"]',
 			method:   'click',
 			handler:  function() {

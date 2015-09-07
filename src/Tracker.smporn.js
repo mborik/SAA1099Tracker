@@ -59,6 +59,27 @@ var SmpOrnEditor = (function () {
 			app.updateSampleEditor(true);
 		};
 
+		this.updateSamplePitchShift = function () {
+			var sample = app.player.sample[app.workingSample],
+				noloop = (sample.end === sample.loop),
+				data;
+
+			$('#fxSampleShift>.cell').each(function (i, el) {
+				data = sample.data[i];
+
+				if (i >= sample.end && !sample.releasable)
+					el.className = 'cell';
+				else if (!noloop && i >= sample.loop && i < sample.end)
+					el.className = 'cell loop';
+				else
+					el.className = 'cell on';
+
+				$(el).find('input').val(parseInt(data.shift, this.radix));
+			});
+
+			$('#fxSampleShift').parent().scrollLeft(0);
+		};
+
 		this.createPitchShiftTable = function () {
 			var i, s,
 				el = $('#fxSampleShift').empty(),

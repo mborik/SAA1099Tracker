@@ -335,21 +335,7 @@ Tracker.prototype.updateSampleEditor = function (update) {
 		$('#chSampleRelease').prop('checked', sample.releasable);
 		$('#chSampleRelease').prop('disabled', l).parent()[l ? 'addClass' : 'removeClass']('disabled');
 
-		$('#fxSampleShift>.cell').each(function (i, el) {
-			data = sample.data[i];
-
-			if (i >= sample.end && !sample.releasable)
-				el.className = 'cell';
-			else if (!l && i >= sample.loop && i < sample.end)
-				el.className = 'cell loop';
-			else
-				el.className = 'cell on';
-
-			$(el).find('input').val(parseInt(data.shift, o.radix));
-		});
-
 		$('#sbSampleScroll').scrollLeft(0);
-		$('#fxSampleShift').parent().scrollLeft(0);
 	}
 };
 //---------------------------------------------------------------------------------------
