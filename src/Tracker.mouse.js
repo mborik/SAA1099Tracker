@@ -8,8 +8,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			sel = obj.selection,
 			offset = obj.canvasData.offset,
 			point = obj.pointToTracklist(e.pageX - offset.left, e.pageY - offset.top),
-			line = p.currentLine, i,
-			type = e.type.replace('mouse', '');
+			line = p.currentLine, i;
 
 		if (this.modePlay || !pp || !point)
 			return;
@@ -17,7 +16,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 		point.line = Math.min(point.line, pp.length - 1);
 		i = point.line - sel.start.line;
 
-		if (type === 'mousewheel') {
+		if (e.type === 'mousewheel') {
 			e.target.focus();
 
 			if (e.delta < 0)
@@ -26,13 +25,13 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				obj.moveCurrentline(-1);
 			redraw = true;
 		}
-		else if (type === 'mousedown') {
+		else if (e.type === 'mousedown') {
 			e.target.focus();
 
 			if (e.which === 1 && point.line < pp.length)
 				sel.start.set(point);
 		}
-		else if (type === 'mouseup' && e.which === 1) {
+		else if (e.type === 'mouseup' && e.which === 1) {
 			if (sel.isDragging) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -46,7 +45,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				redraw = true;
 			}
 		}
-		else if (type === 'dblclick' && e.which === 1) {
+		else if (e.type === 'dblclick' && e.which === 1) {
 			sel.len = 0;
 			sel.line = point.line;
 			sel.channel = point.channel;
@@ -57,7 +56,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			p.currentLine = point.line;
 			redraw = true;
 		}
-		else if (type === 'mousemove' && e.which === 1 && !point.compare(sel.start)) {
+		else if (e.type === 'mousemove' && e.which === 1 && !point.compare(sel.start)) {
 			if (i > 0) {
 				sel.len = i;
 				sel.line = sel.start.line;
