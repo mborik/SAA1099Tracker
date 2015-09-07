@@ -2329,12 +2329,16 @@ Tracker.prototype.populateGUI = function () {
 
 //---------------------------------------------------------------------------------------
 	for (var i = 0, l = populatedElementsTable.length; i < l; i++) {
-		var obj = populatedElementsTable[i],
-			param = obj.handler || obj.data,
-			selector = (obj.selector) ? "'" + obj.selector + "'" : obj.global;
-		eval("$(" + selector + ")." + (obj.param
-			? (obj.method + "('" + obj.param + "', param)")
-			: (obj.method + "(param)")));
+		var o = populatedElementsTable[i],
+			data = o.handler || o.data,
+			selector = o.selector || (o.global && window[o.global]);
+
+		if (selector && o.method) {
+			if (o.param)
+				$(selector)[o.method](o.param, data);
+			else
+				$(selector)[o.method](data);
+		}
 	}
 };
 //---------------------------------------------------------------------------------------
