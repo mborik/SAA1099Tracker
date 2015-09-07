@@ -27,12 +27,6 @@ var Tracker = (function() {
 			length: 0
 		};
 
-		this.selectionPoint = new TracklistPosition;
-		this.selectionStarted = false;
-		this.selectionChannel = 0;
-		this.selectionLine = 0;
-		this.selectionLen = 0;
-
 		this.settings = {
 			tracklistAutosize: true,
 			tracklistLines: 17,

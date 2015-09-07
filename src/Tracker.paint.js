@@ -67,6 +67,7 @@ Tracker.prototype.initPixelFont = function (font) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateTracklist = function (update) {
 	var o = this.tracklist.canvasData,
+		sel = this.tracklist.selection,
 		offs = this.tracklist.offsets,
 		player = this.player,
 		hexdec = this.settings.hexTracklines ? 16 : 10,
@@ -139,9 +140,9 @@ Tracker.prototype.updateTracklist = function (update) {
 
 				cc = ccb;
 				if (!j && !(i === half && this.modeEdit) &&
-					this.selectionLen && this.selectionChannel === chn &&
-					line >= this.selectionLine &&
-					line <= (this.selectionLine + this.selectionLen)) {
+					sel.len && sel.channel === chn &&
+					line >= sel.line &&
+					line <= (sel.line + sel.len)) {
 
 					ctx.fillStyle = '#000';
 					ctx.fillRect(x - 3, y, o.selWidth, h);

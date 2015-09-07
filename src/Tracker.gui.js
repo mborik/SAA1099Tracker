@@ -65,7 +65,7 @@ Tracker.prototype.populateGUI = function () {
 					o[name].ctx = el.getContext('2d');
 				}
 
-				$(this).bind('mousedown mouseup mousemove mouseout dblclick mousewheel DOMMouseScroll', function (e) {
+				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function (e) {
 					var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || (e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
 					if (delta) {
 						e.stopPropagation();

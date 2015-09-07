@@ -74,8 +74,15 @@ var Tracklist = (function () {
 			// 6 channels of 8 column (+1 padding) positions
 			x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
 			y: []
-		}
+		};
 
+		this.selection = {
+			isDragging: false,
+			start: new TracklistPosition,
+			len: 0,
+			line: 0,
+			channel: 0
+		};
 //---------------------------------------------------------------------------------------
 		this.countTracklines = function() {
 			var s = $('#statusbar').offset(),

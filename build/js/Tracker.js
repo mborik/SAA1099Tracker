@@ -99,8 +99,15 @@ var Tracklist = (function () {
 			// 6 channels of 8 column (+1 padding) positions
 			x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
 			y: []
-		}
+		};
 
+		this.selection = {
+			isDragging: false,
+			start: new TracklistPosition,
+			len: 0,
+			line: 0,
+			channel: 0
+		};
 //---------------------------------------------------------------------------------------
 		this.countTracklines = function() {
 			var s = $('#statusbar').offset(),
@@ -290,12 +297,6 @@ var Tracker = (function() {
 			lastPlayMode: 0,
 			length: 0
 		};
-
-		this.selectionPoint = new TracklistPosition;
-		this.selectionStarted = false;
-		this.selectionChannel = 0;
-		this.selectionLine = 0;
-		this.selectionLen = 0;
 
 		this.settings = {
 			tracklistAutosize: true,
@@ -1433,22 +1434,23 @@ Tracker.prototype.getKeynote = function (key) {
 /** Tracker.keyboard submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleMouseEvent = function (part, obj, e) {
-    if (part === 'tracklist') {
-        var redraw = false,
-            p = this.player,
-            sel = this.selectionPoint,
-            pp = p.position[p.currentPosition],
-            offset = obj.canvasData.offset,
-            point = obj.pointToTracklist(e.pageX - offset.left, e.pageY - offset.top),
-            line = p.currentLine,
-            type = e.type, i;
+	if (part === 'tracklist') {
+		var redraw = false,
+			p = this.player,
+			pp = p.position[p.currentPosition],
+			sel = obj.selection,
+			offset = obj.canvasData.offset,
+			point = obj.pointToTracklist(e.pageX - offset.left, e.pageY - offset.top),
+			line = p.currentLine, i,
+			type = e.type.replace('mouse', '');
 
-        if (this.modePlay || !pp || !point)
-            return;
+		if (this.modePlay || !pp || !point)
+			return;
 
-        point.line = Math.min(point.line, pp.length - 1);
+		point.line = Math.min(point.line, pp.length - 1);
+		i = point.line - sel.start.line;
 
-        if (type === 'mousewheel') {
+		if (type === 'mousewheel') {
 			e.target.focus();
 
 			if (e.delta < 0)
@@ -1456,58 +1458,57 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			else if (e.delta > 0)
 				obj.moveCurrentline(-1);
 			redraw = true;
-        }
-        else if (type === 'mousedown') {
-            e.target.focus();
+		}
+		else if (type === 'mousedown') {
+			e.target.focus();
 
-            if (e.which === 1 && point.line < pp.length)
-                sel.set(point);
-        }
-        else if (type === 'mouseup' && e.which === 1) {
-            if (this.selectionStarted) {
-                this.selectionLine = sel.line;
-                this.selectionChannel = sel.channel;
-                this.selectionLen = point.line - sel.line;
-                this.selectionStarted = false;
-                redraw = true;
-            }
-            else if (point.line === line) {
-                this.modeEditChannel = sel.channel;
-                this.modeEditColumn = sel.column;
-                redraw = true;
-            }
-        }
-        else if (type === 'dblclick' && e.which === 1) {
-            this.selectionLine = point.line;
-            this.selectionChannel = point.channel;
-            this.selectionLen = 0;
-            this.selectionStarted = false;
-            this.modeEditChannel = sel.channel;
-            this.modeEditColumn = sel.column;
-            p.currentLine = point.line;
-            redraw = true;
-        }
-        else if (/mouse(move|out)/.test(type) && e.which === 1 && !sel.compare(point)) {
-            i = point.line - sel.line;
+			if (e.which === 1 && point.line < pp.length)
+				sel.start.set(point);
+		}
+		else if (type === 'mouseup' && e.which === 1) {
+			if (sel.isDragging) {
+				sel.len = i;
+				sel.line = sel.start.line;
+				sel.channel = sel.start.channel;
+				sel.isDragging = false;
+				redraw = true;
+			}
+			else if (point.line === line) {
+				this.modeEditChannel = sel.start.channel;
+				this.modeEditColumn = sel.start.column;
+				redraw = true;
+			}
+		}
+		else if (type === 'dblclick' && e.which === 1) {
+			sel.len = 0;
+			sel.line = point.line;
+			sel.channel = point.channel;
+			sel.isDragging = false;
 
-            if (i > 0) {
-                this.selectionLine = sel.line;
-                this.selectionChannel = sel.channel;
-                this.selectionLen = i;
-                this.selectionStarted = true;
-            }
+			this.modeEditChannel = sel.start.channel;
+			this.modeEditColumn = sel.start.column;
+			p.currentLine = point.line;
+			redraw = true;
+		}
+		else if (type === 'mousemove' && e.which === 1 && !point.compare(sel.start)) {
+			if (i > 0) {
+				sel.len = i;
+				sel.line = sel.start.line;
+				sel.channel = sel.start.channel;
+				sel.isDragging = true;
+			}
 
-            if (point.y === (this.settings.tracklistLines - 1))
-                obj.moveCurrentline(1, true);
+			if (point.y === (this.settings.tracklistLines - 1))
+				obj.moveCurrentline(1, true);
 
-            redraw = true;
-        }
+			redraw = true;
+		}
 
-        if (redraw) {
+		if (redraw) {
 			this.updateTracklist();
 			this.updatePanelInfo();
-        }
-    }
+		}
+	}
 }
 //---------------------------------------------------------------------------------------
 
@@ -1580,6 +1581,7 @@ Tracker.prototype.initPixelFont = function (font) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateTracklist = function (update) {
 	var o = this.tracklist.canvasData,
+		sel = this.tracklist.selection,
 		offs = this.tracklist.offsets,
 		player = this.player,
 		hexdec = this.settings.hexTracklines ? 16 : 10,
@@ -1652,9 +1654,9 @@ Tracker.prototype.updateTracklist = function (update) {
 
 				cc = ccb;
 				if (!j && !(i === half && this.modeEdit) &&
-					this.selectionLen && this.selectionChannel === chn &&
-					line >= this.selectionLine &&
-					line <= (this.selectionLine + this.selectionLen)) {
+					sel.len && sel.channel === chn &&
+					line >= sel.line &&
+					line <= (sel.line + sel.len)) {
 
 					ctx.fillStyle = '#000';
 					ctx.fillRect(x - 3, y, o.selWidth, h);
@@ -1933,7 +1935,7 @@ Tracker.prototype.populateGUI = function () {
 					o[name].ctx = el.getContext('2d');
 				}
 
-				$(this).bind('mousedown mouseup mousemove mouseout dblclick mousewheel DOMMouseScroll', function (e) {
+				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function (e) {
 					var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || (e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
 					if (delta) {
 						e.stopPropagation();
