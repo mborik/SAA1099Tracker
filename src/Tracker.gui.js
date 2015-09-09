@@ -418,7 +418,6 @@ Tracker.prototype.populateGUI = function () {
 			method:   'on',
 			param:    'show.bs.tab',
 			handler:  function(e) {
-				console.log(e.target.id + ' | ' + e.relatedTarget.id);
 				if (e.target.id === 'tab-pitchshift' && e.relatedTarget.id === 'tab-sampledata')
 					app.smpornedit.updateSamplePitchShift();
 			}

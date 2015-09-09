@@ -75,7 +75,7 @@ Tracker.prototype.updateTracklist = function (update) {
 		ctx = this.tracklist.ctx,
 		pos = player.currentPosition,
 		pp = player.position[pos] || player.nullPosition,
-		pt, dat,
+		backup, pt, dat,
 		w = this.tracklist.obj.width,
 		h = this.settings.tracklistLineHeight,
 		lines = this.settings.tracklistLines,
@@ -95,8 +95,10 @@ Tracker.prototype.updateTracklist = function (update) {
 		if (update)
 			offs.y[i] = y;
 
-		if (i !== half)
+		if (i !== half) {
 			ccb = 0; // basic color combination
+			ctx.clearRect(o.center, y, o.lineWidth, h);
+		}
 		else if (this.modeEdit) {
 			ccb = 10; // col.combination: 2:WHITE|RED
 			ctx.fillStyle = '#f00';
@@ -104,22 +106,32 @@ Tracker.prototype.updateTracklist = function (update) {
 		}
 		else {
 			ccb = 20; // col.combination: 4:WHITE|HILITE
-			if (update) {
-				ctx.fillStyle = '#38c';
-				ctx.fillRect(0, y, w, h);
-			}
+			ctx.fillStyle = '#38c';
+			ctx.fillRect(0, y, w, h);
 		}
 
-		if (line >= 0 && line < pp.length) {
-			buf = ('0' + line.toString(hexdec)).substr(-2);
-			ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center, ypad, 5, 5);
-			ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center + 6, ypad, 5, 5);
+		if (line < 0) {
+			if (!(pos && pp))
+				continue;
+
+			// prev position hints
+			backup = { pp: pp, line: line };
+			pp = player.position[pos - 1];
+			line += pp.length;
 		}
-		else {
-			ctx.fillStyle = '#fff';
-			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
-			continue; // TODO prev/next position hints
+		else if (line >= pp.length) {
+			if (!(pos < (player.position.length - 1) && pp))
+				continue;
+
+			// next position hints
+			backup = { pp: pp, line: line };
+			line -= pp.length;
+			pp = player.position[pos + 1];
 		}
+
+		buf = ('0' + line.toString(hexdec)).substr(-2);
+		ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center, ypad, 5, 5);
+		ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center + 6, ypad, 5, 5);
 
 		for (chn = 0; chn < 6; chn++) {
 			pt = player.pattern[pp.ch[chn].pattern];
@@ -139,13 +151,16 @@ Tracker.prototype.updateTracklist = function (update) {
 				}
 
 				cc = ccb;
-				if (!j && !(i === half && this.modeEdit) &&
+				if (!(i === half && this.modeEdit) &&
 					sel.len && sel.channel === chn &&
 					line >= sel.line &&
 					line <= (sel.line + sel.len)) {
 
-					ctx.fillStyle = '#000';
-					ctx.fillRect(x - 3, y, o.selWidth, h);
+					if (!j) {
+						ctx.fillStyle = '#000';
+						ctx.fillRect(x - 3, y, o.selWidth, h);
+					}
+
 					cc = 30; // col.combination: 6:WHITE|BLACK
 				}
 				else if (i === half && this.modeEdit &&
@@ -220,6 +235,18 @@ Tracker.prototype.updateTracklist = function (update) {
 					ctx.drawImage(font, charFromBuf(2), cc, 5, 5, x + 12, ypad, 5, 5);
 				}
 			}
+		}
+
+		if (backup) {
+			pp = backup.pp;
+			line = backup.line;
+			backup = void 0;
+
+			ctx.save();
+			ctx.fillStyle = 'rgba(255,255,255,.75)';
+			ctx.globalCompositeOperation = "lighter";
+			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
+			ctx.restore();
 		}
 	}
 
