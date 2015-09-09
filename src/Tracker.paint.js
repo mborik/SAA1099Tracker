@@ -244,7 +244,7 @@ Tracker.prototype.updateTracklist = function (update) {
 
 			ctx.save();
 			ctx.fillStyle = 'rgba(255,255,255,.75)';
-			ctx.globalCompositeOperation = "lighter";
+			ctx.globalCompositeOperation = "xor";
 			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
 			ctx.restore();
 		}
