@@ -181,18 +181,27 @@ var Tracklist = (function () {
 //---------------------------------------------------------------------------------------
 var SmpOrnEditor = (function () {
 	function SmpOrnEditor(app) {
+		this.initialized = false;
+
+		this.img = null;
 		this.amp = { obj: null, ctx: null };
 		this.noise = { obj: null, ctx: null };
 		this.range = { obj: null, ctx: null };
 
-		this.smpeditOffset = 0;
+		this.smpeditOffset = null;
+		this.smpeditScroll = 0;
 		this.columnWidth = 0;
 		this.halfing = 0;
 		this.centering = 0;
 		this.radix = 10;
 
+		this.drag = {
+			isDragging: false,
+			freqEnableState: false,
+			rangeStart: -1
+		};
 //---------------------------------------------------------------------------------------
-		this.drawHeaders = function(img) {
+		this.drawHeaders = function() {
 			var parts = [ 'amp', 'noise', 'range' ],
 				i, l, o, ctx, w, h, half;
 
@@ -231,11 +240,27 @@ var SmpOrnEditor = (function () {
 					ctx.restore();
 				}
 
-				ctx.drawImage(img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
+				ctx.drawImage(this.img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
 			}
 
+			this.updateOffsets();
 			this.createPitchShiftTable();
+			this.initialized = true;
+
 			app.updateSampleEditor(true);
+		};
+
+		this.updateOffsets = function () {
+			var amp = $(this.amp.obj).offset(),
+				noise = $(this.noise.obj).offset();
+
+			this.smpeditOffset = {
+				left: amp.left,
+				top: {
+					amp: amp.top,
+					noise: noise.top
+				}
+			};
 		};
 
 		this.updateSamplePitchShift = function () {
@@ -272,7 +297,7 @@ var SmpOrnEditor = (function () {
 				s.TouchSpin({
 					prefix:  i.toWidth(3),
 					radix: (this.radix = app.settings.hexSampleFreq ? 16 : 10),
-					initval: 0, min: -2047, max: 2047
+					initval: 0, min: -1023, max: 1023
 				})
 				.change({ index: i }, function(e) {
 					var radix = app.settings.hexSampleFreq ? 16 : 10,
@@ -1529,7 +1554,125 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			this.updatePanelInfo();
 		}
 	}
-}
+	else {
+		var sample = this.player.sample[this.workingSample], data,
+			x = e.pageX - obj.smpeditOffset.left - obj.centering,
+			y = e.pageY,
+			dragging = /mouse(down|move)/.test(e.type),
+			update = false;
+
+		if (x < 0)
+			return;
+
+		x = Math.min(0 | (x / obj.columnWidth), 63) + obj.smpeditScroll;
+		data = sample.data[x];
+
+		if (part === 'amp') {
+			y -= obj.smpeditOffset.top.amp;
+
+			var ampHeight = obj.amp.obj.height - 24,
+				ampLeftChn = (y < obj.halfing),
+				freqEnableSection = (y > (ampHeight + 3)) || obj.drag.isDragging;
+
+			if (freqEnableSection && e.which === 1) {
+				if (e.type === 'mousedown') {
+					i = obj.drag.freqEnableState = !data.enable_freq;
+					obj.drag.isDragging = true;
+				}
+				else if (e.type === 'mouseup') {
+					i = obj.drag.freqEnableState;
+					obj.drag.isDragging = false;
+				}
+				else if (obj.drag.isDragging && e.type === 'mousemove')
+					i = obj.drag.freqEnableState;
+
+				if (data.enable_freq !== i) {
+					data.enable_freq = i;
+					update = true;
+				}
+			}
+			else if (e.type === 'mousewheel') {
+				i = e.delta / Math.abs(e.delta);
+
+				if (ampLeftChn)
+					data.volume.L = Math.min(data.volume.L + i, 15);
+				else
+					data.volume.R = Math.max(data.volume.R - i, 0);
+
+				update = true;
+			}
+			else if (dragging && e.which === 1) {
+				if (ampLeftChn)
+					data.volume.L = Math.max(15 - (0 | (y / 9)), 0);
+				else
+					data.volume.R = Math.max(15 - (0 | ((ampHeight - y) / 9)), 0);
+
+				update = true;
+			}
+		}
+		else if (part === 'noise') {
+			y -= obj.smpeditOffset.top.noise;
+			i = (0 | data.enable_noise) * (data.noise_value + 1);
+
+			if (e.type === 'mousewheel') {
+				i += e.delta / Math.abs(e.delta);
+				update = true;
+			}
+			else if (dragging && e.which === 1) {
+				i = 4 - (0 | (y / 9));
+				update = true;
+			}
+
+			if (update) {
+				i = Math.min(Math.max(i, 0), 4);
+
+				data.enable_noise = !!i;
+				data.noise_value = --i;
+			}
+		}
+		else if (part === 'range' && e.which === 1) {
+			if (e.type === 'mouseup') {
+				obj.drag.isDragging = false;
+				update = true;
+			}
+			else if (e.type === 'mousedown') {
+				obj.drag.isDragging = 1;
+				obj.drag.rangeStart = x;
+				update = true;
+			}
+			else if (obj.drag.isDragging && e.type === 'mousemove') {
+				obj.drag.isDragging = 2;
+				update = true;
+			}
+
+			if (update) {
+				if (x === obj.drag.rangeStart) {
+					if (obj.drag.isDragging === 2) {
+						sample.end = x + 1;
+						sample.loop = x;
+					}
+					else {
+						sample.end = ++x;
+						sample.loop = x;
+					}
+				}
+				else if (x > obj.drag.rangeStart) {
+					sample.end = ++x;
+					sample.loop = obj.drag.rangeStart;
+				}
+				else {
+					sample.end = obj.drag.rangeStart + 1;
+					sample.loop = x;
+				}
+
+				return this.updateSampleEditor(true);
+			}
+		}
+
+		if (update)
+			this.updateSampleEditor();
+	}
+};
 //---------------------------------------------------------------------------------------
 
 /** Tracker.paint submodule */
@@ -1778,7 +1921,7 @@ Tracker.prototype.updateTracklist = function (update) {
 
 			ctx.save();
 			ctx.fillStyle = 'rgba(255,255,255,.75)';
-			ctx.globalCompositeOperation = "lighter";
+			ctx.globalCompositeOperation = "xor";
 			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
 			ctx.restore();
 		}
@@ -1801,7 +1944,7 @@ Tracker.prototype.updateSampleEditor = function (update) {
 		pixel = amp.getImageData(22, 0, 1, 1),
 		color, data,
 		half = o.halfing,
-		ptr = o.smpeditOffset,
+		ptr = o.smpeditScroll,
 		end = ptr + 64,
 		add = o.columnWidth,
 		x = o.centering, w = add - 1,
@@ -1920,6 +2063,7 @@ Tracker.prototype.populateGUI = function () {
 				var c = app.tracklist.countTracklines();
 				if (c !== app.settings.tracklistLineHeight) {
 					app.tracklist.setHeight(c);
+					app.smpornedit.updateOffsets();
 					app.updateTracklist(true);
 				}
 			}
@@ -1991,13 +2135,16 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: 'img.smpedit',
 			method:   'load',
-			handler:  function(e) { app.smpornedit.drawHeaders(e.target) }
+			handler:  function(e) { app.smpornedit.img = e.target }
 		}, {
-			selector: '#main-tabpanel a',
-			method:   'bind',
-			param:    'click',
+			selector: '#main-tabpanel a[data-toggle="tab"]',
+			method:   'on',
+			param:    'shown.bs.tab',
 			handler:  function(e) {
-				app.activeTab = parseInt($(this).data().value);
+				app.activeTab = parseInt($(this).data().value, 10);
+
+				if (!app.smpornedit.initialized)
+					app.smpornedit.drawHeaders();
 			}
 		}, {
 			selector: '#scOctave',
@@ -2250,6 +2397,10 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 			}
 		}, {
+			selector: '#txSampleName',
+			method:   'change',
+			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
+		}, {
 			selector: '#scSampleTone',
 			method:   'each',
 			handler:  function(i, el) {
@@ -2274,7 +2425,7 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#sbSampleScroll',
 			method:   'scroll',
 			handler:  function(e) {
-				app.smpornedit.smpeditOffset = 0 | ((e.target.scrollLeft/ 1000) * 64);
+				app.smpornedit.smpeditScroll = 0 | ((e.target.scrollLeft/ 1000) * 64);
 				app.updateSampleEditor();
 			}
 		}, {

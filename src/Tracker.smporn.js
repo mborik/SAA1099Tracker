@@ -2,18 +2,27 @@
 //---------------------------------------------------------------------------------------
 var SmpOrnEditor = (function () {
 	function SmpOrnEditor(app) {
+		this.initialized = false;
+
+		this.img = null;
 		this.amp = { obj: null, ctx: null };
 		this.noise = { obj: null, ctx: null };
 		this.range = { obj: null, ctx: null };
 
-		this.smpeditOffset = 0;
+		this.smpeditOffset = null;
+		this.smpeditScroll = 0;
 		this.columnWidth = 0;
 		this.halfing = 0;
 		this.centering = 0;
 		this.radix = 10;
 
+		this.drag = {
+			isDragging: false,
+			freqEnableState: false,
+			rangeStart: -1
+		};
 //---------------------------------------------------------------------------------------
-		this.drawHeaders = function(img) {
+		this.drawHeaders = function() {
 			var parts = [ 'amp', 'noise', 'range' ],
 				i, l, o, ctx, w, h, half;
 
@@ -52,11 +61,27 @@ var SmpOrnEditor = (function () {
 					ctx.restore();
 				}
 
-				ctx.drawImage(img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
+				ctx.drawImage(this.img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
 			}
 
+			this.updateOffsets();
 			this.createPitchShiftTable();
+			this.initialized = true;
+
 			app.updateSampleEditor(true);
+		};
+
+		this.updateOffsets = function () {
+			var amp = $(this.amp.obj).offset(),
+				noise = $(this.noise.obj).offset();
+
+			this.smpeditOffset = {
+				left: amp.left,
+				top: {
+					amp: amp.top,
+					noise: noise.top
+				}
+			};
 		};
 
 		this.updateSamplePitchShift = function () {
@@ -93,7 +118,7 @@ var SmpOrnEditor = (function () {
 				s.TouchSpin({
 					prefix:  i.toWidth(3),
 					radix: (this.radix = app.settings.hexSampleFreq ? 16 : 10),
-					initval: 0, min: -2047, max: 2047
+					initval: 0, min: -1023, max: 1023
 				})
 				.change({ index: i }, function(e) {
 					var radix = app.settings.hexSampleFreq ? 16 : 10,

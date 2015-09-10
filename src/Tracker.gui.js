@@ -17,6 +17,7 @@ Tracker.prototype.populateGUI = function () {
 				var c = app.tracklist.countTracklines();
 				if (c !== app.settings.tracklistLineHeight) {
 					app.tracklist.setHeight(c);
+					app.smpornedit.updateOffsets();
 					app.updateTracklist(true);
 				}
 			}
@@ -88,13 +89,16 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: 'img.smpedit',
 			method:   'load',
-			handler:  function(e) { app.smpornedit.drawHeaders(e.target) }
+			handler:  function(e) { app.smpornedit.img = e.target }
 		}, {
-			selector: '#main-tabpanel a',
-			method:   'bind',
-			param:    'click',
+			selector: '#main-tabpanel a[data-toggle="tab"]',
+			method:   'on',
+			param:    'shown.bs.tab',
 			handler:  function(e) {
-				app.activeTab = parseInt($(this).data().value);
+				app.activeTab = parseInt($(this).data().value, 10);
+
+				if (!app.smpornedit.initialized)
+					app.smpornedit.drawHeaders();
 			}
 		}, {
 			selector: '#scOctave',
@@ -347,6 +351,10 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 			}
 		}, {
+			selector: '#txSampleName',
+			method:   'change',
+			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
+		}, {
 			selector: '#scSampleTone',
 			method:   'each',
 			handler:  function(i, el) {
@@ -371,7 +379,7 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#sbSampleScroll',
 			method:   'scroll',
 			handler:  function(e) {
-				app.smpornedit.smpeditOffset = 0 | ((e.target.scrollLeft/ 1000) * 64);
+				app.smpornedit.smpeditScroll = 0 | ((e.target.scrollLeft/ 1000) * 64);
 				app.updateSampleEditor();
 			}
 		}, {

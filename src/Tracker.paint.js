@@ -267,7 +267,7 @@ Tracker.prototype.updateSampleEditor = function (update) {
 		pixel = amp.getImageData(22, 0, 1, 1),
 		color, data,
 		half = o.halfing,
-		ptr = o.smpeditOffset,
+		ptr = o.smpeditScroll,
 		end = ptr + 64,
 		add = o.columnWidth,
 		x = o.centering, w = add - 1,
