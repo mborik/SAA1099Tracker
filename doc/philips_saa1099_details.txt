@@ -1,0 +1,204 @@
+== PINOUT =====================================================================
+===============================================================================
+
+  func   pin  |  pin   func
+--------------|--------------
+   /WR    1   |  18   Vcc
+   /CS    2   |  17   D7
+    A0    3   |  16   D6
+  OutR    4   |  15   D5
+  OutL    5   |  14   D4
+  Iref    6   |  13   D3
+/DTACK    7   |  12   D2
+   CLK    8   |  11   D1
+   GND    9   |  10   D0
+
+
+== ADDRESSING =================================================================
+===============================================================================
+
+address | function
+------- | ----------------
+   0    | data to register
+   1    | register select
+
+
+== REGISTERS ==================================================================
+===============================================================================
+
+   \bit   7   6   5   4   3   2   1   0
+reg.\
+        -------------------------------
+ 00    |     right     |     left      |  Amplitude channel 0
+        -------------------------------
+ 01    |     right     |     left      |  Amplitude channel 1
+        -------------------------------
+ 02    |     right     |     left      |  Amplitude channel 2
+        -------------------------------
+ 03    |     right     |     left      |  Amplitude channel 3
+        -------------------------------
+ 04    |     right     |     left      |  Amplitude channel 4
+        -------------------------------
+ 05    |     right     |     left      |  Amplitude channel 5
+        -------------------------------
+ 06    | x | x | x | x | x | x | x | x |  Reserved
+        -------------------------------
+ 07    | x | x | x | x | x | x | x | x |  Reserved
+        -------------------------------
+ 08    |                               |  Frequency channel 0
+        -------------------------------
+ 09    |                               |  Frequency channel 1
+        -------------------------------
+ 0A    |                               |  Frequency channel 2
+        -------------------------------
+ 0B    |                               |  Frequency channel 3
+        -------------------------------
+ 0C    |                               |  Frequency channel 4
+        -------------------------------
+ 0D    |                               |  Frequency channel 5
+        -------------------------------
+ 0E    | x | x | x | x | x | x | x | x |  Reserved
+        -------------------------------
+ 0F    | x | x | x | x | x | x | x | x |  Reserved
+        -------------------------------
+ 10    | x | channel 1 | x | channel 0 |  Octave select
+        -------------------------------
+ 11    | x | channel 3 | x | channel 2 |  Octave select
+        -------------------------------
+ 12    | x | channel 5 | x | channel 4 |  Octave select
+        -------------------------------
+ 13    | x | x | x | x | x | x | x | x |  Reserved
+        -------------------------------
+ 14    | x | x | 5 | 4 | 3 | 2 | 1 | 0 |  Channel frequency enable
+        -------------------------------
+ 15    | x | x | 5 | 4 | 3 | 2 | 1 | 0 |  Channel noise enable
+        -------------------------------
+ 16    | x | x | NG 1  | x | x | NG 0  |   Noise generator
+        -------------------------------
+ 17    | x | x | x | x | x | x | x | x |
+        -------------------------------
+ 18    |   | x |   |   |   |   |   |   |   Envelope generator 0
+        -------------------------------
+ 19    |   | x |   |   |   |   |   |   |   Envelope generator 1
+        -------------------------------
+ 1A    | x | x | x | x | x | x | x | x |
+        -------------------------------
+ 1B    | x | x | x | x | x | x | x | x |
+        -------------------------------
+ 1C    | x | x | x | x | x | x | R |SE |   R=Reset, SE=Sound Enable
+        -------------------------------
+ 1D    | x | x | x | x | x | x | x | x |
+        -------------------------------
+ 1E    | x | x | x | x | x | x | x | x |
+        -------------------------------
+ 1F    | x | x | x | x | x | x | x | x |
+        -------------------------------
+
+
+00h - 05h : Amplitude register
+------------------------------
+
+    0 = minimum amplitude (off), 15 = maximum amplitude
+
+
+08h - 0Dh : Frequency register
+------------------------------
+
+    0 = lowest, 255 = highest frequency
+
+                     15625 * 2^octave
+        Freg (Hz) = ------------------
+   (input clk 8MHz)    511 - value
+
+    tone    value
+     B         5
+     C        33
+     C#       60
+     D        85
+     D#      109
+     E       132
+     F       153
+     F#      173
+     G       192
+     G#      210
+     A       227
+     A#      243
+
+
+10h - 12h : Octave select
+-------------------------
+
+    value    Frequency       (input clk 8MHz)
+      0    31 Hz - 61 Hz
+      1    61 Hz - 122 Hz
+      2    122 Hz - 244 Hz
+      3    245 Hz - 488 Hz
+      4    489 Hz - 977 Hz
+      5    978 Hz - 1.95 kHz
+      6    1.96 kHz - 3.91 kHz
+      7    3.91 kHz - 7.81 kHz
+
+
+14h : Channel frequency enable
+------------------------------
+
+    0 = off, 1 = on
+
+
+15h : Channel noise enable
+--------------------------
+
+    0 = off, 1 = on
+
+
+16h : Noise generator
+---------------------
+
+    value    Frequency       (input clk 8MHz)
+      0    31.3 kHz
+      1    15.6 kHz
+      2     7.6 kHz
+      3    61 Hz - 15.6 kHz  (FG 0 is used for NG 0 and
+                              FG 3 is used for NG 1 )
+
+
+18h - 19h : Envelope generator
+------------------------------
+
+   bit  7 6 5 4 3 2 1 0
+        - - - - ----- -
+        | | | |   |   |
+        | | | |   |   +-| 0 = Left and right have same envelope
+        | | | |   |     | 1 = Right envelope is inverse of left
+        | | | |   |
+        | | | |   |     | 0 = Zero amplitude
+        | | | |   |     | 1 = Maximum amplitude
+        | | | |   |     | 2 = Single decay            \______
+        | | | |   +-----| 3 = Repetitive decay        \|\|\|\
+        | | | |         | 4 = Single triangular       /\_____
+        | | | |         | 5 = Repetitive triangular   /\/\/\/\
+        | | | |         | 6 = Single attack           /|_____
+        | | | |         | 7 = Repetitive attack       /|/|/|/|
+        | | | |
+        | | | +---------| 0 = 4 bits for envelope control
+        | | |           | 1 = 3 bits for envelope control
+        | | |
+        | | |           | 0 = Internal envelope clock (FG 1 is used for EG 0
+        | | +-----------|                          and FG 4 is used for EG 1)
+        | |             | 1 = External envelope clock (address write pulse)
+        | |
+        | +-------------| not used
+        |
+        +---------------| 0 = Reset (no envelope control)
+                        | 1 = Envelope control enabled
+
+
+
+1Ch : Reset, Sound Enable, Sync
+-------------------------------
+
+    SE   0 = All channels disabled
+         1 = All channels enabled
+
+    R    0 =
+         1 = Reset and synchronizes generators

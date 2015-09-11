@@ -43,7 +43,8 @@
 
 [Cxy] - SPECIAL COMMAND
         [C00] - disable last command (whatever)
-        [CF1] - swap stereo channels
+        [CF0] - std. stereo of sample, as defined
+        [CF1] - swap stereo channels of sample
         [CFx] - reseved
         [Cxy] - false chord
                 (for example C37 is ornament 0,3,7 - minor)
