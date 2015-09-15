@@ -349,6 +349,7 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function() {
 				app.workingSample = parseInt($(this).val(), 32);
 				app.updateSampleEditor(true);
+				app.smpornedit.updateSamplePitchShift();
 			}
 		}, {
 			selector: '#txSampleName',
@@ -434,7 +435,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() {
 				var data = $(this).data(), fn = data.filename;
-				if (!fn)
+				if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
 					return false;
 				app.loadDemosong(fn);
 			}
