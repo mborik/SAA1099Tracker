@@ -93,7 +93,7 @@ var Tracker = (function() {
 						s.data[k].enable_freq = !!(c & 0x80);
 						s.data[k].enable_noise = !!(c & 0x40);
 						s.data[k].noise_value = (c & 0x30) >> 4;
-						s.data[k].shift = (c & 7) | (d.charCodeAt(j + 2) & 0xff);
+						s.data[k].shift = ((c & 7) << 8) | (d.charCodeAt(j + 2) & 0xff);
 						if (!!(c & 8))
 							s.data[k].shift *= -1;
 					}
