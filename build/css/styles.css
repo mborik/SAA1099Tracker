@@ -18,6 +18,16 @@
   font-weight: bold;
   font-style: normal;
 }
+@font-face {
+  font-family: 'BPmono';
+  src: url('../fonts/bpmono-webfont.eot');
+  src: url('../fonts/bpmono-webfont.eot?#iefix') format('embedded-opentype');
+  src: url('../fonts/bpmono-webfont.svg#droid_sansbold') format('svg');
+  src: url('../fonts/bpmono-webfont.woff') format('woff');
+  src: url('../fonts/bpmono-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 /*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
 html {
   font-family: sans-serif;
@@ -1465,7 +1475,7 @@ code,
 kbd,
 pre,
 samp {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
 }
 code {
   padding: 2px 4px;
@@ -7198,11 +7208,69 @@ label {
 /**
  * SAA1099Tracker modifications and custom styles
  */
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
 body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+body.loading > :not(:first-child) {
+  -webkit-filter: blur(1px);
+  -moz-filter: blur(1px);
+  -o-filter: blur(1px);
+  -ms-filter: blur(1px);
+  filter: blur(1px);
+}
+body.loading > #overlay {
+  display: -webkit-flex;
+  -webkit-flex: none;
+  -webkit-flex-flow: initial;
+  -webkit-justify-content: center;
+  display: -moz-flex;
+  -moz-box-flex: none;
+  -moz-flex-flow: initial;
+  -moz-justify-content: center;
+  display: flex;
+  flex: none;
+  flex-flow: initial;
+  justify-content: center;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1024;
+  background: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+body.loading > #overlay > span {
+  display: block;
+  color: #333;
+  font-size: 16px;
+  width: 128px;
+  text-align: center;
+}
+body.loading > #overlay > span:before {
+  display: block;
+  color: #fff;
+  text-shadow: #000 0 0 10px;
+  width: 128px;
+  margin-bottom: 20px;
+  content: "\20e3";
+  font-size: 5em;
+  animation: spin 4s ease-in-out infinite;
+}
+body.loading > #overlay > span:after {
+  content: "...";
+  margin-right: -8px;
 }
 button {
   cursor: default !important;
@@ -7321,6 +7389,7 @@ button {
   border-bottom: 1px solid #eeeeee;
 }
 .form-control[disabled],
+.nav > li.disabled > a,
 label.toggle-off,
 label.disabled {
   color: #777777 !important;
@@ -7416,7 +7485,7 @@ label.disabled {
   border: 1px solid #cccccc;
   margin-left: 74px;
   margin-top: -2px;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
   font-weight: bold;
   padding: 4px 12px;
   cursor: default;
@@ -7681,7 +7750,7 @@ label.disabled {
 }
 #statusbar .tooltip-custom {
   font-size: 12px !important;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
   font-weight: bold;
   position: relative !important;
   left: inherit !important;

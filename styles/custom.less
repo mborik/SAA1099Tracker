@@ -6,8 +6,16 @@
 @border-soft: #eee;
 @border-mild: #ccc;
 @tracker-base-width: 1118px;
+@keyframes spin { 100% { transform:rotate(360deg); } }
 
 // mixins -------------------------------------------------------------------------------
+.blur(@value: 1px) {
+	-webkit-filter: blur(@value);
+	-moz-filter: blur(@value);
+	-o-filter: blur(@value);
+	-ms-filter: blur(@value);
+	filter: blur(@value);
+}
 .make-my-panel-column(@width) {
 	position: relative;
 	width: @width;
@@ -44,7 +52,52 @@
 //---------------------------------------------------------------------------------------
 body {
 	.user-select(none);
+
+	&.loading {
+		> :not(:first-child) { .blur(); }
+
+		> #overlay {
+			.flexbox(initial, center);
+		    -webkit-align-items: center;
+		    -moz-align-items: center;
+		    align-items: center;
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    right: 0;
+		    bottom: 0;
+		    z-index: 1024;
+		    background: rgba(255,255,255,.5);
+		    overflow: hidden;
+
+			> span {
+			    display: block;
+			    color: #333;
+
+			    font-size: 16px;
+			    width: 128px;
+			    text-align: center;
+
+				&:before {
+				    display: block;
+				    color: #fff;
+				    text-shadow: #000 0 0 10px;
+				    width: 128px;
+				    margin-bottom: 20px;
+				    content: "\20e3";
+				    font-size: 5em;
+				    animation: spin 4s ease-in-out infinite;
+				}
+				&:after {
+					content: "...";
+					margin-right: -8px;
+				}
+			}
+		}
+	}
 }
+
+//---------------------------------------------------------------------------------------
 button {
 	cursor: default !important;
 }
@@ -138,7 +191,10 @@ button {
 	padding: 0;
 	border-bottom: 1px solid @border-soft;
 }
-.form-control[disabled], label.toggle-off, label.disabled {
+.form-control[disabled],
+.nav > li.disabled > a,
+label.toggle-off,
+label.disabled {
 	color: @gray-light !important;
 }
 .col-label {

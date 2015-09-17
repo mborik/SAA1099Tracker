@@ -55,9 +55,6 @@ Tracker.prototype.populateGUI = function () {
 				if (name === 'tracklist') {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
-
-					// first height initialization
-					o.setHeight();
 				}
 				else if (name === 'smpornedit') {
 					name = el.id.replace('smpedit_', '');
@@ -82,10 +79,7 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: 'img.pixelfont',
 			method:   'load',
-			handler:  function(e) {
-				app.initPixelFont(e.target);
-				app.updateTracklist(true);
-			}
+			handler:  function(e) { app.initPixelFont(e.target) }
 		}, {
 			selector: 'img.smpedit',
 			method:   'load',
@@ -94,12 +88,7 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#main-tabpanel a[data-toggle="tab"]',
 			method:   'on',
 			param:    'shown.bs.tab',
-			handler:  function(e) {
-				app.activeTab = parseInt($(this).data().value, 10);
-
-				if (!app.smpornedit.initialized)
-					app.smpornedit.drawHeaders();
-			}
+			handler:  function(e) { app.activeTab = parseInt($(this).data().value, 10) }
 		}, {
 			selector: '#scOctave',
 			method:   'TouchSpin',

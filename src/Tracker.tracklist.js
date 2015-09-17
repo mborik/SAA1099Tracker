@@ -35,6 +35,8 @@ var TracklistPosition = (function () {
 //---------------------------------------------------------------------------------------
 var Tracklist = (function () {
 	function Tracklist(app) {
+		this.initialized = false;
+
 		this.obj = null;
 		this.ctx = null;
 		this.zoom = 2;

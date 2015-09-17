@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.0') });
 //---------------------------------------------------------------------------------------
 
 /** Tracker.tracklist submodule */
@@ -60,6 +60,8 @@ var TracklistPosition = (function () {
 //---------------------------------------------------------------------------------------
 var Tracklist = (function () {
 	function Tracklist(app) {
+		this.initialized = false;
+
 		this.obj = null;
 		this.ctx = null;
 		this.zoom = 2;
@@ -318,8 +320,11 @@ var SmpOrnEditor = (function () {
 /** Tracker.core submodule */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
-	function Tracker() {
-		this.activeTab = 0;
+	function Tracker(ver) {
+		this.version = ver;
+
+		this.loaded = false;
+		this.activeTab = null;
 
 		this.modePlay = false;
 		this.modeEdit = false;
@@ -361,27 +366,54 @@ var Tracker = (function() {
 
 	// constructor {
 		this.player = new Player(new SAASound(AudioDriver.sampleRate));
-
 		AudioDriver.setAudioSource(this.player);
-		AudioDriver.play();
 
 		this.populateGUI();
-		this.updatePanels();
 
 		var app = this;
-		SyncTimer.start(function() {
-			if (app.modePlay && app.player.changedLine) {
-				if (app.player.changedPosition)
-					app.updatePanelPosition();
-				app.updatePanelInfo();
-				app.updateTracklist();
-
-				app.player.changedPosition = false;
-				app.player.changedLine = false;
-			}
-		}, 20);
+		SyncTimer.start(function() { app.baseTimer() }, 20);
 	// }
 	}
+
+	Tracker.prototype.baseTimer = function() {
+		if (!this.modePlay) {
+			if (!this.smpornedit.initialized) {
+				if (this.smpornedit.img) {
+					if (this.activeTab === 1)
+						this.smpornedit.drawHeaders();
+					else
+						$('#tab-smpedit').trigger('click');
+				}
+			}
+			else if (!this.tracklist.initialized) {
+				if (this.pixelfont.ctx) {
+					if (this.activeTab === 0) {
+						this.updatePanels();
+						this.tracklist.setHeight();
+						this.updateTracklist(true);
+						this.tracklist.initialized = true;
+
+						AudioDriver.play();
+					}
+					else
+						$('#tab-tracker').trigger('click');
+				}
+			}
+			else if (!this.loaded) {
+				document.body.className = '';
+				this.loaded = true;
+			}
+		}
+		else if (this.player.changedLine) {
+			if (this.player.changedPosition)
+				this.updatePanelPosition();
+			this.updatePanelInfo();
+			this.updateTracklist();
+
+			this.player.changedPosition = false;
+			this.player.changedLine = false;
+		}
+	};
 
 	Tracker.prototype.loadDemosong = function (name) {
 		var tracker = this;
@@ -2101,9 +2133,6 @@ Tracker.prototype.populateGUI = function () {
 				if (name === 'tracklist') {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
-
-					// first height initialization
-					o.setHeight();
 				}
 				else if (name === 'smpornedit') {
 					name = el.id.replace('smpedit_', '');
@@ -2128,10 +2157,7 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: 'img.pixelfont',
 			method:   'load',
-			handler:  function(e) {
-				app.initPixelFont(e.target);
-				app.updateTracklist(true);
-			}
+			handler:  function(e) { app.initPixelFont(e.target) }
 		}, {
 			selector: 'img.smpedit',
 			method:   'load',
@@ -2140,12 +2166,7 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#main-tabpanel a[data-toggle="tab"]',
 			method:   'on',
 			param:    'shown.bs.tab',
-			handler:  function(e) {
-				app.activeTab = parseInt($(this).data().value, 10);
-
-				if (!app.smpornedit.initialized)
-					app.smpornedit.drawHeaders();
-			}
+			handler:  function(e) { app.activeTab = parseInt($(this).data().value, 10) }
 		}, {
 			selector: '#scOctave',
 			method:   'TouchSpin',
