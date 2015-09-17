@@ -19,6 +19,16 @@
 	font-weight: bold;
 	font-style: normal;
 }
+@font-face {
+	font-family: 'BPmono';
+	src: url('@{icon-font-path}bpmono-webfont.eot');
+	src: url('@{icon-font-path}bpmono-webfont.eot?#iefix') format('embedded-opentype');
+	src: url('@{icon-font-path}bpmono-webfont.svg#droid_sansbold') format('svg');
+	src: url('@{icon-font-path}bpmono-webfont.woff') format('woff');
+	src: url('@{icon-font-path}bpmono-webfont.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
 
 //== Colors
 @gray-base: rgb(0, 0, 0);
@@ -55,7 +65,7 @@
 @font-family-serif: Georgia, "Times New Roman", Times, serif;
 
 //** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
-@font-family-monospace: Menlo, Monaco, Consolas, "Courier New", monospace;
+@font-family-monospace: "BPmono", Menlo, Monaco, Consolas, monospace;
 @font-family-base: @font-family-sans-serif;
 @font-size-base: 12px;
 @font-size-large: ceil((@font-size-base * 1.25));
