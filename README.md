@@ -6,9 +6,10 @@ SAA1099Tracker is a offline-storage HTML5/JavaScript chiptune music tracker for 
   - few sound interfaces for **ZX-Spectrum**
 
 ### Version
-1.0.0 (early alpha)
+1.1.0 (first public alpha)
 
 ### Tech
+* [Cloud9] - cloud IDE - online development environment and server
 * [node.js] - evented I/O for the backend
 * [TypeScript] - syntactic sugar for JavaScript
 * [Bootstrap] - great UI boilerplate for modern web apps
@@ -27,3 +28,4 @@ MIT
 [express]:http://expressjs.com
 [TypeScript]:http://www.typescriptlang.org
 [Grunt]:http://gruntjs.com
+[Cloud9]:http://c9.io
