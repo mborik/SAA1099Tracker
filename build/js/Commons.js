@@ -127,7 +127,8 @@ var SyncTimer = (function() {
 		return true;
 	};
 
-	this.end = function() { enabled = false }
+	this.pause = function() { enabled = false }
+	this.resume = function() { enabled = true }
 
 	this.loop = function(t) {
 		if (enabled)
