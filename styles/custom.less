@@ -54,7 +54,7 @@ body {
 	.user-select(none);
 
 	&.loading {
-		> :not(:first-child) { .blur(); }
+//		> :not(:first-child) { .blur(); }
 
 		> #overlay {
 			.flexbox(initial, center);
@@ -67,7 +67,7 @@ body {
 		    right: 0;
 		    bottom: 0;
 		    z-index: 1024;
-		    background: rgba(255,255,255,.5);
+		    background: rgba(255,255,255,.75);
 		    overflow: hidden;
 
 			> span {
@@ -483,6 +483,17 @@ label.disabled {
 		&.loop input { background-color:  lighten(#38c, 40%); }
 		&.loop span.bootstrap-touchspin-prefix { background-color:  lighten(#38c, 35%); }
 	}
+}
+
+#documodal pre.modal-body {
+	font-family: @font-family-monospace;
+	font-weight: normal;
+	font-size: 13px;
+	color: @text-color;
+	background: transparent;
+	border: 0;
+	height: 50ex;
+	min-height: 50ex;
 }
 
 #statusbar {

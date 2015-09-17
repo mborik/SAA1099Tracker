@@ -7219,13 +7219,6 @@ body {
   -ms-user-select: none;
   user-select: none;
 }
-body.loading > :not(:first-child) {
-  -webkit-filter: blur(1px);
-  -moz-filter: blur(1px);
-  -o-filter: blur(1px);
-  -ms-filter: blur(1px);
-  filter: blur(1px);
-}
 body.loading > #overlay {
   display: -webkit-flex;
   -webkit-flex: none;
@@ -7248,7 +7241,7 @@ body.loading > #overlay {
   right: 0;
   bottom: 0;
   z-index: 1024;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.75);
   overflow: hidden;
 }
 body.loading > #overlay > span {
@@ -7735,6 +7728,16 @@ label.disabled {
 }
 #fxSampleShift > .cell.loop span.bootstrap-touchspin-prefix {
   background-color: #c2dbf0;
+}
+#documodal pre.modal-body {
+  font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
+  font-weight: normal;
+  font-size: 13px;
+  color: #000000;
+  background: transparent;
+  border: 0;
+  height: 50ex;
+  min-height: 50ex;
 }
 #statusbar {
   position: absolute;

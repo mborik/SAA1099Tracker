@@ -19,12 +19,12 @@
 						<li class="disabled"><a id="miFileNew" data-toggle="tooltip" title="New"><span class="glyphicon glyphicon-file"></span></a></li>
 						<li class="disabled"><a id="miFileOpen" data-toggle="tooltip" title="Open [Ctrl+O]"><span class="glyphicon glyphicon-folder-open"></span></a></li>
 						<li class="disabled"><a id="miFileSave" data-toggle="tooltip" title="Save [Ctrl+S]"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
-						<li class="disabled"><a id="miFileSaveAs" data-toggle="tooltip" title="Save as..."><span class="glyphicon glyphicon-floppy-save"></span>&ensp;</a></li>
+						<li class="disabled"><a id="miFileSaveAs" data-toggle="tooltip" title="Save as&hellip;"><span class="glyphicon glyphicon-floppy-save"></span>&ensp;</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-import"></span>&ensp;Import&nbsp;<span class="caret"></span></a>
 							<ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
-								<li class="disabled"><a id="miFileImportPT2" data-toggle="tooltip" title="Create new file converting from song module of ProTracker II (Sam Coupé)...">ProTracker II module...</a></li>
-								<li class="disabled"><a id="miFileImportETrack" data-toggle="tooltip" title="Create new file converting from song module of E-Tracker (Sam Coupé)...">E-Tracker module...</a></li>
+								<li class="disabled"><a id="miFileImportPT2" data-toggle="tooltip" title="Create new file converting from song module of ProTracker II (Sam Coupé)&hellip;">ProTracker II module&hellip;</a></li>
+								<li class="disabled"><a id="miFileImportETrack" data-toggle="tooltip" title="Create new file converting from song module of E-Tracker (Sam Coupé)&hellip;">E-Tracker module&hellip;</a></li>
 								<li class="divider"></li>
 								<li class="dropdown-submenu">
 									<a id="miFileImportDemosong">Demosong</a>
@@ -42,7 +42,7 @@
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-export"></span>&ensp;Export&nbsp;<span class="caret"></span>&ensp;</a>
 							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-								<li class="disabled"><a id="miFileExportCompile" data-toggle="tooltip" title="Create binary compilation of this song for specific platform...">Binary compilation...</a></li>
+								<li class="disabled"><a id="miFileExportCompile" data-toggle="tooltip" title="Create binary compilation of this song for specific platform&hellip;">Binary compilation&hellip;</a></li>
 							</ul>
 						</li>
 						<li class="divider-vertical"></li>
@@ -55,15 +55,15 @@
 						<li class="disabled"><a id="miEditRedo" data-toggle="tooltip" title="Redo [Ctrl+Y, Ctrl+Shift+Z]"><span class="glyphicon glyphicon-redo"></span></a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
-						<li class="disabled"><a id="miSpecialLogin" data-toggle="tooltip" title="Login to SAA-1099 cloud for musicians..."><span class="glyphicon glyphicon-user"></span>&ensp;Login</a></li>
+						<li class="disabled"><a id="miSpecialLogin" data-toggle="tooltip" title="Login to SAA-1099 cloud for musicians&hellip;"><span class="glyphicon glyphicon-user"></span>&ensp;Login</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-help"></span>&ensp;Help&nbsp;<span class="caret"></span>&ensp;</a>
 							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-								<li><a id="miHelpReadMe">Basic info...</a></li>
-								<li><a id="miHelpCmd">Commands...</a></li>
-								<li><a id="miHelpExport">Export data format...</a></li>
+								<li><a id="miHelpReadMe" data-filename="readme">Basic info&hellip;</a></li>
+								<li><a id="miHelpCmd" data-filename="commands">Commands&hellip;</a></li>
+								<li><a id="miHelpExport" data-filename="export_data_format">Export data format&hellip;</a></li>
 								<li role="separator" class="divider"></li>
-								<li><a id="miAbout">About...</a></li>
+								<li><a id="miAbout">About&hellip;</a></li>
 							</ul>
 						</li>
 					</ul>
@@ -335,6 +335,17 @@
 				<div role="tabpanel" class="tab-pane" id="ornedit">
 					<div class="row">
 					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal" id="documodal" tabindex="-1" role="dialog" aria-labelledby="DocuModal">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title" id="DocuModal"></h4>
+					</div>
+					<pre class="modal-body"></pre>
 				</div>
 			</div>
 		</div>

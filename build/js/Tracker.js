@@ -2501,10 +2501,43 @@ Tracker.prototype.populateGUI = function () {
 			selector: 'a[id^="miFileImportDemo"]',
 			method:   'click',
 			handler:  function() {
-				var data = $(this).data(), fn = data.filename;
+				var fn = $(this).data().filename;
 				if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
 					return false;
 				app.loadDemosong(fn);
+			}
+		}, {
+			selector: 'a[id^="miHelp"]',
+			method:   'click',
+			handler:  function() {
+				var el = $(this),
+					fn = el.data().filename,
+					titleEl = $('#documodal .modal-title'),
+					title = el.text();
+
+				if (!fn)
+					return false;
+
+				title = title.substr(0, title.length - 1);
+				if (title === titleEl.text())
+					$('#documodal').modal('show');
+				else {
+					titleEl.text(title);
+
+					$.ajax('doc/' + fn + '.txt', {
+						contentType: 'text/plain',
+						dataType: 'text',
+						cache: true,
+						success: function(data) {
+							var offset = $('#statusbar').offset();
+							$('#documodal')
+								.modal('show')
+								.find('pre')
+								.text(data)
+								.css('height', offset.top * 0.8);
+						}
+					});
+				}1
 			}
 		}, {
 			selector: '#miStop,#btSampleStop,#btOrnamentStop',
