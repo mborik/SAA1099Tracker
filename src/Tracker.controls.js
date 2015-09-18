@@ -102,7 +102,7 @@ Tracker.prototype.updatePanelPattern = function() {
 		for (i = 0, len = a.length; i < len; i++)
 			$(a[i] + ',' + a[i] + '~span>button').prop('disabled', d);
 	}
-}
+};
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPosition = function () {
 	var a = [ '#scPosCurrent', '#scPosLength', '#scPosSpeed', '#txPosTotal', '#scPosRepeat' ],
@@ -187,11 +187,31 @@ Tracker.prototype.onCmdToggleEditMode = function () {
 	var state = (this.modeEdit = !this.modeEdit),
 		el = $('.tracklist-panel');
 
-	if (state)
-		el.addClass('edit');
-	else
-		el.removeClass('edit');
-
+	el[state ? 'addClass' : 'removeClass']('edit');
 	this.updateTracklist(true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdShowDocumentation = function (name, title) {
+	var filename = 'doc/' + name + '.txt',
+		modal = $('#documodal'),
+		cache = this.ajaxCache,
+		data = cache[name];
+
+	if (!!data) {
+		modal.find('.modal-title').text(title);
+		modal.modal('show').find('pre').text(data);
+	}
+	else {
+		$.ajax(filename, {
+			contentType: 'text/plain',
+			dataType: 'text',
+			success: function(data) {
+				cache[name] = data;
+
+				modal.find('.modal-title').text(title);
+				modal.modal('show').find('pre').text(data);
+			}
+		});
+	}
 };
 //---------------------------------------------------------------------------------------

@@ -359,6 +359,7 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
+		this.ajaxCache  = {};
 		this.pixelfont  = { obj: null, ctx: null };
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
@@ -378,7 +379,7 @@ var Tracker = (function() {
 	Tracker.prototype.baseTimer = function() {
 		if (!this.modePlay) {
 			if (!this.smpornedit.initialized) {
-				if (this.smpornedit.img) {
+				if (!!this.smpornedit.img) {
 					if (this.activeTab === 1)
 						this.smpornedit.drawHeaders();
 					else
@@ -386,10 +387,11 @@ var Tracker = (function() {
 				}
 			}
 			else if (!this.tracklist.initialized) {
-				if (this.pixelfont.ctx) {
+				if (!!this.pixelfont.ctx) {
 					if (this.activeTab === 0) {
+						$(window).trigger('resize');
+
 						this.updatePanels();
-						this.tracklist.setHeight();
 						this.updateTracklist(true);
 						this.tracklist.initialized = true;
 
@@ -612,7 +614,7 @@ Tracker.prototype.updatePanelPattern = function() {
 		for (i = 0, len = a.length; i < len; i++)
 			$(a[i] + ',' + a[i] + '~span>button').prop('disabled', d);
 	}
-}
+};
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPosition = function () {
 	var a = [ '#scPosCurrent', '#scPosLength', '#scPosSpeed', '#txPosTotal', '#scPosRepeat' ],
@@ -697,12 +699,32 @@ Tracker.prototype.onCmdToggleEditMode = function () {
 	var state = (this.modeEdit = !this.modeEdit),
 		el = $('.tracklist-panel');
 
-	if (state)
-		el.addClass('edit');
-	else
-		el.removeClass('edit');
-
+	el[state ? 'addClass' : 'removeClass']('edit');
 	this.updateTracklist(true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdShowDocumentation = function (name, title) {
+	var filename = 'doc/' + name + '.txt',
+		modal = $('#documodal'),
+		cache = this.ajaxCache,
+		data = cache[name];
+
+	if (!!data) {
+		modal.find('.modal-title').text(title);
+		modal.modal('show').find('pre').text(data);
+	}
+	else {
+		$.ajax(filename, {
+			contentType: 'text/plain',
+			dataType: 'text',
+			success: function(data) {
+				cache[name] = data;
+
+				modal.find('.modal-title').text(title);
+				modal.modal('show').find('pre').text(data);
+			}
+		});
+	}
 };
 //---------------------------------------------------------------------------------------
 
@@ -2097,6 +2119,9 @@ Tracker.prototype.populateGUI = function () {
 					app.tracklist.setHeight(c);
 					app.smpornedit.updateOffsets();
 					app.updateTracklist(true);
+
+					var offset = $('#statusbar').offset();
+					$('#documodal .modal-body').css('height', offset.top * 0.8);
 				}
 			}
 		}, {
@@ -2512,32 +2537,10 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function() {
 				var el = $(this),
 					fn = el.data().filename,
-					titleEl = $('#documodal .modal-title'),
 					title = el.text();
-
 				if (!fn)
 					return false;
-
-				title = title.substr(0, title.length - 1);
-				if (title === titleEl.text())
-					$('#documodal').modal('show');
-				else {
-					titleEl.text(title);
-
-					$.ajax('doc/' + fn + '.txt', {
-						contentType: 'text/plain',
-						dataType: 'text',
-						cache: true,
-						success: function(data) {
-							var offset = $('#statusbar').offset();
-							$('#documodal')
-								.modal('show')
-								.find('pre')
-								.text(data)
-								.css('height', offset.top * 0.8);
-						}
-					});
-				}1
+				app.onCmdShowDocumentation(fn, title.slice(0, -1));
 			}
 		}, {
 			selector: '#miStop,#btSampleStop,#btOrnamentStop',

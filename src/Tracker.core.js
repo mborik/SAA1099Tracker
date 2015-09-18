@@ -40,6 +40,7 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
+		this.ajaxCache  = {};
 		this.pixelfont  = { obj: null, ctx: null };
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
@@ -59,7 +60,7 @@ var Tracker = (function() {
 	Tracker.prototype.baseTimer = function() {
 		if (!this.modePlay) {
 			if (!this.smpornedit.initialized) {
-				if (this.smpornedit.img) {
+				if (!!this.smpornedit.img) {
 					if (this.activeTab === 1)
 						this.smpornedit.drawHeaders();
 					else
@@ -67,10 +68,11 @@ var Tracker = (function() {
 				}
 			}
 			else if (!this.tracklist.initialized) {
-				if (this.pixelfont.ctx) {
+				if (!!this.pixelfont.ctx) {
 					if (this.activeTab === 0) {
+						$(window).trigger('resize');
+
 						this.updatePanels();
-						this.tracklist.setHeight();
 						this.updateTracklist(true);
 						this.tracklist.initialized = true;
 

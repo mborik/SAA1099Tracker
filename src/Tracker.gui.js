@@ -19,6 +19,9 @@ Tracker.prototype.populateGUI = function () {
 					app.tracklist.setHeight(c);
 					app.smpornedit.updateOffsets();
 					app.updateTracklist(true);
+
+					var offset = $('#statusbar').offset();
+					$('#documodal .modal-body').css('height', offset.top * 0.8);
 				}
 			}
 		}, {
@@ -434,32 +437,10 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function() {
 				var el = $(this),
 					fn = el.data().filename,
-					titleEl = $('#documodal .modal-title'),
 					title = el.text();
-
 				if (!fn)
 					return false;
-
-				title = title.substr(0, title.length - 1);
-				if (title === titleEl.text())
-					$('#documodal').modal('show');
-				else {
-					titleEl.text(title);
-
-					$.ajax('doc/' + fn + '.txt', {
-						contentType: 'text/plain',
-						dataType: 'text',
-						cache: true,
-						success: function(data) {
-							var offset = $('#statusbar').offset();
-							$('#documodal')
-								.modal('show')
-								.find('pre')
-								.text(data)
-								.css('height', offset.top * 0.8);
-						}
-					});
-				}1
+				app.onCmdShowDocumentation(fn, title.slice(0, -1));
 			}
 		}, {
 			selector: '#miStop,#btSampleStop,#btOrnamentStop',
