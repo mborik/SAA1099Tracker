@@ -2098,6 +2098,54 @@ Tracker.prototype.updateSampleEditor = function (update) {
 };
 //---------------------------------------------------------------------------------------
 
+/** Tracker.doc submodule */
+//---------------------------------------------------------------------------------------
+Tracker.prototype.doc = {
+    tooltip: {
+        'miFileNew': 'New',
+        'miFileOpen': 'Open [Ctrl+O]',
+        'miFileSave': 'Save [Ctrl+S]',
+        'miFileSaveAs': 'Save as...',
+        'miEditCut': 'Cut [Ctrl+X]',
+        'miEditCopy': 'Copy [Ctrl+C]',
+        'miEditPaste': 'Paste [Ctrl+V]',
+        'miEditClear': 'Clear [Ctrl+D]',
+        'miEditUndo': 'Undo [Ctrl+Z]',
+        'miEditRedo': 'Redo [Ctrl+Y | Ctrl+Shift+Z]',
+        'miStop': 'Stop [Esc]',
+        'miSongPlay': 'Play song [F5]',
+        'miSongPlayStart': 'Play song from start [F6]',
+        'miPosPlay': 'Play position [F7]',
+        'miPosPlayStart': 'Play position from start [F8]',
+        'miToggleLoop': 'Toggle repeat [F11]',
+        'miManager': 'Track manager [F9]',
+        'miPreferences': 'Preferences [F10]',
+        'miSpecialLogin': 'Login to SAA-1099\ncloud for musicians',
+        'scOctave': 'Base octave [Ctrl+1...Ctrl+8]',
+        'scAutoSmp': 'Auto-typed sample',
+        'scAutoOrn': 'Auto-typed ornament',
+        'scRowStep': 'Row-step in edit mode [- Ctrl+9 | Ctrl+0 +]',
+        'btPatternCreate': 'Create a new pattern\nin length of current',
+        'btPatternDelete': 'Delete the current pattern\n(and renumber others if it isn\'t last one)',
+        'btPatternClean': 'Clear content of current pattern',
+        'btPatternInfo': 'View summary dialog of patterns',
+        'scPattern': 'Current pattern number',
+        'scPatternLen': 'Current pattern length',
+        'txPatternUsed': 'How many times is the pattern used',
+        'txPatternTotal': 'Total number of patterns',
+        'btPosCreate': 'Create an empty position\nat the end of song',
+        'btPosInsert': 'Create a copy of current position\nand insert before it',
+        'btPosDelete': 'Delete the current position',
+        'btPosMoveUp': 'Move the current position\nbefore the previous',
+        'btPosMoveDown': 'Move the current position\nafter the next one',
+        'scPosCurrent': 'Actual position to play or edit [- Ctrl+Shift+Left|Right +]',
+        'scPosLength': 'Current position length',
+        'scPosSpeed': 'Initial speed of current position',
+        'scPosRepeat': 'Position number to repeat from',
+    }
+};
+//---------------------------------------------------------------------------------------
+
 /** Tracker.gui submodule - element populator with jQuery */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
@@ -2141,13 +2189,24 @@ Tracker.prototype.populateGUI = function () {
 				}
 			}
 		}, {
-			selector: '[data-toggle="tooltip"]',
-			method:   'tooltip',
-			data:     {
-				animation: false,
-				container: '.tooltip-target',
-				viewport:  { selector: '.tooltip-target', padding: 0 },
-				template:  '<div class="tooltip tooltip-custom" role="tooltip"><div class="tooltip-inner"></div></div>'
+			selector: '[data-tooltip]',
+			method:   'each',
+			handler:  function(i, el) {
+				var tt = (el.dataset || $(this).data()).tooltip || '',
+					id = tt.length ? tt : el.id || el.htmlFor || el.name,
+					title = app.doc.tooltip[id];
+
+				if (!title)
+					return;
+
+				$(this).tooltip({
+					html: true,
+					animation: false,
+					delay: { "show": 1000, "hide": 0 },
+					placement: 'auto top',
+					trigger: 'hover',
+					title: title.replace('...', '&hellip;').replace('\n', '<br>').replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
+				});
 			}
 		}, {
 			selector: 'canvas',

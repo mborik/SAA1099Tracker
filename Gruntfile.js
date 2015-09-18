@@ -65,6 +65,7 @@ module.exports = function(grunt) {
 					'src/Tracker.keyboard.js',
 					'src/Tracker.mouse.js',
 					'src/Tracker.paint.js',
+					'src/Tracker.doc.js',
 					'src/Tracker.gui.js'
 				],
 				dest: 'build/js/Tracker.js'

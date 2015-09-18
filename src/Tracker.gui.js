@@ -41,13 +41,24 @@ Tracker.prototype.populateGUI = function () {
 				}
 			}
 		}, {
-			selector: '[data-toggle="tooltip"]',
-			method:   'tooltip',
-			data:     {
-				animation: false,
-				container: '.tooltip-target',
-				viewport:  { selector: '.tooltip-target', padding: 0 },
-				template:  '<div class="tooltip tooltip-custom" role="tooltip"><div class="tooltip-inner"></div></div>'
+			selector: '[data-tooltip]',
+			method:   'each',
+			handler:  function(i, el) {
+				var tt = (el.dataset || $(this).data()).tooltip || '',
+					id = tt.length ? tt : el.id || el.htmlFor || el.name,
+					title = app.doc.tooltip[id];
+
+				if (!title)
+					return;
+
+				$(this).tooltip({
+					html: true,
+					animation: false,
+					delay: { "show": 1000, "hide": 0 },
+					placement: 'auto top',
+					trigger: 'hover',
+					title: title.replace('...', '&hellip;').replace('\n', '<br>').replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
+				});
 			}
 		}, {
 			selector: 'canvas',

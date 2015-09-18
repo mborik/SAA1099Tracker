@@ -7750,33 +7750,40 @@ label.disabled {
   min-height: 24px;
   background: #fcfcff;
   border-top: 1px solid #dbdbff;
-  z-index: 1000;
+  z-index: 2000;
 }
-#statusbar .tooltip-custom {
-  font-size: 12px !important;
+#statusbar > p {
+  color: #000000;
+  font-size: 12px;
+  letter-spacing: 1px;
   font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
   font-weight: bold;
-  position: relative !important;
-  left: inherit !important;
-  right: inherit !important;
-  top: inherit !important;
-  bottom: inherit !important;
-  display: block !important;
+  position: relative;
+  display: block;
   width: 1118px;
-  height: 24px;
   margin: 0 auto;
-  padding: 5px;
+  padding: 5px 12px;
   overflow: hidden;
-  opacity: 1 !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-#statusbar .tooltip-inner {
-  border: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: none !important;
-  color: #000000 !important;
-  max-width: inherit !important;
-  display: inline !important;
+.tooltip {
+  font-size: 12px !important;
+  white-space: nowrap;
+}
+.tooltip > .tooltip-inner > kbd {
+  font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
+  font-weight: bold;
+  color: #99c3e6;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  white-space: nowrap;
+}
+.tooltip > .tooltip-inner > kbd:before {
+  content: '\a';
+  white-space: pre;
 }
 .bootstrap-touchspin input {
   border-top-left-radius: 4px !important;

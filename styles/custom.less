@@ -508,36 +508,46 @@ label.disabled {
 	min-height: @navbar-height / 4 * 3;
 	background: @navbar-default-bg;
 	border-top: 1px solid @navbar-default-border;
-	z-index: 1000;
+	z-index: 2000;
 
-	.tooltip-custom {
-		font-size: @font-size-base !important;
+	> p {
+		color: @text-color;
+		font-size: @font-size-base;
+		letter-spacing: 1px;
 		font-family: @font-family-monospace;
 		font-weight: bold;
-		position: relative !important;
-		left: inherit !important;
-		right: inherit !important;
-		top: inherit !important;
-		bottom: inherit !important;
-		display: block !important;
+		position: relative;
+		display: block;
 		width: @tracker-base-width;
-		height: @navbar-height / 4 * 3;
 		margin: 0 auto;
-		padding: @grid-gutter-width;
+		padding: @grid-gutter-width 12px;
 		overflow: hidden;
-		opacity: 1 !important;
-	}
-	.tooltip-inner {
-		border: 0 !important;
-		margin: 0 !important;
-		padding: 0 !important;
-		background: none !important;
-		color: @text-color !important;
-		max-width: inherit !important;
-		display: inline !important;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 }
 
+// Tooltip customization
+.tooltip {
+	font-size: @font-size-base !important;
+	white-space: nowrap;
+
+	> .tooltip-inner > kbd {
+		font-family: @font-family-monospace;
+		font-weight: bold;
+		color: lighten(@blue-effect, 25%);
+		padding: 0;
+		border: 0;
+		background: none;
+		box-shadow: none;
+		white-space: nowrap;
+
+		&:before {
+			content: '\a';
+			white-space: pre;
+		}
+	}
+}
 // TouchSpin extension
 .bootstrap-touchspin {
 	input {
@@ -552,7 +562,7 @@ label.disabled {
 		vertical-align: middle;
 		display: table-cell;
 
-		&>.btn {
+		> .btn {
 			display: block;
 			float: none;
 			width: 100%;
