@@ -39,10 +39,14 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				sel.isDragging = false;
 				redraw = true;
 			}
-			else if (point.line === line) {
-				this.modeEditChannel = sel.start.channel;
-				this.modeEditColumn = sel.start.column;
-				redraw = true;
+			else {
+				if (!this.modeEdit)
+					this.modeEdit = redraw = true;
+				if (point.line === line) {
+					this.modeEditChannel = sel.start.channel;
+					this.modeEditColumn = sel.start.column;
+					redraw = true;
+				}
 			}
 		}
 		else if (e.type === 'dblclick' && e.which === 1) {
