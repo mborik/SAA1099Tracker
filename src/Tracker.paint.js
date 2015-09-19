@@ -81,7 +81,7 @@ Tracker.prototype.updateTracklist = function (update) {
 		lines = this.settings.tracklistLines,
 		half = lines >> 1,
 		line = player.currentLine - half,
-		buf, cc, ccb, chn, i, j, k, x, ypad, y,
+		buf, cc, ccb, chn, i, j, k, x, ypad, y, status,
 		charFromBuf = function(i) { return (buf.charCodeAt(i || 0) - 32) * 6 };
 
 	if (update) {
@@ -167,6 +167,9 @@ Tracker.prototype.updateTracklist = function (update) {
 						this.modeEditChannel === chn &&
 						this.modeEditColumn === j) {
 
+					// value for statusbar
+					status = (j >= 5) ? dat.cmd : 0;
+
 					ctx.fillStyle = '#800';
 					if (j)
 						ctx.fillRect(x - 1, y,  7, h);
@@ -249,6 +252,9 @@ Tracker.prototype.updateTracklist = function (update) {
 			ctx.restore();
 		}
 	}
+
+	if (!this.modePlay && this.modeEdit && status !== void 0)
+		this.doc.showTracklistStatus(this.modeEditColumn, status);
 
 	if (update) {
 		// expand offsets to full canvas width and height

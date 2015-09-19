@@ -69,6 +69,107 @@ Tracker.prototype.doc = {
 		'chSampleRelease' : 'Sample can continue in playing\nafter the loop section when\nthe note was released in tracklist',
 		'scSampleLength'  : 'Length of current sample',
 		'scSampleRepeat'  : 'Number of ticks at the end\nof sample which will be repeated'
+	},
+
+	statusbar: [
+		/*  0 */ "NOTE - use alphanumeric keys as two-octave piano, for RELEASE note use [A], [1] or [-] key",
+		/*  1 */ "SAMPLE - [0] no change, [1 - V] to change current sample",
+		/*  2 */ "ORNAMENT - [0] no change, [1 - F] for ornament, or [X] for release ornament",
+		/*  3 */ "VOLUME CHANGE - [0] no change, [1 - F] for volume change in left channel",
+		/*  4 */ "VOLUME CHANGE - [0] no change, [1 - F] for volume change in right channel",
+		/*  5 */ "COMMAND - [0] no change, [1 - F] to use effect or command",
+		/*  6 */ "COMMAND: 1XY - portamento up",
+		/*  7 */ "COMMAND: 2XY - portamento down",
+		/*  8 */ "COMMAND: 3XY - glissando to given note",
+		/*  9 */ "COMMAND: 4XY - vibrato on current note",
+		/* 10 */ "COMMAND: 5XY - tremolo on current note",
+		/* 11 */ "COMMAND: 6XX - delay ornament",
+		/* 12 */ "COMMAND: 7XX - ornament offset",
+		/* 13 */ "COMMAND: 8XX - delay sample",
+		/* 14 */ "COMMAND: 9XX - sample offset",
+		/* 15 */ "COMMAND: AXY - volume slide",
+		/* 16 */ "COMMAND: BXX - break current channel-pattern and loop from line",
+		/* 17 */ "COMMAND: CXY - special command",
+		/* 18 */ "COMMAND: DXX - delay listing on current line",
+		/* 19 */ "COMMAND: EXY - soundchip envelope or noise channel control",
+		/* 20 */ "COMMAND: FXX - change global speed",
+		/* 21 */ "COMMAND 1st parameter: period of change (in ticks)",
+		/* 22 */ "COMMAND 2nd parameter: pitch change in period (in cents)",
+		/* 23 */ "COMMAND parameter: delay (in ticks)",
+		/* 24 */ "COMMAND parameter: offset (in ticks)",
+		/* 25 */ "COMMAND 2nd parameter: volume change in period [- 9-F | 1-7 +]",
+		/* 26 */ "COMMAND parameter: trackline of current channel-pattern",
+		/* 27 */ "COMMAND parameter: [00] disable last command, [XY] false-chord, [F1] swap stereo channels",
+		/* 28 */ "COMMAND 1st parameter: [0, 1] enable envelope control, [D] disable, [2] enable noise control",
+		/* 29 */ "COMMAND 2nd parameter: [0-F] for envelope shape, [0-4] for noise control",
+		/* 30 */ "COMMAND parameter: speed of track listing (01-1F constant, otherwise XY for swing mode)",
+		/* 31 */ "COMMAND parameter: none",
+	],
+
+	// helper functions for statusbar:
+	lastStatus: void 0,
+	setStatusText: function (i) {
+		var text = this.statusbar[i];
+
+		if (text && i === this.lastStatus)
+			return;
+
+		$('#statusbar>p').html(!text ? '' :
+			(
+				text.replace(/(\[.+?\])/g, '<strong>$1</strong>')
+				    .replace(/^([\w ]+?)(\:| \-)/, '<kbd>$1</kbd>$2')
+				    .replace(/(\(.+?\))$/, '<em>$1</em>')
+			)
+		);
+
+		this.lastStatus = i;
+	},
+
+	showTracklistStatus: function (col, cmd) {
+		var i = col;
+
+		if (col === 5)
+			i = cmd + 5;
+		else if (col > 5) {
+			switch (cmd) {
+				case 0x1:
+				case 0x2:
+				case 0x3:
+				case 0x4:
+				case 0x5:
+					i = (col + 15);
+					break;
+				case 0x6:
+				case 0x8:
+				case 0xD:
+					i = 23;
+					break;
+				case 0x7:
+				case 0x9:
+					i = 24;
+					break;
+				case 0xA:
+					i = (col == 6) ? 21 : 25;
+					break;
+				case 0xB:
+					i = 26;
+					break;
+				case 0xC:
+					i = 27;
+					break;
+				case 0xE:
+					i = (col + 22);
+					break;
+				case 0xF:
+					i = 30;
+					break;
+				default:
+					i = 31;
+					break;
+			}
+		}
+
+		this.setStatusText(i);
 	}
 };
 //---------------------------------------------------------------------------------------

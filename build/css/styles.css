@@ -7776,6 +7776,20 @@ label.disabled {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+#statusbar > p > kbd {
+  font-size: 100%;
+  color: #3388cc;
+  background-color: #ebf3fa;
+  box-shadow: none;
+}
+#statusbar > p > strong {
+  color: #3388cc;
+}
+#statusbar > p > em {
+  font-weight: normal;
+  font-style: normal;
+  color: #555555;
+}
 .tooltip {
   font-size: 12px !important;
 }

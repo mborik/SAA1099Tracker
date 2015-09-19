@@ -533,6 +533,21 @@ label.disabled {
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
+
+		> kbd {
+			font-size: 100%;
+			color: @blue-effect;
+			background-color: lighten(@blue-effect, 45%);
+			box-shadow: none;
+		}
+		> strong {
+			color: @blue-effect;
+		}
+		> em {
+			font-weight: normal;
+			font-style: normal;
+			color: @gray;
+		}
 	}
 }
 

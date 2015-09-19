@@ -75,6 +75,14 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 		}
 
 		if (redraw) {
+			if (!sel.isDragging) {
+				i = 0;
+				if (this.modeEditColumn >= 5)
+					i = p.pattern[pp.ch[this.modeEditChannel].pattern].data[line].cmd;
+
+				this.doc.showTracklistStatus(this.modeEditColumn, i);
+			}
+
 			this.updateTracklist();
 			this.updatePanelInfo();
 		}
