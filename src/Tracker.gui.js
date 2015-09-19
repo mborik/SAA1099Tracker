@@ -44,20 +44,23 @@ Tracker.prototype.populateGUI = function () {
 			selector: '[data-tooltip]',
 			method:   'each',
 			handler:  function(i, el) {
-				var tt = (el.dataset || $(this).data()).tooltip || '',
-					id = tt.length ? tt : el.id || el.htmlFor || el.name,
-					title = app.doc.tooltip[id];
+				var data = (el.dataset || $(this).data()).tooltip || '',
+					id = data.length ? data : el.id || el.htmlFor || el.name,
+					delay = /^mi/.test(id) ? 500 : 1000,
+					t = app.doc.tooltip[id];
 
-				if (!title)
+				if (!t)
 					return;
 
 				$(this).tooltip({
 					html: true,
 					animation: false,
-					delay: { "show": 1000, "hide": 0 },
+					delay: { "show": delay, "hide": 0 },
 					placement: 'auto top',
 					trigger: 'hover',
-					title: title.replace('...', '&hellip;').replace('\n', '<br>').replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
+					title: t.replace(/\.{3}/g, '&hellip;')
+					        .replace(/\n/g, '<br>')
+					        .replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
 				});
 			}
 		}, {

@@ -2101,48 +2101,72 @@ Tracker.prototype.updateSampleEditor = function (update) {
 /** Tracker.doc submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.doc = {
-    tooltip: {
-        'miFileNew': 'New',
-        'miFileOpen': 'Open [Ctrl+O]',
-        'miFileSave': 'Save [Ctrl+S]',
-        'miFileSaveAs': 'Save as...',
-        'miEditCut': 'Cut [Ctrl+X]',
-        'miEditCopy': 'Copy [Ctrl+C]',
-        'miEditPaste': 'Paste [Ctrl+V]',
-        'miEditClear': 'Clear [Ctrl+D]',
-        'miEditUndo': 'Undo [Ctrl+Z]',
-        'miEditRedo': 'Redo [Ctrl+Y | Ctrl+Shift+Z]',
-        'miStop': 'Stop [Esc]',
-        'miSongPlay': 'Play song [F5]',
-        'miSongPlayStart': 'Play song from start [F6]',
-        'miPosPlay': 'Play position [F7]',
-        'miPosPlayStart': 'Play position from start [F8]',
-        'miToggleLoop': 'Toggle repeat [F11]',
-        'miManager': 'Track manager [F9]',
-        'miPreferences': 'Preferences [F10]',
-        'miSpecialLogin': 'Login to SAA-1099\ncloud for musicians',
-        'scOctave': 'Base octave [Ctrl+1...Ctrl+8]',
-        'scAutoSmp': 'Auto-typed sample',
-        'scAutoOrn': 'Auto-typed ornament',
-        'scRowStep': 'Row-step in edit mode [- Ctrl+9 | Ctrl+0 +]',
-        'btPatternCreate': 'Create a new pattern\nin length of current',
-        'btPatternDelete': 'Delete the current pattern\n(and renumber others if it isn\'t last one)',
-        'btPatternClean': 'Clear content of current pattern',
-        'btPatternInfo': 'View summary dialog of patterns',
-        'scPattern': 'Current pattern number',
-        'scPatternLen': 'Current pattern length',
-        'txPatternUsed': 'How many times is the pattern used',
-        'txPatternTotal': 'Total number of patterns',
-        'btPosCreate': 'Create an empty position\nat the end of song',
-        'btPosInsert': 'Create a copy of current position\nand insert before it',
-        'btPosDelete': 'Delete the current position',
-        'btPosMoveUp': 'Move the current position\nbefore the previous',
-        'btPosMoveDown': 'Move the current position\nafter the next one',
-        'scPosCurrent': 'Actual position to play or edit [- Ctrl+Shift+Left|Right +]',
-        'scPosLength': 'Current position length',
-        'scPosSpeed': 'Initial speed of current position',
-        'scPosRepeat': 'Position number to repeat from',
-    }
+	tooltip: {
+		'miFileNew'       : 'New',
+		'miFileOpen'      : 'Open [Ctrl+O]',
+		'miFileSave'      : 'Save [Ctrl+S]',
+		'miFileSaveAs'    : 'Save as...',
+		'miEditCut'       : 'Cut [Ctrl+X]',
+		'miEditCopy'      : 'Copy [Ctrl+C]',
+		'miEditPaste'     : 'Paste [Ctrl+V]',
+		'miEditClear'     : 'Clear [Ctrl+D]',
+		'miEditUndo'      : 'Undo [Ctrl+Z]',
+		'miEditRedo'      : 'Redo [Ctrl+Y | Ctrl+Shift+Z]',
+		'miStop'          : 'Stop [Esc]',
+		'miSongPlay'      : 'Play song [F5]',
+		'miSongPlayStart' : 'Play song from start [F6]',
+		'miPosPlay'       : 'Play position [F7]',
+		'miPosPlayStart'  : 'Play position from start [F8]',
+		'miToggleLoop'    : 'Toggle repeat [F11]',
+		'miManager'       : 'Track manager [F9]',
+		'miPreferences'   : 'Preferences [F10]',
+		'miSpecialLogin'  : 'Login to SAA-1099\ncloud for musicians',
+		'scOctave'        : 'Base octave [Ctrl+1...Ctrl+8]',
+		'scAutoSmp'       : 'Auto-typed sample',
+		'scAutoOrn'       : 'Auto-typed ornament',
+		'scRowStep'       : 'Row-step in edit mode [- Ctrl+9 | Ctrl+0 +]',
+		'btPatternCreate' : 'Create a new pattern\nin length of current',
+		'btPatternDelete' : 'Delete the current pattern\n(and renumber others if it isn\'t last one)',
+		'btPatternClean'  : 'Clear content of current pattern',
+		'btPatternInfo'   : 'View summary dialog of patterns',
+		'scPattern'       : 'Current pattern number',
+		'scPatternLen'    : 'Current pattern length',
+		'txPatternUsed'   : 'How many times is the pattern used',
+		'txPatternTotal'  : 'Total number of patterns',
+		'btPosCreate'     : 'Create an empty position\nat the end of song',
+		'btPosInsert'     : 'Create a copy of current position\nand insert before it',
+		'btPosDelete'     : 'Delete the current position',
+		'btPosMoveUp'     : 'Move the current position\nbefore the previous',
+		'btPosMoveDown'   : 'Move the current position\nafter the next one',
+		'scPosCurrent'    : 'Actual position to play or edit [- Ctrl+Shift+Left|Right +]',
+		'scPosLength'     : 'Current position length',
+		'scPosSpeed'      : 'Initial speed of current position',
+		'scPosRepeat'     : 'Position number to repeat from',
+		'txPosTotal'      : 'Total number of positions',
+		'scChnButton'     : 'Mute/Unmute channels [Ctrl+Num1...Ctrl+Num6]',
+		'scChnPattern'    : 'Assigned pattern for specific\nchannel in current position',
+		'scChnTrans'      : 'Transposition of notes\nin specific channel-pattern',
+		'scSampleNumber'  : 'Current sample ID',
+		'txSampleName'    : 'Current sample description',
+		'scSampleTone'    : 'Base tone and octave\nto test this sample',
+		'btSamplePlay'    : 'Play current sample',
+		'btSampleStop'    : 'Stop playback [Esc]',
+		'btSampleClear'   : 'Clear sample or\npart of sample data',
+		'btSampleSwap'    : 'Swap volume data between channels',
+		'btSampleLVolUp'  : 'Volume up left channel',
+		'btSampleLVolDown': 'Volume down left channel',
+		'btSampleCopyLR'  : 'Copy volume data from left to right channel',
+		'btSampleCopyRL'  : 'Copy volume data from right to left channel',
+		'btSampleRVolUp'  : 'Volume up right channel',
+		'btSampleRVolDown': 'Volume down right channel',
+		'btSampleRotL'    : 'Shift whole sample data\nto the left side',
+		'btSampleRotR'    : 'Shift whole sample data\nto the right side',
+		'btSampleEnable'  : 'Enable frequency generator\nin full active sample length',
+		'btSampleDisable' : 'Disable frequency generator\nin full sample length',
+		'chSampleRelease' : 'Sample can continue in playing\nafter the loop section when\nthe note was released in tracklist',
+		'scSampleLength'  : 'Length of current sample',
+		'scSampleRepeat'  : 'Number of ticks at the end\nof sample which will be repeated'
+	}
 };
 //---------------------------------------------------------------------------------------
 
@@ -2192,20 +2216,23 @@ Tracker.prototype.populateGUI = function () {
 			selector: '[data-tooltip]',
 			method:   'each',
 			handler:  function(i, el) {
-				var tt = (el.dataset || $(this).data()).tooltip || '',
-					id = tt.length ? tt : el.id || el.htmlFor || el.name,
-					title = app.doc.tooltip[id];
+				var data = (el.dataset || $(this).data()).tooltip || '',
+					id = data.length ? data : el.id || el.htmlFor || el.name,
+					delay = /^mi/.test(id) ? 500 : 1000,
+					t = app.doc.tooltip[id];
 
-				if (!title)
+				if (!t)
 					return;
 
 				$(this).tooltip({
 					html: true,
 					animation: false,
-					delay: { "show": 1000, "hide": 0 },
+					delay: { "show": delay, "hide": 0 },
 					placement: 'auto top',
 					trigger: 'hover',
-					title: title.replace('...', '&hellip;').replace('\n', '<br>').replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
+					title: t.replace(/\.{3}/g, '&hellip;')
+					        .replace(/\n/g, '<br>')
+					        .replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
 				});
 			}
 		}, {

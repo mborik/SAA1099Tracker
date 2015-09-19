@@ -59,36 +59,36 @@ body {
 
 		> #overlay {
 			.flexbox(initial, center);
-		    -webkit-align-items: center;
-		    -moz-align-items: center;
-		    align-items: center;
-		    position: fixed;
-		    top: 0;
-		    left: 0;
-		    right: 0;
-		    bottom: 0;
-		    z-index: 1024;
-		    background: rgba(255,255,255,.75);
-		    overflow: hidden;
+			-webkit-align-items: center;
+			-moz-align-items: center;
+			align-items: center;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 1024;
+			background: rgba(255,255,255,.75);
+			overflow: hidden;
 
 			> span {
-			    display: block;
-			    color: @blue-effect;
+				display: block;
+				color: @blue-effect;
 
-			    font-size: 16px;
-			    width: 128px;
-			    text-align: center;
+				font-size: 16px;
+				width: 128px;
+				text-align: center;
 
 				&:before {
-				    display: block;
-				    color: #fff;
-				    text-shadow: @blue-effect 0 0 10px;
-				    width: 128px;
-				    margin-bottom: 8px;
-				    content: "\2836";
-				    font-size: 5em;
-				    animation: spin 2s linear infinite;
-				    transform-origin: center 57.5%;
+					display: block;
+					color: #fff;
+					text-shadow: @blue-effect 0 0 10px;
+					width: 128px;
+					margin-bottom: 8px;
+					content: "\2836";
+					font-size: 5em;
+					animation: spin 2s linear infinite;
+					transform-origin: center 57.5%;
 				}
 				&:after {
 					content: "...";
@@ -198,6 +198,7 @@ button {
 label.toggle-off,
 label.disabled {
 	color: @gray-light !important;
+	pointer-events: all !important;
 }
 .col-label {
 	.make-my-column(67px, 28);
@@ -206,6 +207,14 @@ label.disabled {
 	.make-my-column(90px, 28);
 	.border-my-column();
 	button { height: 24px }
+}
+.col-label-input {
+	display: block;
+	position: relative;
+	margin-left: 90px;
+	width: 160px;
+	height: 28px;
+	padding: 0;
 }
 .col-edt {
 	.make-my-panel-column(162px);
@@ -530,21 +539,25 @@ label.disabled {
 // Tooltip customization
 .tooltip {
 	font-size: @font-size-base !important;
-	white-space: nowrap;
 
-	> .tooltip-inner > kbd {
-		font-family: @font-family-monospace;
-		font-weight: bold;
-		color: lighten(@blue-effect, 25%);
-		padding: 0;
-		border: 0;
-		background: none;
-		box-shadow: none;
+	> .tooltip-inner {
+		max-width: none;
 		white-space: nowrap;
 
-		&:before {
-			content: '\a';
-			white-space: pre;
+		> kbd {
+			font-family: @font-family-monospace;
+			font-weight: bold;
+			color: lighten(@blue-effect, 25%);
+			padding: 0;
+			border: 0;
+			background: none;
+			box-shadow: none;
+			white-space: nowrap;
+
+			&:before {
+				content: '\a';
+				white-space: pre;
+			}
 		}
 	}
 }

@@ -7387,6 +7387,7 @@ button {
 label.toggle-off,
 label.disabled {
   color: #777777 !important;
+  pointer-events: all !important;
 }
 .col-label {
   position: relative;
@@ -7407,6 +7408,14 @@ label.disabled {
 }
 .col-buttons button {
   height: 24px;
+}
+.col-label-input {
+  display: block;
+  position: relative;
+  margin-left: 90px;
+  width: 160px;
+  height: 28px;
+  padding: 0;
 }
 .col-edt {
   position: relative;
@@ -7769,6 +7778,9 @@ label.disabled {
 }
 .tooltip {
   font-size: 12px !important;
+}
+.tooltip > .tooltip-inner {
+  max-width: none;
   white-space: nowrap;
 }
 .tooltip > .tooltip-inner > kbd {
