@@ -359,7 +359,6 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
-		this.ajaxCache  = {};
 		this.pixelfont  = { obj: null, ctx: null };
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
@@ -706,7 +705,7 @@ Tracker.prototype.onCmdToggleEditMode = function () {
 Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 	var filename = 'doc/' + name + '.txt',
 		modal = $('#documodal'),
-		cache = this.ajaxCache,
+		cache = this.doc.txtCache,
 		data = cache[name];
 
 	if (!!data) {
@@ -718,7 +717,7 @@ Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 			contentType: 'text/plain',
 			dataType: 'text',
 			success: function(data) {
-				cache[name] = data;
+				cache[name] = data.trim();
 
 				modal.find('.modal-title').text(title);
 				modal.modal('show').find('pre').text(data);
@@ -2101,6 +2100,9 @@ Tracker.prototype.updateSampleEditor = function (update) {
 /** Tracker.doc submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.doc = {
+	// ajax cache for text documentations:
+	txtCache: {},
+
 	tooltip: {
 		'miFileNew'       : 'New',
 		'miFileOpen'      : 'Open [Ctrl+O]',

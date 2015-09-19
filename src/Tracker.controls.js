@@ -194,7 +194,7 @@ Tracker.prototype.onCmdToggleEditMode = function () {
 Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 	var filename = 'doc/' + name + '.txt',
 		modal = $('#documodal'),
-		cache = this.ajaxCache,
+		cache = this.doc.txtCache,
 		data = cache[name];
 
 	if (!!data) {
@@ -206,7 +206,7 @@ Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 			contentType: 'text/plain',
 			dataType: 'text',
 			success: function(data) {
-				cache[name] = data;
+				cache[name] = data.trim();
 
 				modal.find('.modal-title').text(title);
 				modal.modal('show').find('pre').text(data);

@@ -1,6 +1,9 @@
 /** Tracker.doc submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.doc = {
+	// ajax cache for text documentations:
+	txtCache: {},
+
 	tooltip: {
 		'miFileNew'       : 'New',
 		'miFileOpen'      : 'Open [Ctrl+O]',

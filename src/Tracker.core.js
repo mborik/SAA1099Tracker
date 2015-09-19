@@ -40,7 +40,6 @@ var Tracker = (function() {
 			audioBuffers: 0
 		};
 
-		this.ajaxCache  = {};
 		this.pixelfont  = { obj: null, ctx: null };
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
