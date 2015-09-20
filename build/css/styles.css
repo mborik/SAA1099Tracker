@@ -7253,14 +7253,15 @@ body.loading > #overlay > span {
 }
 body.loading > #overlay > span:before {
   display: block;
-  color: #fff;
+  color: #f3f8fc;
   text-shadow: #3388cc 0 0 10px;
   width: 128px;
   margin-bottom: 8px;
-  content: "\2836";
+  content: "\E201";
+  font-family: 'Glyphicons Halflings';
   font-size: 5em;
-  animation: spin 2s linear infinite;
-  transform-origin: center 57.5%;
+  animation: spin 2s cubic-bezier(1, -0.5, 0, 1.5) infinite;
+  transform-origin: 52.4% 49%;
 }
 body.loading > #overlay > span:after {
   content: "...";
