@@ -229,3 +229,210 @@ Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 	}
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatCreate = function () {
+	if (this.modePlay)
+		return;
+
+	var id = this.player.addNewPattern(),
+		pt = this.player.pattern[id],
+		len = (this.workingPattern && this.player.pattern[this.workingPattern].end) || 64;
+
+	pt.end = len;
+	this.workingPattern = id;
+	this.updatePanelPattern();
+
+	$('#scPatternLen').focus();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatDelete = function () {
+	if (this.modePlay || !this.workingPattern)
+		return;
+
+	var i, l,
+		pt = this.workingPattern,
+		len = this.player.pattern.length - 1,
+		chn, pos, msg = null;
+
+	if (this.player.countPatternUsage(pt) > 0)
+		msg = 'This pattern is used in some positions!\nAre you sure to delete it?';
+	if (pt !== len)
+		msg = 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?';
+	if (!msg)
+		msg = 'Are you sure to delete this pattern?';
+	// TODO prompt bootstrap dialog
+
+	for (i = 0, l = this.player.position.length; i < l; i++) {
+		for (pos = this.player.position[i], chn = 0; chn < 6; chn++) {
+			if (pos.ch[chn].pattern === pt)
+				pos.ch[chn].pattern = 0;
+			else if (pos.ch[chn].pattern > pt)
+				pos.ch[chn].pattern--;
+		}
+	}
+
+	this.player.pattern.splice(pt, 1);
+	if (pt === len)
+		pt--;
+
+	this.workingPattern = pt;
+	this.updatePanelInfo();
+	this.updatePanelPattern();
+	this.updatePanelPosition();
+	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatClean = function () {
+	if (this.modePlay || !this.workingPattern)
+		return;
+
+	for (var pt = this.player.pattern[this.workingPattern].data,
+	         i = 0, data = pt[i]; i < 96; i++, data = pt[i]) {
+		data.tone = 0;
+		data.release = false;
+		data.smp = 0;
+		data.orn = 0;
+		data.orn_release = false;
+		data.volume.byte = 0;
+		data.cmd = 0;
+		data.cmd_data = 0;
+	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatInfo = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosCreate = function () {
+	if (this.modePlay)
+		return;
+
+	var p = this.player,
+		total = p.position.length,
+		current = p.position[p.currentPosition] || p.nullPosition,
+		ps = new pPosition(current.length, current.speed);
+
+	p.position.push(ps);
+	p.countPositionFrames(total);
+	p.currentPosition = total;
+	p.currentLine = 0;
+
+	this.updatePanelInfo();
+	this.updatePanelPosition();
+	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosInsert = function () {
+	if (this.modePlay)
+		return;
+	if (!this.player.position.length)
+		return this.onCmdPosCreate();
+
+	var p = this.player, chn,
+		i = p.currentPosition,
+		current = p.position[i] || p.nullPosition,
+		pt = new pPosition(current.length, current.speed);
+
+	for (chn = 0; chn < 6; chn++) {
+		pt.ch[chn].pattern = current.ch[chn].pattern;
+		pt.ch[chn].pitch = current.ch[chn].pitch;
+	}
+
+	p.position.splice(i, 0, pt);
+	p.countPositionFrames(i);
+	p.currentLine = 0;
+
+	this.updatePanelInfo();
+	this.updatePanelPattern();
+	this.updatePanelPosition();
+	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosDelete = function () {
+	if (this.modePlay || !this.player.position.length)
+		return;
+
+	// TODO prompt bootstrap dialog
+
+	this.player.position.splice(this.player.currentPosition, 1);
+	this.player.currentLine = 0;
+
+	this.updatePanelInfo();
+	this.updatePanelPattern();
+	this.updatePanelPosition();
+	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosMoveUp = function () {
+	var p = this.player,
+		i = p.currentPosition,
+		swap = p.position[i];
+
+	if (this.modePlay || !p.position.length || !i)
+		return;
+
+	p.position[i] = p.position[--i];
+	p.position[i] = swap;
+
+	p.currentPosition = i;
+	p.currentLine = 0;
+
+	this.updatePanelInfo();
+	this.updatePanelPosition();
+	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPosMoveDown = function () {
+	var p = this.player,
+		i = p.currentPosition,
+		total = p.position.length,
+		swap = p.position[i];
+
+	if (this.modePlay || !total || i === (total - 1))
+		return;
+
+	p.position[i] = p.position[++i];
+	p.position[i] = swap;
+
+	p.currentPosition = i;
+	p.currentLine = 0;
+
+	this.updatePanelInfo();
+	this.updatePanelPosition();
+	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpClear = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpSwap = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpLVolUp = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpLVolDown = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpRVolUp = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpRVolDown = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpCopyLR = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpCopyRL = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpRotL = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpRotR = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpEnable = function () {
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpDisable = function () {
+};
+//---------------------------------------------------------------------------------------

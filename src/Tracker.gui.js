@@ -488,6 +488,18 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#miToggleLoop',
 			method:   'click',
 			handler:  function() { app.onCmdToggleLoop() }
+		}, {
+			selector: 'button[id^="btPattern"]',
+			method:   'click',
+			handler:  function() { app[this.id.replace('btPattern', 'onCmdPat')]() }
+		}, {
+			selector: 'button[id^=btPos]',
+			method:   'click',
+			handler:  function() { app[this.id.replace('bt', 'onCmd')]() }
+		}, {
+			selector: 'button[id^="btSample"]',
+			method:   'click',
+			handler:  function() { app[this.id.replace('btSample', 'onCmdSmp')]() }
 		}
 	];
 

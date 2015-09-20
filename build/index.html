@@ -22,7 +22,7 @@
 						<li class="disabled"><a id="miFileSaveAs" data-tooltip><span class="glyphicon glyphicon-floppy-save"></span>&ensp;</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-import"></span>&ensp;Import&nbsp;<span class="caret"></span></a>
-							<ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+							<ul class="dropdown-menu multi-level" role="menu">
 								<li class="disabled"><a id="miFileImportPT2">ProTracker II module&hellip;</a></li>
 								<li class="disabled"><a id="miFileImportETrack">E-Tracker module&hellip;</a></li>
 								<li class="divider"></li>
@@ -41,7 +41,7 @@
 						</li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-export"></span>&ensp;Export&nbsp;<span class="caret"></span>&ensp;</a>
-							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+							<ul class="dropdown-menu" role="menu">
 								<li class="disabled"><a id="miFileExportCompile">Binary compilation&hellip;</a></li>
 							</ul>
 						</li>
@@ -58,7 +58,7 @@
 						<li class="disabled"><a id="miSpecialLogin" data-tooltip><span class="glyphicon glyphicon-user"></span>&ensp;Login</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-help"></span>&ensp;Help&nbsp;<span class="caret"></span>&ensp;</a>
-							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+							<ul class="dropdown-menu" role="menu">
 								<li><a id="miHelpReadMe" data-filename="readme">Basic info&hellip;</a></li>
 								<li><a id="miHelpCmd" data-filename="commands">Commands&hellip;</a></li>
 								<li><a id="miHelpExport" data-filename="export_data_format">Export data format&hellip;</a></li>
@@ -95,9 +95,9 @@
 			</div>
 			<div id="main-tabpanel" class="row tab-panel" role="tabpanel">
 				<ul class="nav nav-tabs" role="tablist">
-					<li role="presentation"><a href="#tracker" id="tab-tracker" aria-controls="tracker" role="tab" data-toggle="tab" data-value="0"><span class="glyphicon glyphicon-list"></span>&ensp;Tracker</a></li>
-					<li role="presentation"><a href="#smpedit" id="tab-smpedit" aria-controls="smpedit" role="tab" data-toggle="tab" data-value="1"><span class="glyphicon glyphicon-equalizer"></span>&ensp;Samples</a></li>
-					<li role="presentation"><a href="#ornedit" id="tab-ornedit" aria-controls="ornedit" role="tab" data-toggle="tab" data-value="2"><span class="glyphicon glyphicon-music"></span>&ensp;Ornaments</a></li>
+					<li role="presentation"><a href="#tracker" id="tab-tracker" role="tab" data-toggle="tab" data-value="0"><span class="glyphicon glyphicon-list"></span>&ensp;Tracker</a></li>
+					<li role="presentation"><a href="#smpedit" id="tab-smpedit" role="tab" data-toggle="tab" data-value="1"><span class="glyphicon glyphicon-equalizer"></span>&ensp;Samples</a></li>
+					<li role="presentation"><a href="#ornedit" id="tab-ornedit" role="tab" data-toggle="tab" data-value="2"><span class="glyphicon glyphicon-music"></span>&ensp;Ornaments</a></li>
 				</ul>
 			</div>
 			<div class="tab-content">
@@ -343,8 +343,8 @@
 					</div>
 					<div id="sample-tabpanel" class="row tab-panel tabs-bottom" role="tabpanel">
 						<ul class="nav nav-tabs" role="tablist">
-							<li role="presentation" class="active"><a href="#sampledata" id="tab-sampledata" aria-controls="sampledata" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span>&ensp;Sample data</a></li>
-							<li role="presentation"><a href="#pitchshift" id="tab-pitchshift" aria-controls="pitchshift" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-resize-full"></span>&ensp;Pitch-shift</a></li>
+							<li role="presentation" class="active"><a href="#sampledata" id="tab-sampledata" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span>&ensp;Sample data</a></li>
+							<li role="presentation"><a href="#pitchshift" id="tab-pitchshift" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-resize-full"></span>&ensp;Pitch-shift</a></li>
 						</ul>
 					</div>
 				</div>
@@ -354,14 +354,26 @@
 				</div>
 			</div>
 		</div>
-		<div class="modal" id="documodal" tabindex="-1" role="dialog" aria-labelledby="documodal-title">
+		<div class="modal" id="documodal" tabindex="-1" role="dialog">
 			<div class="modal-dialog modal-lg" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="close"><span aria-hidden="true">&times;</span></button>
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
 						<h4 class="modal-title" id="documodal-title"></h4>
 					</div>
 					<pre class="modal-body"></pre>
+				</div>
+			</div>
+		</div>
+		<div class="modal" id="confirm" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title" id="confirm-title"></h4>
+					</div>
+					<div class="modal-body"></div>
+					<div class="modal-footer"></div>
 				</div>
 			</div>
 		</div>
