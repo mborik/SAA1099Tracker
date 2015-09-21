@@ -615,23 +615,21 @@ class Player {
 
 				// current sample cursor position handler...
 				if (pp.sample_cursor + 1 >= pp.sample.end) {
-					c = chn + 1;
-
 					// it had to be released?
 					if (pp.sample.releasable && pp.released) {
-						if (++pp.sample_cursor === 0)
-							this.stopChannel(c);
+						if (++pp.sample_cursor === 256)
+							this.clearPlayParams(chn);
 					}
 					// it had to be repeated at the end?
 					else if (pp.sample.loop === pp.sample.end) {
 						if ((this.mode & pMode.PM_SAMP_OR_LINE))
-							this.stopChannel(c);
+							this.clearPlayParams(chn);
 						else
 							pp.sample_cursor = pp.sample.end;
 					}
 					// it had to be stopped?
 					else if (this.mode === pMode.PM_LINE)
-						this.stopChannel(c);
+						this.clearPlayParams(chn);
 					// it had to be in the loop?
 					else
 						pp.sample_cursor = pp.sample.loop;
