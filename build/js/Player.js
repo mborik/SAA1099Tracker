@@ -502,6 +502,8 @@ var Player = (function () {
                 this.SAA1099.setRegData(8 + chn, 0);
                 ///~ SAA1099 DATA 10-12: Octave for generators 0-5
                 this.SAA1099.setRegData(16 + chn2nd, oct);
+                ///~ SAA1099 DATA 18/19: Envelope generator 0/1
+                this.SAA1099.setRegData(24 + chn3rd, 0);
                 eFreq &= (0xff ^ eMask);
                 eNoiz &= (0xff ^ eMask);
             }
