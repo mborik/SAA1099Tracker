@@ -17,7 +17,6 @@ Tracker.prototype.populateGUI = function () {
 				var c = app.tracklist.countTracklines();
 				if (c !== app.settings.tracklistLineHeight) {
 					app.tracklist.setHeight(c);
-					app.smpornedit.updateOffsets();
 					app.updateTracklist(true);
 
 					var offset = $('#statusbar').offset();
