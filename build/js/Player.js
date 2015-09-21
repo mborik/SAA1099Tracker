@@ -467,20 +467,19 @@ var Player = (function () {
                 }
                 // current sample cursor position handler...
                 if (pp.sample_cursor + 1 >= pp.sample.end) {
-                    c = chn + 1;
                     // it had to be released?
                     if (pp.sample.releasable && pp.released) {
-                        if (++pp.sample_cursor === 0)
-                            this.stopChannel(c);
+                        if (++pp.sample_cursor === 256)
+                            this.clearPlayParams(chn);
                     }
                     else if (pp.sample.loop === pp.sample.end) {
                         if ((this.mode & pMode.PM_SAMP_OR_LINE))
-                            this.stopChannel(c);
+                            this.clearPlayParams(chn);
                         else
                             pp.sample_cursor = pp.sample.end;
                     }
                     else if (this.mode === pMode.PM_LINE)
-                        this.stopChannel(c);
+                        this.clearPlayParams(chn);
                     else
                         pp.sample_cursor = pp.sample.loop;
                 }
@@ -502,8 +501,6 @@ var Player = (function () {
                 this.SAA1099.setRegData(8 + chn, 0);
                 ///~ SAA1099 DATA 10-12: Octave for generators 0-5
                 this.SAA1099.setRegData(16 + chn2nd, oct);
-                ///~ SAA1099 DATA 18/19: Envelope generator 0/1
-                this.SAA1099.setRegData(24 + chn3rd, 0);
                 eFreq &= (0xff ^ eMask);
                 eNoiz &= (0xff ^ eMask);
             }
@@ -515,8 +512,12 @@ var Player = (function () {
         ///~ SAA1099 DATA 16: Noise generator clock frequency select
         this.SAA1099.setRegData(22, eChar);
         if ((this.mode & pMode.PM_SAMP_OR_LINE) && (eFreq | eNoiz) === 0) {
-            ///~ SAA1099 DATA 1C: Master reset
-            this.SAA1099.setRegData(28, 0);
+            ///~ SAA1099 DATA 18: Envelope generator 0
+            this.SAA1099.setRegData(24, 0);
+            ///~ SAA1099 DATA 19: Envelope generator 1
+            this.SAA1099.setRegData(25, 0);
+            ///~ SAA1099 DATA 1C: Master reset and sync
+            this.SAA1099.setRegData(28, 2);
             this.mode = 0;
         }
         else {
