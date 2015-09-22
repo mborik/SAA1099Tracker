@@ -105,8 +105,7 @@ var SyncTimer = (function() {
 	this.interval = 10; // 100Hz
 
 	var that = this,
-		dummy = function(callback) { setTimeout(function() { callback(performance.now()) }, that.interval )},
-		timer = getCompatible(window, 'requestAnimationFrame', false, dummy),
+		timer = getCompatible(window, 'requestAnimationFrame', false, function(callback) { setTimeout(function() { callback(performance.now()) }, that.interval )}),
 		lastT = 0, enabled = false;
 
 	this.start = function(callback, interval) {
@@ -114,15 +113,12 @@ var SyncTimer = (function() {
 			return false;
 
 		if (callback !== void 0)
-			this.callback = callback;
+			that.callback = callback;
 		if (interval !== void 0)
-			this.interval = interval;
+			that.interval = interval;
 
 		enabled = true;
-		timer(function(t) {
-			timer(that.loop);
-			lastT = t;
-		});
+		timer(that.loop);
 
 		return true;
 	};
@@ -132,10 +128,10 @@ var SyncTimer = (function() {
 
 	this.loop = function(t) {
 		if (enabled)
-			timer(this.loop);
-		if ((t - lastT) < this.interval)
+			timer(that.loop);
+		if ((t - lastT) < that.interval)
 			return false;
-		this.callback();
+		that.callback();
 		lastT = t;
 	};
 
