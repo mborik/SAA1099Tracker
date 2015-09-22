@@ -355,6 +355,7 @@ Tracker.prototype.populateGUI = function () {
 				app.workingSample = parseInt($(this).val(), 32);
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
+				$('#sbSampleScroll').scrollLeft(0);
 			}
 		}, {
 			selector: '#txSampleName',

@@ -184,7 +184,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 						sample.end = x + 1;
 						sample.loop = x;
 					}
-					else {
+					else if (obj.drag.isDragging === 1) {
 						sample.end = ++x;
 						sample.loop = x;
 					}

@@ -915,36 +915,106 @@ Tracker.prototype.onCmdSmpClear = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpSwap = function () {
+	for (var data = this.player.sample[this.workingSample].data, swap, i = 0; i < 256; i++) {
+		swap = data[i].volume.L;
+		data[i].volume.L = data[i].volume.R;
+		data[i].volume.R = swap;
+	}
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolUp = function () {
+	for (var smp = this.player.sample[this.workingSample], data = smp.data, i = 0; i < 256; i++) {
+		if ((i <  smp.end && data[i].volume.L < 15) ||
+			(i >= smp.end && data[i].volume.L > 0 && data[i].volume.L < 15))
+				data[i].volume.L++;
+	}
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolDown = function () {
+	for (var data = this.player.sample[this.workingSample].data, i = 0; i < 256; i++)
+		if (data[i].volume.L > 0)
+			data[i].volume.L--;
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolUp = function () {
+	for (var smp = this.player.sample[this.workingSample], data = smp.data, i = 0; i < 256; i++) {
+		if ((i <  smp.end && data[i].volume.R < 15) ||
+			(i >= smp.end && data[i].volume.R > 0 && data[i].volume.R < 15))
+				data[i].volume.R++;
+	}
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolDown = function () {
+	for (var data = this.player.sample[this.workingSample].data, i = 0; i < 256; i++)
+		if (data[i].volume.R > 0)
+			data[i].volume.R--;
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyLR = function () {
+	for (var data = this.player.sample[this.workingSample].data, i = 0; i < 256; i++)
+		data[i].volume.R = data[i].volume.L;
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyRL = function () {
+	for (var data = this.player.sample[this.workingSample].data, i = 0; i < 256; i++)
+		data[i].volume.L = data[i].volume.R;
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotL = function () {
+	for (var data = this.player.sample[this.workingSample].data, ref, i = 0; i < 256; i++) {
+		ref = data[(i + 1) % 256];
+
+		data[i].volume.byte  = ref.volume.byte;
+		data[i].enable_freq  = ref.enable_freq;
+		data[i].enable_noise = ref.enable_noise;
+		data[i].noise_value  = ref.noise_value;
+		data[i].shift        = ref.shift;
+	}
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotR = function () {
+	for (var data = this.player.sample[this.workingSample].data, ref, i = 255; i >= 0; i--) {
+		ref = data[(i - 1) & 255];
+
+		data[i].volume.byte  = ref.volume.byte;
+		data[i].enable_freq  = ref.enable_freq;
+		data[i].enable_noise = ref.enable_noise;
+		data[i].noise_value  = ref.noise_value;
+		data[i].shift        = ref.shift;
+	}
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpEnable = function () {
+	for (var data = this.player.sample[this.workingSample].data, i = 0; i < 256; i++)
+		if (!!data[i].volume.byte)
+			data[i].enable_freq = true;
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpDisable = function () {
+	for (var data = this.player.sample[this.workingSample].data, i = 0; i < 256; i++)
+		data[i].enable_freq = false;
+
+	this.updateSampleEditor();
 };
 //---------------------------------------------------------------------------------------
 
@@ -1937,7 +2007,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 						sample.end = x + 1;
 						sample.loop = x;
 					}
-					else {
+					else if (obj.drag.isDragging === 1) {
 						sample.end = ++x;
 						sample.loop = x;
 					}
@@ -2330,8 +2400,6 @@ Tracker.prototype.updateSampleEditor = function (update) {
 
 		$('#chSampleRelease').prop('checked', sample.releasable);
 		$('#chSampleRelease').prop('disabled', l).parent()[l ? 'addClass' : 'removeClass']('disabled');
-
-		$('#sbSampleScroll').scrollLeft(0);
 	}
 };
 //---------------------------------------------------------------------------------------
@@ -2869,6 +2937,7 @@ Tracker.prototype.populateGUI = function () {
 				app.workingSample = parseInt($(this).val(), 32);
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
+				$('#sbSampleScroll').scrollLeft(0);
 			}
 		}, {
 			selector: '#txSampleName',

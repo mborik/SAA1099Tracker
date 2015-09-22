@@ -367,8 +367,6 @@ Tracker.prototype.updateSampleEditor = function (update) {
 
 		$('#chSampleRelease').prop('checked', sample.releasable);
 		$('#chSampleRelease').prop('disabled', l).parent()[l ? 'addClass' : 'removeClass']('disabled');
-
-		$('#sbSampleScroll').scrollLeft(0);
 	}
 };
 //---------------------------------------------------------------------------------------
