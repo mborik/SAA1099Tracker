@@ -264,7 +264,7 @@ Tracker.prototype.updateTracklist = function (update) {
 	}
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.updateSampleEditor = function (update) {
+Tracker.prototype.updateSampleEditor = function (update, limitFrom, limitTo) {
 	var o = this.smpornedit,
 		sample = this.player.sample[this.workingSample],
 		amp = o.amp.ctx,
@@ -278,6 +278,14 @@ Tracker.prototype.updateSampleEditor = function (update) {
 		add = o.columnWidth,
 		x = o.centering, w = add - 1,
 		i, yl, yr, l, r;
+
+	if (limitFrom !== void 0) {
+		i = Math.max(ptr, limitFrom);
+		x += (i - ptr) * add;
+		ptr = i;
+	}
+	if (limitTo !== void 0)
+		end = Math.min(end, ++limitTo);
 
 	for (; ptr < end; ptr++, x += add) {
 		if (ptr >= sample.end && !sample.releasable)

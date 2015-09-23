@@ -408,6 +408,10 @@ Tracker.prototype.onCmdPosMoveDown = function () {
 	this.updateTracklist();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpPlay = function () {
+	this.player.playSample(this.workingSample, 0, this.workingSampleTone);
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpClear = function () {
 };
 //---------------------------------------------------------------------------------------

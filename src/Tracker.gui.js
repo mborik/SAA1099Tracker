@@ -461,7 +461,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() { app.onCmdAbout() }
 		}, {
-			selector: '#miStop,#btSampleStop,#btOrnamentStop',
+			selector: '#miStop',
 			method:   'click',
 			handler:  function() { app.onCmdStop() }
 		}, {
@@ -481,14 +481,6 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() { app.onCmdPosPlayStart() }
 		}, {
-			selector: '#btSamplePlay',
-			method:   'click',
-			handler:  function() { app.player.playSample(app.workingSample, 0, app.workingSampleTone) }
-		}, {
-			selector: '#btOrnamentPlay',
-			method:   'click',
-			handler:  function() { app.player.playSample(app.workingSample, app.workingOrnament, app.workingSampleTone) }
-		}, {
 			selector: '#miToggleLoop',
 			method:   'click',
 			handler:  function() { app.onCmdToggleLoop() }
@@ -503,7 +495,12 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: 'button[id^="btSample"]',
 			method:   'click',
-			handler:  function() { app[this.id.replace('btSample', 'onCmdSmp')]() }
+			handler:  function() {
+				var name = this.id.replace('btSample', 'onCmdSmp');
+				if (name.endsWith('Stop'))
+					name = name.replace('Smp', '');
+				app[name]();
+			}
 		}
 	];
 

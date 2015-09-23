@@ -92,12 +92,14 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			x = e.pageX - obj.smpeditOffset.left - obj.centering,
 			y = e.pageY,
 			dragging = /mouse(down|move)/.test(e.type),
-			update = false;
+			update = false,
+			redrawAll = false, limitFrom, limitTo;
 
 		if (x < 0)
 			return;
 
 		x = Math.min(0 | (x / obj.columnWidth), 63) + obj.smpeditScroll;
+		limitFrom = limitTo = x;
 		data = sample.data[x];
 
 		if (part === 'amp') {
@@ -160,7 +162,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				i = Math.min(Math.max(i, 0), 4);
 
 				data.enable_noise = !!i;
-				data.noise_value = --i;
+				data.noise_value = Math.max(--i, 0);
 			}
 		}
 		else if (part === 'range' && e.which === 1) {
@@ -198,12 +200,19 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 					sample.loop = x;
 				}
 
-				return this.updateSampleEditor(true);
+				redrawAll = true;
+
+				if (obj.drag.isDragging === 1)
+					limitFrom = limitTo = void 0;
+				else {
+					limitFrom = sample.loop - 1;
+					limitTo = sample.end;
+				}
 			}
 		}
 
 		if (update)
-			this.updateSampleEditor();
+			this.updateSampleEditor(redrawAll, limitFrom, limitTo);
 	}
 };
 //---------------------------------------------------------------------------------------
