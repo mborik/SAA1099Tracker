@@ -19,6 +19,8 @@ Tracker.prototype.initPixelFont = function (font) {
 		o = this.pixelfont, i, l = bg.length * 10,
 		w = font.width, copy, copyctx;
 
+	console.log('Initializing pixel-font...');
+
 	o.obj = document.createElement('canvas');
 	o.obj.width = w;
 	o.obj.height = l;

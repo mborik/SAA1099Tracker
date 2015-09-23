@@ -2,6 +2,8 @@
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
+		console.log('Inizializing SAA1099Tracker v%s...', ver);
+
 		this.version = ver;
 
 		this.loaded = false;
@@ -55,7 +57,10 @@ var Tracker = (function() {
 
 		var app = this;
 		if (this.player) {
+			console.log('Populating elements...');
 			this.populateGUI();
+
+			console.log('Starting precise 50Hz timer...');
 			SyncTimer.start(function() { app.baseTimer() }, 20);
 		}
 	// }
@@ -67,26 +72,34 @@ var Tracker = (function() {
 				if (!!this.smpornedit.img) {
 					if (this.activeTab === 1)
 						this.smpornedit.drawHeaders();
-					else
+					else {
+						console.log('Force initialization of Sample editor tab...');
 						$('#tab-smpedit').trigger('click');
+					}
 				}
 			}
 			else if (!this.tracklist.initialized) {
 				if (!!this.pixelfont.ctx) {
 					if (this.activeTab === 0) {
+						console.log('Force triggering of window resize event...');
 						$(window).trigger('resize');
 
+						console.log('Redrawing all tracklist elements and canvas...');
 						this.updatePanels();
 						this.updateTracklist(true);
 						this.tracklist.initialized = true;
 
+						console.log('Starting AudioDriver...');
 						AudioDriver.play();
 					}
-					else
+					else {
+						console.log('Force initialization of Tracklist editor tab...');
 						$('#tab-tracker').trigger('click');
+					}
 				}
 			}
 			else if (!this.loaded) {
+				console.log('Initialization done, Tracker ready!');
 				document.body.className = '';
 				this.loaded = true;
 			}
@@ -107,7 +120,10 @@ var Tracker = (function() {
 		var player = this.player;
 		var settings = this.settings;
 
+		console.log('Loading "%s" demosong...', name);
 		$.getJSON('demosongs/' + name + '.json', function(data) {
+			console.log('Demosong "%s/%s" (v%s) loaded...', data.author, data.title, data.version);
+
 			player.clearOrnaments();
 			player.clearSamples();
 			player.clearSong();
@@ -188,6 +204,8 @@ var Tracker = (function() {
 			tracker.updatePanels();
 			tracker.updateTracklist();
 			tracker.updateSampleEditor(true);
+
+			console.log('Completely loaded...');
 		});
 	};
 
