@@ -93,18 +93,19 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				112: function () {
 					console.logHotkey('F1 - About');
+					app.onCmdAbout();
 				},
 				113: function () {
 					console.logHotkey('F2 - Tracklist Editor');
-					$('#tab-tracker').trigger('click');
+					$('#tab-tracker').tab('show');
 				},
 				114: function () {
 					console.logHotkey('F3 - Sample Editor');
-					$('#tab-smpedit').trigger('click');
+					$('#tab-smpedit').tab('show');
 				},
 				115: function () {
 					console.logHotkey('F4 - Ornament Editor');
-					$('#tab-ornedit').trigger('click');
+					$('#tab-ornedit').tab('show');
 				},
 				116: function () {
 					console.logHotkey('F5 - Play song');

@@ -227,6 +227,16 @@ Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 	}
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdAbout = function () {
+	var dialog = $('#about'),
+		data = dialog.data();
+
+	if (!data.hasOwnProperty('bs.modal'))
+		dialog.find('.ver').text('v' + this.version);
+
+	dialog.modal('toggle');
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatCreate = function () {
 	if (this.modePlay)
 		return;

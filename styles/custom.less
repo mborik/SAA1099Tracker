@@ -499,6 +499,93 @@ label.disabled {
 	min-height: 50ex;
 }
 
+#about > .modal-dialog {
+	margin-top: 128px;
+	width: 400px;
+
+	> .modal-content {
+		background: #000;
+		color: #fff;
+
+		> .modal-body {
+			position: relative;
+			display: block;
+			width: 360px;
+			height: 260px;
+			padding: 20px;
+			font-size: 13px;
+
+			> .img {
+				position: absolute;
+				top: 12px;
+				left: 180px;
+
+				> img {
+					width: 200%;
+					height: 200%;
+					image-rendering: optimizeSpeed;
+					image-rendering: -moz-crisp-edges;
+					image-rendering: -webkit-optimize-contrast;
+					image-rendering: optimize-contrast;
+					image-rendering: crisp-edges;
+					image-rendering: pixelated;
+					-ms-interpolation-mode: nearest-neighbor;
+				}
+			}
+			> .app {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				font-size: 20px;
+				font-weight: bold;
+			}
+			> .ver {
+				position: absolute;
+				top: 25px;
+				left: 182px;
+				font-size: 14px;
+				font-weight: bold;
+			}
+			> .desc {
+				position: absolute;
+				top: 54px;
+				left: 20px;
+				width: 180px;
+				font-size: 15px;
+			}
+			> .copy {
+				position: absolute;
+				top: 190px;
+				left: 20px;
+			}
+			> .link {
+				position: absolute;
+			    top: 213px;
+				left: 16px;
+			    font-weight: bold;
+			    border: 1px solid @blue-effect;
+			    padding: 6px;
+			    border-radius: 3px;
+
+				> a {
+					color: @blue-effect;
+				}
+			}
+			> .ok {
+				position: absolute;
+				left: 300px;
+				top: 212px;
+
+				> button {
+					width: 80px;
+					height: 28px;
+					font-weight: bold;
+				}
+			}
+		}
+	}
+}
+
 #statusbar {
 	position: absolute;
 	left: 0;

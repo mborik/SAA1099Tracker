@@ -738,6 +738,16 @@ Tracker.prototype.onCmdShowDocumentation = function (name, title) {
 	}
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdAbout = function () {
+	var dialog = $('#about'),
+		data = dialog.data();
+
+	if (!data.hasOwnProperty('bs.modal'))
+		dialog.find('.ver').text('v' + this.version);
+
+	dialog.modal('toggle');
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatCreate = function () {
 	if (this.modePlay)
 		return;
@@ -1111,18 +1121,19 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				112: function () {
 					console.logHotkey('F1 - About');
+					app.onCmdAbout();
 				},
 				113: function () {
 					console.logHotkey('F2 - Tracklist Editor');
-					$('#tab-tracker').trigger('click');
+					$('#tab-tracker').tab('show');
 				},
 				114: function () {
 					console.logHotkey('F3 - Sample Editor');
-					$('#tab-smpedit').trigger('click');
+					$('#tab-smpedit').tab('show');
 				},
 				115: function () {
 					console.logHotkey('F4 - Ornament Editor');
-					$('#tab-ornedit').trigger('click');
+					$('#tab-ornedit').tab('show');
 				},
 				116: function () {
 					console.logHotkey('F5 - Play song');
@@ -1981,7 +1992,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				i = Math.min(Math.max(i, 0), 4);
 
 				data.enable_noise = !!i;
-				data.noise_value = --i;
+				data.noise_value = Math.max(--i, 0);
 			}
 		}
 		else if (part === 'range' && e.which === 1) {
@@ -3036,6 +3047,10 @@ Tracker.prototype.populateGUI = function () {
 					return false;
 				app.onCmdShowDocumentation(fn, title.slice(0, -1));
 			}
+		}, {
+			selector: '#miAbout',
+			method:   'click',
+			handler:  function() { app.onCmdAbout() }
 		}, {
 			selector: '#miStop,#btSampleStop,#btOrnamentStop',
 			method:   'click',

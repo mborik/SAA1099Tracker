@@ -457,6 +457,10 @@ Tracker.prototype.populateGUI = function () {
 				app.onCmdShowDocumentation(fn, title.slice(0, -1));
 			}
 		}, {
+			selector: '#miAbout',
+			method:   'click',
+			handler:  function() { app.onCmdAbout() }
+		}, {
 			selector: '#miStop,#btSampleStop,#btOrnamentStop',
 			method:   'click',
 			handler:  function() { app.onCmdStop() }
