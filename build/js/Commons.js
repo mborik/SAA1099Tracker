@@ -57,7 +57,7 @@
 		if (window.performance.timing && window.performance.timing.navigationStart)
 			d = window.performance.timing.navigationStart;
 
-		window.performance.now = function now() { return Date.now() - d }
+		window.performance.now = function now() { return Date.now() - d };
 	}
 
 	// browser detection:
@@ -123,8 +123,8 @@ var SyncTimer = (function() {
 		return true;
 	};
 
-	this.pause = function() { enabled = false }
-	this.resume = function() { enabled = true }
+	this.pause = function() { enabled = false };
+	this.resume = function() { enabled = true };
 
 	this.loop = function(t) {
 		if (enabled)
@@ -138,7 +138,20 @@ var SyncTimer = (function() {
 	return this;
 })();
 
-Number.prototype.toWidth = function(w) {
-	var a = '' + (this.valueOf() >> 0);
-	return ('0000000000' + a).substr(-Math.max(w || 0, a.length));
+// fastest absolute value helper...
+Number.prototype.abs = function() {
+	var a = this.valueOf(), s = a >> 31;
+	return (a ^ s) - s;
+};
+
+// align value to exact character width with zeroes from left...
+Number.prototype.toWidth = function(width) {
+	var a = '' + this.abs();
+	return ('0000000000' + a).substr(-Math.max(width || 0, a.length));
+};
+
+// format number of seconds to time string MM:SS...
+Number.prototype.toTimeString = function() {
+	var a = this.valueOf(), m = (a / 60).abs(), s = (a % 60).abs();
+	return ('0' + m).substr(-2) + ':' + ('0' + s).substr(-2);
 };

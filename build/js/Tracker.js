@@ -532,22 +532,24 @@ Tracker.prototype.updateEditorCombo = function (step) {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelInfo = function () {
-	var int = this.settings.audioInterrupt,
-		buf, pos = null, posi = null,
+	var p = this.player,
+		el = $('#stInfoPanel u'),
+		int = this.settings.audioInterrupt,
 		total = 0, current = 0,
-		p = this.player.currentPosition,
-		len = this.player.position.length,
-		line = this.player.currentLine,
+		curpos = p.currentPosition,
+		len = p.position.length,
+		pos = p.position[curpos],
+		posi = null,
+		line = p.currentLine,
 		even = line & -2,
 		bpm, i = int * 60;
 
 	if (len) {
-		pos = this.player.position[p];
 		bpm = (i / (pos.frames[even + 2] - pos.frames[even])) >> 1;
 
 		for (i = 0; i < len; i++) {
-			posi = this.player.position[i];
-			if (i === p)
+			posi = p.position[i];
+			if (i === curpos)
 				current = total;
 			total += posi.frames[posi.length];
 		}
@@ -555,25 +557,21 @@ Tracker.prototype.updatePanelInfo = function () {
 		current += pos.frames[line];
 
 		i = total.toString().length;
-		buf = '(' + current.toWidth(i) + '/' + total.toWidth(i) + ')';
-		$('#stInfoPanelFrames').text(buf);
+		el[4].innerText = current.toWidth(i);
+		el[5].innerText = total.toWidth(i);
 
-		current /= int;
-		total /= int;
-		buf = (current / 60).toWidth(2) + ':' +
-		      (current % 60).toWidth(2) + ' / ' +
-		        (total / 60).toWidth(2) + ':' +
-		        (total % 60).toWidth(2);
-
-		$('#stInfoPanelTime').text(buf);
+		el[2].innerText = (current / int).toTimeString();
+		el[3].innerText = (total / int).toTimeString();
 	}
 	else {
-		$('#stInfoPanelTime').text('00:00 / 00:00');
-		$('#stInfoPanelFrames').text('(0/0)');
-
 		bpm = (i / this.player.currentSpeed) >> 2;
+
+		el[2].innerText = el[3].innerText = (0).toTimeString();
+		el[4].innerText = el[5].innerText = '0';
 	}
-	$('#stInfoPanelBPM').text('BPM: ' + bpm + ' (' + int + ' Hz)');
+
+	el[0].innerText = bpm;
+	el[1].innerText = int;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {

@@ -205,10 +205,9 @@
 										<div class="col-chn">
 											<div class="row">
 												<div class="col-pos-total" data-tooltip="txPosTotal"><input id="txPosTotal" type="text" value="0" class="form-control" disabled="disabled"></div>
-												<div class="col-infopanel">
-													<span id="stInfoPanelBPM">BPM: 125 (50 Hz)</span>
-													<span id="stInfoPanelFrames">(0 / 0)</span>
-													<span id="stInfoPanelTime">00:00 / 00:00</span>
+												<div class="col-infopanel" id="stInfoPanel">
+													<span class="pull-left">BPM: <u>125</u> (<u>50</u> Hz)</span>
+													<span class="pull-right"><b><u>00:00</u> / <u>00:00</u></b> (<u>0</u>/<u>0</u>)</span>
 												</div>
 											</div>
 											<div class="row" data-tooltip="scChnButton">
@@ -300,8 +299,8 @@
 														<div class="separator"></div>
 														<button id="btSampleCopyRL" type="button" class="btn btn-default btn-block" data-tooltip>Copy L&nbsp;&#x21d0;&nbsp;R</button>
 														<div class="btnpair">
-															<button id="btSampleRVolUp" type="button" class="btn btn-default btn-half left" data-tooltip><span class="glyphicon glyphicon-chevron-up"></span></button>
-															<button id="btSampleRVolDown" type="button" class="btn btn-default btn-half right" data-tooltip><span class="glyphicon glyphicon-chevron-down"></span></button>
+															<button id="btSampleRVolUp" type="button" class="btn btn-default btn-half left" data-tooltip><span class="glyphicon glyphicon-chevron-down"></span></button>
+															<button id="btSampleRVolDown" type="button" class="btn btn-default btn-half right" data-tooltip><span class="glyphicon glyphicon-chevron-up"></span></button>
 														</div>
 													</div>
 													<div class="rowcell bottom">

@@ -7493,18 +7493,13 @@ label.disabled {
   font-weight: bold;
   padding: 4px 12px;
   cursor: default;
-}
-.col-infopanel #stInfoPanelBPM {
-  float: left;
   color: #777777;
 }
-.col-infopanel #stInfoPanelTime {
-  float: right;
-  padding: 0 8px;
+.col-infopanel u {
+  text-decoration: none;
 }
-.col-infopanel #stInfoPanelFrames {
-  float: right;
-  color: #777777;
+.col-infopanel b {
+  color: #000000;
 }
 .col-chn-label {
   position: relative;
