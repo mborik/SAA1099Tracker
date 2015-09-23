@@ -46,13 +46,18 @@ var Tracker = (function() {
 
 
 	// constructor {
-		this.player = new Player(new SAASound(AudioDriver.sampleRate));
-		AudioDriver.setAudioSource(this.player);
-
-		this.populateGUI();
+		if (AudioDriver) {
+			this.player = new Player(new SAASound(AudioDriver.sampleRate));
+			AudioDriver.init(this.player);
+		}
+		else
+			$('#overlay>span').html(browser.isIE ? "don't be evil,<br>stop using IE" : "WebAudio<br>not supported");
 
 		var app = this;
-		SyncTimer.start(function() { app.baseTimer() }, 20);
+		if (this.player) {
+			this.populateGUI();
+			SyncTimer.start(function() { app.baseTimer() }, 20);
+		}
 	// }
 	}
 
