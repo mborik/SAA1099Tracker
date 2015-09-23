@@ -1,6 +1,6 @@
 /*!
  * Tracker: Core of SAA1099Tracker.
- * Copyright (c) 2013-2015 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2012-2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.1') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.2') });
 //---------------------------------------------------------------------------------------
 
 /** Tracker.tracklist submodule */
@@ -917,6 +917,10 @@ Tracker.prototype.onCmdPosMoveDown = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdSmpPlay = function () {
+	this.player.playSample(this.workingSample, 0, this.workingSampleTone);
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpClear = function () {
@@ -1924,12 +1928,14 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			x = e.pageX - obj.smpeditOffset.left - obj.centering,
 			y = e.pageY,
 			dragging = /mouse(down|move)/.test(e.type),
-			update = false;
+			update = false,
+			redrawAll = false, limitFrom, limitTo;
 
 		if (x < 0)
 			return;
 
 		x = Math.min(0 | (x / obj.columnWidth), 63) + obj.smpeditScroll;
+		limitFrom = limitTo = x;
 		data = sample.data[x];
 
 		if (part === 'amp') {
@@ -2030,12 +2036,19 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 					sample.loop = x;
 				}
 
-				return this.updateSampleEditor(true);
+				redrawAll = true;
+
+				if (obj.drag.isDragging === 1)
+					limitFrom = limitTo = void 0;
+				else {
+					limitFrom = sample.loop - 1;
+					limitTo = sample.end;
+				}
 			}
 		}
 
 		if (update)
-			this.updateSampleEditor();
+			this.updateSampleEditor(redrawAll, limitFrom, limitTo);
 	}
 };
 //---------------------------------------------------------------------------------------
@@ -2306,7 +2319,7 @@ Tracker.prototype.updateTracklist = function (update) {
 	}
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.updateSampleEditor = function (update) {
+Tracker.prototype.updateSampleEditor = function (update, limitFrom, limitTo) {
 	var o = this.smpornedit,
 		sample = this.player.sample[this.workingSample],
 		amp = o.amp.ctx,
@@ -2320,6 +2333,14 @@ Tracker.prototype.updateSampleEditor = function (update) {
 		add = o.columnWidth,
 		x = o.centering, w = add - 1,
 		i, yl, yr, l, r;
+
+	if (limitFrom !== void 0) {
+		i = Math.max(ptr, limitFrom);
+		x += (i - ptr) * add;
+		ptr = i;
+	}
+	if (limitTo !== void 0)
+		end = Math.min(end, ++limitTo);
 
 	for (; ptr < end; ptr++, x += add) {
 		if (ptr >= sample.end && !sample.releasable)
@@ -3052,7 +3073,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() { app.onCmdAbout() }
 		}, {
-			selector: '#miStop,#btSampleStop,#btOrnamentStop',
+			selector: '#miStop',
 			method:   'click',
 			handler:  function() { app.onCmdStop() }
 		}, {
@@ -3072,14 +3093,6 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() { app.onCmdPosPlayStart() }
 		}, {
-			selector: '#btSamplePlay',
-			method:   'click',
-			handler:  function() { app.player.playSample(app.workingSample, 0, app.workingSampleTone) }
-		}, {
-			selector: '#btOrnamentPlay',
-			method:   'click',
-			handler:  function() { app.player.playSample(app.workingSample, app.workingOrnament, app.workingSampleTone) }
-		}, {
 			selector: '#miToggleLoop',
 			method:   'click',
 			handler:  function() { app.onCmdToggleLoop() }
@@ -3094,7 +3107,12 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: 'button[id^="btSample"]',
 			method:   'click',
-			handler:  function() { app[this.id.replace('btSample', 'onCmdSmp')]() }
+			handler:  function() {
+				var name = this.id.replace('btSample', 'onCmdSmp');
+				if (name.endsWith('Stop'))
+					name = name.replace('Smp', '');
+				app[name]();
+			}
 		}
 	];
 

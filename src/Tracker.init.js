@@ -1,6 +1,6 @@
 /*!
  * Tracker: Core of SAA1099Tracker.
- * Copyright (c) 2013-2015 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2012-2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,5 +20,5 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.1') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.2') });
 //---------------------------------------------------------------------------------------
