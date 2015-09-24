@@ -26,8 +26,8 @@ var SmpOrnEditor = (function () {
 			var parts = [ 'amp', 'noise', 'range' ],
 				i, l, o, ctx, w, h, half;
 
+			console.log('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
 			for (i = 0, l = parts.length; i < l; i++) {
-				console.log('First time draw of "%s" canvas...', parts[i]);
 				o = this[parts[i]];
 
 				ctx = o.ctx;
@@ -70,7 +70,7 @@ var SmpOrnEditor = (function () {
 			this.initialized = true;
 
 			app.updateSampleEditor(true);
-			console.log('Sample editor completely drawn...');
+			console.log('Tracker.smporn', 'Sample editor completely initialized...');
 		};
 
 		this.updateOffsets = function () {
@@ -85,8 +85,8 @@ var SmpOrnEditor = (function () {
 				}
 			};
 
-			console.log('Sample editor canvas offsets observed...\n\t%s',
-				JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
+			console.log('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s',
+				'color:gray', JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
 		};
 
 		this.updateSamplePitchShift = function () {
@@ -116,7 +116,7 @@ var SmpOrnEditor = (function () {
 				cell = $('<div class="cell"/>'),
 				spin = $('<input type="text" class="form-control">');
 
-			console.log('Creating elements into Pitch-shift tab...');
+			console.log('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
 			for (i = 0; i < 256; i++) {
 				s = spin.clone();
 				cell.clone().append(s).appendTo(el);

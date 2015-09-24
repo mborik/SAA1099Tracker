@@ -30,7 +30,7 @@ var AudioDriver = (function () {
 	}
 
 	function WebAudioAPIDriver() {
-		console.log('Creating new WebAudioAPIDriver...');
+		console.log('Audio', 'Creating new WebAudioAPIDriver...');
 
 		var audioDriver = this,
 			audioSource = null,
@@ -65,14 +65,14 @@ var AudioDriver = (function () {
 
 		this.init = function (audioSrc, buffers, int) {
 			if (scriptProcessor) {
-				console.log('Freeing script processor...');
+				console.log('Audio', 'Freeing script processor...');
 
 				audioDriver.stop();
 				scriptProcessor = null;
 			}
 
 			if (audioSrc) {
-				console.log('New audio generator source is "%s"...', audioSrc.constructor.name);
+				console.log('Audio', 'New audio generator source is %o...', audioSrc);
 				audioDriver.setAudioSource(audioSrc);
 			}
 
@@ -87,8 +87,8 @@ var AudioDriver = (function () {
 				audioDriver.interruptFrequency
 			);
 
-			console.log('Initializing new script processor with examined buffer size: %d...\n\t[ samplerate: %d, buffers: %d, interrupt frequency: %d ]',
-				audioDriver.bufferSize, audioDriver.sampleRate, audioDriver.bufferCount, audioDriver.interruptFrequency);
+			console.log('Audio', 'Initializing new script processor with examined buffer size: %d...\n\t\t%c[ samplerate: %dHz, buffers: %d, interrupt frequency: %dHz ]',
+				audioDriver.bufferSize, 'color:gray', audioDriver.sampleRate, audioDriver.bufferCount, audioDriver.interruptFrequency);
 
 			if (audioContext.createScriptProcessor !== null)
 				scriptProcessor = audioContext.createScriptProcessor(audioDriver.bufferSize, 0, 2);
@@ -97,10 +97,10 @@ var AudioDriver = (function () {
 			scriptProcessor.onaudioprocess = null;
 
 			audioDriver.bufferSize = scriptProcessor.bufferSize;
-			console.log('Successfully initialized with proper buffer size %d...', audioDriver.bufferSize);
+			console.log('Audio', 'Successfully initialized with proper buffer size %d...', audioDriver.bufferSize);
 		};
 
-		console.log('Hardware default samplerate is %d...', audioContext.sampleRate);
+		console.log('Audio', 'Hardware default samplerate is %dHz...', audioContext.sampleRate);
 		return this;
 	}
 

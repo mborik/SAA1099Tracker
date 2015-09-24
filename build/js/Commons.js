@@ -87,8 +87,13 @@
 		};
 
 		console.log = function() {
-			if (window.dev.logAll && arguments.length)
-			 	this.apply(console, arguments);
+			if (window.dev.logAll && arguments.length) {
+				var a = Array.prototype.slice.call(arguments, 0);
+				if (a.length > 1 && (typeof a[0] === 'string' && typeof a[1] === 'string'))
+					a.splice(0, 2, ('%c[' + a[0] + ']%c ' + a[1]), 'color:blue', 'color:initial');
+
+				this.apply(console, a);
+			}
 		}.bind(console.log);
 
 		console.logHotkey = function() {
@@ -138,20 +143,29 @@ var SyncTimer = (function() {
 	return this;
 })();
 
-// fastest absolute value helper...
-Number.prototype.abs = function() {
-	var a = this.valueOf(), s = a >> 31;
-	return (a ^ s) - s;
-};
-
+Object.defineProperties(Number.prototype, {
+// fastest absolute integer value helper...
+	'abs': {
+		enumerable: true,
+		value: function() {
+			var a = this.valueOf(), s = a >> 31;
+			return (a ^ s) - s;
+		}
+	},
 // align value to exact character width with zeroes from left...
-Number.prototype.toWidth = function(width) {
-	var a = '' + this.abs();
-	return ('0000000000' + a).substr(-Math.max(width || 0, a.length));
-};
-
+	'toWidth': {
+		enumerable: true,
+		value: function(width) {
+			var a = '' + this.abs();
+			return ('0000000000' + a).substr(-Math.max(width || 0, a.length));
+		}
+	},
 // format number of seconds to time string MM:SS...
-Number.prototype.toTimeString = function() {
-	var a = this.valueOf(), m = (a / 60).abs(), s = (a % 60).abs();
-	return ('0' + m).substr(-2) + ':' + ('0' + s).substr(-2);
-};
+	'toTimeString': {
+		enumerable: true,
+		value: function() {
+			var a = this.valueOf(), m = (a / 60).abs(), s = (a % 60).abs();
+			return ('0' + m).substr(-2) + ':' + ('0' + s).substr(-2);
+		}
+	}
+});

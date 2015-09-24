@@ -27,6 +27,7 @@ var SAASound = (function () {
         this.register = 0;
         this.enabled = false;
         this.ampMuted = [false, false, false, false, false, false];
+        console.log('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
         SAASound.sampleRate = sampleRate;
         this.env = [new SAAEnv, new SAAEnv];
         this.noise = [
@@ -50,6 +51,7 @@ var SAASound = (function () {
             new SAAAmp(this.freq[5], this.noise[1], this.env[1])
         ];
         this.clear();
+        console.log('SAASound', 'Chip emulation initialized...');
     }
     SAASound.prototype.clear = function () {
         // sets reg 28 to 0x02 - sync and disabled

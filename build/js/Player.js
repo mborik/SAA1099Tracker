@@ -104,6 +104,7 @@ var Player = (function () {
     function Player(SAA1099) {
         this.mixer = new pMixer;
         this.SAA1099 = SAA1099;
+        console.log('Player', 'Initializing module player connected to %o...', this.SAA1099);
         this.sample = [];
         this.ornament = [];
         this.playParams = [];
@@ -144,6 +145,7 @@ var Player = (function () {
         this.setInterrupt(50);
         this.stopChannel(0);
         this.mode = 0;
+        console.log('Player', 'Initialization done...');
     }
     /** Clear song (positions, patterns, pointers and playParams). */
     Player.prototype.clearSong = function () {
@@ -159,6 +161,7 @@ var Player = (function () {
         this.currentTick = 0;
         for (var chn = 0; chn < 6; chn++)
             this.clearPlayParams(chn);
+        console.log('Player', 'Song cleared...');
     };
     /** Clear all samples. */
     Player.prototype.clearSamples = function () {
@@ -167,11 +170,13 @@ var Player = (function () {
             for (var c = 0; c < 256; c++)
                 this.sample[i].data[c] = { volume: new pVolume, enable_freq: false, enable_noise: false, noise_value: 0, shift: 0 };
         }
+        console.log('Player', 'Samples cleared...');
     };
     /** Clear all ornaments. */
     Player.prototype.clearOrnaments = function () {
         for (var i = 0; i < 16; i++)
             this.ornament[i] = { name: '', data: new Int8Array(256), loop: 0, end: 0 };
+        console.log('Player', 'Ornaments cleared...');
     };
     /**
      * Reset playParams for particular channel to default values.

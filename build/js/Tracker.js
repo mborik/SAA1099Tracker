@@ -127,6 +127,8 @@ var Tracklist = (function () {
 					: sett.tracklistLines;
 			}
 
+			console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
+
 			sett.tracklistLines = height;
 			height *= sett.tracklistLineHeight;
 
@@ -207,6 +209,7 @@ var SmpOrnEditor = (function () {
 			var parts = [ 'amp', 'noise', 'range' ],
 				i, l, o, ctx, w, h, half;
 
+			console.log('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
 			for (i = 0, l = parts.length; i < l; i++) {
 				o = this[parts[i]];
 
@@ -250,6 +253,7 @@ var SmpOrnEditor = (function () {
 			this.initialized = true;
 
 			app.updateSampleEditor(true);
+			console.log('Tracker.smporn', 'Sample editor completely initialized...');
 		};
 
 		this.updateOffsets = function () {
@@ -263,6 +267,9 @@ var SmpOrnEditor = (function () {
 					noise: noise.top
 				}
 			};
+
+			console.log('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s',
+				'color:gray', JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
 		};
 
 		this.updateSamplePitchShift = function () {
@@ -292,6 +299,7 @@ var SmpOrnEditor = (function () {
 				cell = $('<div class="cell"/>'),
 				spin = $('<input type="text" class="form-control">');
 
+			console.log('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
 			for (i = 0; i < 256; i++) {
 				s = spin.clone();
 				cell.clone().append(s).appendTo(el);
@@ -321,6 +329,8 @@ var SmpOrnEditor = (function () {
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
+		console.log('Tracker', 'Inizializing SAA1099Tracker v%s...', ver);
+
 		this.version = ver;
 
 		this.loaded = false;
@@ -365,13 +375,21 @@ var Tracker = (function() {
 
 
 	// constructor {
-		this.player = new Player(new SAASound(AudioDriver.sampleRate));
-		AudioDriver.setAudioSource(this.player);
-
-		this.populateGUI();
+		if (AudioDriver) {
+			this.player = new Player(new SAASound(AudioDriver.sampleRate));
+			AudioDriver.init(this.player);
+		}
+		else
+			$('#overlay>span').html(browser.isIE ? "don't be evil,<br>stop using IE" : "WebAudio<br>not supported");
 
 		var app = this;
-		SyncTimer.start(function() { app.baseTimer() }, 20);
+		if (this.player) {
+			console.log('Tracker', 'Populating elements...');
+			this.populateGUI();
+
+			console.log('Tracker', 'Starting precise 50Hz timer...');
+			SyncTimer.start(function() { app.baseTimer() }, 20);
+		}
 	// }
 	}
 
@@ -381,26 +399,34 @@ var Tracker = (function() {
 				if (!!this.smpornedit.img) {
 					if (this.activeTab === 1)
 						this.smpornedit.drawHeaders();
-					else
+					else {
+						console.log('Tracker', 'Force initialization of Sample editor tab...');
 						$('#tab-smpedit').trigger('click');
+					}
 				}
 			}
 			else if (!this.tracklist.initialized) {
 				if (!!this.pixelfont.ctx) {
 					if (this.activeTab === 0) {
+						console.log('Tracker', 'Force triggering of window resize event...');
 						$(window).trigger('resize');
 
+						console.log('Tracker', 'Redrawing all tracklist elements and canvas...');
 						this.updatePanels();
 						this.updateTracklist(true);
 						this.tracklist.initialized = true;
 
+						console.log('Tracker', 'Starting audio playback...');
 						AudioDriver.play();
 					}
-					else
+					else {
+						console.log('Tracker', 'Force initialization of Tracklist editor tab...');
 						$('#tab-tracker').trigger('click');
+					}
 				}
 			}
 			else if (!this.loaded) {
+				console.log('Tracker', 'Initialization done, everything ready!');
 				document.body.className = '';
 				this.loaded = true;
 			}
@@ -421,10 +447,13 @@ var Tracker = (function() {
 		var player = this.player;
 		var settings = this.settings;
 
+		console.log('Tracker.core', 'Loading "%s" demosong...', name);
 		$.getJSON('demosongs/' + name + '.json', function(data) {
-			player.clearOrnaments();
-			player.clearSamples();
+			console.log('Tracker.core', 'Demosong "%s/%s" (v%s) loaded...', data.author, data.title, data.version);
+
 			player.clearSong();
+			player.clearSamples();
+			player.clearOrnaments();
 
 			tracker.songTitle = data.title;
 			tracker.songAuthor = data.author;
@@ -502,6 +531,8 @@ var Tracker = (function() {
 			tracker.updatePanels();
 			tracker.updateTracklist();
 			tracker.updateSampleEditor(true);
+
+			console.log('Tracker.core', 'Demosong completely loaded...');
 		});
 	};
 
@@ -2073,6 +2104,8 @@ Tracker.prototype.initPixelFont = function (font) {
 	var bg = [ '#fff', '#f00', '#38c', '#000', '#800' ],
 		o = this.pixelfont, i, l = bg.length * 10,
 		w = font.width, copy, copyctx;
+
+	console.log('Tracker.paint', 'Initializing pixel-font...');
 
 	o.obj = document.createElement('canvas');
 	o.obj.width = w;

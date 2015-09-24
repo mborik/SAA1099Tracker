@@ -102,6 +102,8 @@ var Tracklist = (function () {
 					: sett.tracklistLines;
 			}
 
+			console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
+
 			sett.tracklistLines = height;
 			height *= sett.tracklistLineHeight;
 

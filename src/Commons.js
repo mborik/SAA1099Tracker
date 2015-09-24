@@ -87,8 +87,13 @@
 		};
 
 		console.log = function() {
-			if (window.dev.logAll && arguments.length)
-				this.apply(console, arguments);
+			if (window.dev.logAll && arguments.length) {
+				var a = Array.prototype.slice.call(arguments, 0);
+				if (a.length > 1 && (typeof a[0] === 'string' && typeof a[1] === 'string'))
+					a.splice(0, 2, ('%c[' + a[0] + ']%c ' + a[1]), 'color:blue', 'color:initial');
+
+				this.apply(console, a);
+			}
 		}.bind(console.log);
 
 		console.logHotkey = function() {

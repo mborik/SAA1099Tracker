@@ -36,6 +36,7 @@ class SAASound {
 	private amp: SAAAmp[];
 
 	constructor(sampleRate: number) {
+		console.log('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
 		SAASound.sampleRate = sampleRate;
 
 		this.env = [ new SAAEnv, new SAAEnv ];
@@ -64,6 +65,7 @@ class SAASound {
 		];
 
 		this.clear();
+		console.log('SAASound', 'Chip emulation initialized...')
 	}
 
 	public clear() {
