@@ -21,7 +21,7 @@ class SAAAmp {
 	private noiseGen: SAANoise;
 	private envGen: SAAEnv;
 
-	private levels: Float32Array;
+	private static levels: Float32Array;
 
 	constructor(ToneGenerator: SAAFreq, NoiseGenerator: SAANoise, EnvGenerator?: SAAEnv) {
 		this.toneGen = ToneGenerator;
@@ -31,9 +31,15 @@ class SAAAmp {
 		this.mute = true;
 
 		// generate precalculated volume levels to Float32 for fast mix calculations...
-		this.levels = new Float32Array(512);
-		for (var i: number = 0; i < 512; i++)
-			this.levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
+		if (!SAAAmp.levels) {
+			console.log('SAASound', 'Pregenerating lookup table with float 32bit volume levels...');
+
+			var levels = new Float32Array(512);
+			for (var i: number = 0; i < 512; i++)
+				levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
+
+			SAAAmp.levels = levels;
+		}
 	}
 
 	/**
@@ -91,27 +97,29 @@ class SAAAmp {
 			return;
 
 		// now calculate the returned amplitude for this sample:
-		var e: boolean = (this.env && this.envGen.enabled);
+		var e: boolean = (this.env && this.envGen.enabled),
+			levels: Float32Array = SAAAmp.levels;
+
 		if (this.out === 0) {
 			if (e) {
-				last[0] += this.levels[this.envGen.left * this.lefta0Ex2];
-				last[1] += this.levels[this.envGen.right * this.righta0Ex2];
+				last[0] += levels[this.envGen.left * this.lefta0Ex2];
+				last[1] += levels[this.envGen.right * this.righta0Ex2];
 			}
 		}
 		else if (this.out === 1) {
 			if (e) {
-				last[0] += this.levels[this.envGen.left * this.lefta0E];
-				last[1] += this.levels[this.envGen.right * this.righta0E];
+				last[0] += levels[this.envGen.left * this.lefta0E];
+				last[1] += levels[this.envGen.right * this.righta0E];
 			}
 			else {
-				last[0] += this.levels[this.leftx16];
-				last[1] += this.levels[this.rightx16];
+				last[0] += levels[this.leftx16];
+				last[1] += levels[this.rightx16];
 			}
 		}
 		else if (this.out === 2) {
 			if (!e) {
-				last[0] += this.levels[this.leftx32];
-				last[1] += this.levels[this.rightx32];
+				last[0] += levels[this.leftx32];
+				last[1] += levels[this.rightx32];
 			}
 		}
 	}

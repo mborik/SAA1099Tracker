@@ -64,11 +64,11 @@ class SAASound {
 			new SAAAmp(this.freq[5], this.noise[1], this.env[1])
 		];
 
-		this.clear();
-		console.log('SAASound', 'Chip emulation initialized...')
+		this.reset();
+		console.log('SAASound', 'Chip emulation initialized...');
 	}
 
-	public clear() {
+	public reset() {
 		// sets reg 28 to 0x02 - sync and disabled
 		this.setRegData(28, 2);
 

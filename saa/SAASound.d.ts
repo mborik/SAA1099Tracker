@@ -9,7 +9,7 @@ declare class SAASound {
     private freq;
     private amp;
     constructor(sampleRate: number);
-    clear(): void;
+    reset(): void;
     /**
      * route data to the appropriate place by current register
      * @param data BYTE
@@ -125,7 +125,7 @@ declare class SAAFreq {
     private mode;
     private noiseGen;
     private envGen;
-    private freqs;
+    private static freqs;
     constructor(pcNoise?: SAANoise, pcEnv?: SAAEnv);
     /**
      * @param offset between 0 and 255
@@ -174,7 +174,7 @@ declare class SAAAmp {
     private toneGen;
     private noiseGen;
     private envGen;
-    private levels;
+    private static levels;
     constructor(ToneGenerator: SAAFreq, NoiseGenerator: SAANoise, EnvGenerator?: SAAEnv);
     /**
      * Set amplitude, but if level unchanged since last call then do nothing.

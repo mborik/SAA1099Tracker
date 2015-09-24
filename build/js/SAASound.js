@@ -50,10 +50,10 @@ var SAASound = (function () {
             new SAAAmp(this.freq[4], this.noise[1]),
             new SAAAmp(this.freq[5], this.noise[1], this.env[1])
         ];
-        this.clear();
+        this.reset();
         console.log('SAASound', 'Chip emulation initialized...');
     }
-    SAASound.prototype.clear = function () {
+    SAASound.prototype.reset = function () {
         // sets reg 28 to 0x02 - sync and disabled
         this.setRegData(28, 2);
         // sets regs 00-31 (except 28) to 0
@@ -531,13 +531,17 @@ var SAAFreq = (function () {
         this.envGen = pcEnv;
         this.mode = (!pcNoise ? (!pcEnv ? 0 : 1) : 2);
         // pregenerate frequency lookup table...
-        this.freqs = [];
-        for (var o = 0, i; o < 8; o++) {
-            this.freqs[o] = [];
-            for (i = 0; i < 256; i++)
-                this.freqs[o][i] = Math.round(((32e6 << o) >>> 0) / (511 - i)) << 2;
+        if (!SAAFreq.freqs) {
+            console.log('SAASound', 'Pregenerating lookup table with all frequencies...');
+            var freqs = [];
+            for (var o = 0, i; o < 8; o++) {
+                freqs[o] = [];
+                for (i = 0; i < 256; i++)
+                    freqs[o][i] = Math.round(((32e6 << o) >>> 0) / (511 - i)) << 2;
+            }
+            SAAFreq.freqs = freqs;
         }
-        this.add = this.freqs[this.curOctave][this.curOffset];
+        this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
     }
     /**
      * @param offset between 0 and 255
@@ -561,7 +565,7 @@ var SAAFreq = (function () {
             this.newdata = false;
             this.curOffset = offset;
             this.curOctave = this.nextOctave;
-            this.add = this.freqs[this.curOctave][this.curOffset];
+            this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
         }
     };
     /**
@@ -578,7 +582,7 @@ var SAAFreq = (function () {
             this.newdata = false;
             this.curOctave = octave;
             this.curOffset = this.nextOffset;
-            this.add = this.freqs[this.curOctave][this.curOffset];
+            this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
         }
     };
     /**
@@ -608,7 +612,7 @@ var SAAFreq = (function () {
             this.newdata = false;
         }
         this.ignoreOffset = false;
-        this.add = this.freqs[this.curOctave][this.curOffset];
+        this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
     };
     SAAFreq.prototype.tick = function () {
         // set to the absolute level (0 or 2)
@@ -641,7 +645,7 @@ var SAAFreq = (function () {
             this.level = 2;
             this.curOctave = this.nextOctave;
             this.curOffset = this.nextOffset;
-            this.add = this.freqs[this.curOctave][this.curOffset];
+            this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
         }
     };
     return SAAFreq;
@@ -668,9 +672,13 @@ var SAAAmp = (function () {
         this.env = !!EnvGenerator;
         this.mute = true;
         // generate precalculated volume levels to Float32 for fast mix calculations...
-        this.levels = new Float32Array(512);
-        for (var i = 0; i < 512; i++)
-            this.levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
+        if (!SAAAmp.levels) {
+            console.log('SAASound', 'Pregenerating lookup table with float 32bit volume levels...');
+            var levels = new Float32Array(512);
+            for (var i = 0; i < 512; i++)
+                levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
+            SAAAmp.levels = levels;
+        }
     }
     /**
      * Set amplitude, but if level unchanged since last call then do nothing.
@@ -721,27 +729,27 @@ var SAAAmp = (function () {
         if (this.mute)
             return;
         // now calculate the returned amplitude for this sample:
-        var e = (this.env && this.envGen.enabled);
+        var e = (this.env && this.envGen.enabled), levels = SAAAmp.levels;
         if (this.out === 0) {
             if (e) {
-                last[0] += this.levels[this.envGen.left * this.lefta0Ex2];
-                last[1] += this.levels[this.envGen.right * this.righta0Ex2];
+                last[0] += levels[this.envGen.left * this.lefta0Ex2];
+                last[1] += levels[this.envGen.right * this.righta0Ex2];
             }
         }
         else if (this.out === 1) {
             if (e) {
-                last[0] += this.levels[this.envGen.left * this.lefta0E];
-                last[1] += this.levels[this.envGen.right * this.righta0E];
+                last[0] += levels[this.envGen.left * this.lefta0E];
+                last[1] += levels[this.envGen.right * this.righta0E];
             }
             else {
-                last[0] += this.levels[this.leftx16];
-                last[1] += this.levels[this.rightx16];
+                last[0] += levels[this.leftx16];
+                last[1] += levels[this.rightx16];
             }
         }
         else if (this.out === 2) {
             if (!e) {
-                last[0] += this.levels[this.leftx32];
-                last[1] += this.levels[this.rightx32];
+                last[0] += levels[this.leftx32];
+                last[1] += levels[this.rightx32];
             }
         }
     };

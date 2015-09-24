@@ -20,7 +20,7 @@ class SAAFreq {
 	private noiseGen: SAANoise;
 	private envGen: SAAEnv;
 
-	private freqs: number[][];
+	private static freqs: number[][];
 
 	constructor(pcNoise?: SAANoise, pcEnv?: SAAEnv) {
 		this.level = 2;
@@ -30,14 +30,20 @@ class SAAFreq {
 		this.mode = (!pcNoise ? (!pcEnv ? 0 : 1) : 2);
 
 		// pregenerate frequency lookup table...
-		this.freqs = [];
-		for (var o: number = 0, i: number; o < 8; o++) {
-			this.freqs[o] = [];
-			for (i = 0; i < 256; i++)
-				this.freqs[o][i] = Math.round(((32e6 << o) >>> 0) / (511 - i)) << 2;
+		if (!SAAFreq.freqs) {
+			console.log('SAASound', 'Pregenerating lookup table with all frequencies...');
+
+			var freqs = [];
+			for (var o: number = 0, i: number; o < 8; o++) {
+				freqs[o] = [];
+				for (i = 0; i < 256; i++)
+					freqs[o][i] = Math.round(((32e6 << o) >>> 0) / (511 - i)) << 2;
+			}
+
+			SAAFreq.freqs = freqs;
 		}
 
-		this.add = this.freqs[this.curOctave][this.curOffset];
+		this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
 	}
 
 	/**
@@ -63,7 +69,7 @@ class SAAFreq {
 			this.newdata = false;
 			this.curOffset = offset;
 			this.curOctave = this.nextOctave;
-			this.add = this.freqs[this.curOctave][this.curOffset];
+			this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
 		}
 	}
 
@@ -81,7 +87,7 @@ class SAAFreq {
 			this.newdata = false;
 			this.curOctave = octave;
 			this.curOffset = this.nextOffset;
-			this.add = this.freqs[this.curOctave][this.curOffset];
+			this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
 		}
 	}
 
@@ -115,7 +121,7 @@ class SAAFreq {
 		}
 
 		this.ignoreOffset = false;
-		this.add = this.freqs[this.curOctave][this.curOffset];
+		this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
 	}
 
 	public tick(): number {
@@ -156,7 +162,7 @@ class SAAFreq {
 			this.level = 2;
 			this.curOctave = this.nextOctave;
 			this.curOffset = this.nextOffset;
-			this.add = this.freqs[this.curOctave][this.curOffset];
+			this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
 		}
 	}
 }
