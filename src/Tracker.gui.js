@@ -458,8 +458,8 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#fxOrnChords button',
 			method:   'each',
-			handler:  function(i, el) {
-				var id = el.innerText,
+			handler:  function() {
+				var id = $(this).text(),
 					chord = app.smpornedit.chords[id],
 					seqtxt = JSON.stringify(chord.sequence, null, 1).replace(/^\[|\]$|\s+/g, '');
 

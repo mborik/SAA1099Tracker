@@ -1,6 +1,8 @@
 /** Tracker.keyboard submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleMouseEvent = function (part, obj, e) {
+	var button = e.button || e.buttons || (/^mouse(up|down)|click$/.test(e.type) && e.which);
+
 	if (part === 'tracklist') {
 		var redraw = false,
 			p = this.player,
@@ -28,10 +30,10 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 		else if (e.type === 'mousedown') {
 			e.target.focus();
 
-			if (e.which === 1 && point.line < pp.length)
+			if (button === 1 && point.line < pp.length)
 				sel.start.set(point);
 		}
-		else if (e.type === 'mouseup' && e.which === 1) {
+		else if (e.type === 'mouseup' && button === 1) {
 			if (sel.isDragging) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -49,7 +51,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				}
 			}
 		}
-		else if (e.type === 'dblclick' && e.which === 1) {
+		else if (e.type === 'dblclick' && button === 1) {
 			sel.len = 0;
 			sel.line = point.line;
 			sel.channel = point.channel;
@@ -60,7 +62,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			p.currentLine = point.line;
 			redraw = true;
 		}
-		else if (e.type === 'mousemove' && e.which === 1 && !point.compare(sel.start)) {
+		else if (e.type === 'mousemove' && button === 1 && !point.compare(sel.start)) {
 			if (i > 0) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -109,7 +111,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				ampLeftChn = (y < obj.halfing),
 				freqEnableSection = (y > (ampHeight + 3)) || obj.drag.isDragging;
 
-			if (freqEnableSection && e.which === 1) {
+			if (freqEnableSection && button === 1) {
 				if (e.type === 'mousedown') {
 					i = obj.drag.freqEnableState = !data.enable_freq;
 					obj.drag.isDragging = true;
@@ -136,7 +138,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 
 				update = true;
 			}
-			else if (dragging && e.which === 1) {
+			else if (dragging && button === 1) {
 				if (ampLeftChn)
 					data.volume.L = Math.max(15 - (0 | (y / 9)), 0);
 				else
@@ -153,7 +155,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				i += e.delta / Math.abs(e.delta);
 				update = true;
 			}
-			else if (dragging && e.which === 1) {
+			else if (dragging && button === 1) {
 				i = 4 - (0 | (y / 9));
 				update = true;
 			}
@@ -165,7 +167,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				data.noise_value = Math.max(--i, 0);
 			}
 		}
-		else if (part === 'range' && e.which === 1) {
+		else if (part === 'range' && button === 1) {
 			if (e.type === 'mouseup') {
 				obj.drag.isDragging = false;
 				update = true;

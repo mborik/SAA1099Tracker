@@ -80,10 +80,10 @@ var SmpOrnEditor = (function () {
 				noise = $(this.noise.obj).offset();
 
 			this.smpeditOffset = {
-				left: amp.left,
+				left: 0 | amp.left,
 				top: {
-					amp: amp.top,
-					noise: noise.top
+					amp: 0 | amp.top,
+					noise: 0| noise.top
 				}
 			};
 
