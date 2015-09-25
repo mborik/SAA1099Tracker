@@ -207,6 +207,7 @@ var Tracker = (function() {
 			tracker.updatePanels();
 			tracker.updateTracklist();
 			tracker.updateSampleEditor(true);
+			tracker.smpornedit.updateOrnamentEditor(true);
 
 			console.log('Tracker.core', 'Demosong completely loaded...');
 		});

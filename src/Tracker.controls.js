@@ -476,8 +476,12 @@ Tracker.prototype.onCmdSmpCopyRL = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotL = function () {
-	for (var data = this.player.sample[this.workingSample].data, ref, i = 0; i < 256; i++) {
-		ref = data[(i + 1) % 256];
+	var i = 0, ref,
+		data = this.player.sample[this.workingSample].data,
+		backup = $.extend(true, {}, data[i]);
+
+	for (; i < 256; i++) {
+		ref = (i < 255) ? data[i + 1] : backup;
 
 		data[i].volume.byte  = ref.volume.byte;
 		data[i].enable_freq  = ref.enable_freq;
@@ -490,8 +494,12 @@ Tracker.prototype.onCmdSmpRotL = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotR = function () {
-	for (var data = this.player.sample[this.workingSample].data, ref, i = 255; i >= 0; i--) {
-		ref = data[(i - 1) & 255];
+	var i = 255, ref,
+		data = this.player.sample[this.workingSample].data,
+		backup = $.extend(true, {}, data[i]);
+
+	for (; i >= 0; i--) {
+		ref = (i > 0) ? data[i - 1] : backup;
 
 		data[i].volume.byte  = ref.volume.byte;
 		data[i].enable_freq  = ref.enable_freq;
@@ -516,5 +524,85 @@ Tracker.prototype.onCmdSmpDisable = function () {
 		data[i].enable_freq = false;
 
 	this.updateSampleEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnPlay = function () {
+	this.player.playSample(this.workingOrnTestSample, this.workingOrnament, this.workingSampleTone);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnClear = function () {
+	var orn = this.player.ornament[this.workingOrnament];
+
+	orn.data.fill(0);
+	orn.loop = orn.end = 0;
+
+	this.smpornedit.updateOrnamentEditor(true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnShiftLeft = function () {
+	var i = 0,
+		data = this.player.ornament[this.workingOrnament].data,
+		ref = data[i];
+
+	for (; i < 256; i++)
+		data[i] = (i < 255) ? data[i + 1] : ref;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnShiftRight = function () {
+	var i = 255,
+		data = this.player.ornament[this.workingOrnament].data,
+		ref = data[i];
+
+	for (; i >= 0; i--)
+		data[i] = (i > 0) ? data[i - 1] : ref;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnTransUp = function () {
+	for (var orn = this.player.ornament[this.workingOrnament], l = orn.end, i = 0; i < l; i++)
+		orn.data[i]++;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnTransDown = function () {
+	for (var orn = this.player.ornament[this.workingOrnament], l = orn.end, i = 0; i < l; i++)
+		orn.data[i]--;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnCompress = function () {
+	var orn = this.player.ornament[this.workingOrnament],
+		data = orn.data,
+		i = 0, k = 0;
+
+	for (; k < 256; i++, k += 2)
+		data[i] = data[k];
+	data.fill(0, i);
+
+	orn.loop >>= 1;
+	orn.end >>= 1;
+
+	this.smpornedit.updateOrnamentEditor(true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnExpand = function () {
+	var orn = this.player.ornament[this.workingOrnament],
+		data = orn.data,
+		i = 127, k = 256;
+
+	for (; k > 0; i--) {
+		data[--k] = data[i];
+		data[--k] = data[i];
+	}
+
+	orn.loop <<= 1;
+	orn.end <<= 1;
+
+	this.smpornedit.updateOrnamentEditor(true);
 };
 //---------------------------------------------------------------------------------------

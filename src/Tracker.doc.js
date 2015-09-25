@@ -68,7 +68,23 @@ Tracker.prototype.doc = {
 		'btSampleDisable' : 'Disable frequency generator\nin full sample length',
 		'chSampleRelease' : 'Sample can continue in playing\nafter the loop section when\nthe note was released in tracklist',
 		'scSampleLength'  : 'Length of current sample',
-		'scSampleRepeat'  : 'Number of ticks at the end\nof sample which will be repeated'
+		'scSampleRepeat'  : 'Number of ticks at the end\nof sample which will be repeated',
+		'scOrnNumber'     : 'Current ornament ID',
+		'txOrnName'       : 'Current ornament description',
+		'scOrnTestSample' : 'Sample ID to test ornament with',
+		'scOrnTone'       : 'Base tone and octave\nto test this ornament',
+		'btOrnPlay'       : 'Play current ornament\nwith test sample',
+		'btOrnStop'       : 'Stop playback [Esc]',
+		'btOrnClear'      : 'Clear ornament',
+		'btOrnShiftLeft'  : 'Shift whole ornament data\nto the left side',
+		'btOrnShiftRight' : 'Shift whole ornament data\nto the right side',
+		'btOrnTransUp'    : 'Transpose ornament data\nup a halftone',
+		'btOrnTransDown'  : 'Transpose ornament data\ndown a halftone',
+		'btOrnCompress'   : 'Compress ornament data\n(keep only every even line)',
+		'btOrnExpand'     : 'Expand ornament data\n(duplicate each line)',
+		'fxOrnChords'     : 'Replace current ornament with\npregenerated chord decomposition',
+		'scOrnLength'     : 'Length of current ornament',
+		'scOrnRepeat'     : 'Number of ticks at the end\nof ornament which will be repeated'
 	},
 
 	statusbar: [

@@ -322,11 +322,27 @@ var SmpOrnEditor = (function () {
 			}
 		};
 //---------------------------------------------------------------------------------------
+		this.chords = {
+			'maj':    { sequence: [ 0, 4, 7 ],     name: 'major' },
+			'min':    { sequence: [ 0, 3, 7 ],     name: 'minor' },
+			'maj7':   { sequence: [ 0, 4, 7, 11 ], name: 'major 7th' },
+			'min7':   { sequence: [ 0, 3, 7, 10 ], name: 'minor 7th' },
+			'sus2':   { sequence: [ 0, 2, 7 ],     name: 'suspended 2nd' },
+			'sus4':   { sequence: [ 0, 5, 7 ],     name: 'suspended 4th' },
+			'6':      { sequence: [ 0, 4, 7, 9 ],  name: 'major 6th' },
+			'7':      { sequence: [ 0, 4, 7, 10 ], name: 'dominant 7th' },
+			'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
+			'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
+			'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
+			'dim':    { sequence: [ 0, 3, 6 ],     name: 'diminished' },
+			'12th':   { sequence: [ 12, 0 ],       name: '12th' }
+		};
+
 		this.updateOrnamentEditor = function (update) {
 			var orn = app.player.ornament[app.workingOrnament],
 				noloop = (orn.end === orn.loop);
 
-			$('#fxOrnamentEditor>.cell').each(function (i, el) {
+			$('#fxOrnEditor>.cell').each(function (i, el) {
 				if (i >= orn.end)
 					el.className = 'cell';
 				else if (!noloop && i >= orn.loop && i < orn.end)
@@ -338,11 +354,11 @@ var SmpOrnEditor = (function () {
 			});
 
 			if (update) {
-				$('#txOrnamentName').val(orn.name);
-				$('#fxOrnamentEditor').parent().scrollLeft(0);
+				$('#txOrnName').val(orn.name);
+				$('#fxOrnEditor').parent().scrollLeft(0);
 
-				$('#scOrnamentLength').val('' + orn.end);
-				$('#scOrnamentRepeat')
+				$('#scOrnLength').val('' + orn.end);
+				$('#scOrnRepeat')
 					.trigger('touchspin.updatesettings', { min: 0, max: orn.end })
 					.val(orn.end - orn.loop);
 			}
@@ -350,7 +366,7 @@ var SmpOrnEditor = (function () {
 
 		this.createOrnamentEditorTable = function () {
 			var i, s,
-				el = $('#fxOrnamentEditor').empty(),
+				el = $('#fxOrnEditor').empty(),
 				cell = $('<div class="cell"/>'),
 				spin = $('<input type="text" class="form-control">');
 
@@ -361,7 +377,7 @@ var SmpOrnEditor = (function () {
 
 				s.TouchSpin({
 					prefix:  i.toWidth(3),
-					initval: 0, min: -48, max: 48
+					initval: 0, min: -60, max: 60
 				})
 				.change({ index: i }, function(e) {
 					var orn = app.player.ornament[app.workingOrnament],
@@ -586,6 +602,7 @@ var Tracker = (function() {
 			tracker.updatePanels();
 			tracker.updateTracklist();
 			tracker.updateSampleEditor(true);
+			tracker.smpornedit.updateOrnamentEditor(true);
 
 			console.log('Tracker.core', 'Demosong completely loaded...');
 		});
@@ -1073,8 +1090,12 @@ Tracker.prototype.onCmdSmpCopyRL = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotL = function () {
-	for (var data = this.player.sample[this.workingSample].data, ref, i = 0; i < 256; i++) {
-		ref = data[(i + 1) % 256];
+	var i = 0, ref,
+		data = this.player.sample[this.workingSample].data,
+		backup = $.extend(true, {}, data[i]);
+
+	for (; i < 256; i++) {
+		ref = (i < 255) ? data[i + 1] : backup;
 
 		data[i].volume.byte  = ref.volume.byte;
 		data[i].enable_freq  = ref.enable_freq;
@@ -1087,8 +1108,12 @@ Tracker.prototype.onCmdSmpRotL = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotR = function () {
-	for (var data = this.player.sample[this.workingSample].data, ref, i = 255; i >= 0; i--) {
-		ref = data[(i - 1) & 255];
+	var i = 255, ref,
+		data = this.player.sample[this.workingSample].data,
+		backup = $.extend(true, {}, data[i]);
+
+	for (; i >= 0; i--) {
+		ref = (i > 0) ? data[i - 1] : backup;
 
 		data[i].volume.byte  = ref.volume.byte;
 		data[i].enable_freq  = ref.enable_freq;
@@ -1113,6 +1138,86 @@ Tracker.prototype.onCmdSmpDisable = function () {
 		data[i].enable_freq = false;
 
 	this.updateSampleEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnPlay = function () {
+	this.player.playSample(this.workingOrnTestSample, this.workingOrnament, this.workingSampleTone);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnClear = function () {
+	var orn = this.player.ornament[this.workingOrnament];
+
+	orn.data.fill(0);
+	orn.loop = orn.end = 0;
+
+	this.smpornedit.updateOrnamentEditor(true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnShiftLeft = function () {
+	var i = 0,
+		data = this.player.ornament[this.workingOrnament].data,
+		ref = data[i];
+
+	for (; i < 256; i++)
+		data[i] = (i < 255) ? data[i + 1] : ref;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnShiftRight = function () {
+	var i = 255,
+		data = this.player.ornament[this.workingOrnament].data,
+		ref = data[i];
+
+	for (; i >= 0; i--)
+		data[i] = (i > 0) ? data[i - 1] : ref;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnTransUp = function () {
+	for (var orn = this.player.ornament[this.workingOrnament], l = orn.end, i = 0; i < l; i++)
+		orn.data[i]++;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnTransDown = function () {
+	for (var orn = this.player.ornament[this.workingOrnament], l = orn.end, i = 0; i < l; i++)
+		orn.data[i]--;
+
+	this.smpornedit.updateOrnamentEditor();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnCompress = function () {
+	var orn = this.player.ornament[this.workingOrnament],
+		data = orn.data,
+		i = 0, k = 0;
+
+	for (; k < 256; i++, k += 2)
+		data[i] = data[k];
+	data.fill(0, i);
+
+	orn.loop >>= 1;
+	orn.end >>= 1;
+
+	this.smpornedit.updateOrnamentEditor(true);
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdOrnExpand = function () {
+	var orn = this.player.ornament[this.workingOrnament],
+		data = orn.data,
+		i = 127, k = 256;
+
+	for (; k > 0; i--) {
+		data[--k] = data[i];
+		data[--k] = data[i];
+	}
+
+	orn.loop <<= 1;
+	orn.end <<= 1;
+
+	this.smpornedit.updateOrnamentEditor(true);
 };
 //---------------------------------------------------------------------------------------
 
@@ -2592,7 +2697,23 @@ Tracker.prototype.doc = {
 		'btSampleDisable' : 'Disable frequency generator\nin full sample length',
 		'chSampleRelease' : 'Sample can continue in playing\nafter the loop section when\nthe note was released in tracklist',
 		'scSampleLength'  : 'Length of current sample',
-		'scSampleRepeat'  : 'Number of ticks at the end\nof sample which will be repeated'
+		'scSampleRepeat'  : 'Number of ticks at the end\nof sample which will be repeated',
+		'scOrnNumber'     : 'Current ornament ID',
+		'txOrnName'       : 'Current ornament description',
+		'scOrnTestSample' : 'Sample ID to test ornament with',
+		'scOrnTone'       : 'Base tone and octave\nto test this ornament',
+		'btOrnPlay'       : 'Play current ornament\nwith test sample',
+		'btOrnStop'       : 'Stop playback [Esc]',
+		'btOrnClear'      : 'Clear ornament',
+		'btOrnShiftLeft'  : 'Shift whole ornament data\nto the left side',
+		'btOrnShiftRight' : 'Shift whole ornament data\nto the right side',
+		'btOrnTransUp'    : 'Transpose ornament data\nup a halftone',
+		'btOrnTransDown'  : 'Transpose ornament data\ndown a halftone',
+		'btOrnCompress'   : 'Compress ornament data\n(keep only every even line)',
+		'btOrnExpand'     : 'Expand ornament data\n(duplicate each line)',
+		'fxOrnChords'     : 'Replace current ornament with\npregenerated chord decomposition',
+		'scOrnLength'     : 'Length of current ornament',
+		'scOrnRepeat'     : 'Number of ticks at the end\nof ornament which will be repeated'
 	},
 
 	statusbar: [
@@ -2745,7 +2866,7 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function(i, el) {
 				var data = (el.dataset || $(this).data()).tooltip || '',
 					id = data.length ? data : el.id || el.htmlFor || el.name,
-					delay = /^mi/.test(id) ? 500 : 1000,
+					delay = /^mi/.test(id) ? 500 : 2000,
 					t = app.doc.tooltip[id];
 
 				if (!t)
@@ -3041,7 +3162,7 @@ Tracker.prototype.populateGUI = function () {
 				});
 			}
 		}, {
-			selector: '#scSampleNumber,#scOrnamentTestSample',
+			selector: '#scSampleNumber,#scOrnTestSample',
 			method:   'TouchSpin',
 			data: {
 				initval: '1',
@@ -3053,17 +3174,18 @@ Tracker.prototype.populateGUI = function () {
 			method:   'change',
 			handler:  function() {
 				app.workingSample = parseInt($(this).val(), 32);
+				app.workingOrnTestSample = app.workingSample;
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
 				$('#sbSampleScroll').scrollLeft(0);
-				$('#scOrnamentTestSample').val(app.workingOrnTestSample = app.workingSample);
+				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32));
 			}
 		}, {
-			selector: '#scOrnamentTestSample',
+			selector: '#scOrnTestSample',
 			method:   'change',
 			handler:  function() { app.workingOrnTestSample = parseInt($(this).val(), 32) }
 		}, {
-			selector: '#scOrnamentNumber',
+			selector: '#scOrnNumber',
 			method:   'TouchSpin',
 			data: {
 				initval: '1',
@@ -3071,7 +3193,7 @@ Tracker.prototype.populateGUI = function () {
 				min: 1, max: 15
 			}
 		}, {
-			selector: '#scOrnamentNumber',
+			selector: '#scOrnNumber',
 			method:   'change',
 			handler:  function() {
 				app.workingOrnament = parseInt($(this).val(), 16);
@@ -3082,11 +3204,11 @@ Tracker.prototype.populateGUI = function () {
 			method:   'change',
 			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
 		}, {
-			selector: '#txOrnamentName',
+			selector: '#txOrnName',
 			method:   'change',
 			handler:  function(e) { app.player.ornament[app.workingOrnament].name = e.target.value }
 		}, {
-			selector: '#scSampleTone,#scOrnamentTone',
+			selector: '#scSampleTone,#scOrnTone',
 			method:   'each',
 			handler:  function(i, el) {
 				var cc = 'tx' + el.id.substr(2);
@@ -3096,7 +3218,7 @@ Tracker.prototype.populateGUI = function () {
 				}).change(function(e) {
 					var el = e.target, val = el.value - 0;
 					app.workingSampleTone = val;
-					$('#scSampleTone,#scOrnamentTone')
+					$('#scSampleTone,#scOrnTone')
 						.val(val.toString())
 						.prev().val(app.player.tones[val].txt);
 				}).wrapAll('<div id="' + cc + '"/>')
@@ -3116,7 +3238,7 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor();
 			}
 		}, {
-			selector: '#scSampleLength,#scSampleRepeat,#scOrnamentLength,#scOrnamentRepeat',
+			selector: '#scSampleLength,#scSampleRepeat,#scOrnLength,#scOrnRepeat',
 			method:   'TouchSpin',
 			data: {
 				initval: '0',
@@ -3155,7 +3277,36 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 			}
 		}, {
-			selector: '#scOrnamentLength',
+			selector: '#fxOrnChords button',
+			method:   'each',
+			handler:  function(i, el) {
+				var id = el.innerText,
+					chord = app.smpornedit.chords[id],
+					seqtxt = JSON.stringify(chord.sequence, null, 1).replace(/^\[|\]$|\s+/g, '');
+
+				$(this).tooltip({
+					html: true,
+					animation: false,
+					trigger: 'hover',
+					delay: { "show": 500, "hide": 0 },
+					title: chord.name + '<kbd>{ ' + seqtxt + ' }</kbd>'
+				}).click(function() {
+					var orn = app.player.ornament[app.workingOrnament],
+						i, l = chord.sequence.length;
+
+					orn.data.fill(0);
+					orn.name = chord.name;
+					orn.loop = 0;
+					orn.end  = l;
+
+					for (i = 0; i < l; i++)
+						orn.data[i] = chord.sequence[i];
+
+					app.smpornedit.updateOrnamentEditor(true);
+				});
+			}
+		}, {
+			selector: '#scOrnLength',
 			method:   'change',
 			handler:  function(e) {
 				var orn = app.player.ornament[app.workingOrnament],
@@ -3165,17 +3316,17 @@ Tracker.prototype.populateGUI = function () {
 				orn.end += offset;
 				orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
 
-				app.smpornedit.updateOrnamentEditor();
+				app.smpornedit.updateOrnamentEditor(true);
 			}
 		}, {
-			selector: '#scOrnamentRepeat',
+			selector: '#scOrnRepeat',
 			method:   'change',
 			handler:  function(e) {
 				var orn = app.player.ornament[app.workingOrnament],
 					value = parseInt(e.target.value, 10);
 
 				orn.loop = orn.end - value;
-				app.smpornedit.updateOrnamentEditor();
+				app.smpornedit.updateOrnamentEditor(true);
 			}
 		}, {
 			selector: '#sample-tabpanel a[data-toggle="tab"]',
@@ -3248,6 +3399,15 @@ Tracker.prototype.populateGUI = function () {
 				var name = this.id.replace('btSample', 'onCmdSmp');
 				if (name.endsWith('Stop'))
 					name = name.replace('Smp', '');
+				app[name]();
+			}
+		}, {
+			selector: 'button[id^="btOrn"]',
+			method:   'click',
+			handler:  function() {
+				var name = this.id.replace('btOrn', 'onCmdOrn');
+				if (name.endsWith('Stop'))
+					name = name.replace('Orn', '');
 				app[name]();
 			}
 		}

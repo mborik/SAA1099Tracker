@@ -341,7 +341,7 @@ Tracker.prototype.populateGUI = function () {
 				});
 			}
 		}, {
-			selector: '#scSampleNumber,#scOrnamentTestSample',
+			selector: '#scSampleNumber,#scOrnTestSample',
 			method:   'TouchSpin',
 			data: {
 				initval: '1',
@@ -353,17 +353,18 @@ Tracker.prototype.populateGUI = function () {
 			method:   'change',
 			handler:  function() {
 				app.workingSample = parseInt($(this).val(), 32);
+				app.workingOrnTestSample = app.workingSample;
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
 				$('#sbSampleScroll').scrollLeft(0);
-				$('#scOrnamentTestSample').val(app.workingOrnTestSample = app.workingSample);
+				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32));
 			}
 		}, {
-			selector: '#scOrnamentTestSample',
+			selector: '#scOrnTestSample',
 			method:   'change',
 			handler:  function() { app.workingOrnTestSample = parseInt($(this).val(), 32) }
 		}, {
-			selector: '#scOrnamentNumber',
+			selector: '#scOrnNumber',
 			method:   'TouchSpin',
 			data: {
 				initval: '1',
@@ -371,7 +372,7 @@ Tracker.prototype.populateGUI = function () {
 				min: 1, max: 15
 			}
 		}, {
-			selector: '#scOrnamentNumber',
+			selector: '#scOrnNumber',
 			method:   'change',
 			handler:  function() {
 				app.workingOrnament = parseInt($(this).val(), 16);
@@ -382,11 +383,11 @@ Tracker.prototype.populateGUI = function () {
 			method:   'change',
 			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
 		}, {
-			selector: '#txOrnamentName',
+			selector: '#txOrnName',
 			method:   'change',
 			handler:  function(e) { app.player.ornament[app.workingOrnament].name = e.target.value }
 		}, {
-			selector: '#scSampleTone,#scOrnamentTone',
+			selector: '#scSampleTone,#scOrnTone',
 			method:   'each',
 			handler:  function(i, el) {
 				var cc = 'tx' + el.id.substr(2);
@@ -396,7 +397,7 @@ Tracker.prototype.populateGUI = function () {
 				}).change(function(e) {
 					var el = e.target, val = el.value - 0;
 					app.workingSampleTone = val;
-					$('#scSampleTone,#scOrnamentTone')
+					$('#scSampleTone,#scOrnTone')
 						.val(val.toString())
 						.prev().val(app.player.tones[val].txt);
 				}).wrapAll('<div id="' + cc + '"/>')
@@ -416,7 +417,7 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor();
 			}
 		}, {
-			selector: '#scSampleLength,#scSampleRepeat,#scOrnamentLength,#scOrnamentRepeat',
+			selector: '#scSampleLength,#scSampleRepeat,#scOrnLength,#scOrnRepeat',
 			method:   'TouchSpin',
 			data: {
 				initval: '0',
@@ -455,7 +456,36 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 			}
 		}, {
-			selector: '#scOrnamentLength',
+			selector: '#fxOrnChords button',
+			method:   'each',
+			handler:  function(i, el) {
+				var id = el.innerText,
+					chord = app.smpornedit.chords[id],
+					seqtxt = JSON.stringify(chord.sequence, null, 1).replace(/^\[|\]$|\s+/g, '');
+
+				$(this).tooltip({
+					html: true,
+					animation: false,
+					trigger: 'hover',
+					delay: { "show": 500, "hide": 0 },
+					title: chord.name + '<kbd>{ ' + seqtxt + ' }</kbd>'
+				}).click(function() {
+					var orn = app.player.ornament[app.workingOrnament],
+						i, l = chord.sequence.length;
+
+					orn.data.fill(0);
+					orn.name = chord.name;
+					orn.loop = 0;
+					orn.end  = l;
+
+					for (i = 0; i < l; i++)
+						orn.data[i] = chord.sequence[i];
+
+					app.smpornedit.updateOrnamentEditor(true);
+				});
+			}
+		}, {
+			selector: '#scOrnLength',
 			method:   'change',
 			handler:  function(e) {
 				var orn = app.player.ornament[app.workingOrnament],
@@ -465,17 +495,17 @@ Tracker.prototype.populateGUI = function () {
 				orn.end += offset;
 				orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
 
-				app.smpornedit.updateOrnamentEditor();
+				app.smpornedit.updateOrnamentEditor(true);
 			}
 		}, {
-			selector: '#scOrnamentRepeat',
+			selector: '#scOrnRepeat',
 			method:   'change',
 			handler:  function(e) {
 				var orn = app.player.ornament[app.workingOrnament],
 					value = parseInt(e.target.value, 10);
 
 				orn.loop = orn.end - value;
-				app.smpornedit.updateOrnamentEditor();
+				app.smpornedit.updateOrnamentEditor(true);
 			}
 		}, {
 			selector: '#sample-tabpanel a[data-toggle="tab"]',
@@ -548,6 +578,15 @@ Tracker.prototype.populateGUI = function () {
 				var name = this.id.replace('btSample', 'onCmdSmp');
 				if (name.endsWith('Stop'))
 					name = name.replace('Smp', '');
+				app[name]();
+			}
+		}, {
+			selector: 'button[id^="btOrn"]',
+			method:   'click',
+			handler:  function() {
+				var name = this.id.replace('btOrn', 'onCmdOrn');
+				if (name.endsWith('Stop'))
+					name = name.replace('Orn', '');
 				app[name]();
 			}
 		}

@@ -420,7 +420,7 @@ label.disabled {
 	}
 }
 
-#txSampleTone, #txOrnamentTone {
+#txSampleTone, #txOrnTone {
 	position: relative;
 
 	&>input {
@@ -465,7 +465,7 @@ label.disabled {
 		height: 16px;
 	}
 }
-#fxSampleShift, #fxOrnamentEditor {
+#fxSampleShift, #fxOrnEditor {
 	.flexbox(column wrap, space-between);
 	box-sizing: border-box;
 	padding: 0;
@@ -499,7 +499,8 @@ label.disabled {
 	}
 }
 
-#fxOrnamentEditor > .cell { width: 112px };
+#fxOrnEditor > .cell { width: 112px; }
+#fxOrnChords > .row { padding: (@grid-gutter-width / 2) 0; }
 
 // modal windows ------------------------------------------------------------------------
 #documodal pre.modal-body {

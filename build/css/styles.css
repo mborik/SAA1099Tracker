@@ -7663,11 +7663,11 @@ label.disabled {
   height: 50%;
 }
 #txSampleTone,
-#txOrnamentTone {
+#txOrnTone {
   position: relative;
 }
 #txSampleTone > input,
-#txOrnamentTone > input {
+#txOrnTone > input {
   position: absolute;
   top: 0;
   left: 0;
@@ -7679,13 +7679,13 @@ label.disabled {
   user-select: none;
 }
 #txSampleTone > input:first-child,
-#txOrnamentTone > input:first-child {
+#txOrnTone > input:first-child {
   z-index: 0;
   color: #000000;
   background: #ffffff;
 }
 #txSampleTone > input:last-child,
-#txOrnamentTone > input:last-child {
+#txOrnTone > input:last-child {
   z-index: 5;
   color: transparent;
   background: transparent;
@@ -7711,7 +7711,7 @@ label.disabled {
   height: 16px;
 }
 #fxSampleShift,
-#fxOrnamentEditor {
+#fxOrnEditor {
   display: -webkit-flex;
   -webkit-flex: none;
   -webkit-flex-flow: column wrap;
@@ -7730,7 +7730,7 @@ label.disabled {
   height: 408px;
 }
 #fxSampleShift > .cell,
-#fxOrnamentEditor > .cell {
+#fxOrnEditor > .cell {
   width: 117px;
   height: 25px;
   min-height: 25px;
@@ -7741,34 +7741,37 @@ label.disabled {
   border-right: 1px solid #eeeeee;
 }
 #fxSampleShift > .cell span.bootstrap-touchspin-prefix,
-#fxOrnamentEditor > .cell span.bootstrap-touchspin-prefix {
+#fxOrnEditor > .cell span.bootstrap-touchspin-prefix {
   font-size: 11px;
 }
 #fxSampleShift > .cell input,
-#fxOrnamentEditor > .cell input {
+#fxOrnEditor > .cell input {
   text-align: right;
   font-weight: bold;
   border-radius: 0 !important;
   background-color: #eeeeee;
 }
 #fxSampleShift > .cell.on input,
-#fxOrnamentEditor > .cell.on input {
+#fxOrnEditor > .cell.on input {
   background-color: #ffffff;
 }
 #fxSampleShift > .cell.on span.bootstrap-touchspin-prefix,
-#fxOrnamentEditor > .cell.on span.bootstrap-touchspin-prefix {
+#fxOrnEditor > .cell.on span.bootstrap-touchspin-prefix {
   background-color: #fcfcfc;
 }
 #fxSampleShift > .cell.loop input,
-#fxOrnamentEditor > .cell.loop input {
+#fxOrnEditor > .cell.loop input {
   background-color: #d6e7f5;
 }
 #fxSampleShift > .cell.loop span.bootstrap-touchspin-prefix,
-#fxOrnamentEditor > .cell.loop span.bootstrap-touchspin-prefix {
+#fxOrnEditor > .cell.loop span.bootstrap-touchspin-prefix {
   background-color: #c2dbf0;
 }
-#fxOrnamentEditor > .cell {
+#fxOrnEditor > .cell {
   width: 112px;
+}
+#fxOrnChords > .row {
+  padding: 2.5px 0;
 }
 #documodal pre.modal-body {
   font-family: "BPmono", Menlo, Monaco, Consolas, monospace;

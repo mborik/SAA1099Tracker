@@ -139,11 +139,27 @@ var SmpOrnEditor = (function () {
 			}
 		};
 //---------------------------------------------------------------------------------------
+		this.chords = {
+			'maj':    { sequence: [ 0, 4, 7 ],     name: 'major' },
+			'min':    { sequence: [ 0, 3, 7 ],     name: 'minor' },
+			'maj7':   { sequence: [ 0, 4, 7, 11 ], name: 'major 7th' },
+			'min7':   { sequence: [ 0, 3, 7, 10 ], name: 'minor 7th' },
+			'sus2':   { sequence: [ 0, 2, 7 ],     name: 'suspended 2nd' },
+			'sus4':   { sequence: [ 0, 5, 7 ],     name: 'suspended 4th' },
+			'6':      { sequence: [ 0, 4, 7, 9 ],  name: 'major 6th' },
+			'7':      { sequence: [ 0, 4, 7, 10 ], name: 'dominant 7th' },
+			'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
+			'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
+			'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
+			'dim':    { sequence: [ 0, 3, 6 ],     name: 'diminished' },
+			'12th':   { sequence: [ 12, 0 ],       name: '12th' }
+		};
+
 		this.updateOrnamentEditor = function (update) {
 			var orn = app.player.ornament[app.workingOrnament],
 				noloop = (orn.end === orn.loop);
 
-			$('#fxOrnamentEditor>.cell').each(function (i, el) {
+			$('#fxOrnEditor>.cell').each(function (i, el) {
 				if (i >= orn.end)
 					el.className = 'cell';
 				else if (!noloop && i >= orn.loop && i < orn.end)
@@ -155,11 +171,11 @@ var SmpOrnEditor = (function () {
 			});
 
 			if (update) {
-				$('#txOrnamentName').val(orn.name);
-				$('#fxOrnamentEditor').parent().scrollLeft(0);
+				$('#txOrnName').val(orn.name);
+				$('#fxOrnEditor').parent().scrollLeft(0);
 
-				$('#scOrnamentLength').val('' + orn.end);
-				$('#scOrnamentRepeat')
+				$('#scOrnLength').val('' + orn.end);
+				$('#scOrnRepeat')
 					.trigger('touchspin.updatesettings', { min: 0, max: orn.end })
 					.val(orn.end - orn.loop);
 			}
@@ -167,7 +183,7 @@ var SmpOrnEditor = (function () {
 
 		this.createOrnamentEditorTable = function () {
 			var i, s,
-				el = $('#fxOrnamentEditor').empty(),
+				el = $('#fxOrnEditor').empty(),
 				cell = $('<div class="cell"/>'),
 				spin = $('<input type="text" class="form-control">');
 
@@ -178,7 +194,7 @@ var SmpOrnEditor = (function () {
 
 				s.TouchSpin({
 					prefix:  i.toWidth(3),
-					initval: 0, min: -48, max: 48
+					initval: 0, min: -60, max: 60
 				})
 				.change({ index: i }, function(e) {
 					var orn = app.player.ornament[app.workingOrnament],
