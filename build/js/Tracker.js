@@ -318,7 +318,8 @@ var SmpOrnEditor = (function () {
 						el = e.target;
 
 					data[e.data.index].shift = parseInt(el.value, radix);
-				});
+				})
+				.prop('tabindex', i + 1);
 			}
 		};
 //---------------------------------------------------------------------------------------
@@ -384,7 +385,8 @@ var SmpOrnEditor = (function () {
 						el = e.target;
 
 					orn.data[e.data.index] = parseInt(el.value, 10);
-				});
+				})
+				.prop('tabindex', i + 1);
 			}
 		};
 	}
@@ -2028,7 +2030,10 @@ Tracker.prototype.getKeynote = function (key) {
 /** Tracker.keyboard submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleMouseEvent = function (part, obj, e) {
-	var button = e.button || e.buttons || (/^mouse(up|down)|click$/.test(e.type) && e.which);
+	var x = e.pageX || 0, y = e.pageY || 0;
+	var leftButton = browser.isFirefox
+			? (!!(e.buttons & 1) || (e.type !== 'mousemove' && e.button === 0))
+			: (e.which === 1);
 
 	if (part === 'tracklist') {
 		var redraw = false,
@@ -2036,14 +2041,18 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			pp = p.position[p.currentPosition],
 			sel = obj.selection,
 			offset = obj.canvasData.offset,
-			point = obj.pointToTracklist(e.pageX - offset.left, e.pageY - offset.top),
+			point = obj.pointToTracklist(x - offset.left, y - offset.top),
 			line = p.currentLine, i;
 
-		if (this.modePlay || !pp || !point)
+		if (this.modePlay || !pp)
 			return;
 
-		point.line = Math.min(point.line, pp.length - 1);
-		i = point.line - sel.start.line;
+		if (point) {
+			point.line = Math.min(point.line, pp.length - 1);
+			i = point.line - sel.start.line;
+		}
+		else if (e.type !== 'mousewheel')
+			return;
 
 		if (e.type === 'mousewheel') {
 			e.target.focus();
@@ -2057,10 +2066,10 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 		else if (e.type === 'mousedown') {
 			e.target.focus();
 
-			if (button === 1 && point.line < pp.length)
+			if (leftButton && point.line < pp.length)
 				sel.start.set(point);
 		}
-		else if (e.type === 'mouseup' && button === 1) {
+		else if (e.type === 'mouseup' && leftButton) {
 			if (sel.isDragging) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -2078,7 +2087,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				}
 			}
 		}
-		else if (e.type === 'dblclick' && button === 1) {
+		else if (e.type === 'dblclick' && leftButton) {
 			sel.len = 0;
 			sel.line = point.line;
 			sel.channel = point.channel;
@@ -2089,7 +2098,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			p.currentLine = point.line;
 			redraw = true;
 		}
-		else if (e.type === 'mousemove' && button === 1 && !point.compare(sel.start)) {
+		else if (e.type === 'mousemove' && leftButton && !point.compare(sel.start)) {
 			if (i > 0) {
 				sel.len = i;
 				sel.line = sel.start.line;
@@ -2104,7 +2113,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 		}
 
 		if (redraw) {
-			if (!sel.isDragging) {
+			if (!sel.isDragging && e.type !== 'mousewheel') {
 				i = 0;
 				if (this.modeEditColumn >= 5)
 					i = p.pattern[pp.ch[this.modeEditChannel].pattern].data[line].cmd;
@@ -2118,12 +2127,11 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 	}
 	else {
 		var sample = this.player.sample[this.workingSample], data,
-			x = e.pageX - obj.smpeditOffset.left - obj.centering,
-			y = e.pageY,
 			dragging = /mouse(down|move)/.test(e.type),
 			update = false,
 			redrawAll = false, limitFrom, limitTo;
 
+		x -= (obj.smpeditOffset.left + obj.centering);
 		if (x < 0)
 			return;
 
@@ -2138,7 +2146,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				ampLeftChn = (y < obj.halfing),
 				freqEnableSection = (y > (ampHeight + 3)) || obj.drag.isDragging;
 
-			if (freqEnableSection && button === 1) {
+			if (freqEnableSection && leftButton) {
 				if (e.type === 'mousedown') {
 					i = obj.drag.freqEnableState = !data.enable_freq;
 					obj.drag.isDragging = true;
@@ -2165,7 +2173,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 
 				update = true;
 			}
-			else if (dragging && button === 1) {
+			else if (dragging && leftButton) {
 				if (ampLeftChn)
 					data.volume.L = Math.max(15 - (0 | (y / 9)), 0);
 				else
@@ -2182,7 +2190,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				i += e.delta / Math.abs(e.delta);
 				update = true;
 			}
-			else if (dragging && button === 1) {
+			else if (dragging && leftButton) {
 				i = 4 - (0 | (y / 9));
 				update = true;
 			}
@@ -2194,7 +2202,7 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				data.noise_value = Math.max(--i, 0);
 			}
 		}
-		else if (part === 'range' && button === 1) {
+		else if (part === 'range' && leftButton) {
 			if (e.type === 'mouseup') {
 				obj.drag.isDragging = false;
 				update = true;

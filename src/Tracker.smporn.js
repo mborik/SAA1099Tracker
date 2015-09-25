@@ -135,7 +135,8 @@ var SmpOrnEditor = (function () {
 						el = e.target;
 
 					data[e.data.index].shift = parseInt(el.value, radix);
-				});
+				})
+				.prop('tabindex', i + 1);
 			}
 		};
 //---------------------------------------------------------------------------------------
@@ -201,7 +202,8 @@ var SmpOrnEditor = (function () {
 						el = e.target;
 
 					orn.data[e.data.index] = parseInt(el.value, 10);
-				});
+				})
+				.prop('tabindex', i + 1);
 			}
 		};
 	}

@@ -35,7 +35,8 @@ var AudioDriver = (function () {
 		var audioDriver = this,
 			audioSource = null,
 			scriptProcessor = null,
-			audioContext = getCompatible(window, 'AudioContext', true);
+			audioContext = getCompatible(window, 'AudioContext', true),
+			newAPICaps = !!(audioContext.resume && audioContext.suspend);
 		var audioEventHandler = function (event) {
 			var buf = event.outputBuffer;
 			audioSource.getAudio(buf.getChannelData(0), buf.getChannelData(1), buf.length);
@@ -53,11 +54,15 @@ var AudioDriver = (function () {
 				return;
 			scriptProcessor.onaudioprocess = audioEventHandler;
 			scriptProcessor.connect(audioContext.destination);
-			audioContext.resume();
+
+			if (newAPICaps)
+				audioContext.resume();
 		};
 
 		this.stop = function() {
-			audioContext.suspend();
+			if (newAPICaps)
+				audioContext.suspend();
+
 			if (scriptProcessor.onaudioprocess)
 				scriptProcessor.disconnect(audioContext.destination);
 			scriptProcessor.onaudioprocess = null;
