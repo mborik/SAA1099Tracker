@@ -76,7 +76,7 @@ focusing on shortest data length. All pointers in header are offsets from the
     |---|---|---|---|---|---|---|---|
 
 X - controller:
-    [0] - no changing line, skip to next
+    [0 - 126] - 1 to 127 of non-changing lines
     [127] - end of pattern
 
 T - tone number:
