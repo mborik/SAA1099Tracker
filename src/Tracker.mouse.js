@@ -138,9 +138,9 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 				i = e.delta / Math.abs(e.delta);
 
 				if (ampLeftChn)
-					data.volume.L = Math.min(data.volume.L + i, 15);
+					data.volume.L = Math.max(Math.min(data.volume.L + i, 15), 0);
 				else
-					data.volume.R = Math.max(data.volume.R - i, 0);
+					data.volume.R = Math.max(Math.min(data.volume.R - i, 15), 0);
 
 				update = true;
 			}
