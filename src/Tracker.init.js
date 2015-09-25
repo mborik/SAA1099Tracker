@@ -20,5 +20,5 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.2') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.3') });
 //---------------------------------------------------------------------------------------

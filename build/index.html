@@ -274,7 +274,7 @@
 												</div>
 											</div>
 										</div>
-										<div class="col-smpactions"><button id="btSampleClear" type="button" class="btn btn-default btn-block" data-tooltip>Clear</button></div>
+										<div class="col-smpornactions"><button id="btSampleClear" type="button" class="btn btn-default btn-block" data-tooltip>Clear</button></div>
 									</div>
 								</div>
 							</div>
@@ -292,7 +292,7 @@
 												<canvas id="smpedit_range" class="smpornedit" width="928" height="24"></canvas>
 												<div id="sbSampleScroll"><div class="scrollbar"></div></div>
 											</div>
-											<div class="col-smpactions">
+											<div class="col-smpornactions">
 												<div class="actions-amp">
 													<div class="rowcell"><button id="btSampleSwap" type="button" class="btn btn-default btn-block" data-tooltip>Swap L&nbsp;&#x21cc;&nbsp;R</button></div>
 													<div class="rowcell middle">
@@ -354,6 +354,78 @@
 				</div>
 				<div role="tabpanel" class="tab-pane" id="ornedit">
 					<div class="row">
+						<div class="fixed-column col-sm-18">
+							<div class="panel panel-default tabs-top">
+								<div class="panel-heading"><h3 class="panel-title">Ornament:</h3></div>
+								<div class="panel-body">
+									<div class="row">
+										<div class="col-smpedit">
+											<div class="col-sm-1"><input id="scOrnamentNumber" type="text" class="form-control" data-tooltip></div>
+											<div class="col-sm-13"><input id="txOrnamentName" type="text" class="form-control" data-tooltip></div>
+											<div class="col-sm-1"><input id="scOrnamentTestSample" type="text" class="form-control" data-tooltip></div>
+											<div class="col-sm-3">
+												<div class="col-xs-9" data-tooltip="scOrnamentTone"><input id="scOrnamentTone" type="text" class="form-control"></div>
+												<div class="col-xs-9">
+													<button id="btOrnamentPlay" type="button" class="btn btn-default btn-half left" data-tooltip><span class="glyphicon glyphicon-play"></span></button>
+													<button id="btOrnamentStop" type="button" class="btn btn-default btn-half right" data-tooltip><span class="glyphicon glyphicon-stop"></span></button>
+												</div>
+											</div>
+										</div>
+										<div class="col-smpornactions"><button id="btOrnamentClear" type="button" class="btn btn-default btn-block" data-tooltip>Clear</button></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-18">
+							<div class="panel panel-default">
+								<div class="panel-body tab-content">
+									<div class="row">
+										<div class="col-ornedit scrollable-container">
+											<div id="fxOrnamentEditor"></div>
+										</div>
+										<div class="col-smpornactions">
+											<div class="actions-orn">
+												<div class="rowcell">
+													<div class="centertext">Shift ornament:</div>
+													<div class="btnpair">
+														<button id="btOrnamentShiftLeft" type="button" class="btn btn-default btn-half left" data-tooltip><span class="glyphicon glyphicon-chevron-left"></span></button>
+														<button id="btOrnamentShiftRight" type="button" class="btn btn-default btn-half right" data-tooltip><span class="glyphicon glyphicon-chevron-right"></span></button>
+													</div>
+													<div class="separator"></div>
+													<div class="centertext">Transposition:</div>
+													<div class="btnpair">
+														<button id="btOrnamentTransUp" type="button" class="btn btn-default btn-half left" data-tooltip><span class="glyphicon glyphicon-chevron-up"></span></button>
+														<button id="btOrnamentTransDown" type="button" class="btn btn-default btn-half right" data-tooltip><span class="glyphicon glyphicon-chevron-down"></span></button>
+													</div>
+													<div class="separator"></div>
+													<div class="centertext">Special functions:</div>
+													<div class="btnpair">
+														<button id="btOrnamentCmp" type="button" class="btn btn-default btn-half left" data-tooltip>Compress</button>
+														<button id="btOrnamentExp" type="button" class="btn btn-default btn-half right" data-tooltip>Expand</button>
+													</div>
+													<div class="separator"></div>
+												</div>
+											</div>
+											<div class="actions-range">
+												<div class="bottom">
+													<div class="separator"></div>
+													<div class="halfing">
+														<input id="scOrnamentLength" name="scOrnamentLength" type="text" class="form-control" data-tooltip>
+														<input id="scOrnamentRepeat" name="scOrnamentRepeat" type="text" class="form-control" data-tooltip>
+													</div>
+													<div class="halfing">
+														<label for="scOrnamentLength" class="small">LENGTH</label>
+														<label for="scOrnamentRepeat" class="small right">REPEAT</label>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

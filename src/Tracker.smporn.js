@@ -22,7 +22,7 @@ var SmpOrnEditor = (function () {
 			rangeStart: -1
 		};
 //---------------------------------------------------------------------------------------
-		this.drawHeaders = function() {
+		this.init = function() {
 			var parts = [ 'amp', 'noise', 'range' ],
 				i, l, o, ctx, w, h, half;
 
@@ -67,10 +67,12 @@ var SmpOrnEditor = (function () {
 
 			this.updateOffsets();
 			this.createPitchShiftTable();
-			this.initialized = true;
+			this.createOrnamentEditorTable();
 
 			app.updateSampleEditor(true);
-			console.log('Tracker.smporn', 'Sample editor completely initialized...');
+			this.initialized = true;
+
+			console.log('Tracker.smporn', 'Sample/Ornament editors completely initialized...');
 		};
 
 		this.updateOffsets = function () {
@@ -133,6 +135,56 @@ var SmpOrnEditor = (function () {
 						el = e.target;
 
 					data[e.data.index].shift = parseInt(el.value, radix);
+				});
+			}
+		};
+//---------------------------------------------------------------------------------------
+		this.updateOrnamentEditor = function (update) {
+			var orn = app.player.ornament[app.workingOrnament],
+				noloop = (orn.end === orn.loop);
+
+			$('#fxOrnamentEditor>.cell').each(function (i, el) {
+				if (i >= orn.end)
+					el.className = 'cell';
+				else if (!noloop && i >= orn.loop && i < orn.end)
+					el.className = 'cell loop';
+				else
+					el.className = 'cell on';
+
+				$(el).find('input').val(orn.data[i]);
+			});
+
+			if (update) {
+				$('#txOrnamentName').val(orn.name);
+				$('#fxOrnamentEditor').parent().scrollLeft(0);
+
+				$('#scOrnamentLength').val('' + orn.end);
+				$('#scOrnamentRepeat')
+					.trigger('touchspin.updatesettings', { min: 0, max: orn.end })
+					.val(orn.end - orn.loop);
+			}
+		};
+
+		this.createOrnamentEditorTable = function () {
+			var i, s,
+				el = $('#fxOrnamentEditor').empty(),
+				cell = $('<div class="cell"/>'),
+				spin = $('<input type="text" class="form-control">');
+
+			console.log('Tracker.smporn', 'Creating elements into Ornament editor...');
+			for (i = 0; i < 256; i++) {
+				s = spin.clone();
+				cell.clone().append(s).appendTo(el);
+
+				s.TouchSpin({
+					prefix:  i.toWidth(3),
+					initval: 0, min: -48, max: 48
+				})
+				.change({ index: i }, function(e) {
+					var orn = app.player.ornament[app.workingOrnament],
+						el = e.target;
+
+					orn.data[e.data.index] = parseInt(el.value, 10);
 				});
 			}
 		};

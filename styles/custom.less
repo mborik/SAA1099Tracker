@@ -316,13 +316,19 @@ label.disabled {
 	}
 }
 
-.col-smpedit {
+.col-smpedit, .col-ornedit {
 	position: relative;
 	float: left;
 	width: 935px;
 	padding: 0;
 }
-.col-smpactions {
+.col-ornedit {
+	position: relative;
+	float: left;
+	width: 930px;
+	padding: 0;
+}
+.col-smpornactions {
 	position: relative;
 	float: right;
 	width: 160px;
@@ -332,7 +338,7 @@ label.disabled {
 
 	button { height: 24px }
 
-	.actions-amp {
+	.actions-amp, .actions-orn {
 		position: relative;
 		width: 100%;
 		height: 325px;
@@ -350,18 +356,23 @@ label.disabled {
 			&.middle {
 				top: 50%;
 				margin-top: -50%;
-
-				> .separator {
-					height: 1px;
-					border-bottom: 1px solid @border-soft;
-					margin: @grid-gutter-width -@grid-gutter-width;
-				}
 			}
 			&.bottom {
 				bottom: 0;
 			}
 
-			.btnpair {
+			> .centertext {
+				width: 100%;
+				text-align: center;
+				.small;
+				padding: 1px 0;
+			}
+			> .separator {
+				height: 1px;
+				border-bottom: 1px solid @border-soft;
+				margin: @grid-gutter-width -@grid-gutter-width;
+			}
+			> .btnpair {
 				display: inline-block;
 				width: 100%;
 				margin: 2px 0;
@@ -409,7 +420,7 @@ label.disabled {
 	}
 }
 
-#txSampleTone {
+#txSampleTone, #txOrnamentTone {
 	position: relative;
 
 	&>input {
@@ -454,7 +465,7 @@ label.disabled {
 		height: 16px;
 	}
 }
-#fxSampleShift {
+#fxSampleShift, #fxOrnamentEditor {
 	.flexbox(column wrap, space-between);
 	box-sizing: border-box;
 	padding: 0;
@@ -488,6 +499,9 @@ label.disabled {
 	}
 }
 
+#fxOrnamentEditor > .cell { width: 112px };
+
+// modal windows ------------------------------------------------------------------------
 #documodal pre.modal-body {
 	font-family: @font-family-monospace;
 	font-weight: normal;
@@ -586,6 +600,7 @@ label.disabled {
 	}
 }
 
+// statusbar ----------------------------------------------------------------------------
 #statusbar {
 	position: absolute;
 	left: 0;
@@ -630,7 +645,7 @@ label.disabled {
 	}
 }
 
-// Tooltip customization
+// tooltip customization ----------------------------------------------------------------
 .tooltip {
 	font-size: @font-size-base !important;
 
@@ -655,7 +670,7 @@ label.disabled {
 		}
 	}
 }
-// TouchSpin extension
+// TouchSpin extension ------------------------------------------------------------------
 .bootstrap-touchspin {
 	input {
 		border-top-left-radius: @border-radius-base !important;
@@ -695,7 +710,7 @@ label.disabled {
 	}
 }
 
-// Toggle Button extension
+// ToggleButton extension ---------------------------------------------------------------
 .toggle-group label {
 	margin: 0 !important;
 	padding: 4px 0 0 0 !important;

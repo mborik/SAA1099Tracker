@@ -341,7 +341,7 @@ Tracker.prototype.populateGUI = function () {
 				});
 			}
 		}, {
-			selector: '#scSampleNumber',
+			selector: '#scSampleNumber,#scOrnamentTestSample',
 			method:   'TouchSpin',
 			data: {
 				initval: '1',
@@ -356,13 +356,37 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
 				$('#sbSampleScroll').scrollLeft(0);
+				$('#scOrnamentTestSample').val(app.workingOrnTestSample = app.workingSample);
+			}
+		}, {
+			selector: '#scOrnamentTestSample',
+			method:   'change',
+			handler:  function() { app.workingOrnTestSample = parseInt($(this).val(), 32) }
+		}, {
+			selector: '#scOrnamentNumber',
+			method:   'TouchSpin',
+			data: {
+				initval: '1',
+				radix: 16,
+				min: 1, max: 15
+			}
+		}, {
+			selector: '#scOrnamentNumber',
+			method:   'change',
+			handler:  function() {
+				app.workingOrnament = parseInt($(this).val(), 16);
+				app.smpornedit.updateOrnamentEditor(true);
 			}
 		}, {
 			selector: '#txSampleName',
 			method:   'change',
 			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
 		}, {
-			selector: '#scSampleTone',
+			selector: '#txOrnamentName',
+			method:   'change',
+			handler:  function(e) { app.player.ornament[app.workingOrnament].name = e.target.value }
+		}, {
+			selector: '#scSampleTone,#scOrnamentTone',
 			method:   'each',
 			handler:  function(i, el) {
 				var cc = 'tx' + el.id.substr(2);
@@ -372,7 +396,9 @@ Tracker.prototype.populateGUI = function () {
 				}).change(function(e) {
 					var el = e.target, val = el.value - 0;
 					app.workingSampleTone = val;
-					$(this).prev().val(app.player.tones[val].txt);
+					$('#scSampleTone,#scOrnamentTone')
+						.val(val.toString())
+						.prev().val(app.player.tones[val].txt);
 				}).wrapAll('<div id="' + cc + '"/>')
 				  .removeAttr('style')
 				  .prop('readonly', true)
@@ -390,11 +416,20 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor();
 			}
 		}, {
-			selector: '#scSampleLength,#scSampleRepeat',
+			selector: '#scSampleLength,#scSampleRepeat,#scOrnamentLength,#scOrnamentRepeat',
 			method:   'TouchSpin',
 			data: {
 				initval: '0',
 				min: 0, max: 255
+			}
+		}, {
+			selector: '#chSampleRelease',
+			method:   'change',
+			handler:  function(e) {
+				var sample = app.player.sample[app.workingSample];
+				if (sample.end !== sample.loop)
+					sample.releasable = e.target.checked;
+				app.updateSampleEditor(true);
 			}
 		}, {
 			selector: '#scSampleLength',
@@ -420,13 +455,27 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 			}
 		}, {
-			selector: '#chSampleRelease',
+			selector: '#scOrnamentLength',
 			method:   'change',
 			handler:  function(e) {
-				var sample = app.player.sample[app.workingSample];
-				if (sample.end !== sample.loop)
-					sample.releasable = e.target.checked;
-				app.updateSampleEditor(true);
+				var orn = app.player.ornament[app.workingOrnament],
+					offset = parseInt(e.target.value, 10) - orn.end,
+					looper = (orn.loop += offset);
+
+				orn.end += offset;
+				orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
+
+				app.smpornedit.updateOrnamentEditor();
+			}
+		}, {
+			selector: '#scOrnamentRepeat',
+			method:   'change',
+			handler:  function(e) {
+				var orn = app.player.ornament[app.workingOrnament],
+					value = parseInt(e.target.value, 10);
+
+				orn.loop = orn.end - value;
+				app.smpornedit.updateOrnamentEditor();
 			}
 		}, {
 			selector: '#sample-tabpanel a[data-toggle="tab"]',

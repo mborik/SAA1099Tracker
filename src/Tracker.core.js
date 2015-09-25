@@ -17,6 +17,7 @@ var Tracker = (function() {
 		this.workingSample = 1;
 		this.workingSampleTone = 37;
 		this.workingOrnament = 1;
+		this.workingOrnTestSample = 1;
 
 		this.ctrlOctave = 2;
 		this.ctrlSample = 0;
@@ -70,11 +71,13 @@ var Tracker = (function() {
 		if (!this.modePlay) {
 			if (!this.smpornedit.initialized) {
 				if (!!this.smpornedit.img) {
-					if (this.activeTab === 1)
-						this.smpornedit.drawHeaders();
+					if (this.activeTab === 1) {
+						this.smpornedit.init();
+						$('#tab-ornedit').tab('show');
+					}
 					else {
-						console.log('Tracker', 'Force initialization of Sample editor tab...');
-						$('#tab-smpedit').trigger('click');
+						console.log('Tracker', 'Force initialization of Sample/Ornament editors...');
+						$('#tab-smpedit').tab('show');
 					}
 				}
 			}
@@ -94,7 +97,7 @@ var Tracker = (function() {
 					}
 					else {
 						console.log('Tracker', 'Force initialization of Tracklist editor tab...');
-						$('#tab-tracker').trigger('click');
+						$('#tab-tracker').tab('show');
 					}
 				}
 			}

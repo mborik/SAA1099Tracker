@@ -7557,13 +7557,20 @@ label.disabled {
   image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
 }
-.col-smpedit {
+.col-smpedit,
+.col-ornedit {
   position: relative;
   float: left;
   width: 935px;
   padding: 0;
 }
-.col-smpactions {
+.col-ornedit {
+  position: relative;
+  float: left;
+  width: 930px;
+  padding: 0;
+}
+.col-smpornactions {
   position: relative;
   float: right;
   width: 160px;
@@ -7571,48 +7578,61 @@ label.disabled {
   border-left: 1px solid #eeeeee;
   margin: -8px 0;
 }
-.col-smpactions button {
+.col-smpornactions button {
   height: 24px;
 }
-.col-smpactions .actions-amp {
+.col-smpornactions .actions-amp,
+.col-smpornactions .actions-orn {
   position: relative;
   width: 100%;
   height: 325px;
   padding: 0;
   margin: 0;
 }
-.col-smpactions .actions-amp > .rowcell {
+.col-smpornactions .actions-amp > .rowcell,
+.col-smpornactions .actions-orn > .rowcell {
   position: absolute;
   left: 0;
   width: 100%;
   padding: 0;
   margin: 0;
 }
-.col-smpactions .actions-amp > .rowcell.middle {
+.col-smpornactions .actions-amp > .rowcell.middle,
+.col-smpornactions .actions-orn > .rowcell.middle {
   top: 50%;
   margin-top: -50%;
 }
-.col-smpactions .actions-amp > .rowcell.middle > .separator {
+.col-smpornactions .actions-amp > .rowcell.bottom,
+.col-smpornactions .actions-orn > .rowcell.bottom {
+  bottom: 0;
+}
+.col-smpornactions .actions-amp > .rowcell > .centertext,
+.col-smpornactions .actions-orn > .rowcell > .centertext {
+  width: 100%;
+  text-align: center;
+  font-size: 91%;
+  padding: 1px 0;
+}
+.col-smpornactions .actions-amp > .rowcell > .separator,
+.col-smpornactions .actions-orn > .rowcell > .separator {
   height: 1px;
   border-bottom: 1px solid #eeeeee;
   margin: 5px -5px;
 }
-.col-smpactions .actions-amp > .rowcell.bottom {
-  bottom: 0;
-}
-.col-smpactions .actions-amp > .rowcell .btnpair {
+.col-smpornactions .actions-amp > .rowcell > .btnpair,
+.col-smpornactions .actions-orn > .rowcell > .btnpair {
   display: inline-block;
   width: 100%;
   margin: 2px 0;
 }
-.col-smpactions .actions-range {
+.col-smpornactions .actions-range {
   position: relative;
   width: 100%;
   height: 100px;
   padding: 0;
   margin: 0;
 }
-.col-smpactions .actions-range > .bottom {
+.col-smpornactions .actions-range > .bottom {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -7620,32 +7640,34 @@ label.disabled {
   padding: 0;
   margin: 0;
 }
-.col-smpactions .actions-range > .bottom input[type=checkbox] {
+.col-smpornactions .actions-range > .bottom input[type=checkbox] {
   margin-top: 0;
 }
-.col-smpactions .actions-range > .bottom > .separator {
+.col-smpornactions .actions-range > .bottom > .separator {
   height: 1px;
   border-bottom: 1px solid #eeeeee;
   margin: 5px -5px;
 }
-.col-smpactions .actions-range > .bottom > .halfing > * {
+.col-smpornactions .actions-range > .bottom > .halfing > * {
   float: left;
   width: 50%;
   margin: 0;
   margin-top: 2.5px;
   padding-right: 1px;
 }
-.col-smpactions .actions-range > .bottom > .halfing > *.right {
+.col-smpornactions .actions-range > .bottom > .halfing > *.right {
   float: right;
   width: auto;
 }
-.col-smpactions .actions-range > .bottom > .halfing > * .input-group-btn-vertical > button {
+.col-smpornactions .actions-range > .bottom > .halfing > * .input-group-btn-vertical > button {
   height: 50%;
 }
-#txSampleTone {
+#txSampleTone,
+#txOrnamentTone {
   position: relative;
 }
-#txSampleTone > input {
+#txSampleTone > input,
+#txOrnamentTone > input {
   position: absolute;
   top: 0;
   left: 0;
@@ -7656,12 +7678,14 @@ label.disabled {
   -ms-user-select: none;
   user-select: none;
 }
-#txSampleTone > input:first-child {
+#txSampleTone > input:first-child,
+#txOrnamentTone > input:first-child {
   z-index: 0;
   color: #000000;
   background: #ffffff;
 }
-#txSampleTone > input:last-child {
+#txSampleTone > input:last-child,
+#txOrnamentTone > input:last-child {
   z-index: 5;
   color: transparent;
   background: transparent;
@@ -7686,7 +7710,8 @@ label.disabled {
   width: 3929px;
   height: 16px;
 }
-#fxSampleShift {
+#fxSampleShift,
+#fxOrnamentEditor {
   display: -webkit-flex;
   -webkit-flex: none;
   -webkit-flex-flow: column wrap;
@@ -7704,7 +7729,8 @@ label.disabled {
   margin: 0;
   height: 408px;
 }
-#fxSampleShift > .cell {
+#fxSampleShift > .cell,
+#fxOrnamentEditor > .cell {
   width: 117px;
   height: 25px;
   min-height: 25px;
@@ -7714,26 +7740,35 @@ label.disabled {
   margin-right: 5px;
   border-right: 1px solid #eeeeee;
 }
-#fxSampleShift > .cell span.bootstrap-touchspin-prefix {
+#fxSampleShift > .cell span.bootstrap-touchspin-prefix,
+#fxOrnamentEditor > .cell span.bootstrap-touchspin-prefix {
   font-size: 11px;
 }
-#fxSampleShift > .cell input {
+#fxSampleShift > .cell input,
+#fxOrnamentEditor > .cell input {
   text-align: right;
   font-weight: bold;
   border-radius: 0 !important;
   background-color: #eeeeee;
 }
-#fxSampleShift > .cell.on input {
+#fxSampleShift > .cell.on input,
+#fxOrnamentEditor > .cell.on input {
   background-color: #ffffff;
 }
-#fxSampleShift > .cell.on span.bootstrap-touchspin-prefix {
+#fxSampleShift > .cell.on span.bootstrap-touchspin-prefix,
+#fxOrnamentEditor > .cell.on span.bootstrap-touchspin-prefix {
   background-color: #fcfcfc;
 }
-#fxSampleShift > .cell.loop input {
+#fxSampleShift > .cell.loop input,
+#fxOrnamentEditor > .cell.loop input {
   background-color: #d6e7f5;
 }
-#fxSampleShift > .cell.loop span.bootstrap-touchspin-prefix {
+#fxSampleShift > .cell.loop span.bootstrap-touchspin-prefix,
+#fxOrnamentEditor > .cell.loop span.bootstrap-touchspin-prefix {
   background-color: #c2dbf0;
+}
+#fxOrnamentEditor > .cell {
+  width: 112px;
 }
 #documodal pre.modal-body {
   font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
