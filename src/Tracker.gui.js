@@ -45,7 +45,7 @@ Tracker.prototype.populateGUI = function () {
 			handler:  function(i, el) {
 				var data = (el.dataset || $(this).data()).tooltip || '',
 					id = data.length ? data : el.id || el.htmlFor || el.name,
-					delay = /^mi/.test(id) ? 500 : 1000,
+					delay = /^mi/.test(id) ? 500 : 2000,
 					t = app.doc.tooltip[id];
 
 				if (!t)
