@@ -152,7 +152,7 @@ var SmpOrnEditor = (function () {
 			'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
 			'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
 			'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
-			'dim':    { sequence: [ 0, 3, 6 ],     name: 'diminished' },
+			'dim':    { sequence: [ 0, 3, 6, 9 ],  name: 'diminished' },
 			'12th':   { sequence: [ 12, 0 ],       name: '12th' }
 		};
 
