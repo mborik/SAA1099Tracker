@@ -795,7 +795,7 @@ class Player {
 				pp.attenuation.byte = ~pl.volume.byte;
 
 			if (pl.release) {
-				if (pp.sample.releasable)
+				if (pp.sample.releasable && !pp.released)
 					pp.released = true;
 				else
 					this.clearPlayParams(chn);
@@ -827,11 +827,13 @@ class Player {
 				pp.sample_cursor = 0;
 				pp.ornament_cursor = 0;
 				pp.slideShift = pp.commandValue1 = pp.commandValue2 = 0;
+				pp.released = false;
 			}
 
 			if (pl.smp) {
 				pp.sample = this.sample[pl.smp];
 				pp.sample_cursor = 0;
+				pp.released = false;
 			}
 			if (pl.orn) {
 				pp.ornament = this.ornament[pl.orn];
