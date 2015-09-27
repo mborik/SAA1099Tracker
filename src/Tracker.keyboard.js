@@ -343,29 +343,47 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			if (cl < pt.end) switch (key) {
 				case 8:
-					return function () { // TODO FIXME
+					return function () {
 						console.logHotkey('Backspace - Delete trackline from pattern');
 
-						var i = cl, line = cl + 1;
-						for (; line < 96; i++, line++)
-							pt.data[i] = pt.data[line];
-						pt.data[i].tone = pt.data[i].smp = pt.data[i].orn = 0;
-						pt.data[i].release = pt.data[i].orn_release = false;
-						pt.data[i].cmd = pt.data[i].cmd_data = pt.data[i].volume.byte = 0;
+						var A = cl + 1, B = cl, data = pt.data;
+						for (; A < 95; A++, B++) {
+							data[B].tone = data[A].tone;
+							data[B].release = data[A].release;
+							data[B].smp = data[A].smp;
+							data[B].orn = data[A].orn;
+							data[B].orn_release = data[A].orn_release;
+							data[B].volume.byte = data[A].volume.byte;
+							data[B].cmd = data[A].cmd;
+							data[B].cmd_data = data[A].cmd_data;
+						}
+
+						data[A].tone = data[A].smp = data[A].orn = 0;
+						data[A].release = data[A].orn_release = false;
+						data[A].cmd = data[A].cmd_data = data[A].volume.byte = 0;
 
 						app.updateTracklist();
 					};
 
 				case 45:
-					return function () { // TODO FIXME
+					return function () {
 						console.logHotkey('Insert - New trackline into pattern');
 
-						var len = 96 - cl, i = len - 1, line = 94;
-						for (; line >= cl; i--, line--)
-							pt.data[i] = pt.data[line];
-						pt.data[i].tone = pt.data[i].smp = pt.data[i].orn = 0;
-						pt.data[i].release = pt.data[i].orn_release = false;
-						pt.data[i].cmd = pt.data[i].cmd_data = pt.data[i].volume.byte = 0;
+						var A = 94, B = 95, data = pt.data;
+						for (; A >= cl; A--, B--) {
+							data[B].tone = data[A].tone;
+							data[B].release = data[A].release;
+							data[B].smp = data[A].smp;
+							data[B].orn = data[A].orn;
+							data[B].orn_release = data[A].orn_release;
+							data[B].volume.byte = data[A].volume.byte;
+							data[B].cmd = data[A].cmd;
+							data[B].cmd_data = data[A].cmd_data;
+						}
+
+						data[B].tone = data[B].smp = data[B].orn = 0;
+						data[B].release = data[B].orn_release = false;
+						data[B].cmd = data[B].cmd_data = data[B].volume.byte = 0;
 
 						app.updateTracklist();
 					};
