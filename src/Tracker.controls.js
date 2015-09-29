@@ -46,21 +46,21 @@ Tracker.prototype.updatePanelInfo = function () {
 		current += pos.frames[line];
 
 		i = total.toString().length;
-		el[4].innerText = current.toWidth(i);
-		el[5].innerText = total.toWidth(i);
+		el[4].textContent = current.toWidth(i);
+		el[5].textContent = total.toWidth(i);
 
-		el[2].innerText = (current / int).toTimeString();
-		el[3].innerText = (total / int).toTimeString();
+		el[2].textContent = (current / int).toTimeString();
+		el[3].textContent = (total / int).toTimeString();
 	}
 	else {
 		bpm = (i / this.player.currentSpeed) >> 2;
 
-		el[2].innerText = el[3].innerText = (0).toTimeString();
-		el[4].innerText = el[5].innerText = '0';
+		el[2].textContent = el[3].textContent = (0).toTimeString();
+		el[4].textContent = el[5].textContent = '0';
 	}
 
-	el[0].innerText = bpm;
-	el[1].innerText = int;
+	el[0].textContent = bpm;
+	el[1].textContent = int;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {
