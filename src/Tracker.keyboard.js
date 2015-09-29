@@ -142,9 +142,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!((type === 'repeat' && ([38,40,48,57].indexOf(key) >= 0)) || keydown))
 				return;
 
-			if (key > 96 && key < 103)
+			// unite bunch of keys into one handler...
+			if (key > 96 && key < 103)     // Numpad1-Numpad6 (toggle channels)
 				key = 96;
-			else if (key > 48 && key < 57)
+			else if (key > 48 && key < 57) // numbers 1-8 (octave)
 				key = 56;
 
 			return {
@@ -201,6 +202,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keyup)
 				return;
 
+			// unite Numpad +/- into one handler (transposition)
+			if (key === 109)
+				key = 107;
+
 			return {
 				37: function () {
 					console.logHotkey('Ctrl+Shift+Left - Previous position');
@@ -209,6 +214,35 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				39: function () {
 					console.logHotkey('Ctrl+Shift+Right - Next position');
 					$('#scPosCurrent').trigger('touchspin.uponce');
+				},
+				107: function(plus) {
+					if (!app.modeEdit)
+						return;
+
+					plus &= 2;
+					console.logHotkey('Ctrl+Shift+Num' + (!!plus ? 'Plus' : 'Minus') + ' - Transpose octave');
+
+					var p = app.player, t,
+						sel = app.tracklist.selection,
+						ch = sel.len ? sel.channel : app.modeEditChannel,
+						line = sel.len ? sel.line : p.currentLine,
+						end = line + sel.len,
+						pos = p.position[p.currentPosition] || p.nullPosition,
+						pp = p.pattern[pos.ch[ch].pattern];
+
+					for (plus = (plus - 1) * 12; line <= end; line++) {
+						if (line >= pp.end)
+							break;
+
+						if (!(t = pp.data[line].tone))
+							continue;
+
+						t += plus;
+						if (t > 0 && t <= 96)
+							pp.data[line].tone = t;
+					}
+
+					app.updateTracklist();
 				}
 			}[key];
 
@@ -231,6 +265,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 		case 'editorKeys':
 			if (!(keydown || (type === 'repeat' && cursors)))
 				return;
+
+			// unite Numpad +/- into one handler (transposition)
+			if (key === 109)
+				key = 107;
 
 			if (cursors) {
 				if (app.modePlay)
@@ -328,6 +366,29 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				40: function () {
 					console.logHotkey('Down - Cursor movement');
 					app.updateEditorCombo(1);
+				},
+				107: function(plus) {
+					if (!app.modeEdit)
+						return;
+
+					plus &= 2;
+					console.logHotkey('Num' + (!!plus ? 'Plus' : 'Minus') + ' - Transpose half-tone');
+
+					var p = app.player,
+						sel = app.tracklist.selection,
+						ch = sel.len ? sel.channel : app.modeEditChannel,
+						line = sel.len ? sel.line : p.currentLine,
+						end = line + sel.len,
+						pos = p.position[p.currentPosition] || p.nullPosition,
+						pp = p.pattern[pos.ch[ch].pattern];
+
+					for (--plus; line <= end; line++)
+						if (line >= pp.end)
+							break;
+						else if (pp.data[line].tone)
+							pp.data[line].tone = Math.min(Math.max(pp.data[line].tone + plus, 1), 96);
+
+					app.updateTracklist();
 				}
 			}[key];
 
