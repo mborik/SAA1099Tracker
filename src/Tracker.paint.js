@@ -153,7 +153,8 @@ Tracker.prototype.updateTracklist = function (update) {
 				}
 
 				cc = ccb;
-				if (!(i === half && this.modeEdit) &&
+				if (!backup &&
+					!(i === half && this.modeEdit) &&
 					sel.len && sel.channel === chn &&
 					line >= sel.line &&
 					line <= (sel.line + sel.len)) {
