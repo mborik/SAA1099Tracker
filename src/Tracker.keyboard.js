@@ -699,7 +699,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				key += 256;
 		}
 
-		if (e.repeat)
+		if (e.repeat || (browser.isFirefox && o[key]))
 			type = 'repeat';
 
 		// add new key to the keymapper
