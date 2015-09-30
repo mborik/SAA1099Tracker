@@ -15,7 +15,12 @@ Tracker.prototype.updatePanels = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateEditorCombo = function (step) {
-	this.tracklist.moveCurrentline(step || this.ctrlRowStep);
+	if (step === void 0) {
+		this.player.playLine();
+		step = this.ctrlRowStep;
+	}
+
+	this.tracklist.moveCurrentline(step);
 	this.updateTracklist();
 	this.updatePanelInfo();
 };
