@@ -487,7 +487,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					var columnHandler = {
 					// NOTE column
 						0: function (key, test) {
-							var tone = app.getKeynote(key);
+							var tone = Math.min(app.getKeynote(key), 96);
 
 							if (tone < 0)
 								return false;
@@ -667,6 +667,20 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					return (columnHandler(key, true)) ? columnHandler : undefined;
 			}
 
+
+		case 'smpornKeys':
+			if (!keydown)
+				return;
+
+			var oct  = app.player.tones[app.workingSampleTone].oct,
+				tone = Math.min(app.getKeynote(key, oct), 96),
+				sample = (app.activeTab === 1) ? app.workingSample : app.workingOrnTestSample,
+				ornament = (app.activeTab === 2) ? app.workingOrnament : 0;
+
+			if (tone > 0)
+				return function () { app.player.playSample(sample, ornament, tone) };
+			break;
+
 		default:
 			return;
 	}
@@ -821,10 +835,8 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 			else if (!(fn = this.hotkeyMap(type, 'globalCtrl', key))) {
 				if (this.activeTab === 0 && !(fn = this.hotkeyMap(type, 'trackerCtrl', key)))
 					fn = this.hotkeyMap(type, 'editorCtrl', key);
-				else if (this.activeTab === 1)
-					fn = this.hotkeyMap(type, 'smpeditCtrl', key);
-				else if (this.activeTab === 2)
-					fn = this.hotkeyMap(type, 'orneditCtrl', key);
+				else if (this.activeTab > 0)
+					fn = this.hotkeyMap(type, 'smpornCtrl', key);
 			}
 		}
 		else if (o.length === 3 && o[16] && this.activeTab === 0)
@@ -853,8 +865,8 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 	}
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.getKeynote = function (key) {
-	var t = ((this.ctrlOctave - 1) * 12),
+Tracker.prototype.getKeynote = function (key, octave) {
+	var t = ((octave !== void 0) ? octave : (this.ctrlOctave - 1)) * 12,
 		c = String.fromCharCode(key),
 		i = ' ZSXDCVGBHNJMQ2W3ER5T6Y7UI9O0P'.indexOf(c);
 
