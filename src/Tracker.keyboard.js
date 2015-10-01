@@ -667,6 +667,27 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					return (columnHandler(key, true)) ? columnHandler : undefined;
 			}
 
+		case 'smpornCtrl':
+			if (!keydown)
+				return;
+
+			if (key > 48 && key < 57) { // numbers 1-8 (octave)
+				return function (key) {
+					var oct = (key - 49),
+						base = app.workingSampleTone,
+						tone = ((base - 1) % 12) + (oct * 12) + 1;
+
+					if (base !== tone) {
+						console.logHotkey('Ctrl+' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
+						app.workingSampleTone = tone;
+
+						$('#scSampleTone,#scOrnTone')
+							.val(tone.toString())
+							.prev().val(app.player.tones[tone].txt);
+					}
+				};
+			}
+			break;
 
 		case 'smpornKeys':
 			if (!keydown)
