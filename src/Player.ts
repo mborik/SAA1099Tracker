@@ -968,7 +968,7 @@ class Player {
 		// base tone overflowing in tones range
 		while (pitch < 0)
 			pitch += 96;
-		while (pitch >= 96)
+		while (pitch > 96)
 			pitch -= 96;
 
 		// pick tone descriptor for base tone
