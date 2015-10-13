@@ -315,13 +315,13 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				35: function () {
 					console.logHotkey('End - Move cursor to end of the position');
-					app.tracklist.moveCurrentline(96, true);
+					app.tracklist.moveCurrentline(Player.maxPatternLen, true);
 					app.updateTracklist();
 					app.updatePanelInfo();
 				},
 				36: function () {
 					console.logHotkey('Home - Move cursor to start of the position');
-					app.tracklist.moveCurrentline(-96, true);
+					app.tracklist.moveCurrentline(-Player.maxPatternLen, true);
 					app.updateTracklist();
 					app.updatePanelInfo();
 				},
@@ -407,8 +407,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					return function () {
 						console.logHotkey('Backspace - Delete trackline from pattern');
 
-						var A = cl + 1, B = cl, data = pt.data;
-						for (; A < 95; A++, B++) {
+						var A = cl + 1, B = cl, data = pt.data,
+							max = Player.maxPatternLen - 1;
+
+						for (; A < max; A++, B++) {
 							data[B].tone = data[A].tone;
 							data[B].release = data[A].release;
 							data[B].smp = data[A].smp;
@@ -430,7 +432,9 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					return function () {
 						console.logHotkey('Insert - New trackline into pattern');
 
-						var A = 94, B = 95, data = pt.data;
+						var max = Player.maxPatternLen,
+							A = max - 2, B = max - 1, data = pt.data;
+
 						for (; A >= cl; A--, B--) {
 							data[B].tone = data[A].tone;
 							data[B].release = data[A].release;

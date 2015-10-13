@@ -72,11 +72,12 @@ Tracker.prototype.updateTracklist = function (update) {
 		sel = this.tracklist.selection,
 		offs = this.tracklist.offsets,
 		player = this.player,
-		hexdec = this.settings.hexTracklines ? 16 : 10,
+		hexdec = this.settings.hexTracklines,
 		font = this.pixelfont.obj,
 		ctx = this.tracklist.ctx,
 		pos = player.currentPosition,
 		pp = player.position[pos] || player.nullPosition,
+		triDigitLine = (!hexdec && pp.length > 100),
 		backup, pt, dat,
 		w = this.tracklist.obj.width,
 		h = this.settings.tracklistLineHeight,
@@ -99,7 +100,7 @@ Tracker.prototype.updateTracklist = function (update) {
 
 		if (i !== half) {
 			ccb = 0; // basic color combination
-			ctx.clearRect(o.center, y, o.lineWidth, h);
+			ctx.clearRect(o.center - 6, y, o.lineWidth + 9, h);
 		}
 		else if (this.modeEdit) {
 			ccb = 10; // col.combination: 2:WHITE|RED
@@ -131,9 +132,13 @@ Tracker.prototype.updateTracklist = function (update) {
 			pp = player.position[pos + 1];
 		}
 
-		buf = ('0' + line.toString(hexdec)).substr(-2);
-		ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center, ypad, 5, 5);
-		ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center + 6, ypad, 5, 5);
+		buf = ('00' + line.toString(hexdec ? 16 : 10)).substr(-3);
+
+		if (triDigitLine || (!hexdec && line > 99))
+			ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center - 6, ypad, 5, 5);
+
+		ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center, ypad, 5, 5);
+		ctx.drawImage(font, charFromBuf(2), ccb, 5, 5, o.center + 6, ypad, 5, 5);
 
 		for (chn = 0; chn < 6; chn++) {
 			pt = player.pattern[pp.ch[chn].pattern];
@@ -251,7 +256,7 @@ Tracker.prototype.updateTracklist = function (update) {
 			ctx.save();
 			ctx.fillStyle = 'rgba(255,255,255,.75)';
 			ctx.globalCompositeOperation = "xor";
-			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
+			ctx.fillRect(o.center - 6, ypad, o.lineWidth + 6, 5);
 			ctx.restore();
 		}
 	}

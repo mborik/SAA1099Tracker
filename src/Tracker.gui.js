@@ -163,7 +163,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'TouchSpin',
 			data: {
 				initval: '64',
-				min: 1, max: 96
+				min: 1, max: Player.maxPatternLen
 			}
 		}, {
 			selector: '#scPattern',
