@@ -96,7 +96,7 @@ interface pPatternLine {
 	cmd_data: number;
 }
 
-// Pattern interface (data length = 96)
+// Pattern interface (data length = maxPatternLen)
 interface pPattern {
 	data: pPatternLine[];
 	end: number;
@@ -126,7 +126,7 @@ class pPosition {
 
 		for (var i: number = 0; i < 6; i++)
 			this.ch[i] = { pattern: 0, pitch: 0 };
-		for (var i: number = 0, line: number = 0; line <= 96; line++, i+= speed)
+		for (var i: number = 0, line: number = 0; line <= Player.maxPatternLen; line++, i+= speed)
 			this.frames[line] = i;
 	}
 
@@ -163,7 +163,7 @@ class pMixer {
 }
 //---------------------------------------------------------------------------------------
 class Player {
-	public SAA1099: SAASound;
+	public static maxPatternLen: number = 128;
 
 	public tones: pTone[];
 	public sample: pSample[];
@@ -183,8 +183,9 @@ class Player {
 
 	private mode: number;
 	private playParams: pParams[];
-
 	private mixer: pMixer = new pMixer;
+
+	public SAA1099: SAASound;
 
 	constructor(SAA1099: SAASound) {
 		this.SAA1099 = SAA1099;
@@ -301,7 +302,7 @@ class Player {
 			index: number = this.pattern.length,
 			pt: pPattern = { data: [], end: 0 };
 
-		for (i = 0; i < 96; i++)
+		for (i = 0; i < Player.maxPatternLen; i++)
 			pt.data[i] = { tone: 0, release: false, smp: 0, orn: 0, orn_release: false, volume: new pVolume, cmd: 0, cmd_data: 0 };
 
 		this.pattern.push(pt);
@@ -912,8 +913,29 @@ class Player {
 			for (chn = 0; chn < 6; chn++)
 				if (!this.playParams[chn].playing)
 					break;
-			if (chn === 6)
-				return 0;
+
+			// no free channel for playing,
+			// we can try find channel, that playing same sample
+			// but on farther sample pointer...
+			if (chn === 6) {
+				var farther = -1,
+					chnToStop = -1;
+
+				for (chn = 0; chn < 6; chn++) {
+					if (this.playParams[chn].sample === this.sample[s]) {
+						if (this.playParams[chn].sample_cursor > farther) {
+							farther = this.playParams[chn].sample_cursor;
+							chnToStop = chn;
+						}
+					}
+				}
+
+				// definetely, no free channel left...
+				if (chnToStop < 0)
+					return 0;
+
+				chn = chnToStop;
+			}
 		}
 		else if (--chn > 5)
 			return 0;
@@ -1023,7 +1045,7 @@ class Player {
 			speed = this.position[pos].speed;
 
 			// proceed through all tracklines and all channel-patterns
-			for (i = 0, line = 0; line < 96; line++) {
+			for (i = 0, line = 0; line < Player.maxPatternLen; line++) {
 				for (chn = 0; chn < 6; chn++) {
 					ptr = this.pattern[this.position[pos].ch[chn].pattern].data[line];
 
@@ -1055,7 +1077,7 @@ class Player {
 					i += speed;
 			}
 
-			// and at last: total number of interupts for all 96 lines...
+			// and at last: total number of interupts for all tracklines of pattern...
 			this.position[pos].frames[line] = i;
 		}
 	}
