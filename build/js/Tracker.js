@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.3') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.4') });
 //---------------------------------------------------------------------------------------
 
 /** Tracker.tracklist submodule */
@@ -335,7 +335,7 @@ var SmpOrnEditor = (function () {
 			'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
 			'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
 			'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
-			'dim':    { sequence: [ 0, 3, 6 ],     name: 'diminished' },
+			'dim':    { sequence: [ 0, 3, 6, 9 ],  name: 'diminished' },
 			'12th':   { sequence: [ 12, 0 ],       name: '12th' }
 		};
 
@@ -631,7 +631,12 @@ Tracker.prototype.updatePanels = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateEditorCombo = function (step) {
-	this.tracklist.moveCurrentline(step || this.ctrlRowStep);
+	if (step === void 0) {
+		this.player.playLine();
+		step = this.ctrlRowStep;
+	}
+
+	this.tracklist.moveCurrentline(step);
 	this.updateTracklist();
 	this.updatePanelInfo();
 };
@@ -662,21 +667,21 @@ Tracker.prototype.updatePanelInfo = function () {
 		current += pos.frames[line];
 
 		i = total.toString().length;
-		el[4].innerText = current.toWidth(i);
-		el[5].innerText = total.toWidth(i);
+		el[4].textContent = current.toWidth(i);
+		el[5].textContent = total.toWidth(i);
 
-		el[2].innerText = (current / int).toTimeString();
-		el[3].innerText = (total / int).toTimeString();
+		el[2].textContent = (current / int).toTimeString();
+		el[3].textContent = (total / int).toTimeString();
 	}
 	else {
 		bpm = (i / this.player.currentSpeed) >> 2;
 
-		el[2].innerText = el[3].innerText = (0).toTimeString();
-		el[4].innerText = el[5].innerText = '0';
+		el[2].textContent = el[3].textContent = (0).toTimeString();
+		el[4].textContent = el[5].textContent = '0';
 	}
 
-	el[0].innerText = bpm;
-	el[1].innerText = int;
+	el[0].textContent = bpm;
+	el[1].textContent = int;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {
@@ -1367,9 +1372,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!((type === 'repeat' && ([38,40,48,57].indexOf(key) >= 0)) || keydown))
 				return;
 
-			if (key > 96 && key < 103)
+			// unite bunch of keys into one handler...
+			if (key > 96 && key < 103)     // Numpad1-Numpad6 (toggle channels)
 				key = 96;
-			else if (key > 48 && key < 57)
+			else if (key > 48 && key < 57) // numbers 1-8 (octave)
 				key = 56;
 
 			return {
@@ -1426,6 +1432,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keyup)
 				return;
 
+			// unite Numpad +/- into one handler (transposition)
+			if (key === 109)
+				key = 107;
+
 			return {
 				37: function () {
 					console.logHotkey('Ctrl+Shift+Left - Previous position');
@@ -1434,6 +1444,35 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				39: function () {
 					console.logHotkey('Ctrl+Shift+Right - Next position');
 					$('#scPosCurrent').trigger('touchspin.uponce');
+				},
+				107: function(plus) {
+					if (!app.modeEdit)
+						return;
+
+					plus &= 2;
+					console.logHotkey('Ctrl+Shift+Num' + (!!plus ? 'Plus' : 'Minus') + ' - Transpose octave');
+
+					var p = app.player, t,
+						sel = app.tracklist.selection,
+						ch = sel.len ? sel.channel : app.modeEditChannel,
+						line = sel.len ? sel.line : p.currentLine,
+						end = line + sel.len,
+						pos = p.position[p.currentPosition] || p.nullPosition,
+						pp = p.pattern[pos.ch[ch].pattern];
+
+					for (plus = (plus - 1) * 12; line <= end; line++) {
+						if (line >= pp.end)
+							break;
+
+						if (!(t = pp.data[line].tone))
+							continue;
+
+						t += plus;
+						if (t > 0 && t <= 96)
+							pp.data[line].tone = t;
+					}
+
+					app.updateTracklist();
 				}
 			}[key];
 
@@ -1456,6 +1495,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 		case 'editorKeys':
 			if (!(keydown || (type === 'repeat' && cursors)))
 				return;
+
+			// unite Numpad +/- into one handler (transposition)
+			if (key === 109)
+				key = 107;
 
 			if (cursors) {
 				if (app.modePlay)
@@ -1502,13 +1545,13 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				35: function () {
 					console.logHotkey('End - Move cursor to end of the position');
-					app.tracklist.moveCurrentline(96, true);
+					app.tracklist.moveCurrentline(Player.maxPatternLen, true);
 					app.updateTracklist();
 					app.updatePanelInfo();
 				},
 				36: function () {
 					console.logHotkey('Home - Move cursor to start of the position');
-					app.tracklist.moveCurrentline(-96, true);
+					app.tracklist.moveCurrentline(-Player.maxPatternLen, true);
 					app.updateTracklist();
 					app.updatePanelInfo();
 				},
@@ -1553,6 +1596,29 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				40: function () {
 					console.logHotkey('Down - Cursor movement');
 					app.updateEditorCombo(1);
+				},
+				107: function(plus) {
+					if (!app.modeEdit)
+						return;
+
+					plus &= 2;
+					console.logHotkey('Num' + (!!plus ? 'Plus' : 'Minus') + ' - Transpose half-tone');
+
+					var p = app.player,
+						sel = app.tracklist.selection,
+						ch = sel.len ? sel.channel : app.modeEditChannel,
+						line = sel.len ? sel.line : p.currentLine,
+						end = line + sel.len,
+						pos = p.position[p.currentPosition] || p.nullPosition,
+						pp = p.pattern[pos.ch[ch].pattern];
+
+					for (--plus; line <= end; line++)
+						if (line >= pp.end)
+							break;
+						else if (pp.data[line].tone)
+							pp.data[line].tone = Math.min(Math.max(pp.data[line].tone + plus, 1), 96);
+
+					app.updateTracklist();
 				}
 			}[key];
 
@@ -1568,29 +1634,51 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 			if (cl < pt.end) switch (key) {
 				case 8:
-					return function () { // TODO FIXME
+					return function () {
 						console.logHotkey('Backspace - Delete trackline from pattern');
 
-						var i = cl, line = cl + 1;
-						for (; line < 96; i++, line++)
-							pt.data[i] = pt.data[line];
-						pt.data[i].tone = pt.data[i].smp = pt.data[i].orn = 0;
-						pt.data[i].release = pt.data[i].orn_release = false;
-						pt.data[i].cmd = pt.data[i].cmd_data = pt.data[i].volume.byte = 0;
+						var A = cl + 1, B = cl, data = pt.data,
+							max = Player.maxPatternLen - 1;
+
+						for (; A < max; A++, B++) {
+							data[B].tone = data[A].tone;
+							data[B].release = data[A].release;
+							data[B].smp = data[A].smp;
+							data[B].orn = data[A].orn;
+							data[B].orn_release = data[A].orn_release;
+							data[B].volume.byte = data[A].volume.byte;
+							data[B].cmd = data[A].cmd;
+							data[B].cmd_data = data[A].cmd_data;
+						}
+
+						data[A].tone = data[A].smp = data[A].orn = 0;
+						data[A].release = data[A].orn_release = false;
+						data[A].cmd = data[A].cmd_data = data[A].volume.byte = 0;
 
 						app.updateTracklist();
 					};
 
 				case 45:
-					return function () { // TODO FIXME
+					return function () {
 						console.logHotkey('Insert - New trackline into pattern');
 
-						var len = 96 - cl, i = len - 1, line = 94;
-						for (; line >= cl; i--, line--)
-							pt.data[i] = pt.data[line];
-						pt.data[i].tone = pt.data[i].smp = pt.data[i].orn = 0;
-						pt.data[i].release = pt.data[i].orn_release = false;
-						pt.data[i].cmd = pt.data[i].cmd_data = pt.data[i].volume.byte = 0;
+						var max = Player.maxPatternLen,
+							A = max - 2, B = max - 1, data = pt.data;
+
+						for (; A >= cl; A--, B--) {
+							data[B].tone = data[A].tone;
+							data[B].release = data[A].release;
+							data[B].smp = data[A].smp;
+							data[B].orn = data[A].orn;
+							data[B].orn_release = data[A].orn_release;
+							data[B].volume.byte = data[A].volume.byte;
+							data[B].cmd = data[A].cmd;
+							data[B].cmd_data = data[A].cmd_data;
+						}
+
+						data[B].tone = data[B].smp = data[B].orn = 0;
+						data[B].release = data[B].orn_release = false;
+						data[B].cmd = data[B].cmd_data = data[B].volume.byte = 0;
 
 						app.updateTracklist();
 					};
@@ -1633,7 +1721,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					var columnHandler = {
 					// NOTE column
 						0: function (key, test) {
-							var tone = app.getKeynote(key);
+							var tone = Math.min(app.getKeynote(key), 96);
 
 							if (tone < 0)
 								return false;
@@ -1813,6 +1901,41 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					return (columnHandler(key, true)) ? columnHandler : undefined;
 			}
 
+		case 'smpornCtrl':
+			if (!keydown)
+				return;
+
+			if (key > 48 && key < 57) { // numbers 1-8 (octave)
+				return function (key) {
+					var oct = (key - 49),
+						base = app.workingSampleTone,
+						tone = ((base - 1) % 12) + (oct * 12) + 1;
+
+					if (base !== tone) {
+						console.logHotkey('Ctrl+' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
+						app.workingSampleTone = tone;
+
+						$('#scSampleTone,#scOrnTone')
+							.val(tone.toString())
+							.prev().val(app.player.tones[tone].txt);
+					}
+				};
+			}
+			break;
+
+		case 'smpornKeys':
+			if (!keydown)
+				return;
+
+			var oct  = app.player.tones[app.workingSampleTone].oct,
+				tone = Math.min(app.getKeynote(key, oct), 96),
+				sample = (app.activeTab === 1) ? app.workingSample : app.workingOrnTestSample,
+				ornament = (app.activeTab === 2) ? app.workingOrnament : 0;
+
+			if (tone > 0)
+				return function () { app.player.playSample(sample, ornament, tone) };
+			break;
+
 		default:
 			return;
 	}
@@ -1845,7 +1968,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				key += 256;
 		}
 
-		if (e.repeat)
+		if (e.repeat || (browser.isFirefox && o[key]))
 			type = 'repeat';
 
 		// add new key to the keymapper
@@ -1967,10 +2090,8 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 			else if (!(fn = this.hotkeyMap(type, 'globalCtrl', key))) {
 				if (this.activeTab === 0 && !(fn = this.hotkeyMap(type, 'trackerCtrl', key)))
 					fn = this.hotkeyMap(type, 'editorCtrl', key);
-				else if (this.activeTab === 1)
-					fn = this.hotkeyMap(type, 'smpeditCtrl', key);
-				else if (this.activeTab === 2)
-					fn = this.hotkeyMap(type, 'orneditCtrl', key);
+				else if (this.activeTab > 0)
+					fn = this.hotkeyMap(type, 'smpornCtrl', key);
 			}
 		}
 		else if (o.length === 3 && o[16] && this.activeTab === 0)
@@ -1999,8 +2120,8 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 	}
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.getKeynote = function (key) {
-	var t = ((this.ctrlOctave - 1) * 12),
+Tracker.prototype.getKeynote = function (key, octave) {
+	var t = ((octave !== void 0) ? octave : (this.ctrlOctave - 1)) * 12,
 		c = String.fromCharCode(key),
 		i = ' ZSXDCVGBHNJMQ2W3ER5T6Y7UI9O0P'.indexOf(c);
 
@@ -2328,11 +2449,12 @@ Tracker.prototype.updateTracklist = function (update) {
 		sel = this.tracklist.selection,
 		offs = this.tracklist.offsets,
 		player = this.player,
-		hexdec = this.settings.hexTracklines ? 16 : 10,
+		hexdec = this.settings.hexTracklines,
 		font = this.pixelfont.obj,
 		ctx = this.tracklist.ctx,
 		pos = player.currentPosition,
 		pp = player.position[pos] || player.nullPosition,
+		triDigitLine = (!hexdec && pp.length > 100),
 		backup, pt, dat,
 		w = this.tracklist.obj.width,
 		h = this.settings.tracklistLineHeight,
@@ -2355,7 +2477,7 @@ Tracker.prototype.updateTracklist = function (update) {
 
 		if (i !== half) {
 			ccb = 0; // basic color combination
-			ctx.clearRect(o.center, y, o.lineWidth, h);
+			ctx.clearRect(o.center - 6, y, o.lineWidth + 9, h);
 		}
 		else if (this.modeEdit) {
 			ccb = 10; // col.combination: 2:WHITE|RED
@@ -2387,9 +2509,13 @@ Tracker.prototype.updateTracklist = function (update) {
 			pp = player.position[pos + 1];
 		}
 
-		buf = ('0' + line.toString(hexdec)).substr(-2);
-		ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center, ypad, 5, 5);
-		ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center + 6, ypad, 5, 5);
+		buf = ('00' + line.toString(hexdec ? 16 : 10)).substr(-3);
+
+		if (triDigitLine || (!hexdec && line > 99))
+			ctx.drawImage(font, charFromBuf(0), ccb, 5, 5, o.center - 6, ypad, 5, 5);
+
+		ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center, ypad, 5, 5);
+		ctx.drawImage(font, charFromBuf(2), ccb, 5, 5, o.center + 6, ypad, 5, 5);
 
 		for (chn = 0; chn < 6; chn++) {
 			pt = player.pattern[pp.ch[chn].pattern];
@@ -2409,7 +2535,8 @@ Tracker.prototype.updateTracklist = function (update) {
 				}
 
 				cc = ccb;
-				if (!(i === half && this.modeEdit) &&
+				if (!backup &&
+					!(i === half && this.modeEdit) &&
 					sel.len && sel.channel === chn &&
 					line >= sel.line &&
 					line <= (sel.line + sel.len)) {
@@ -2506,7 +2633,7 @@ Tracker.prototype.updateTracklist = function (update) {
 			ctx.save();
 			ctx.fillStyle = 'rgba(255,255,255,.75)';
 			ctx.globalCompositeOperation = "xor";
-			ctx.fillRect(o.center, ypad, o.lineWidth, 5);
+			ctx.fillRect(o.center - 6, ypad, o.lineWidth + 6, 5);
 			ctx.restore();
 		}
 	}
@@ -2994,7 +3121,7 @@ Tracker.prototype.populateGUI = function () {
 			method:   'TouchSpin',
 			data: {
 				initval: '64',
-				min: 1, max: 96
+				min: 1, max: Player.maxPatternLen
 			}
 		}, {
 			selector: '#scPattern',

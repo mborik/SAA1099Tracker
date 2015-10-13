@@ -86,6 +86,7 @@
 			logHotkeys: false
 		};
 
+		var originalLogger = console.log;
 		console.log = function() {
 			if (window.dev.logAll && arguments.length) {
 				var a = Array.prototype.slice.call(arguments, 0);
@@ -94,11 +95,11 @@
 
 				this.apply(console, a);
 			}
-		}.bind(console.log);
+		}.bind(originalLogger);
 
 		console.logHotkey = function() {
 			if (window.dev.logHotkeys && arguments.length)
-				console.log.apply(console, ['%cTrackerHotkey: ' + arguments[0], 'color:tan' ].concat(Array.prototype.slice.call(arguments, 1)));
+				originalLogger.apply(console, ['%cTrackerHotkey: ' + arguments[0], 'color:tan' ].concat(Array.prototype.slice.call(arguments, 1)));
 		};
 
 		return '### DEVELOPER MODE ACTIVE ###';

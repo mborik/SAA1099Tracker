@@ -80,7 +80,7 @@ var pPosition = (function () {
         this.frames = [];
         for (var i = 0; i < 6; i++)
             this.ch[i] = { pattern: 0, pitch: 0 };
-        for (var i = 0, line = 0; line <= 96; line++, i += speed)
+        for (var i = 0, line = 0; line <= Player.maxPatternLen; line++, i += speed)
             this.frames[line] = i;
     }
     pPosition.prototype.hasPattern = function (pattern) { return this.indexOf(pattern) >= 0; };
@@ -195,7 +195,7 @@ var Player = (function () {
      */
     Player.prototype.addNewPattern = function () {
         var i, index = this.pattern.length, pt = { data: [], end: 0 };
-        for (i = 0; i < 96; i++)
+        for (i = 0; i < Player.maxPatternLen; i++)
             pt.data[i] = { tone: 0, release: false, smp: 0, orn: 0, orn_release: false, volume: new pVolume, cmd: 0, cmd_data: 0 };
         this.pattern.push(pt);
         return index;
@@ -613,7 +613,7 @@ var Player = (function () {
             if (pl.volume.byte && pp.command != 0x5 && pp.command != 0xA)
                 pp.attenuation.byte = ~pl.volume.byte;
             if (pl.release) {
-                if (pp.sample.releasable)
+                if (pp.sample.releasable && !pp.released)
                     pp.released = true;
                 else
                     this.clearPlayParams(chn);
@@ -641,10 +641,12 @@ var Player = (function () {
                 pp.sample_cursor = 0;
                 pp.ornament_cursor = 0;
                 pp.slideShift = pp.commandValue1 = pp.commandValue2 = 0;
+                pp.released = false;
             }
             if (pl.smp) {
                 pp.sample = this.sample[pl.smp];
                 pp.sample_cursor = 0;
+                pp.released = false;
             }
             if (pl.orn) {
                 pp.ornament = this.ornament[pl.orn];
@@ -715,8 +717,24 @@ var Player = (function () {
             for (chn = 0; chn < 6; chn++)
                 if (!this.playParams[chn].playing)
                     break;
-            if (chn === 6)
-                return 0;
+            // no free channel for playing,
+            // we can try find channel, that playing same sample
+            // but on farther sample pointer...
+            if (chn === 6) {
+                var farther = -1, chnToStop = -1;
+                for (chn = 0; chn < 6; chn++) {
+                    if (this.playParams[chn].sample === this.sample[s]) {
+                        if (this.playParams[chn].sample_cursor > farther) {
+                            farther = this.playParams[chn].sample_cursor;
+                            chnToStop = chn;
+                        }
+                    }
+                }
+                // definetely, no free channel left...
+                if (chnToStop < 0)
+                    return 0;
+                chn = chnToStop;
+            }
         }
         else if (--chn > 5)
             return 0;
@@ -766,7 +784,7 @@ var Player = (function () {
         // base tone overflowing in tones range
         while (pitch < 0)
             pitch += 96;
-        while (pitch >= 96)
+        while (pitch > 96)
             pitch -= 96;
         // pick tone descriptor for base tone
         // and fix pitch of tone with fine tune frequency shift
@@ -809,7 +827,7 @@ var Player = (function () {
         else if (pos < l) {
             speed = this.position[pos].speed;
             // proceed through all tracklines and all channel-patterns
-            for (i = 0, line = 0; line < 96; line++) {
+            for (i = 0, line = 0; line < Player.maxPatternLen; line++) {
                 for (chn = 0; chn < 6; chn++) {
                     ptr = this.pattern[this.position[pos].ch[chn].pattern].data[line];
                     // in every channel-pattern we are looking for speed changes
@@ -834,10 +852,11 @@ var Player = (function () {
                 else
                     i += speed;
             }
-            // and at last: total number of interupts for all 96 lines...
+            // and at last: total number of interupts for all tracklines of pattern...
             this.position[pos].frames[line] = i;
         }
     };
+    Player.maxPatternLen = 128;
     //---------------------------------------------------------------------------------------
     Player.vibratable = [
         0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
