@@ -1,0 +1,45 @@
+== GLOBAL HOTKEYS =============================================================
+===============================================================================
+
+Esc                   | stop
+F1                    | about dialog
+F2                    | tracklist editor
+F3                    | sample editor
+F4                    | ornament editor
+F5, Right Ctrl        | play song
+F6                    | play song from start
+F7, Right Shift       | play position
+F8                    | play position from start
+F9                    | track manager
+F10                   | preferences
+F11                   | toggle loop
+Ctrl+O                | open
+Ctrl+S                | save
+Ctrl+Z                | undo
+Ctrl+Y, Ctrl+Shift+Z  | redo
+
+== TRACKLIST EDITOR ===========================================================
+===============================================================================
+
+Space                 | toggle edit mode
+Cursor keys           | basic tracklist cursor movement
+PgUp/PgDown, Home/End | fast tracklist cursor movement
+Ctrl+Up/Down          | cursor movement to every 16th line (signature)
+Tab/Shift+Tab         | move cursor to next/previous channel
+Ctrl+1..8             | set base octave
+Ctrl+9                | decrease rowstep
+Ctrl+0                | increase rowstep
+Ctrl+Shift+Left/Right | move to next/previous position
+Ctrl+Num1..Num6       | toggle on/off channels of SAA1099
+Num-/Num+             | transpose block/cursor by halftone up/down
+Ctrl+Shift+Num-/Num+  | transpose block/cursor by octave up/down
+Backspace             | delete trackline from channel-pattern
+Insert                | insert empty trackline to channel-pattern
+Delete                | clear trackline data under cursor
+
+== SAMPLE/ORNAMENT EDITOR =====================================================
+===============================================================================
+
+Ctrl+1..9|A-V         | change current sample/ornament
+Ctrl+Shift+1..8       | set base octave for sample/ornament editor test tone
+Alphanum keys section | works like 2.5 octave piano keyboard
