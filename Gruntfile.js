@@ -100,12 +100,14 @@ module.exports = function(grunt) {
 			}
 		},
 		less: {
-			'styles': {
+			'bootstrap': {
 				options: {
-					paths: ['less', 'bower_components/bootstrap/less']
+					paths: ['bower_components/bootstrap/less']
 				},
 				files: {
-					'build/css/styles.css': 'styles/bootstrap.less'
+					'build/css/bootstrap.css': 'styles/bootstrap.less',
+					'build/css/styles.css': 'styles/loader.less',
+					'build/css/tracker.css': 'styles/custom.less'
 				}
 			}
 		},
@@ -129,12 +131,25 @@ module.exports = function(grunt) {
 			}
 		},
 		cssmin: {
-			'styles': {
+			'bootstrap': {
 				options: {
-					sourceMap: true
+					sourceMap: true,
+					roundingPrecision: 1
 				},
 				files: {
-					'build/css/styles.min.css': 'build/css/styles.css'
+					'build/css/bootstrap.min.css': 'build/css/bootstrap.css'
+				}
+			},
+			'styles': {
+				options: {
+					sourceMap: true,
+					processImport: false,
+					roundingPrecision: 1,
+					banner: "/*!\n * SAA1099Tracker\n * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>\n * Licensed under MIT\n */"
+				},
+				files: {
+					'build/css/styles.min.css': 'build/css/styles.css',
+					'build/css/tracker.min.css': 'build/css/tracker.css'
 				}
 			}
 		},

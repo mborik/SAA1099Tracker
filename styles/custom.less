@@ -1,22 +1,33 @@
 /**
  * SAA1099Tracker modifications and custom styles
+ * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom
+ * the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
+ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+//---------------------------------------------------------------------------------------
+@import (reference) "variables.less";
+@import (reference) "mixins.less";
+@import (reference) "glyphicons.less";
 
 // defines ------------------------------------------------------------------------------
-@blue-effect: #38c;
-@border-soft: #eee;
-@border-mild: #ccc;
 @tracker-base-width: 1118px;
-@keyframes spin { 100% { transform:rotate(360deg); } }
 
-// mixins -------------------------------------------------------------------------------
-.blur(@value: 1px) {
-	-webkit-filter: blur(@value);
-	-moz-filter: blur(@value);
-	-o-filter: blur(@value);
-	-ms-filter: blur(@value);
-	filter: blur(@value);
-}
+// custom mixins ------------------------------------------------------------------------
 .make-my-panel-column(@width) {
 	position: relative;
 	width: @width;
@@ -49,66 +60,17 @@
 	flex-flow: @flow;
 	justify-content: @justify;
 }
-
-//---------------------------------------------------------------------------------------
-body {
-	.user-select(none);
-
-	&.loading {
-//		> :not(:first-child) { .blur(); }
-
-		> #overlay {
-			.flexbox(initial, center);
-			-webkit-align-items: center;
-			-moz-align-items: center;
-			align-items: center;
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			z-index: 1024;
-			background: rgba(255,255,255,.75);
-			overflow: hidden;
-
-			> span {
-				display: block;
-				color: @blue-effect;
-
-				font-size: 16px;
-				width: 128px;
-				text-align: center;
-
-				&:before {
-					display: block;
-					color: #f3f8fc;
-					text-shadow: @blue-effect 0 0 10px;
-					width: 128px;
-					margin-bottom: 8px;
-					content: "\E201";
-					font-family: 'Glyphicons Halflings';
-					font-size: 5em;
-					animation: spin 2s cubic-bezier(1, -0.5, 0, 1.5) infinite;
-					transform-origin: 52.4% 49%;
-				}
-				&:after {
-					content: "...";
-					margin-right: -10px;
-				}
-			}
-		}
-	}
+.pixelated() {
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	image-rendering: crisp-edges;
+	image-rendering: pixelated;
+	-ms-interpolation-mode: nearest-neighbor;
 }
 
 //---------------------------------------------------------------------------------------
-button {
-	cursor: default !important;
-}
-.btn-default {
-	&, &:hover {
-		border-color: @border-mild;
-	}
-}
 .btn-half {
 	float: left;
 	width: 50%;
@@ -135,14 +97,6 @@ button {
 }
 .songinfo-padding {
 	padding: 6px 0 18px 0;
-}
-.nav-tabs > li {
-	font-weight: bold;
-}
-.panel-heading {
-	border-color: @border-soft;
-	#gradient.vertical(@body-bg, #f4f4f4);
-	h3 { font-size: @font-size-base }
 }
 
 .glyphicon-play-song {
@@ -194,13 +148,7 @@ button {
 	padding: 0;
 	border-bottom: 1px solid @border-soft;
 }
-.form-control[disabled],
-.nav > li.disabled > a,
-label.toggle-off,
-label.disabled {
-	color: @gray-light !important;
-	pointer-events: all !important;
-}
+
 .col-label {
 	.make-my-column(67px, 28);
 }
@@ -306,13 +254,7 @@ label.disabled {
 		display: block;
 		margin: 0 auto;
 		width: 1104px;
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		image-rendering: crisp-edges;
-		image-rendering: pixelated;
-		-ms-interpolation-mode: nearest-neighbor;
+		.pixelated();
 	}
 }
 
@@ -364,7 +306,7 @@ label.disabled {
 			> .centertext {
 				width: 100%;
 				text-align: center;
-				.small;
+				font-size: 85%;
 				padding: 1px 0;
 			}
 			> .separator {
@@ -538,13 +480,7 @@ label.disabled {
 				> img {
 					width: 200%;
 					height: 200%;
-					image-rendering: optimizeSpeed;
-					image-rendering: -moz-crisp-edges;
-					image-rendering: -webkit-optimize-contrast;
-					image-rendering: optimize-contrast;
-					image-rendering: crisp-edges;
-					image-rendering: pixelated;
-					-ms-interpolation-mode: nearest-neighbor;
+					.pixelated();
 				}
 			}
 			> .app {
@@ -671,51 +607,3 @@ label.disabled {
 		}
 	}
 }
-// TouchSpin extension ------------------------------------------------------------------
-.bootstrap-touchspin {
-	input {
-		border-top-left-radius: @border-radius-base !important;
-		border-bottom-left-radius: @border-radius-base !important;
-	}
-
-	.input-group-btn-vertical {
-		position: relative;
-		white-space: nowrap;
-		width: 1%;
-		vertical-align: middle;
-		display: table-cell;
-
-		> .btn {
-			display: block;
-			float: none;
-			width: 100%;
-			max-width: 100%;
-			padding: 5px 8px;
-			margin-left: -1px;
-			position: relative;
-		}
-		.bootstrap-touchspin-up {
-			border-radius: 0 4px 0 0;
-		}
-		.bootstrap-touchspin-down {
-			margin-top: -2px;
-			border-radius: 0 0 4px 0;
-		}
-		i {
-			position: absolute;
-			top: 2px;
-			left: 5px;
-			font-size: 7px;
-			font-weight: normal;
-		}
-	}
-}
-
-// ToggleButton extension ---------------------------------------------------------------
-.toggle-group label {
-	margin: 0 !important;
-	padding: 4px 0 0 0 !important;
-	font-weight: bold !important;
-}
-
-@import (inline) "../bower_components/bootstrap-toggle/css/bootstrap-toggle.css";
