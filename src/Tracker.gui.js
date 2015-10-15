@@ -1,7 +1,20 @@
-/** Tracker.gui submodule - element populator with jQuery */
+/** Tracker.gui submodule - template loader and element populator with jQuery */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
-	var app = this, populatedElementsTable = [
+	var app = this;
+
+	var tplInjectionTable = {
+			'menu':        'nav.navbar',
+			'header':     '.fixed-container',
+			'trackedit':  '.fixed-container>.tab-content',
+			'smpedit':    '.fixed-container>.tab-content',
+			'ornedit':    '.fixed-container>.tab-content',
+			'dlg-commons': 'body',
+			'dlg-about':   'body',
+			'footer':      'body'
+		};
+
+	var populatedElementsTable = [
 		{
 			global:   'document',
 			method:   'bind',
@@ -593,17 +606,36 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
-	for (var i = 0, l = populatedElementsTable.length; i < l; i++) {
-		var o = populatedElementsTable[i],
-			data = o.handler || o.data,
-			selector = o.selector || (o.global && window[o.global]);
+	$.ajax({
+		cache: true,
+		contentType: false,
+		converters: { "text html": jQuery.parseHTML },
+		dataType: 'html',
+		isLocal: true,
+		url: location.appPath + 'Tracker.tpl.html',
 
-		if (selector && o.method) {
-			if (o.param)
-				$(selector)[o.method](o.param, data);
-			else
-				$(selector)[o.method](data);
+		success: function (templates) {
+			var i, l, o, data, selector;
+
+			for (i = 0, l = templates.length; i < l; i++) {
+				o = templates[i];
+				selector = tplInjectionTable[o.id];
+				$(o).contents().appendTo(selector);
+			}
+
+			for (i = 0, l = populatedElementsTable.length; i < l; i++) {
+				o = populatedElementsTable[i];
+				data = o.handler || o.data;
+				selector = o.selector || (o.global && window[o.global]);
+
+				if (selector && o.method) {
+					if (o.param)
+						$(selector)[o.method](o.param, data);
+					else
+						$(selector)[o.method](data);
+				}
+			}
 		}
-	}
+	});
 };
 //---------------------------------------------------------------------------------------

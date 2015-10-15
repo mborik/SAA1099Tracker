@@ -1,0 +1,150 @@
+<div role="tabpanel" class="tab-pane" id="tracker">
+	<div class="row">
+		<div class="fixed-column col-edt">
+			<div class="panel panel-default tabs-top">
+				<div class="panel-heading"><h3 class="panel-title">Editor:</h3></div>
+				<div class="panel-body">
+					<div class="row" data-tooltip="scOctave">
+						<div class="col-label"><label for="scOctave" class="control-label">Octave:</label></div>
+						<div class="col-edt-input"><input id="scOctave" type="text" class="form-control"></div>
+					</div>
+					<div class="row" data-tooltip="scAutoSmp">
+						<div class="col-label"><label for="scAutoSmp" class="control-label">AutoSmp:</label></div>
+						<div class="col-edt-input"><input id="scAutoSmp" type="text" class="form-control"></div>
+					</div>
+					<div class="row" data-tooltip="scAutoOrn">
+						<div class="col-label"><label for="scAutoOrn" class="control-label">AutoOrn:</label></div>
+						<div class="col-edt-input"><input id="scAutoOrn" type="text" class="form-control"></div>
+					</div>
+					<div class="row separator"></div>
+					<div class="row" data-tooltip="scRowStep">
+						<div class="col-label"><label for="scRowStep" class="control-label">RowStep:</label></div>
+						<div class="column col-edt-input"><input id="scRowStep" type="text" class="form-control"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="fixed-column col-pat">
+			<div class="panel panel-default tabs-top">
+				<div class="panel-heading"><h3 class="panel-title text-left">Patterns:</h3></div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-buttons"><button id="btPatternCreate" type="button" class="btn btn-default btn-block" data-tooltip>Create</button></div>
+						<div class="col-label-input" data-tooltip="scPattern">
+							<div class="col-label"><label for="scPattern" class="control-label">Pattern:</label></div>
+							<div class="col-pp-input"><input id="scPattern" type="text" class="form-control"></div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-buttons"><button id="btPatternDelete" type="button" class="btn btn-default btn-block" data-tooltip>Delete</button></div>
+						<div class="col-label-input" data-tooltip="scPatternLen">
+							<div class="col-label"><label for="scPatternLen" class="control-label">Length:</label></div>
+							<div class="col-pp-input"><input id="scPatternLen" type="text" class="form-control"></div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-buttons"><button id="btPatternClean" type="button" class="btn btn-default btn-block" data-tooltip>Clean</button></div>
+						<div class="col-label-input" data-tooltip="txPatternUsed">
+							<div class="col-label"><label for="txPatternUsed" class="control-label">Used:</label></div>
+							<div class="col-pp-input"><input id="txPatternUsed" type="text" value="0" class="form-control" disabled="disabled"></div>
+						</div>
+					</div>
+					<div class="row separator"></div>
+					<div class="row">
+						<div class="col-buttons"><button id="btPatternInfo" type="button" class="btn btn-default btn-block" data-tooltip>Info</button></div>
+						<div class="col-label-input" data-tooltip="txPatternTotal">
+							<div class="col-label"><label for="txPatternTotal" class="control-label">Total:</label></div>
+							<div class="col-pp-input"><input id="txPatternTotal" type="text" value="0" class="form-control" disabled="disabled"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="fixed-column col-rem">
+			<div class="panel panel-default tabs-top">
+				<div class="panel-heading"><h3 class="panel-title text-left">Positions:</h3></div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-pos">
+							<div class="row">
+								<div class="col-buttons"><button id="btPosCreate" type="button" class="btn btn-default btn-block" data-tooltip>Create</button></div>
+								<div class="col-label-input" data-tooltip="scPosCurrent">
+									<div class="col-label"><label for="scPosCurrent" class="control-label">Current:</label></div>
+									<div class="col-pp-input"><input id="scPosCurrent" type="text" class="form-control"></div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-buttons"><button id="btPosInsert" type="button" class="btn btn-default btn-block" data-tooltip>Insert</button></div>
+								<div class="col-label-input" data-tooltip="scPosLength">
+									<div class="col-label"><label for="scPosLength" class="control-label">Length:</label></div>
+									<div class="col-pp-input"><input id="scPosLength" type="text" class="form-control"></div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-buttons"><button id="btPosDelete" type="button" class="btn btn-default btn-block" data-tooltip>Delete</button></div>
+								<div class="col-label-input" data-tooltip="scPosSpeed">
+									<div class="col-label"><label for="scPosSpeed" class="control-label">Speed:</label></div>
+									<div class="col-pp-input"><input id="scPosSpeed" type="text" class="form-control"></div>
+								</div>
+							</div>
+							<div class="row separator"></div>
+							<div class="row">
+								<div class="col-buttons">
+									<button id="btPosMoveUp" type="button" class="btn btn-default btn-half left" data-tooltip><span class="glyphicon glyphicon-chevron-up"></span></button>
+									<button id="btPosMoveDown" type="button" class="btn btn-default btn-half right" data-tooltip><span class="glyphicon glyphicon-chevron-down"></span></button>
+								</div>
+								<div class="col-label-input" data-tooltip="scPosRepeat">
+									<div class="col-label"><label for="scPosRepeat" class="control-label">Repeat:</label></div>
+									<div class="col-pp-input"><input id="scPosRepeat" type="text" class="form-control"></div>
+								</div>
+							</div>
+						</div>
+						<div class="col-chn">
+							<div class="row">
+								<div class="col-pos-total" data-tooltip="txPosTotal"><input id="txPosTotal" type="text" value="0" class="form-control" disabled="disabled"></div>
+								<div class="col-infopanel" id="stInfoPanel">
+									<span class="pull-left">BPM: <u>125</u> (<u>50</u> Hz)</span>
+									<span class="pull-right"><b><u>00:00</u> / <u>00:00</u></b> (<u>0</u>/<u>0</u>)</span>
+								</div>
+							</div>
+							<div class="row" data-tooltip="scChnButton">
+								<div class="col-chn-label"><label class="control-label">Channel:</label></div>
+								<div class="col-chn-buttons"><input id="scChnButton1" type="checkbox" checked value="1"></div>
+								<div class="col-chn-buttons"><input id="scChnButton2" type="checkbox" checked value="2"></div>
+								<div class="col-chn-buttons"><input id="scChnButton3" type="checkbox" checked value="3"></div>
+								<div class="col-chn-buttons"><input id="scChnButton4" type="checkbox" checked value="4"></div>
+								<div class="col-chn-buttons"><input id="scChnButton5" type="checkbox" checked value="5"></div>
+								<div class="col-chn-buttons"><input id="scChnButton6" type="checkbox" checked value="6"></div>
+							</div>
+							<div class="row-chn-brd">
+								<div class="row" data-tooltip="scChnPattern">
+									<div class="col-label"><label class="control-label">Pattern:</label></div>
+									<div class="col-chn-input"><input id="scChnPattern1" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnPattern2" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnPattern3" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnPattern4" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnPattern5" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnPattern6" type="text" class="form-control"></div>
+								</div>
+								<div class="row" data-tooltip="scChnTrans">
+									<div class="col-label"><label class="control-label">Transpose:</label></div>
+									<div class="col-chn-input"><input id="scChnTrans1" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnTrans2" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnTrans3" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnTrans4" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnTrans5" type="text" class="form-control"></div>
+									<div class="col-chn-input"><input id="scChnTrans6" type="text" class="form-control"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row col-tracklist">
+		<div class="tracklist-panel">
+			<canvas id="tracklist" class="tracklist" width="552"></canvas>
+		</div>
+	</div>
+</div>

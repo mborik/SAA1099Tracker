@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 (function() {
 	var i, l, s,
-		js = /\/[a-z]+?\.js(\?.*)?$/, path, loc = window.location,
+		js = /\/[a-z]+?\.js(\?.*)?$/, path = 'app/', loc = window.location,
 		dev = (loc.search || loc.hash).match(/[\?&#]dev/) ? '' : '.min',
 		el = document.getElementsByTagName('script')[0],
 		libs = [
@@ -36,13 +36,12 @@
 		];
 
 	if (el && el.src.match(js))
-		path = el.src.replace(js, '/js/').replace(loc.href, '');
-	else
-		path = 'js/';
+		path = el.src.replace(js, path).replace(loc.origin, '');
 
 	el = document.getElementsByTagName('head')[0];
 	for (i = 0, l = libs.length; i < l; i++) {
 		js = path + libs[i] + dev + '.js';
+
 		try {
 			document.write('<' + 'script type="text/javascript" src="' + js + '"><\/script>');
 		} catch (e) {
@@ -53,5 +52,6 @@
 		}
 	}
 
+	window.location.appPath = path;
 	window.dev = !dev;
 })();

@@ -58,7 +58,7 @@ var Tracker = (function() {
 
 		var app = this;
 		if (this.player) {
-			console.log('Tracker', 'Populating elements...');
+			console.log('Tracker', 'Loading HTML templates and populating elements...');
 			this.populateGUI();
 
 			console.log('Tracker', 'Starting precise 50Hz timer...');
@@ -102,7 +102,7 @@ var Tracker = (function() {
 				}
 			}
 			else if (!this.loaded) {
-				console.log('Tracker', 'Initialization done, everything ready!');
+				console.log('Tracker', 'Initialization done, everything is ready!');
 				document.body.className = '';
 				this.loaded = true;
 			}

@@ -1,5 +1,5 @@
 /*!
- * Tracker: Core of SAA1099Tracker.
+ * SAA1099Tracker v1.1.5.
  * Copyright (c) 2012-2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -20,9 +20,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.4') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.5') });
 //---------------------------------------------------------------------------------------
-
 /** Tracker.tracklist submodule */
 //---------------------------------------------------------------------------------------
 var TracklistPosition = (function () {
@@ -180,7 +179,6 @@ var Tracklist = (function () {
 	return Tracklist;
 })();
 //---------------------------------------------------------------------------------------
-
 /** Tracker.smporn submodule */
 //---------------------------------------------------------------------------------------
 var SmpOrnEditor = (function () {
@@ -394,7 +392,6 @@ var SmpOrnEditor = (function () {
 	return SmpOrnEditor;
 })();
 //---------------------------------------------------------------------------------------
-
 /** Tracker.core submodule */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
@@ -455,7 +452,7 @@ var Tracker = (function() {
 
 		var app = this;
 		if (this.player) {
-			console.log('Tracker', 'Populating elements...');
+			console.log('Tracker', 'Loading HTML templates and populating elements...');
 			this.populateGUI();
 
 			console.log('Tracker', 'Starting precise 50Hz timer...');
@@ -499,7 +496,7 @@ var Tracker = (function() {
 				}
 			}
 			else if (!this.loaded) {
-				console.log('Tracker', 'Initialization done, everything ready!');
+				console.log('Tracker', 'Initialization done, everything is ready!');
 				document.body.className = '';
 				this.loaded = true;
 			}
@@ -613,7 +610,6 @@ var Tracker = (function() {
 	return Tracker;
 })();
 //---------------------------------------------------------------------------------------
-
 /** Tracker.controls submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanels = function () {
@@ -1227,7 +1223,6 @@ Tracker.prototype.onCmdOrnExpand = function () {
 	this.smpornedit.updateOrnamentEditor(true);
 };
 //---------------------------------------------------------------------------------------
-
 /** Tracker.keyboard submodule */
 //---------------------------------------------------------------------------------------
 /*
@@ -2147,7 +2142,6 @@ Tracker.prototype.getKeynote = function (key, octave) {
 	return -1;
 };
 //---------------------------------------------------------------------------------------
-
 /** Tracker.keyboard submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.handleMouseEvent = function (part, obj, e) {
@@ -2374,7 +2368,6 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 	}
 };
 //---------------------------------------------------------------------------------------
-
 /** Tracker.paint submodule */
 //---------------------------------------------------------------------------------------
 /*
@@ -2763,7 +2756,6 @@ Tracker.prototype.updateSampleEditor = function (update, limitFrom, limitTo) {
 	}
 };
 //---------------------------------------------------------------------------------------
-
 /** Tracker.doc submodule */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.doc = {
@@ -2955,11 +2947,23 @@ Tracker.prototype.doc = {
 	}
 };
 //---------------------------------------------------------------------------------------
-
-/** Tracker.gui submodule - element populator with jQuery */
+/** Tracker.gui submodule - template loader and element populator with jQuery */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
-	var app = this, populatedElementsTable = [
+	var app = this;
+
+	var tplInjectionTable = {
+			'menu':        'nav.navbar',
+			'header':     '.fixed-container',
+			'trackedit':  '.fixed-container>.tab-content',
+			'smpedit':    '.fixed-container>.tab-content',
+			'ornedit':    '.fixed-container>.tab-content',
+			'dlg-commons': 'body',
+			'dlg-about':   'body',
+			'footer':      'body'
+		};
+
+	var populatedElementsTable = [
 		{
 			global:   'document',
 			method:   'bind',
@@ -3551,17 +3555,36 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
-	for (var i = 0, l = populatedElementsTable.length; i < l; i++) {
-		var o = populatedElementsTable[i],
-			data = o.handler || o.data,
-			selector = o.selector || (o.global && window[o.global]);
+	$.ajax({
+		cache: true,
+		contentType: false,
+		converters: { "text html": jQuery.parseHTML },
+		dataType: 'html',
+		isLocal: true,
+		url: location.appPath + 'Tracker.tpl.html',
 
-		if (selector && o.method) {
-			if (o.param)
-				$(selector)[o.method](o.param, data);
-			else
-				$(selector)[o.method](data);
+		success: function (templates) {
+			var i, l, o, data, selector;
+
+			for (i = 0, l = templates.length; i < l; i++) {
+				o = templates[i];
+				selector = tplInjectionTable[o.id];
+				$(o).contents().appendTo(selector);
+			}
+
+			for (i = 0, l = populatedElementsTable.length; i < l; i++) {
+				o = populatedElementsTable[i];
+				data = o.handler || o.data;
+				selector = o.selector || (o.global && window[o.global]);
+
+				if (selector && o.method) {
+					if (o.param)
+						$(selector)[o.method](o.param, data);
+					else
+						$(selector)[o.method](data);
+				}
+			}
 		}
-	}
+	});
 };
 //---------------------------------------------------------------------------------------

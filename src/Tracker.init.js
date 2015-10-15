@@ -1,5 +1,5 @@
 /*!
- * Tracker: Core of SAA1099Tracker.
+ * SAA1099Tracker v<%= pkg.version %>.
  * Copyright (c) 2012-2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -20,5 +20,5 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.4') });
+$(document).ready(function() { window.Tracker = new Tracker('<%= pkg.version %>') });
 //---------------------------------------------------------------------------------------

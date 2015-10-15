@@ -1,16 +1,16 @@
 module.exports = function(grunt) {
 	grunt.initConfig({
+		pkg: grunt.file.readJSON('package.json'),
+		year: grunt.template.today('yyyy'),
+
 		jshint: {
-			jshintrc: '.jshintrc',
-			gruntfile: {
-				src: 'Gruntfile.js'
-			},
+			jshintrc: '/.jshintrc',
 			files: [
-				'build/js/Audio.js',
-				'build/js/Commons.js',
-				'build/js/Player.js',
-				'build/js/SAASound.js',
-				'build/js/Tracker.js'
+				'build/app/Audio.js',
+				'build/app/Commons.js',
+				'build/app/Player.js',
+				'build/app/SAASound.js',
+				'build/app/Tracker.js'
 			]
 		},
 		copy: {
@@ -34,45 +34,69 @@ module.exports = function(grunt) {
 					filter: 'isFile'
 				}]
 			},
-			"commons": {
+			'Commons': {
 				src: 'src/Commons.js',
-				dest: 'build/js/Commons.js'
+				dest: 'build/app/Commons.js'
 			},
-			"audio": {
+			'Audio': {
 				src: 'src/Audio.js',
-				dest: 'build/js/Audio.js'
+				dest: 'build/app/Audio.js'
 			}
 		},
 		concat: {
-			options: {
-				separator: '\n'
+			'bootstrap': {
+				options: {
+					separator: '\n'
+				},
+				files: {
+					'build/app/bootstrap.js': [
+						'bower_components/bootstrap/dist/js/bootstrap.js',
+						'src/touchspin.mod/jquery.bootstrap-touchspin.js',
+						'bower_components/bootstrap-toggle/js/bootstrap-toggle.js'
+					]
+				}
 			},
-			"bootstrap.js": {
-				src: [
-					'bower_components/bootstrap/dist/js/bootstrap.js',
-					'src/touchspin.mod/jquery.bootstrap-touchspin.js',
-					'bower_components/bootstrap-toggle/js/bootstrap-toggle.js'
-				],
-				dest: 'build/js/bootstrap.js'
+			'Tracker': {
+				options: {
+					process: true,
+					separator: ''
+				},
+				files: {
+					'build/app/Tracker.js': [
+						'src/Tracker.init.js',
+						'src/Tracker.tracklist.js',
+						'src/Tracker.smporn.js',
+						'src/Tracker.core.js',
+						'src/Tracker.controls.js',
+						'src/Tracker.keyboard.js',
+						'src/Tracker.mouse.js',
+						'src/Tracker.paint.js',
+						'src/Tracker.doc.js',
+						'src/Tracker.gui.js'
+					]
+				}
 			},
-			"Tracker.js": {
+			'templates': {
+				options: {
+					process: function (data, file) {
+						return '<tpl id="' + file.replace(/^.*\/([\w\-]+)\..+$/, '$1') + '">\n' + data + '</tpl>\n';
+					}
+				},
 				src: [
-					'src/Tracker.init.js',
-					'src/Tracker.tracklist.js',
-					'src/Tracker.smporn.js',
-					'src/Tracker.core.js',
-					'src/Tracker.controls.js',
-					'src/Tracker.keyboard.js',
-					'src/Tracker.mouse.js',
-					'src/Tracker.paint.js',
-					'src/Tracker.doc.js',
-					'src/Tracker.gui.js'
+					'templates/menu.html',
+					'templates/header.html',
+					'templates/trackedit.html',
+					'templates/smpedit.html',
+					'templates/ornedit.html',
+					'templates/dlg-commons.html',
+					'templates/dlg-about.html',
+					'templates/footer.html'
 				],
-				dest: 'build/js/Tracker.js'
+				dest: '/tmp/templates.tmp'
 			}
 		},
 		typescript: {
-			SAASound: {
+			'SAASound': {
 				src: [
 					'saa/SAASound.ts',
 					'saa/SAANoise.ts',
@@ -80,7 +104,7 @@ module.exports = function(grunt) {
 					'saa/SAAFreq.ts',
 					'saa/SAAAmp.ts'
 				],
-				dest: 'build/js/SAASound.js',
+				dest: 'build/app/SAASound.js',
 				options: {
 					module: 'commonjs',
 					target: 'ES5',
@@ -88,9 +112,9 @@ module.exports = function(grunt) {
 					sourceMap: true
 				}
 			},
-			Player: {
+			'Player': {
 				src: ['src/Player.ts'],
-				dest: 'build/js/Player.js',
+				dest: 'build/app/Player.js',
 				options: {
 					module: 'commonjs',
 					target: 'ES5',
@@ -100,7 +124,7 @@ module.exports = function(grunt) {
 			}
 		},
 		less: {
-			'bootstrap': {
+			'styles': {
 				options: {
 					paths: ['bower_components/bootstrap/less']
 				},
@@ -121,12 +145,12 @@ module.exports = function(grunt) {
 			'scripts': {
 				files: {
 					'build/init.js': 'src/init.js',
-					'build/js/bootstrap.min.js': 'build/js/bootstrap.js',
-					'build/js/Commons.min.js': 'build/js/Commons.js',
-					'build/js/Audio.min.js': 'build/js/Audio.js',
-					'build/js/SAASound.min.js': 'build/js/SAASound.js',
-					'build/js/Player.min.js': 'build/js/Player.js',
-					'build/js/Tracker.min.js': 'build/js/Tracker.js'
+					'build/app/bootstrap.min.js': 'build/app/bootstrap.js',
+					'build/app/Commons.min.js': 'build/app/Commons.js',
+					'build/app/Audio.min.js': 'build/app/Audio.js',
+					'build/app/SAASound.min.js': 'build/app/SAASound.js',
+					'build/app/Player.min.js': 'build/app/Player.js',
+					'build/app/Tracker.min.js': 'build/app/Tracker.js'
 				}
 			}
 		},
@@ -145,7 +169,7 @@ module.exports = function(grunt) {
 					sourceMap: true,
 					processImport: false,
 					roundingPrecision: 1,
-					banner: "/*!\n * SAA1099Tracker\n * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>\n * Licensed under MIT\n */"
+					banner: "/*!\n * SAA1099Tracker v<%= pkg.version %>\n * Copyright (c) <%= year %> Martin Borik <mborik@users.sourceforge.net>\n * Licensed under MIT\n */"
 				},
 				files: {
 					'build/css/styles.min.css': 'build/css/styles.css',
@@ -153,10 +177,23 @@ module.exports = function(grunt) {
 				}
 			}
 		},
+		htmlmin: {
+			templates: {
+				options: {
+					process: true,
+					removeComments: true,
+					collapseWhitespace: true,
+					conservativeCollapse: false,
+					collapseBooleanAttributes: true,
+				},
+				src: '/tmp/templates.tmp',
+				dest: 'build/app/Tracker.tpl.html'
+			}
+		},
 		rename: {
-			SAASound: {
+			'SAASound': {
 				ignore: true,
-				src: 'build/js/SAASound.d.ts',
+				src: 'build/app/SAASound.d.ts',
 				dest: 'saa/SAASound.d.ts'
 			}
 		}
@@ -173,10 +210,11 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
+	grunt.loadNpmTasks('grunt-contrib-htmlmin');
 	grunt.loadNpmTasks('grunt-rename');
 
 	// Task definitions
-	grunt.registerTask('default', [ 'typescript','copy','concat','less','uglify','cssmin','rename' ]);
+	grunt.registerTask('default', [ 'typescript','copy','concat','less','uglify','cssmin','htmlmin','rename' ]);
 	grunt.registerTask('styles', [ 'less','uglify','cssmin' ]);
 	grunt.registerTask('test', [ 'jshint' ]);
 };
