@@ -1,4 +1,5 @@
 /** Tracker.core submodule */
+/* global browser, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
@@ -54,60 +55,21 @@ var Tracker = (function() {
 			AudioDriver.init(this.player);
 		}
 		else
-			$('#overlay>span').html(browser.isIE ? "don't be evil,<br>stop using IE" : "WebAudio<br>not supported");
+			$('#overlay>span').html(
+				browser.isIE ?
+					"don't be evil,<br>stop using IE" :
+					"WebAudio<br>not supported"
+			);
 
-		var app = this;
 		if (this.player) {
-			console.log('Tracker', 'Loading HTML templates and populating elements...');
 			this.populateGUI();
-
-			console.log('Tracker', 'Starting precise 50Hz timer...');
-			SyncTimer.start(function() { app.baseTimer() }, 20);
+			this.initializeGUI();
 		}
 	// }
 	}
 
 	Tracker.prototype.baseTimer = function() {
-		if (!this.modePlay) {
-			if (!this.smpornedit.initialized) {
-				if (!!this.smpornedit.img) {
-					if (this.activeTab === 1) {
-						this.smpornedit.init();
-						$('#tab-ornedit').tab('show');
-					}
-					else {
-						console.log('Tracker', 'Force initialization of Sample/Ornament editors...');
-						$('#tab-smpedit').tab('show');
-					}
-				}
-			}
-			else if (!this.tracklist.initialized) {
-				if (!!this.pixelfont.ctx) {
-					if (this.activeTab === 0) {
-						console.log('Tracker', 'Force triggering of window resize event...');
-						$(window).trigger('resize');
-
-						console.log('Tracker', 'Redrawing all tracklist elements and canvas...');
-						this.updatePanels();
-						this.updateTracklist(true);
-						this.tracklist.initialized = true;
-
-						console.log('Tracker', 'Starting audio playback...');
-						AudioDriver.play();
-					}
-					else {
-						console.log('Tracker', 'Force initialization of Tracklist editor tab...');
-						$('#tab-tracker').tab('show');
-					}
-				}
-			}
-			else if (!this.loaded) {
-				console.log('Tracker', 'Initialization done, everything is ready!');
-				document.body.className = '';
-				this.loaded = true;
-			}
-		}
-		else if (this.player.changedLine) {
+		if (this.modePlay && this.player.changedLine) {
 			if (this.player.changedPosition)
 				this.updatePanelPosition();
 			this.updatePanelInfo();

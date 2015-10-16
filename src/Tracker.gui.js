@@ -1,4 +1,5 @@
 /** Tracker.gui submodule - template loader and element populator with jQuery */
+/* global AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
 	var app = this;
@@ -606,6 +607,8 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
+	console.log('Tracker.gui', 'Loading HTML templates...');
+
 	$.ajax({
 		cache: true,
 		contentType: false,
@@ -619,9 +622,13 @@ Tracker.prototype.populateGUI = function () {
 
 			for (i = 0, l = templates.length; i < l; i++) {
 				o = templates[i];
+				console.log('Tracker.gui', 'Injecting "%s" template...', o.id);
+
 				selector = tplInjectionTable[o.id];
 				$(o).contents().appendTo(selector);
 			}
+
+			console.log('Tracker.gui', 'Populating elements...');
 
 			for (i = 0, l = populatedElementsTable.length; i < l; i++) {
 				o = populatedElementsTable[i];
@@ -637,5 +644,75 @@ Tracker.prototype.populateGUI = function () {
 			}
 		}
 	});
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.initializeGUI = function () {
+	var app = this, i = 0;
+
+	var initSteps = [
+		function () {
+			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab === 1)
+				return false;
+
+			console.log('Tracker.gui', 'Force initialization of Sample/Ornament editors...');
+			$('#tab-smpedit').tab('show');
+			return true;
+		},
+		function () {
+			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab !== 1)
+				return false;
+
+			app.smpornedit.init();
+			$('#tab-ornedit').tab('show');
+			return true;
+		},
+		function () {
+			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab === 0)
+				return false;
+
+			console.log('Tracker.gui', 'Force initialization of Tracklist editor by triggering of window resize event...');
+			$('#tab-tracker').tab('show');
+			$(window).trigger('resize');
+			return true;
+		},
+		function () {
+			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab)
+				return false;
+
+			console.log('Tracker.gui', 'Redrawing all tracklist elements and canvas...');
+			app.updatePanels();
+			app.updateTracklist(true);
+			app.tracklist.initialized = true;
+			return true;
+		},
+		function () {
+			if (app.loaded)
+				return false;
+
+			console.log('Tracker.gui', 'Starting audio playback and initializing 50Hz refresh timer...');
+			AudioDriver.play();
+			SyncTimer.start(function() { app.baseTimer() }, 20);
+			return true;
+		},
+		function () {
+			if (app.loaded)
+				return false;
+
+			console.log('Tracker.gui', 'Initialization done, everything is ready!');
+			document.body.className = '';
+			return (app.loaded = true);
+		}
+	];
+
+	var initFn = function () {
+		var fn = initSteps[i];
+		if (!!fn) {
+			if (fn())
+				i++;
+			setTimeout(initFn, 250);
+		}
+	};
+
+	initFn();
 };
 //---------------------------------------------------------------------------------------
