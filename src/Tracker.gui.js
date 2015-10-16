@@ -1,5 +1,5 @@
 /** Tracker.gui submodule - template loader and element populator with jQuery */
-/* global AudioDriver, SyncTimer, Player */
+/* global getCompatible, AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
 	var app = this;
@@ -85,12 +85,14 @@ Tracker.prototype.populateGUI = function () {
 				if (name === 'tracklist') {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
+					getCompatible(o.ctx, 'imageSmoothingEnabled', true, false);
 				}
 				else if (name === 'smpornedit') {
 					name = el.id.replace('smpedit_', '');
 
 					o[name].obj = el;
 					o[name].ctx = el.getContext('2d');
+					getCompatible(o[name].ctx, 'imageSmoothingEnabled', true, false);
 				}
 
 				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function (e) {

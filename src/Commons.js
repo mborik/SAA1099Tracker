@@ -20,10 +20,19 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-(function(window) {
-	window.getCompatible = function(base, prop, retnew, fallback) {
+(function (window) {
+	/**
+	 * This global method is trying to find cross-browser compatible property of testing
+	 * or experimental features of the modern browsers.
+	 * @param base {string} Parent object or container which should had that property;
+	 * @param prop {string} Property name to find (future/final name from specification);
+	 * @param ret {bool} If property is constructor and we want a new object of this type
+	 *                   or if we want to set value of this property, set this to true;
+	 * @param value {any} Value which we want to set, or fallback function - polyfill;
+	 */
+	window.getCompatible = function(base, prop, ret, value) {
 		var obj = base[prop], c, n,
-			alts = ['moz', 'webkit', 'o', 'ms', 'Moz', 'WebKit', 'O', 'MS'];
+			alts = [ 'moz', 'webkit', 'o', 'Moz', 'WebKit', 'O' ];
 		if (!obj) {
 			c = prop[0];
 			if (c >= 'a' && c <= 'z')
@@ -38,13 +47,56 @@
 			}
 		}
 
-		if (obj && retnew)
-			return new base[prop];
+		if (obj && ret)
+			return (value === void 0) ? (new base[prop]) : (base[prop] = value);
 		else if (obj)
 			return obj;
-		else if (fallback)
-			return fallback;
+		else if (typeof value === 'function')
+			return value;
 	};
+
+	/**
+	 * Precise multimedia timer based on requestAnimationFrame,
+	 * feature of modern browsers.
+	 */
+	window.SyncTimer = (function() {
+		var that = this,
+			lastT = 0, enabled = false,
+			timer = getCompatible(window, 'requestAnimationFrame', false,
+						function(callback) { setTimeout(function() { callback(performance.now()) }, that.interval )});
+
+		this.callback = function(){};
+		this.interval = 20; // 50Hz
+
+		this.start = function(callback, interval) {
+			if (enabled)
+				return false;
+
+			if (callback !== void 0)
+				that.callback = callback;
+			if (interval !== void 0)
+				that.interval = interval;
+
+			enabled = true;
+			timer(that.loop);
+
+			return true;
+		};
+
+		this.pause = function() { enabled = false };
+		this.resume = function() { enabled = true };
+
+		this.loop = function(t) {
+			if (enabled)
+				timer(that.loop);
+			if ((t - lastT) < that.interval)
+				return false;
+			that.callback();
+			lastT = t;
+		};
+
+		return this;
+	}).call(function SyncTimer(){});
 
 	// compatibility fallback hooks
 	if (!('now' in window.Date))
@@ -105,45 +157,10 @@
 		return '### DEVELOPER MODE ACTIVE ###';
 	})());
 }(window));
-
-var SyncTimer = (function() {
-	this.callback = function(){};
-	this.interval = 10; // 100Hz
-
-	var that = this,
-		timer = getCompatible(window, 'requestAnimationFrame', false, function(callback) { setTimeout(function() { callback(performance.now()) }, that.interval )}),
-		lastT = 0, enabled = false;
-
-	this.start = function(callback, interval) {
-		if (enabled)
-			return false;
-
-		if (callback !== void 0)
-			that.callback = callback;
-		if (interval !== void 0)
-			that.interval = interval;
-
-		enabled = true;
-		timer(that.loop);
-
-		return true;
-	};
-
-	this.pause = function() { enabled = false };
-	this.resume = function() { enabled = true };
-
-	this.loop = function(t) {
-		if (enabled)
-			timer(that.loop);
-		if ((t - lastT) < that.interval)
-			return false;
-		that.callback();
-		lastT = t;
-	};
-
-	return this;
-})();
-
+//---------------------------------------------------------------------------------------
+/**
+ * Number, the global object prototype will be extended with some handy functions...
+ */
 Object.defineProperties(Number.prototype, {
 // fastest absolute integer value helper...
 	'abs': {
@@ -170,3 +187,4 @@ Object.defineProperties(Number.prototype, {
 		}
 	}
 });
+//---------------------------------------------------------------------------------------
