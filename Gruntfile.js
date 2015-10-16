@@ -29,7 +29,7 @@ module.exports = function(grunt) {
 					expand: true,
 					cwd: 'bower_components/jquery/dist/',
 					src: '**',
-					dest: 'build/js',
+					dest: 'build/app',
 					flatten: true,
 					filter: 'isFile'
 				}]
