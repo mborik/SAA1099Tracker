@@ -261,37 +261,48 @@ Tracker.prototype.onCmdPatDelete = function () {
 	if (this.modePlay || !this.workingPattern)
 		return;
 
-	var i, l,
+	var app = this,
+		p = this.player,
 		pt = this.workingPattern,
-		len = this.player.pattern.length - 1,
-		chn, pos, msg = null;
+		len = p.pattern.length - 1,
+		msg = null;
 
-	if (this.player.countPatternUsage(pt) > 0)
+	if (p.countPatternUsage(pt) > 0)
 		msg = 'This pattern is used in some positions!\nAre you sure to delete it?';
 	if (pt !== len)
 		msg = 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?';
 	if (!msg)
 		msg = 'Are you sure to delete this pattern?';
-	// TODO prompt bootstrap dialog
 
-	for (i = 0, l = this.player.position.length; i < l; i++) {
-		for (pos = this.player.position[i], chn = 0; chn < 6; chn++) {
-			if (pos.ch[chn].pattern === pt)
-				pos.ch[chn].pattern = 0;
-			else if (pos.ch[chn].pattern > pt)
-				pos.ch[chn].pattern--;
+	$('#confirm').confirm({
+		title: 'Delete pattern\u2026',
+		text: msg,
+		buttons: 'yesno',
+		style: (pt !== len) ? 'warning' : 'notice',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
+
+			for (var i = 0, l = p.position.length, pos, chn; i < l; i++) {
+				for (pos = p.position[i], chn = 0; chn < 6; chn++) {
+					if (pos.ch[chn].pattern === pt)
+						pos.ch[chn].pattern = 0;
+					else if (pos.ch[chn].pattern > pt)
+						pos.ch[chn].pattern--;
+				}
+			}
+
+			p.pattern.splice(pt, 1);
+			if (pt === len)
+				pt--;
+
+			app.workingPattern = pt;
+			app.updatePanelInfo();
+			app.updatePanelPattern();
+			app.updatePanelPosition();
+			app.updateTracklist();
 		}
-	}
-
-	this.player.pattern.splice(pt, 1);
-	if (pt === len)
-		pt--;
-
-	this.workingPattern = pt;
-	this.updatePanelInfo();
-	this.updatePanelPattern();
-	this.updatePanelPosition();
-	this.updateTracklist();
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatClean = function () {
