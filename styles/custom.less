@@ -446,6 +446,8 @@
 
 // modal windows ------------------------------------------------------------------------
 #documodal pre.modal-body {
+	.user-select(initial);
+
 	font-family: @font-family-monospace;
 	font-weight: normal;
 	font-size: 13px;
@@ -489,13 +491,13 @@
 				left: 20px;
 				font-size: 20px;
 				font-weight: bold;
-			}
-			> .ver {
-				position: absolute;
-				top: 25px;
-				left: 182px;
-				font-size: 14px;
-				font-weight: bold;
+
+				> .ver {
+					padding-left: 8px;
+					font-size: 14px;
+					font-weight: bold;
+					vertical-align: baseline;
+				}
 			}
 			> .desc {
 				position: absolute;
@@ -537,6 +539,48 @@
 	}
 }
 
+#dialoque {
+	.confirm-gradient(@inner-color, @outer-color) {
+		background-image: -webkit-radial-gradient(ellipse, @inner-color, @outer-color);
+		background-image: radial-gradient(ellipse, @inner-color, @outer-color);
+		background-repeat: no-repeat;
+	}
+
+	.modal-dialog {
+		margin-top: 128px;
+
+		> .modal-content { border-radius: 0; }
+	}
+
+	.modal-content.info {
+		.confirm-gradient(@modal-content-bg, lighten(@brand-primary, 51%));
+	}
+	.modal-content.warning {
+		.confirm-gradient(@modal-content-bg, lighten(@brand-warning, 49%));
+	}
+	.modal-content.error {
+		.confirm-gradient(@modal-content-bg, lighten(@brand-danger, 50%));
+	}
+
+	.modal-body {
+		font-size: 13px;
+		text-align: justify;
+	}
+	.modal-footer {
+		text-align: center;
+
+		button {
+			font-size: 13px;
+			padding: 6px 12px;
+			width: 16%;
+
+			&:focus {
+				outline-color: @blue-effect;
+			}
+		}
+	}
+}
+
 // statusbar ----------------------------------------------------------------------------
 #statusbar {
 	position: absolute;
@@ -548,7 +592,7 @@
 	min-height: @navbar-height / 4 * 3;
 	background: @navbar-default-bg;
 	border-top: 1px solid @navbar-default-border;
-	z-index: 2000;
+	z-index: 1000;
 
 	> p {
 		color: @text-color;

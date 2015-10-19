@@ -274,11 +274,11 @@ Tracker.prototype.onCmdPatDelete = function () {
 	if (!msg)
 		msg = 'Are you sure to delete this pattern?';
 
-	$('#confirm').confirm({
+	$('#dialoque').confirm({
 		title: 'Delete pattern\u2026',
 		text: msg,
 		buttons: 'yesno',
-		style: (pt !== len) ? 'warning' : 'notice',
+		style: (pt !== len) ? 'warning' : 'info',
 		callback: function (btn) {
 			if (btn !== 'yes')
 				return;
