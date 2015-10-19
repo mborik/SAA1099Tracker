@@ -186,7 +186,7 @@
 
 			// convert buttons group identifier to predefined button group array...
 			if (typeof buttons === 'string')
-				buttons = (predefs[buttons] || predefs['okcancel']);
+				buttons = (predefs[buttons] || predefs['ok']);
 
 			$.each(buttons, function(i) {
 				if (this.default)
@@ -215,7 +215,7 @@
 						data.cb = btn.callback;
 
 					// apply button bootstrap style and fill in text content...
-					if (!btnStyle.startsWith('btn-'))
+					if (btnStyle.indexOf('btn-') < 0)
 						btnStyle = 'btn-' + btnStyle;
 					el.addClass('btn ' + btnStyle)
 						.text(btnText)
@@ -246,6 +246,10 @@
 			opts.callback(o.id, o.order, o);
 
 			modal.off('show.bs.modal shown.bs.modal hide.bs.modal');
+
+			if (typeof modalStyle === 'string')
+				modalContent.removeClass(modalStyle);
+
 			modalTitle.empty();
 			modalBody.empty();
 			modalFooter.empty();
@@ -265,6 +269,7 @@
 	};
 
 	$.fn.confirm.predefinedButtonGroups = {
+		'ok': [{ id: 'ok', caption: 'OK' }],
 		'yesno': [
 			{ id: 'yes', caption: 'Yes' },
 			{ id: 'no', caption: 'No' }
