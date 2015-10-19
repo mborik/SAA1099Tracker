@@ -309,17 +309,33 @@ Tracker.prototype.onCmdPatClean = function () {
 	if (this.modePlay || !this.workingPattern)
 		return;
 
-	for (var pt = this.player.pattern[this.workingPattern].data,
-	         i = 0, data = pt[i]; i < 96; i++, data = pt[i]) {
-		data.tone = 0;
-		data.release = false;
-		data.smp = 0;
-		data.orn = 0;
-		data.orn_release = false;
-		data.volume.byte = 0;
-		data.cmd = 0;
-		data.cmd_data = 0;
-	}
+	var app = this,
+		pt = this.player.pattern[this.workingPattern].data;
+
+	$('#dialoque').confirm({
+		title: 'Clean pattern\u2026',
+		text: 'Are you ready to clean a content of this pattern?',
+		buttons: 'yesno',
+		style: 'info',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
+
+			for (var i = 0, data = pt[i]; i < Player.maxPatternLen; i++, data = pt[i]) {
+				data.tone = 0;
+				data.release = false;
+				data.smp = 0;
+				data.orn = 0;
+				data.orn_release = false;
+				data.volume.byte = 0;
+				data.cmd = 0;
+				data.cmd_data = 0;
+			}
+
+			app.updatePanelInfo();
+			app.updateTracklist();
+		}
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatInfo = function () {
@@ -374,15 +390,25 @@ Tracker.prototype.onCmdPosDelete = function () {
 	if (this.modePlay || !this.player.position.length)
 		return;
 
-	// TODO prompt bootstrap dialog
+	var app = this;
+	$('#dialoque').confirm({
+		title: 'Delete position\u2026',
+		text: 'Are you ready to delete this position?',
+		buttons: 'yesno',
+		style: 'info',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
 
-	this.player.position.splice(this.player.currentPosition, 1);
-	this.player.currentLine = 0;
+			app.player.position.splice(app.player.currentPosition, 1);
+			app.player.currentLine = 0;
 
-	this.updatePanelInfo();
-	this.updatePanelPattern();
-	this.updatePanelPosition();
-	this.updateTracklist();
+			app.updatePanelInfo();
+			app.updatePanelPattern();
+			app.updatePanelPosition();
+			app.updateTracklist();
+		}
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveUp = function () {
