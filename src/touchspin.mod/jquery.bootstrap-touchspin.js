@@ -1,3 +1,12 @@
+/**
+ * Bootstrap TouchSpin v1.0.0 (http://www.virtuosoft.eu/code/bootstrap-touchspin/)
+ * - Mobile and touch friendly input spinner component for Bootstrap 3.
+ * - Modified and customized for SAA1099Tracker project by Martin Bórik.
+ *
+ * Copyright 2013 István Ujj-Mészáros
+ * Licensed under the Apache License 2.0
+ */
+
 (function($) {
 	'use strict';
 

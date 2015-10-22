@@ -51,8 +51,9 @@ module.exports = function(grunt) {
 				files: {
 					'build/app/bootstrap.js': [
 						'bower_components/bootstrap/dist/js/bootstrap.js',
+						'bower_components/bootstrap-toggle/js/bootstrap-toggle.js',
 						'src/touchspin.mod/jquery.bootstrap-touchspin.js',
-						'bower_components/bootstrap-toggle/js/bootstrap-toggle.js'
+						'src/confirm.mod/jquery.bootstrap-confirm.js'
 					]
 				}
 			},
