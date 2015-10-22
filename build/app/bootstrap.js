@@ -2362,6 +2362,196 @@ if (typeof jQuery === 'undefined') {
 
 }(jQuery);
 
+/*! ========================================================================
+ * Bootstrap Toggle: bootstrap-toggle.js v2.2.0
+ * http://www.bootstraptoggle.com
+ * ========================================================================
+ * Copyright 2014 Min Hur, The New York Times Company
+ * Licensed under MIT
+ * ======================================================================== */
+
+
+ +function ($) {
+ 	'use strict';
+
+	// TOGGLE PUBLIC CLASS DEFINITION
+	// ==============================
+
+	var Toggle = function (element, options) {
+		this.$element  = $(element)
+		this.options   = $.extend({}, this.defaults(), options)
+		this.render()
+	}
+
+	Toggle.VERSION  = '2.2.0'
+
+	Toggle.DEFAULTS = {
+		on: 'On',
+		off: 'Off',
+		onstyle: 'primary',
+		offstyle: 'default',
+		size: 'normal',
+		style: '',
+		width: null,
+		height: null
+	}
+
+	Toggle.prototype.defaults = function() {
+		return {
+			on: this.$element.attr('data-on') || Toggle.DEFAULTS.on,
+			off: this.$element.attr('data-off') || Toggle.DEFAULTS.off,
+			onstyle: this.$element.attr('data-onstyle') || Toggle.DEFAULTS.onstyle,
+			offstyle: this.$element.attr('data-offstyle') || Toggle.DEFAULTS.offstyle,
+			size: this.$element.attr('data-size') || Toggle.DEFAULTS.size,
+			style: this.$element.attr('data-style') || Toggle.DEFAULTS.style,
+			width: this.$element.attr('data-width') || Toggle.DEFAULTS.width,
+			height: this.$element.attr('data-height') || Toggle.DEFAULTS.height
+		}
+	}
+
+	Toggle.prototype.render = function () {
+		this._onstyle = 'btn-' + this.options.onstyle
+		this._offstyle = 'btn-' + this.options.offstyle
+		var size = this.options.size === 'large' ? 'btn-lg'
+			: this.options.size === 'small' ? 'btn-sm'
+			: this.options.size === 'mini' ? 'btn-xs'
+			: ''
+		var $toggleOn = $('<label class="btn">').html(this.options.on)
+			.addClass(this._onstyle + ' ' + size)
+		var $toggleOff = $('<label class="btn">').html(this.options.off)
+			.addClass(this._offstyle + ' ' + size + ' active')
+		var $toggleHandle = $('<span class="toggle-handle btn btn-default">')
+			.addClass(size)
+		var $toggleGroup = $('<div class="toggle-group">')
+			.append($toggleOn, $toggleOff, $toggleHandle)
+		var $toggle = $('<div class="toggle btn" data-toggle="toggle">')
+			.addClass( this.$element.prop('checked') ? this._onstyle : this._offstyle+' off' )
+			.addClass(size).addClass(this.options.style)
+
+		this.$element.wrap($toggle)
+		$.extend(this, {
+			$toggle: this.$element.parent(),
+			$toggleOn: $toggleOn,
+			$toggleOff: $toggleOff,
+			$toggleGroup: $toggleGroup
+		})
+		this.$toggle.append($toggleGroup)
+
+		var width = this.options.width || Math.max($toggleOn.outerWidth(), $toggleOff.outerWidth())+($toggleHandle.outerWidth()/2)
+		var height = this.options.height || Math.max($toggleOn.outerHeight(), $toggleOff.outerHeight())
+		$toggleOn.addClass('toggle-on')
+		$toggleOff.addClass('toggle-off')
+		this.$toggle.css({ width: width, height: height })
+		if (this.options.height) {
+			$toggleOn.css('line-height', $toggleOn.height() + 'px')
+			$toggleOff.css('line-height', $toggleOff.height() + 'px')
+		}
+		this.update(true)
+		this.trigger(true)
+	}
+
+	Toggle.prototype.toggle = function () {
+		if (this.$element.prop('checked')) this.off()
+		else this.on()
+	}
+
+	Toggle.prototype.on = function (silent) {
+		if (this.$element.prop('disabled')) return false
+		this.$toggle.removeClass(this._offstyle + ' off').addClass(this._onstyle)
+		this.$element.prop('checked', true)
+		if (!silent) this.trigger()
+	}
+
+	Toggle.prototype.off = function (silent) {
+		if (this.$element.prop('disabled')) return false
+		this.$toggle.removeClass(this._onstyle).addClass(this._offstyle + ' off')
+		this.$element.prop('checked', false)
+		if (!silent) this.trigger()
+	}
+
+	Toggle.prototype.enable = function () {
+		this.$toggle.removeAttr('disabled')
+		this.$element.prop('disabled', false)
+	}
+
+	Toggle.prototype.disable = function () {
+		this.$toggle.attr('disabled', 'disabled')
+		this.$element.prop('disabled', true)
+	}
+
+	Toggle.prototype.update = function (silent) {
+		if (this.$element.prop('disabled')) this.disable()
+		else this.enable()
+		if (this.$element.prop('checked')) this.on(silent)
+		else this.off(silent)
+	}
+
+	Toggle.prototype.trigger = function (silent) {
+		this.$element.off('change.bs.toggle')
+		if (!silent) this.$element.change()
+		this.$element.on('change.bs.toggle', $.proxy(function() {
+			this.update()
+		}, this))
+	}
+
+	Toggle.prototype.destroy = function() {
+		this.$element.off('change.bs.toggle')
+		this.$toggleGroup.remove()
+		this.$element.removeData('bs.toggle')
+		this.$element.unwrap()
+	}
+
+	// TOGGLE PLUGIN DEFINITION
+	// ========================
+
+	function Plugin(option) {
+		return this.each(function () {
+			var $this   = $(this)
+			var data    = $this.data('bs.toggle')
+			var options = typeof option == 'object' && option
+
+			if (!data) $this.data('bs.toggle', (data = new Toggle(this, options)))
+			if (typeof option == 'string' && data[option]) data[option]()
+		})
+	}
+
+	var old = $.fn.bootstrapToggle
+
+	$.fn.bootstrapToggle             = Plugin
+	$.fn.bootstrapToggle.Constructor = Toggle
+
+	// TOGGLE NO CONFLICT
+	// ==================
+
+	$.fn.toggle.noConflict = function () {
+		$.fn.bootstrapToggle = old
+		return this
+	}
+
+	// TOGGLE DATA-API
+	// ===============
+
+	$(function() {
+		$('input[type=checkbox][data-toggle^=toggle]').bootstrapToggle()
+	})
+
+	$(document).on('click.bs.toggle', 'div[data-toggle^=toggle]', function(e) {
+		var $checkbox = $(this).find('input[type=checkbox]')
+		$checkbox.bootstrapToggle('toggle')
+		e.preventDefault()
+	})
+
+}(jQuery);
+
+/**
+ * Bootstrap TouchSpin v1.0.0 (http://www.virtuosoft.eu/code/bootstrap-touchspin/)
+ * - Mobile and touch friendly input spinner component for Bootstrap 3.
+ * - Modified and customized for SAA1099Tracker project by Martin Bórik.
+ *
+ * Copyright 2013 István Ujj-Mészáros
+ * Licensed under the Apache License 2.0
+ */
+
 (function($) {
 	'use strict';
 
@@ -3012,183 +3202,131 @@ if (typeof jQuery === 'undefined') {
 	};
 })(jQuery);
 
-/*! ========================================================================
- * Bootstrap Toggle: bootstrap-toggle.js v2.2.0
- * http://www.bootstraptoggle.com
- * ========================================================================
- * Copyright 2014 Min Hur, The New York Times Company
- * Licensed under MIT
- * ======================================================================== */
+/**
+ * Confirm dialog based on Bootstrap modal dialog
+ * - some predefined confirm button groups: "okcancel", "yesno"
+ * - customizable buttons to own group with names, styles and callbacks for each
+ * - global callback which returns button ID or its number in sequence
+ *
+ * Copyright 2015 Martin Bórik
+ * Licensed under the MIT license
+ */
 
+(function($) {
+	'use strict';
 
- +function ($) {
- 	'use strict';
+	$.fn.confirm = function(options) {
+		var modal = this,
+			opts = $.extend({}, $.fn.confirm.defaults, options),
+			predefs = $.fn.confirm.predefinedButtonGroups,
+			buttons = opts.buttons,
+			modalStyle = opts.style || opts.class,
+			modalContent = this.find('.modal-content'),
+			modalTitle = modalContent.find('.modal-title'),
+			modalBody = modalContent.find('.modal-body'),
+			modalFooter = modalContent.find('.modal-footer').empty(),
+			btnDefault = -1, btnCancel = -1;
 
-	// TOGGLE PUBLIC CLASS DEFINITION
-	// ==============================
+		modal.on('show.bs.modal', function(e) {
+			if (typeof modalStyle === 'string')
+				modalContent.addClass(modalStyle);
 
-	var Toggle = function (element, options) {
-		this.$element  = $(element)
-		this.options   = $.extend({}, this.defaults(), options)
-		this.render()
-	}
+			modalTitle.text(opts.title);
+			modalBody.text(opts.text);
 
-	Toggle.VERSION  = '2.2.0'
+			// convert buttons group identifier to predefined button group array...
+			if (typeof buttons === 'string')
+				buttons = (predefs[buttons] || predefs['ok']);
 
-	Toggle.DEFAULTS = {
-		on: 'On',
-		off: 'Off',
-		onstyle: 'primary',
-		offstyle: 'default',
-		size: 'normal',
-		style: '',
-		width: null,
-		height: null
-	}
+			$.each(buttons, function(i) {
+				if (this.default)
+					btnDefault = i;
+				if (this.cancel)
+					btnCancel = i;
+			});
 
-	Toggle.prototype.defaults = function() {
-		return {
-			on: this.$element.attr('data-on') || Toggle.DEFAULTS.on,
-			off: this.$element.attr('data-off') || Toggle.DEFAULTS.off,
-			onstyle: this.$element.attr('data-onstyle') || Toggle.DEFAULTS.onstyle,
-			offstyle: this.$element.attr('data-offstyle') || Toggle.DEFAULTS.offstyle,
-			size: this.$element.attr('data-size') || Toggle.DEFAULTS.size,
-			style: this.$element.attr('data-style') || Toggle.DEFAULTS.style,
-			width: this.$element.attr('data-width') || Toggle.DEFAULTS.width,
-			height: this.$element.attr('data-height') || Toggle.DEFAULTS.height
-		}
-	}
+			if (btnDefault < 0)
+				btnDefault = 0;
+			if (btnCancel < 0)
+				btnCancel = buttons.length - 1;
 
-	Toggle.prototype.render = function () {
-		this._onstyle = 'btn-' + this.options.onstyle
-		this._offstyle = 'btn-' + this.options.offstyle
-		var size = this.options.size === 'large' ? 'btn-lg'
-			: this.options.size === 'small' ? 'btn-sm'
-			: this.options.size === 'mini' ? 'btn-xs'
-			: ''
-		var $toggleOn = $('<label class="btn">').html(this.options.on)
-			.addClass(this._onstyle + ' ' + size)
-		var $toggleOff = $('<label class="btn">').html(this.options.off)
-			.addClass(this._offstyle + ' ' + size + ' active')
-		var $toggleHandle = $('<span class="toggle-handle btn btn-default">')
-			.addClass(size)
-		var $toggleGroup = $('<div class="toggle-group">')
-			.append($toggleOn, $toggleOff, $toggleHandle)
-		var $toggle = $('<div class="toggle btn" data-toggle="toggle">')
-			.addClass( this.$element.prop('checked') ? this._onstyle : this._offstyle+' off' )
-			.addClass(size).addClass(this.options.style)
+			if (modalFooter.length) {
+				$.each(buttons, function (i, btn) {
+					var el = $('<button type="button"/>'),
+						btnStyle = btn.style || btn.class || 'btn-default',
+						caption = btn.caption || btn.text,
+						btnText = (caption || (btn.id && $.camelCase('-' + btn.id)) || 'Button'),
+						data = {
+							order: i,
+							id: (btn.id || (caption && caption.toLowerCase()) || ('btn' + i))
+						};
 
-		this.$element.wrap($toggle)
-		$.extend(this, {
-			$toggle: this.$element.parent(),
-			$toggleOn: $toggleOn,
-			$toggleOff: $toggleOff,
-			$toggleGroup: $toggleGroup
-		})
-		this.$toggle.append($toggleGroup)
+					if (typeof btn.callback === 'function')
+						data.cb = btn.callback;
 
-		var width = this.options.width || Math.max($toggleOn.outerWidth(), $toggleOff.outerWidth())+($toggleHandle.outerWidth()/2)
-		var height = this.options.height || Math.max($toggleOn.outerHeight(), $toggleOff.outerHeight())
-		$toggleOn.addClass('toggle-on')
-		$toggleOff.addClass('toggle-off')
-		this.$toggle.css({ width: width, height: height })
-		if (this.options.height) {
-			$toggleOn.css('line-height', $toggleOn.height() + 'px')
-			$toggleOff.css('line-height', $toggleOff.height() + 'px')
-		}
-		this.update(true)
-		this.trigger(true)
-	}
+					// apply button bootstrap style and fill in text content...
+					if (btnStyle.indexOf('btn-') < 0)
+						btnStyle = 'btn-' + btnStyle;
+					el.addClass('btn ' + btnStyle)
+						.text(btnText)
+						.attr('tabindex', i + 1001);
 
-	Toggle.prototype.toggle = function () {
-		if (this.$element.prop('checked')) this.off()
-		else this.on()
-	}
+					el.appendTo(modalFooter).click(function(e) {
+						modal.result = data;
+						modal.modal('hide', e);
+					});
 
-	Toggle.prototype.on = function (silent) {
-		if (this.$element.prop('disabled')) return false
-		this.$toggle.removeClass(this._offstyle + ' off').addClass(this._onstyle)
-		this.$element.prop('checked', true)
-		if (!silent) this.trigger()
-	}
+					if (btnCancel === i)
+						modal.result = data;
+				});
+			}
+		}).on('shown.bs.modal', function() {
+			$(this)
+				.find('.modal-footer')
+				.contents()
+				.eq(btnDefault)
+				.focus();
 
-	Toggle.prototype.off = function (silent) {
-		if (this.$element.prop('disabled')) return false
-		this.$toggle.removeClass(this._onstyle).addClass(this._offstyle + ' off')
-		this.$element.prop('checked', false)
-		if (!silent) this.trigger()
-	}
+		}).on('hide.bs.modal', function() {
+			var o = modal.result || { id: 'none' };
+			delete modal.result;
 
-	Toggle.prototype.enable = function () {
-		this.$toggle.removeAttr('disabled')
-		this.$element.prop('disabled', false)
-	}
+			if (o.cb)
+				o.cb(o.id, o.order, o);
+			opts.callback(o.id, o.order, o);
 
-	Toggle.prototype.disable = function () {
-		this.$toggle.attr('disabled', 'disabled')
-		this.$element.prop('disabled', true)
-	}
+			modal.off('show.bs.modal shown.bs.modal hide.bs.modal');
 
-	Toggle.prototype.update = function (silent) {
-		if (this.$element.prop('disabled')) this.disable()
-		else this.enable()
-		if (this.$element.prop('checked')) this.on(silent)
-		else this.off(silent)
-	}
+			if (typeof modalStyle === 'string')
+				modalContent.removeClass(modalStyle);
 
-	Toggle.prototype.trigger = function (silent) {
-		this.$element.off('change.bs.toggle')
-		if (!silent) this.$element.change()
-		this.$element.on('change.bs.toggle', $.proxy(function() {
-			this.update()
-		}, this))
-	}
+			modalTitle.empty();
+			modalBody.empty();
+			modalFooter.empty();
+		}).modal({
+			show: true,
+			backdrop: 'static'
+		});
 
-	Toggle.prototype.destroy = function() {
-		this.$element.off('change.bs.toggle')
-		this.$toggleGroup.remove()
-		this.$element.removeData('bs.toggle')
-		this.$element.unwrap()
-	}
+		return this;
+	};
 
-	// TOGGLE PLUGIN DEFINITION
-	// ========================
+	$.fn.confirm.defaults = {
+		title: 'Question...',
+		text: 'Are you sure?',
+		buttons: 'yesno',
+		callback: function(){}
+	};
 
-	function Plugin(option) {
-		return this.each(function () {
-			var $this   = $(this)
-			var data    = $this.data('bs.toggle')
-			var options = typeof option == 'object' && option
-
-			if (!data) $this.data('bs.toggle', (data = new Toggle(this, options)))
-			if (typeof option == 'string' && data[option]) data[option]()
-		})
-	}
-
-	var old = $.fn.bootstrapToggle
-
-	$.fn.bootstrapToggle             = Plugin
-	$.fn.bootstrapToggle.Constructor = Toggle
-
-	// TOGGLE NO CONFLICT
-	// ==================
-
-	$.fn.toggle.noConflict = function () {
-		$.fn.bootstrapToggle = old
-		return this
-	}
-
-	// TOGGLE DATA-API
-	// ===============
-
-	$(function() {
-		$('input[type=checkbox][data-toggle^=toggle]').bootstrapToggle()
-	})
-
-	$(document).on('click.bs.toggle', 'div[data-toggle^=toggle]', function(e) {
-		var $checkbox = $(this).find('input[type=checkbox]')
-		$checkbox.bootstrapToggle('toggle')
-		e.preventDefault()
-	})
-
-}(jQuery);
+	$.fn.confirm.predefinedButtonGroups = {
+		'ok': [{ id: 'ok', caption: 'OK' }],
+		'yesno': [
+			{ id: 'yes', caption: 'Yes' },
+			{ id: 'no', caption: 'No' }
+		],
+		'okcancel': [
+			{ id: 'ok', caption: 'OK', style: 'btn-primary' },
+			{ id: 'cancel', caption: 'Cancel' }
+		]
+	};
+})(jQuery);

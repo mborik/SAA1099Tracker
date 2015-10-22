@@ -497,15 +497,36 @@
 #fxOrnChords > .row {
   padding: 2.5px 0;
 }
-#documodal pre.modal-body {
+#documodal .modal-body {
+  -webkit-user-select: initial;
+  -moz-user-select: initial;
+  -ms-user-select: initial;
+  user-select: initial;
+  height: 50ex;
+  min-height: 50ex;
+  color: #000000;
+  overflow: hidden;
+  overflow-y: auto !important;
+}
+#documodal .modal-body > button.close {
+  float: none;
+  position: fixed;
+  right: 2em;
+}
+#documodal .modal-body > h3 {
+  font-size: 15px;
+  font-weight: bold;
+  border: 0;
+  border-bottom: 1px solid #cccccc;
+  padding: 5px 0;
+  margin: 5px 0 10px 0;
+}
+#documodal .modal-body > pre {
   font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
   font-weight: normal;
   font-size: 13px;
-  color: #000000;
   background: transparent;
   border: 0;
-  height: 50ex;
-  min-height: 50ex;
 }
 #about > .modal-dialog {
   margin-top: 128px;
@@ -546,12 +567,11 @@
   font-size: 20px;
   font-weight: bold;
 }
-#about > .modal-dialog > .modal-content > .modal-body > .ver {
-  position: absolute;
-  top: 25px;
-  left: 182px;
+#about > .modal-dialog > .modal-content > .modal-body > .app > .ver {
+  padding-left: 8px;
   font-size: 14px;
   font-weight: bold;
+  vertical-align: baseline;
 }
 #about > .modal-dialog > .modal-content > .modal-body > .desc {
   position: absolute;
@@ -587,6 +607,42 @@
   height: 28px;
   font-weight: bold;
 }
+#dialoque .modal-dialog {
+  margin-top: 128px;
+}
+#dialoque .modal-dialog > .modal-content {
+  border-radius: 0;
+}
+#dialoque .modal-content.info {
+  background-image: -webkit-radial-gradient(ellipse, #ffffff, #f3f8fc);
+  background-image: radial-gradient(ellipse, #ffffff, #f3f8fc);
+  background-repeat: no-repeat;
+}
+#dialoque .modal-content.warning {
+  background-image: -webkit-radial-gradient(ellipse, #ffffff, #fdf9f4);
+  background-image: radial-gradient(ellipse, #ffffff, #fdf9f4);
+  background-repeat: no-repeat;
+}
+#dialoque .modal-content.error {
+  background-image: -webkit-radial-gradient(ellipse, #ffffff, #feebe9);
+  background-image: radial-gradient(ellipse, #ffffff, #feebe9);
+  background-repeat: no-repeat;
+}
+#dialoque .modal-body {
+  font-size: 13px;
+  text-align: justify;
+}
+#dialoque .modal-footer {
+  text-align: center;
+}
+#dialoque .modal-footer button {
+  font-size: 13px;
+  padding: 6px 12px;
+  width: 16%;
+}
+#dialoque .modal-footer button:focus {
+  outline-color: #3388cc;
+}
 #statusbar {
   position: absolute;
   left: 0;
@@ -597,7 +653,7 @@
   min-height: 24px;
   background: #fcfcff;
   border-top: 1px solid #dbdbff;
-  z-index: 2000;
+  z-index: 1000;
 }
 #statusbar > p {
   color: #000000;

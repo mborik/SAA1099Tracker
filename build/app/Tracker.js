@@ -393,6 +393,7 @@ var SmpOrnEditor = (function () {
 })();
 //---------------------------------------------------------------------------------------
 /** Tracker.core submodule */
+/* global browser, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
@@ -448,60 +449,21 @@ var Tracker = (function() {
 			AudioDriver.init(this.player);
 		}
 		else
-			$('#overlay>span').html(browser.isIE ? "don't be evil,<br>stop using IE" : "WebAudio<br>not supported");
+			$('#overlay>span').html(
+				browser.isIE ?
+					"don't be evil,<br>stop using IE" :
+					"WebAudio<br>not supported"
+			);
 
-		var app = this;
 		if (this.player) {
-			console.log('Tracker', 'Loading HTML templates and populating elements...');
 			this.populateGUI();
-
-			console.log('Tracker', 'Starting precise 50Hz timer...');
-			SyncTimer.start(function() { app.baseTimer() }, 20);
+			this.initializeGUI();
 		}
 	// }
 	}
 
 	Tracker.prototype.baseTimer = function() {
-		if (!this.modePlay) {
-			if (!this.smpornedit.initialized) {
-				if (!!this.smpornedit.img) {
-					if (this.activeTab === 1) {
-						this.smpornedit.init();
-						$('#tab-ornedit').tab('show');
-					}
-					else {
-						console.log('Tracker', 'Force initialization of Sample/Ornament editors...');
-						$('#tab-smpedit').tab('show');
-					}
-				}
-			}
-			else if (!this.tracklist.initialized) {
-				if (!!this.pixelfont.ctx) {
-					if (this.activeTab === 0) {
-						console.log('Tracker', 'Force triggering of window resize event...');
-						$(window).trigger('resize');
-
-						console.log('Tracker', 'Redrawing all tracklist elements and canvas...');
-						this.updatePanels();
-						this.updateTracklist(true);
-						this.tracklist.initialized = true;
-
-						console.log('Tracker', 'Starting audio playback...');
-						AudioDriver.play();
-					}
-					else {
-						console.log('Tracker', 'Force initialization of Tracklist editor tab...');
-						$('#tab-tracker').tab('show');
-					}
-				}
-			}
-			else if (!this.loaded) {
-				console.log('Tracker', 'Initialization done, everything is ready!');
-				document.body.className = '';
-				this.loaded = true;
-			}
-		}
-		else if (this.player.changedLine) {
+		if (this.modePlay && this.player.changedLine) {
 			if (this.player.changedPosition)
 				this.updatePanelPosition();
 			this.updatePanelInfo();
@@ -820,25 +782,42 @@ Tracker.prototype.onCmdToggleEditMode = function () {
 	this.updateTracklist(true);
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdShowDocumentation = function (name, title) {
+Tracker.prototype.onCmdShowDocumentation = function (name) {
 	var filename = 'doc/' + name + '.txt',
-		modal = $('#documodal'),
 		cache = this.doc.txtCache,
-		data = cache[name];
+		data = cache[name],
 
-	if (!!data) {
-		modal.find('.modal-title').text(title);
-		modal.modal('show').find('pre').text(data);
-	}
+		dialog = $('#documodal'),
+		button = $('<button/>').attr({
+			'type': 'button',
+			'class': 'close',
+			'data-dismiss': 'modal'
+		}).text('\xd7');
+
+	if (!!data)
+		dialog.modal('show')
+			.on('hidden.bs.modal', function () { $(this).find('.modal-body').empty() })
+			.find('.modal-body')
+			.html(data)
+			.prepend(button);
+
 	else {
 		$.ajax(filename, {
+			cache: true,
 			contentType: 'text/plain',
 			dataType: 'text',
-			success: function(data) {
-				cache[name] = data.trim();
+			isLocal: true,
+			success: function (data) {
+				data = ('<pre>\n' + data + '</pre>')
+					.replace(/\s*?^\=\=\s*([^\=]+?)\s*[\=\s]+$/gm, '</pre><h3>$1</h3><pre>')
+					.replace(/<pre><\/pre>/g, '');
 
-				modal.find('.modal-title').text(title);
-				modal.modal('show').find('pre').text(data);
+				cache[name] = data;
+				dialog.modal('show')
+					.on('hidden.bs.modal', function () { $(this).find('.modal-body').empty() })
+					.find('.modal-body')
+					.html(data)
+					.prepend(button);
 			}
 		});
 	}
@@ -873,54 +852,81 @@ Tracker.prototype.onCmdPatDelete = function () {
 	if (this.modePlay || !this.workingPattern)
 		return;
 
-	var i, l,
+	var app = this,
+		p = this.player,
 		pt = this.workingPattern,
-		len = this.player.pattern.length - 1,
-		chn, pos, msg = null;
+		len = p.pattern.length - 1,
+		msg = null;
 
-	if (this.player.countPatternUsage(pt) > 0)
+	if (p.countPatternUsage(pt) > 0)
 		msg = 'This pattern is used in some positions!\nAre you sure to delete it?';
 	if (pt !== len)
 		msg = 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?';
 	if (!msg)
 		msg = 'Are you sure to delete this pattern?';
-	// TODO prompt bootstrap dialog
 
-	for (i = 0, l = this.player.position.length; i < l; i++) {
-		for (pos = this.player.position[i], chn = 0; chn < 6; chn++) {
-			if (pos.ch[chn].pattern === pt)
-				pos.ch[chn].pattern = 0;
-			else if (pos.ch[chn].pattern > pt)
-				pos.ch[chn].pattern--;
+	$('#dialoque').confirm({
+		title: 'Delete pattern\u2026',
+		text: msg,
+		buttons: 'yesno',
+		style: (pt !== len) ? 'warning' : 'info',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
+
+			for (var i = 0, l = p.position.length, pos, chn; i < l; i++) {
+				for (pos = p.position[i], chn = 0; chn < 6; chn++) {
+					if (pos.ch[chn].pattern === pt)
+						pos.ch[chn].pattern = 0;
+					else if (pos.ch[chn].pattern > pt)
+						pos.ch[chn].pattern--;
+				}
+			}
+
+			p.pattern.splice(pt, 1);
+			if (pt === len)
+				pt--;
+
+			app.workingPattern = pt;
+			app.updatePanelInfo();
+			app.updatePanelPattern();
+			app.updatePanelPosition();
+			app.updateTracklist();
 		}
-	}
-
-	this.player.pattern.splice(pt, 1);
-	if (pt === len)
-		pt--;
-
-	this.workingPattern = pt;
-	this.updatePanelInfo();
-	this.updatePanelPattern();
-	this.updatePanelPosition();
-	this.updateTracklist();
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatClean = function () {
 	if (this.modePlay || !this.workingPattern)
 		return;
 
-	for (var pt = this.player.pattern[this.workingPattern].data,
-	         i = 0, data = pt[i]; i < 96; i++, data = pt[i]) {
-		data.tone = 0;
-		data.release = false;
-		data.smp = 0;
-		data.orn = 0;
-		data.orn_release = false;
-		data.volume.byte = 0;
-		data.cmd = 0;
-		data.cmd_data = 0;
-	}
+	var app = this,
+		pt = this.player.pattern[this.workingPattern].data;
+
+	$('#dialoque').confirm({
+		title: 'Clean pattern\u2026',
+		text: 'Are you ready to clean a content of this pattern?',
+		buttons: 'yesno',
+		style: 'info',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
+
+			for (var i = 0, data = pt[i]; i < Player.maxPatternLen; i++, data = pt[i]) {
+				data.tone = 0;
+				data.release = false;
+				data.smp = 0;
+				data.orn = 0;
+				data.orn_release = false;
+				data.volume.byte = 0;
+				data.cmd = 0;
+				data.cmd_data = 0;
+			}
+
+			app.updatePanelInfo();
+			app.updateTracklist();
+		}
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatInfo = function () {
@@ -975,15 +981,25 @@ Tracker.prototype.onCmdPosDelete = function () {
 	if (this.modePlay || !this.player.position.length)
 		return;
 
-	// TODO prompt bootstrap dialog
+	var app = this;
+	$('#dialoque').confirm({
+		title: 'Delete position\u2026',
+		text: 'Are you ready to delete this position?',
+		buttons: 'yesno',
+		style: 'info',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
 
-	this.player.position.splice(this.player.currentPosition, 1);
-	this.player.currentLine = 0;
+			app.player.position.splice(app.player.currentPosition, 1);
+			app.player.currentLine = 0;
 
-	this.updatePanelInfo();
-	this.updatePanelPattern();
-	this.updatePanelPosition();
-	this.updateTracklist();
+			app.updatePanelInfo();
+			app.updatePanelPattern();
+			app.updatePanelPosition();
+			app.updateTracklist();
+		}
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveUp = function () {
@@ -2948,6 +2964,7 @@ Tracker.prototype.doc = {
 };
 //---------------------------------------------------------------------------------------
 /** Tracker.gui submodule - template loader and element populator with jQuery */
+/* global getCompatible, AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
 	var app = this;
@@ -2984,6 +3001,13 @@ Tracker.prototype.populateGUI = function () {
 					var offset = $('#statusbar').offset();
 					$('#documodal .modal-body').css('height', offset.top * 0.8);
 				}
+			}
+		}, {
+			global:   'window',
+			method:   'bind',
+			param:    'beforeunload',
+			handler:  function() {
+				return 'All unsaved changes in SAA1099Tracker will be lost.';
 			}
 		}, {
 			global:   'window',
@@ -3033,12 +3057,14 @@ Tracker.prototype.populateGUI = function () {
 				if (name === 'tracklist') {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
+					getCompatible(o.ctx, 'imageSmoothingEnabled', true, false);
 				}
 				else if (name === 'smpornedit') {
 					name = el.id.replace('smpedit_', '');
 
 					o[name].obj = el;
 					o[name].ctx = el.getContext('2d');
+					getCompatible(o[name].ctx, 'imageSmoothingEnabled', true, false);
 				}
 
 				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function (e) {
@@ -3491,11 +3517,10 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() {
 				var el = $(this),
-					fn = el.data().filename,
-					title = el.text();
+					fn = el.data().filename;
 				if (!fn)
 					return false;
-				app.onCmdShowDocumentation(fn, title.slice(0, -1));
+				app.onCmdShowDocumentation(fn);
 			}
 		}, {
 			selector: '#miAbout',
@@ -3555,6 +3580,8 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
+	console.log('Tracker.gui', 'Loading HTML templates...');
+
 	$.ajax({
 		cache: true,
 		contentType: false,
@@ -3568,9 +3595,13 @@ Tracker.prototype.populateGUI = function () {
 
 			for (i = 0, l = templates.length; i < l; i++) {
 				o = templates[i];
+				console.log('Tracker.gui', 'Injecting "%s" template...', o.id);
+
 				selector = tplInjectionTable[o.id];
 				$(o).contents().appendTo(selector);
 			}
+
+			console.log('Tracker.gui', 'Populating elements...');
 
 			for (i = 0, l = populatedElementsTable.length; i < l; i++) {
 				o = populatedElementsTable[i];
@@ -3586,5 +3617,75 @@ Tracker.prototype.populateGUI = function () {
 			}
 		}
 	});
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.initializeGUI = function () {
+	var app = this, i = 0;
+
+	var initSteps = [
+		function () {
+			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab === 1)
+				return false;
+
+			console.log('Tracker.gui', 'Force initialization of Sample/Ornament editors...');
+			$('#tab-smpedit').tab('show');
+			return true;
+		},
+		function () {
+			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab !== 1)
+				return false;
+
+			app.smpornedit.init();
+			$('#tab-ornedit').tab('show');
+			return true;
+		},
+		function () {
+			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab === 0)
+				return false;
+
+			console.log('Tracker.gui', 'Force initialization of Tracklist editor by triggering of window resize event...');
+			$('#tab-tracker').tab('show');
+			$(window).trigger('resize');
+			return true;
+		},
+		function () {
+			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab)
+				return false;
+
+			console.log('Tracker.gui', 'Redrawing all tracklist elements and canvas...');
+			app.updatePanels();
+			app.updateTracklist(true);
+			app.tracklist.initialized = true;
+			return true;
+		},
+		function () {
+			if (app.loaded)
+				return false;
+
+			console.log('Tracker.gui', 'Starting audio playback and initializing 50Hz refresh timer...');
+			AudioDriver.play();
+			SyncTimer.start(function() { app.baseTimer() }, 20);
+			return true;
+		},
+		function () {
+			if (app.loaded)
+				return false;
+
+			console.log('Tracker.gui', 'Initialization done, everything is ready!');
+			document.body.className = '';
+			return (app.loaded = true);
+		}
+	];
+
+	var initFn = function () {
+		var fn = initSteps[i];
+		if (!!fn) {
+			if (fn())
+				i++;
+			setTimeout(initFn, 250);
+		}
+	};
+
+	initFn();
 };
 //---------------------------------------------------------------------------------------
