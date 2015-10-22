@@ -445,17 +445,35 @@
 #fxOrnChords > .row { padding: (@grid-gutter-width / 2) 0; }
 
 // modal windows ------------------------------------------------------------------------
-#documodal pre.modal-body {
+#documodal .modal-body {
 	.user-select(initial);
 
-	font-family: @font-family-monospace;
-	font-weight: normal;
-	font-size: 13px;
-	color: @text-color;
-	background: transparent;
-	border: 0;
 	height: 50ex;
 	min-height: 50ex;
+	color: @text-color;
+	overflow: hidden;
+	overflow-y: auto !important;
+
+	> button.close {
+		float: none;
+		position: fixed;
+		right: 2em;
+	}
+	> h3 {
+		font-size: 15px;
+		font-weight: bold;
+		border: 0;
+		border-bottom: 1px solid @border-mild;
+		padding: @grid-gutter-width 0;
+		margin: @grid-gutter-width 0 (@grid-gutter-width * 2) 0;
+	}
+	> pre {
+		font-family: @font-family-monospace;
+		font-weight: normal;
+		font-size: 13px;
+		background: transparent;
+		border: 0;
+	}
 }
 
 #about > .modal-dialog {

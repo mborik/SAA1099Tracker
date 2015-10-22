@@ -545,11 +545,10 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() {
 				var el = $(this),
-					fn = el.data().filename,
-					title = el.text();
+					fn = el.data().filename;
 				if (!fn)
 					return false;
-				app.onCmdShowDocumentation(fn, title.slice(0, -1));
+				app.onCmdShowDocumentation(fn);
 			}
 		}, {
 			selector: '#miAbout',

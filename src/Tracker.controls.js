@@ -208,25 +208,42 @@ Tracker.prototype.onCmdToggleEditMode = function () {
 	this.updateTracklist(true);
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdShowDocumentation = function (name, title) {
+Tracker.prototype.onCmdShowDocumentation = function (name) {
 	var filename = 'doc/' + name + '.txt',
-		modal = $('#documodal'),
 		cache = this.doc.txtCache,
-		data = cache[name];
+		data = cache[name],
 
-	if (!!data) {
-		modal.find('.modal-title').text(title);
-		modal.modal('show').find('pre').text(data);
-	}
+		dialog = $('#documodal'),
+		button = $('<button/>').attr({
+			'type': 'button',
+			'class': 'close',
+			'data-dismiss': 'modal'
+		}).text('\xd7');
+
+	if (!!data)
+		dialog.modal('show')
+			.on('hidden.bs.modal', function () { $(this).find('.modal-body').empty() })
+			.find('.modal-body')
+			.html(data)
+			.prepend(button);
+
 	else {
 		$.ajax(filename, {
+			cache: true,
 			contentType: 'text/plain',
 			dataType: 'text',
-			success: function(data) {
-				cache[name] = data.trim();
+			isLocal: true,
+			success: function (data) {
+				data = ('<pre>\n' + data + '</pre>')
+					.replace(/\s*?^\=\=\s*([^\=]+?)\s*[\=\s]+$/gm, '</pre><h3>$1</h3><pre>')
+					.replace(/<pre><\/pre>/g, '');
 
-				modal.find('.modal-title').text(title);
-				modal.modal('show').find('pre').text(data);
+				cache[name] = data;
+				dialog.modal('show')
+					.on('hidden.bs.modal', function () { $(this).find('.modal-body').empty() })
+					.find('.modal-body')
+					.html(data)
+					.prepend(button);
 			}
 		});
 	}
