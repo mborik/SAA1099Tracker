@@ -40,6 +40,13 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			global:   'window',
 			method:   'bind',
+			param:    'beforeunload',
+			handler:  function() {
+				return 'All unsaved changes in SAA1099Tracker will be lost.';
+			}
+		}, {
+			global:   'window',
+			method:   'bind',
 			param:    'keyup keydown',
 			handler:  function(e) { return app.handleKeyEvent(e.originalEvent) }
 		}, {
