@@ -1,4 +1,31 @@
-== INFORMATION FOR MUSICIANS ==================================================
+== ABOUT SAA1099TRACKER =======================================================
+===============================================================================
+
+~ SAA1099Tracker is offline storage HTML5/JavaScript chiptune music tracker.
+  It emulates pulse-sound generator soundchip Philips SAA 1099 produced in 80s
+  of twentieth century which was used in/with these 8bit micro-computers:
+  - integrated in Sam Coupé
+  - sound interface MIF 85 for Tesla PMD 85
+    (an 8-bit personal micro-computer produced in former Czechoslovakia)
+  - currently also few sound interfaces for ZX-Spectrum
+
+~ SAA1099Tracker is channel-pattern oriented music tracker!
+  Every channel-pattern can have any length of 1 to 128 and should be assigned
+  to the any of six channels into any position which can have any length.
+
+~ Sample defines amplitude of both stereo channels separately with optional
+  noise generator (and its frequency) mixed into chosen amplitude for every
+  interrupt of the processor - or so called "tick". Every tick of the sample
+  can be also fine-tuned with precise pitch-shift.
+  Sample can be looped in any of its waveform and optionaly marked with
+  releasable flag which leads to play the rest of sample data after the loop
+  section if note was released in the tracklist.
+
+~ Ornaments can modulate every tick of the sample by exact number of halftones
+  up or down. It should be used for false-chords and special trill effects.
+
+
+== BASIC HARDWARE SPECIFICATIONS AND LIMITATIONS FOR MUSICIANS ================
 ===============================================================================
 
 ~ Philips SAA 1099 has some rules for envelope or noise control, that you need

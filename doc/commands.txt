@@ -40,6 +40,7 @@
 
 [Bxx] - BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
         xx - trackline of current channel-pattern
+             (less than current trackline)
 
 [Cxy] - SPECIAL COMMAND
         [C00] - disable last command (whatever)
@@ -49,7 +50,7 @@
         [Cxy] - false chord
                 (for example C37 is ornament 0,3,7 - minor)
 
-[Dxx] - DELAY LISTING ON CURRENT LINE
+[Dxx] - DELAY LISTING AFTER CURRENT LINE
         xx - delay (in ticks)
 
 [Exy] - SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL

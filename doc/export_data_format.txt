@@ -6,8 +6,8 @@ focusing on shortest data length. All pointers in header are offsets from the
 ===============================================================================
 
  0. | DWORD signature: "STMF"
- 1. | BYTE file version number in BCD code
-      (current format specification is 1.0 = 0x10)
+ 1. | BYTE file version number and complexity of used commands in BCD code
+      (current format specification is 1.0 = 0x10 + value of cmd complexity)
 
  5. | WORD pointer to sample pointer list
  7. | WORD pointer to ornament pointer list
@@ -105,8 +105,12 @@ V - volume change flag
 L \ _ volume change value
 R /   (if V flag is set)
 
-D - data for command
-    (if C command isn't null, description in "commands.txt")
+D - data for command (if C command isn't null)
+  - only exception is command Bxx - BREAK CURRENT PATTERN AND LOOP FROM LINE
+    when the data for command is stored in word as signed negative offset
+    (in bytes, calculated by compiler from byte which follows after that word)
+    and it points to particular trackline chosen by user. In this case,
+    controller byte of end of the pattern which should follow is ommited.
 
 
 == ORNAMENT DATA ==============================================================
@@ -134,6 +138,10 @@ D - ornament data:
 ===============================================================================
 
     | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    |---|---|---|---|---|---|---|---|
+0.  | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+    |---|---|---|---|---|---|---|---|
+...
     |---|---|---|---|---|---|---|---|
 1.  | 0 | M | N | N | L | L | L | L |
     |---|---|---|---|---|---|---|---|
@@ -170,4 +178,9 @@ F - frequency shift in octave:
 
 C - controller:
     [000] - end of sample
-    [242] - set cursor to -14 lines back and continue (loop)
+    [114] - set cursor to -14 lines back and continue (loop)
+
+0th byte is present only in releasable sample
+and then, sample consists of two different and playable parts:
+    - 1st part ends with repeat controller byte   (> 128)
+    - 2nd part ends with controller end of sample (= 128)
