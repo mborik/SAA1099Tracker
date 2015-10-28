@@ -302,7 +302,7 @@ Tracker.prototype.populateGUI = function () {
 				var el = e.target,
 					pp = app.player.currentPosition,
 					chn = el.id.substr(-1) - 1,
-					pos = app.player.position[pp],
+					pos = app.player.position[pp] || app.player.nullPosition,
 					val = el.value - 0,
 					prev = pos.ch[chn].pattern;
 
