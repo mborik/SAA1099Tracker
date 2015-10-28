@@ -41,6 +41,16 @@ module.exports = function(grunt) {
 			'Audio': {
 				src: 'src/Audio.js',
 				dest: 'build/app/Audio.js'
+			},
+			'LZString': {
+				files: [{
+					expand: true,
+					cwd: 'bower_components/lz-string/libs/',
+					src: 'lz-string*',
+					dest: 'build/app',
+					flatten: true,
+					filter: 'isFile'
+				}]
 			}
 		},
 		concat: {

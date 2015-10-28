@@ -600,6 +600,16 @@
 }
 
 #filedialog {
+	&.save .file-open { display: none; }
+	&.load {
+		& .file-name,
+		& .file-remove,
+		& .file-download,
+		& .file-save,
+		& .btn-separator
+			{ display: none !important; }
+	}
+
 	.modal-header > .file-name {
 		width: 100%;
 		margin: 16px 0 0 0;

@@ -27,6 +27,7 @@
 		el = document.getElementsByTagName('script')[0],
 		libs = [
 			'jquery',
+			'lz-string',
 			'bootstrap',
 			'Commons',
 			'Audio',

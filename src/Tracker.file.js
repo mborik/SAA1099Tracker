@@ -1,11 +1,67 @@
 /** Tracker.file submodule */
-/* global atob, Player, pPosition */
+/* global atob, LZString, Player, pPosition */
 //---------------------------------------------------------------------------------------
 var STMFile = (function () {
 	function STMFile (tracker) {
 		var player = tracker.player,
-			settings = tracker.settings;
+			settings = tracker.settings,
+			storageMap = [], storageLastId, storageBytesUsed = 0;
 
+		this.yetSaved = false;
+		this.modified = false;
+		this.fileName = '';
+
+//---------------------------------------------------------------------------------------
+		function storageSortAndSum () {
+			storageBytesUsed = 0;
+			storageMap.sort(function (a, b) { b.timeModified - a.timeModified });
+			storageMap.forEach(function (obj) { storageBytesUsed += (obj.length + 28) });
+		}
+
+		/**
+		 * This method builds internal database of stored songs in localStorage...
+		 */
+		this.reloadStorage = function () {
+			storageMap.splice(0);
+			storageLastId = -1;
+
+			var i, m, id, n, s, dat,
+				l = localStorage.length;
+
+			for (i = 0; i < l; i++) {
+				if ((m = localStorage.key(i).match(/^(stmf([0-9a-f]{3}))\-nfo/))) {
+					n = parseInt(m[2], 16);
+					id = m[1];
+
+					s = localStorage.getItem(m[0]);
+					dat = localStorage.getItem(id + '-dat');
+
+					if (!dat) {
+						console.log('Tracker.file', 'Unable to read data for file in localStorage\n\t%s:"%s"', m[2], s);
+						localStorage.removeItem(m[0]);
+						continue;
+					}
+
+					if (!(m = s.match(/^(.+)\|(\d+?)\|(\d+?)\|(\d\d:\d\d)$/)))
+						continue;
+
+					storageLastId = Math.max(storageLastId, n);
+					storageMap.push({
+						"id": n,
+						"storageId": id,
+						"fileName": m[1],
+						"timeCreated": parseInt(m[2], 10),
+						"timeModified": parseInt(m[3], 10),
+						"duration": m[4],
+						"length": dat.length
+					});
+				}
+			}
+
+			storageSortAndSum();
+		};
+
+//---------------------------------------------------------------------------------------
 		/**
 		 * This method creates JSON format of song data from tracker,
 		 * more specifically full snapshot of tracker state.
@@ -459,8 +515,28 @@ var STMFile = (function () {
 			tracker.updateSampleEditor(true);
 			tracker.smpornedit.updateOrnamentEditor(true);
 
+			this.modified = false;
+			this.yetSaved = false;
+
 			console.log('Tracker.file', 'Module "%s/%s" (v%s) successfully loaded...',
 					data.author, data.title, data.version);
+		};
+//---------------------------------------------------------------------------------------
+		this.new = function () {
+			player.clearSong();
+			player.clearSamples();
+			player.clearOrnaments();
+
+			tracker.songTitle = '';
+			tracker.songAuthor = '';
+
+			tracker.updatePanels();
+			tracker.updateTracklist();
+			tracker.updateSampleEditor(true);
+			tracker.smpornedit.updateOrnamentEditor(true);
+
+			this.modified = false;
+			this.yetSaved = false;
 		};
 //---------------------------------------------------------------------------------------
 		this.loadDemosong = function (name) {
@@ -470,6 +546,107 @@ var STMFile = (function () {
 			$.getJSON('demosongs/' + name + '.json', parser);
 		};
 //---------------------------------------------------------------------------------------
+		this.saveFile = function (fileName, duration, oldId) {
+			var i, l = storageMap.length,
+				s = fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, ''),
+				now = ~~(Date.now() / 1000),
+				mod = false, obj, data;
+
+			for (i = 0; i < l; i++) {
+				obj = storageMap[i];
+				if (obj.id === oldId || obj.fileName === fileName) {
+					mod = true;
+					break;
+				}
+			}
+
+			data = LZString.compressToUTF16(this.createJSON());
+			if (mod) {
+				obj = storageMap[i];
+
+				obj.fileName = fileName;
+				obj.timeModified = now;
+				obj.duration = duration;
+				obj.length = data.length;
+			}
+			else obj = {
+				"id": ++storageLastId,
+				"storageId": 'stmf' + ('00' + storageLastId.toString(16)).substr(-3),
+				"fileName": fileName,
+				"timeCreated": now,
+				"timeModified": now,
+				"duration": duration,
+				"length": data.length
+			};
+
+			localStorage.setItem(obj.storageId + '-inf', s.concat(
+				'|', obj.timeCreated.toString(),
+				'|', obj.timeModified.toString(),
+				'|', obj.duration
+			));
+
+			localStorage.setItem(obj.storageId + '-dat', data);
+
+			if (!mod)
+				storageMap.push(obj);
+			storageSortAndSum();
+		};
+
+//---------------------------------------------------------------------------------------
+//-- GUI METHODS ------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+		this.dialog = function (mode) {
+			var dlg = $('#filedialog'),
+				fn = this.fileName || tracker.songTitle,
+				titles = {
+					load: 'Open file from storage',
+					save: 'Save file to storage'
+				};
+
+			if (!titles[mode] || (mode === 'load' && !storageMap.length))
+				return false;
+
+			dlg.on('show.bs.modal', function () {
+				var percent = Math.ceil(100 / ((2 * 1024 * 1024) / storageBytesUsed));
+
+				dlg.addClass(mode).find('.modal-title').text(titles[mode] + '\u2026');
+				dlg.find('.file-name input').val(fn);
+				dlg.find('.storage-usage i').text(storageBytesUsed + ' bytes used');
+				dlg.find('.storage-usage .progress-bar').css('width', percent + '%');
+
+				var i, l = storageMap.length, obj, d,
+					el = dlg.find('.file-list').empty(),
+					span = $('<span/>'),
+					cell = $('<button class="cell"/>');
+
+				for (i = 0; i < l; i++) {
+					obj = storageMap[i];
+					d = (new Date(obj.timeModified * 1000))
+							.toISOString().replace(/^([\d\-]+)T([\d:]+?).+$/, '$1 $2');
+
+					cell.clone()
+						.append(span.clone().addClass('filename').text(obj.fileName))
+						.append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
+						.appendTo(el);
+				}
+
+			}).on('shown.bs.modal', function() {
+				var el = $(this);
+				if (el.hasClass('save'))
+					el.find('.file-name input').focus();
+				else
+					el.find('.file-list button:first-child').focus();
+
+			}).on('hide.bs.modal', function() {
+				dlg.removeClass(mode)
+					.off('show.bs.modal shown.bs.modal hide.bs.modal')
+					.find('.file-list')
+					.empty();
+
+			}).modal('show');
+		};
+
+		this.reloadStorage();
 	}
 
 	return STMFile;
