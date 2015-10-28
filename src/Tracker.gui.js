@@ -9,10 +9,7 @@ Tracker.prototype.populateGUI = function () {
 			'header':     '.fixed-container',
 			'trackedit':  '.fixed-container>.tab-content',
 			'smpedit':    '.fixed-container>.tab-content',
-			'ornedit':    '.fixed-container>.tab-content',
-			'dlg-commons': 'body',
-			'dlg-about':   'body',
-			'footer':      'body'
+			'ornedit':    '.fixed-container>.tab-content'
 		};
 
 	var populatedElementsTable = [
@@ -633,7 +630,7 @@ Tracker.prototype.populateGUI = function () {
 				o = templates[i];
 				console.log('Tracker.gui', 'Injecting "%s" template...', o.id);
 
-				selector = tplInjectionTable[o.id];
+				selector = tplInjectionTable[o.id] || 'body';
 				$(o).contents().appendTo(selector);
 			}
 

@@ -599,6 +599,100 @@
 	}
 }
 
+#filedialog {
+	.modal-header > .file-name {
+		width: 100%;
+		margin: 16px 0 0 0;
+
+		> input {
+			margin-top: @grid-gutter-width;
+			font-weight: bold;
+		}
+	}
+
+	.modal-body {
+		&.scrollable-container {
+			margin-bottom: 0;
+			height: 316px;
+		}
+
+		> .file-list {
+			.flexbox(column wrap, space-between);
+			box-sizing: border-box;
+			padding: (@grid-gutter-width * 2);
+			margin: 0;
+			height: 300px;
+
+			> .cell {
+				display: block;
+				padding: 8px;
+				margin: 0;
+				width: 212px;
+				height: 50px;
+				min-height: 50px;
+				margin: 0;
+				margin-right: (@grid-gutter-width * 2);
+				border: 1px solid @border-mild;
+				text-align: left;
+				#gradient.vertical(@table-bg-accent, @gray-lighter);
+
+				> .filename {
+					display: block;
+					font-weight: bold;
+					font-size: 13px;
+				}
+				> .fileinfo {
+					display: block;
+					padding-top: 5px;
+					font-size: 10px;
+					white-space: nowrap;
+					width: 196px;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+			}
+		}
+	}
+
+	.modal-footer {
+		.storage-usage {
+			width: 40%;
+			float: left;
+			text-align: left;
+
+			i {
+				float: right;
+				text-align: right;
+				width: 60%;
+				font-size: @font-size-small;
+				font-style: normal;
+				padding-top: 2px;
+			}
+
+			.progress {
+				clear: both;
+				height: 8px;
+				margin: 0;
+				margin-top: @grid-gutter-width;
+			}
+		}
+
+		.btn-separator {
+			content: '\A0';
+			display: inline-block;
+			vertical-align: middle;
+			background: @border-soft;
+			margin: 0 @grid-gutter-width;
+			height: 24px;
+			width: 1px;
+		}
+		button {
+			font-size: 13px;
+			padding: 6px 12px;
+		}
+	}
+
+}
 // statusbar ----------------------------------------------------------------------------
 #statusbar {
 	position: absolute;

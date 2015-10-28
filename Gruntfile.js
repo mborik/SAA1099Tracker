@@ -91,6 +91,7 @@ module.exports = function(grunt) {
 					'templates/smpedit.html',
 					'templates/ornedit.html',
 					'templates/dlg-commons.html',
+					'templates/dlg-file.html',
 					'templates/dlg-about.html',
 					'templates/footer.html'
 				],
