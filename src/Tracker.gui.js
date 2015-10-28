@@ -42,7 +42,8 @@ Tracker.prototype.populateGUI = function () {
 			method:   'bind',
 			param:    'beforeunload',
 			handler:  function() {
-				return 'All unsaved changes in SAA1099Tracker will be lost.';
+				if (!dev)
+					return 'All unsaved changes in SAA1099Tracker will be lost.';
 			}
 		}, {
 			global:   'window',
@@ -545,7 +546,7 @@ Tracker.prototype.populateGUI = function () {
 				var fn = $(this).data().filename;
 				if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
 					return false;
-				app.loadDemosong(fn);
+				app.file.loadDemosong(fn);
 			}
 		}, {
 			selector: 'a[id^="miHelp"]',
