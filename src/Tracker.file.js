@@ -15,7 +15,7 @@ var STMFile = (function () {
 		function storageSortAndSum () {
 			storageBytesUsed = 0;
 			storageMap.sort(function (a, b) { b.timeModified - a.timeModified });
-			storageMap.forEach(function (obj) { storageBytesUsed += (obj.length + 28) });
+			storageMap.forEach(function (obj) { storageBytesUsed += (obj.length + 40) * 2 });
 		}
 
 		/**
@@ -331,7 +331,7 @@ var STMFile = (function () {
 							// - every tick stored as simple string with hex values...
 
 							for (j = 0, l = Math.min(256, obj.data.length); j < l; j++) {
-								dat = it.data[k];
+								dat = it.data[j];
 
 								s = obj.data[j];
 								k = parseInt(s[0], 16) || 0;
@@ -377,7 +377,7 @@ var STMFile = (function () {
 
 							o = obj.data;
 							for (j = 0, l = Math.min(256, o.length); j < l; j++)
-								dat[k] = parseInt(o[j], 16) || 0;
+								dat[j] = parseInt(o[j], 16) || 0;
 						}
 					}
 				}
@@ -423,16 +423,16 @@ var STMFile = (function () {
 								s = obj.data[j] || '';
 								dat = it.data[j];
 
-								dat.tone = parseInt(s.substr(0, 2), 10)
-										|| ((dat.release = true) && 0);
+								k = parseInt(s.substr(0, 2), 10);
+								dat.tone = isNaN(k) ? ((dat.release = true) && 0) : k;
+
+								k = parseInt(s[3], 16);
+								dat.orn = isNaN(k) ? ((dat.orn_release = true) && 0) : k;
 
 								dat.sample = parseInt(s[2], 32) || 0;
-								dat.orn = parseInt(s[3], 16)
-										|| ((dat.orn_release = true) && 0);
-
 								dat.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
 								dat.cmd = parseInt(s[6], 16) || 0;
-									dat.cmd_data = parseInt(s.substr(7), 16) || 0;
+								dat.cmd_data = parseInt(s.substr(7), 16) || 0;
 							}
 						}
 					}
@@ -515,11 +515,9 @@ var STMFile = (function () {
 			tracker.updateSampleEditor(true);
 			tracker.smpornedit.updateOrnamentEditor(true);
 
-			this.modified = false;
-			this.yetSaved = false;
-
-			console.log('Tracker.file', 'Module "%s/%s" (v%s) successfully loaded...',
-					data.author, data.title, data.version);
+			console.log('Tracker.file', 'Module "%s" (v%s) successfully loaded...',
+					data.title, data.version);
+			return true;
 		};
 //---------------------------------------------------------------------------------------
 		this.new = function () {
@@ -530,6 +528,15 @@ var STMFile = (function () {
 			tracker.songTitle = '';
 			tracker.songAuthor = '';
 
+			player.currentPosition = 0;
+			player.repeatPosition = 0;
+			player.currentLine = 0;
+
+			tracker.modeEdit = false;
+			tracker.modeEditChannel = 0;
+			tracker.modeEditColumn = 0;
+			tracker.workingPattern = 0;
+
 			tracker.updatePanels();
 			tracker.updateTracklist();
 			tracker.updateSampleEditor(true);
@@ -537,30 +544,87 @@ var STMFile = (function () {
 
 			this.modified = false;
 			this.yetSaved = false;
+			this.fileName = '';
 		};
 //---------------------------------------------------------------------------------------
-		this.loadDemosong = function (name) {
-			var parser = this.parseJSON;
+		this.loadDemosong = function (fileName) {
+			var file = this;
 
-			console.log('Tracker.file', 'Loading "%s" demosong...', name);
-			$.getJSON('demosongs/' + name + '.json', parser);
+			console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
+			$.getJSON('demosongs/' + fileName + '.json', function (data) {
+				file.parseJSON(data);
+				file.modified = false;
+				file.yetSaved = false;
+				file.fileName = '';
+			});
+		};
+//---------------------------------------------------------------------------------------
+		this.loadFile = function (fileNameOrId) {
+			var i, l = storageMap.length, name, obj, data;
+
+			if (typeof fileNameOrId === 'string')
+				name = fileNameOrId.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '').trim();
+
+			for (i = 0; i < l; i++) {
+				obj = storageMap[i];
+
+				if (name && obj.fileName === name)
+					break;
+				else if (!name && typeof fileNameOrId === 'number' && obj.id === fileNameOrId) {
+					name = obj.fileName;
+					break;
+				}
+			}
+
+			if (i === l) {
+				console.log('Tracker.file', 'File "' + fileNameOrId + '" not found!');
+				return false;
+			}
+
+			console.log('Tracker.file', 'Loading "%s" from localStorage...', name);
+			data = localStorage.getItem(obj.storageId + '-dat');
+			console.log('Tracker.file', 'Compressed JSON file format loaded, size: ' + data.length * 2);
+			data = LZString.decompressFromUTF16(data);
+			console.log('Tracker.file', '%d bytes after LZString decompression, parsing...', data.length);
+
+			if (!this.parseJSON(data)) {
+				console.log('Tracker.file', 'Cannot parse file!');
+				return false;
+			}
+
+			this.modified = false;
+			this.yetSaved = true;
+			this.fileName = name;
+			return true;
 		};
 //---------------------------------------------------------------------------------------
 		this.saveFile = function (fileName, duration, oldId) {
 			var i, l = storageMap.length,
-				s = fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, ''),
 				now = ~~(Date.now() / 1000),
 				mod = false, obj, data;
+
+			fileName = fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '');
+			console.log('Tracker.file', 'Storing "%s" to localStorage...', fileName);
 
 			for (i = 0; i < l; i++) {
 				obj = storageMap[i];
 				if (obj.id === oldId || obj.fileName === fileName) {
+					console.log('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
 					mod = true;
 					break;
 				}
 			}
 
-			data = LZString.compressToUTF16(this.createJSON());
+			if (oldId !== void 0 && !mod) {
+				console.log('Tracker.file', 'Cannot find given storageId: %d!', oldId);
+				return false;
+			}
+
+			data = this.createJSON();
+			console.log('Tracker.file', 'JSON file format built, original size: ' + data.length);
+			data = LZString.compressToUTF16(data);
+			console.log('Tracker.file', 'Compressed with LZString to size: ' + data.length * 2);
+
 			if (mod) {
 				obj = storageMap[i];
 
@@ -579,7 +643,7 @@ var STMFile = (function () {
 				"length": data.length
 			};
 
-			localStorage.setItem(obj.storageId + '-inf', s.concat(
+			localStorage.setItem(obj.storageId + '-nfo', fileName.concat(
 				'|', obj.timeCreated.toString(),
 				'|', obj.timeModified.toString(),
 				'|', obj.duration
@@ -590,6 +654,13 @@ var STMFile = (function () {
 			if (!mod)
 				storageMap.push(obj);
 			storageSortAndSum();
+
+			this.yetSaved = true;
+			this.modified = false;
+			this.fileName = obj.fileName;
+
+			console.log('Tracker.file', 'Everything stored into localStorage...');
+			return true;
 		};
 
 //---------------------------------------------------------------------------------------
@@ -597,7 +668,7 @@ var STMFile = (function () {
 //---------------------------------------------------------------------------------------
 		this.dialog = function (mode) {
 			var dlg = $('#filedialog'),
-				fn = this.fileName || tracker.songTitle,
+				fn = this.fileName || tracker.songTitle || 'Untitled',
 				titles = {
 					load: 'Open file from storage',
 					save: 'Save file to storage'
@@ -622,7 +693,7 @@ var STMFile = (function () {
 				for (i = 0; i < l; i++) {
 					obj = storageMap[i];
 					d = (new Date(obj.timeModified * 1000))
-							.toISOString().replace(/^([\d\-]+)T([\d:]+?).+$/, '$1 $2');
+							.toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
 
 					cell.clone()
 						.append(span.clone().addClass('filename').text(obj.fileName))
@@ -631,11 +702,12 @@ var STMFile = (function () {
 				}
 
 			}).on('shown.bs.modal', function() {
-				var el = $(this);
-				if (el.hasClass('save'))
-					el.find('.file-name input').focus();
-				else
-					el.find('.file-list button:first-child').focus();
+				var el = $(this),
+					saveFlag = el.hasClass('save');
+
+				el.find(saveFlag
+					? '.file-name input'
+					: '.file-list button:first-child').focus();
 
 			}).on('hide.bs.modal', function() {
 				dlg.removeClass(mode)

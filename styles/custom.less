@@ -627,7 +627,7 @@
 		}
 
 		> .file-list {
-			.flexbox(column wrap, space-between);
+			.flexbox(column wrap, flex-start);
 			box-sizing: border-box;
 			padding: (@grid-gutter-width * 2);
 			margin: 0;
@@ -640,25 +640,25 @@
 				width: 212px;
 				height: 50px;
 				min-height: 50px;
-				margin: 0;
-				margin-right: (@grid-gutter-width * 2);
+				margin: 0 (@grid-gutter-width * 2) @grid-gutter-width 0;
 				border: 1px solid @border-mild;
 				text-align: left;
 				#gradient.vertical(@table-bg-accent, @gray-lighter);
 
-				> .filename {
+				> span {
 					display: block;
-					font-weight: bold;
-					font-size: 13px;
-				}
-				> .fileinfo {
-					display: block;
-					padding-top: 5px;
-					font-size: 10px;
 					white-space: nowrap;
 					width: 196px;
 					overflow: hidden;
 					text-overflow: ellipsis;
+				}
+				> .filename {
+					font-weight: bold;
+					font-size: 13px;
+				}
+				> .fileinfo {
+					padding-top: 5px;
+					font-size: 10px;
 				}
 			}
 		}
