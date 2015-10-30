@@ -11,6 +11,7 @@ var STMFile = (function () {
 		this.modified = false;
 		this.fileName = '';
 
+//- private methods ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 		function storageSortAndSum () {
 			storageBytesUsed = 0;
@@ -18,6 +19,34 @@ var STMFile = (function () {
 			storageMap.forEach(function (obj) { storageBytesUsed += (obj.length + 40) * 2 });
 		}
 
+		function updateAll () {
+			var bakLine = player.currentLine;
+
+			tracker.onCmdToggleEditMode(tracker.modeEdit);
+			tracker.onCmdToggleLoop(player.loopMode);
+
+			$('#scPattern').val(tracker.workingPattern.toString());
+			$('#scPosRepeat').val((player.repeatPosition + 1).toString());
+			$('#scPosCurrent').val(player.currentPosition.toString());
+
+			tracker.updatePanels();
+			player.currentLine = bakLine;
+			tracker.updateTracklist();
+
+			$('#scSampleNumber').val(tracker.workingSample.toString(32).toUpperCase());
+			$('#scOrnNumber').val(tracker.workingOrnament.toString(16).toUpperCase());
+			$('#scOrnTestSample').val(tracker.workingOrnTestSample.toString(32).toUpperCase());
+			$('#scSampleTone,#scOrnTone').val(tracker.workingSampleTone.toString()).trigger('change');
+			$('#sbSampleScroll').scrollLeft(0);
+
+			tracker.updateSampleEditor(true);
+			tracker.smpornedit.updateOrnamentEditor(true);
+
+			$('#main-tabpanel a').eq(tracker.activeTab).tab('show');
+		}
+
+// public methods -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 		/**
 		 * This method builds internal database of stored songs in localStorage...
 		 */
@@ -274,6 +303,7 @@ var STMFile = (function () {
 				return false;
 
 			var i, j, k, l, o, s, it, obj, dat,
+				count = { smp: 0, orn: 0, pat: 0, pos: 0 },
 				oldVer = false;
 
 			// detection of old JSON format v1.1 from previous project MIF85Tracker...
@@ -344,6 +374,8 @@ var STMFile = (function () {
 								dat.shift = parseInt(s.substr(3), 16) || 0;
 							}
 						}
+
+						count.smp++;
 					}
 				}
 			}
@@ -379,6 +411,8 @@ var STMFile = (function () {
 							for (j = 0, l = Math.min(256, o.length); j < l; j++)
 								dat[j] = parseInt(o[j], 16) || 0;
 						}
+
+						count.orn++;
 					}
 				}
 			}
@@ -435,6 +469,8 @@ var STMFile = (function () {
 								dat.cmd_data = parseInt(s.substr(7), 16) || 0;
 							}
 						}
+
+						count.pat++;
 					}
 				}
 			}
@@ -461,6 +497,9 @@ var STMFile = (function () {
 						}
 
 						player.position.push(it);
+						player.countPositionFrames(i);
+
+						count.pos++;
 					}
 				}
 			}
@@ -473,7 +512,11 @@ var STMFile = (function () {
 				player.currentPosition       = o.currentPosition || 0;
 				player.currentLine           = o.currentLine || 0;
 
+				tracker.activeTab            = 0;
+				tracker.modeEdit             = false;
+				tracker.modeEditColumn       = 0;
 				tracker.modeEditChannel      = o.editChannel || 0;
+
 				tracker.ctrlOctave           = o.ctrlOctave || 2;
 				tracker.ctrlSample           = o.ctrlSample || 0;
 				tracker.ctrlOrnament         = o.ctrlOrnament || 0;
@@ -510,13 +553,17 @@ var STMFile = (function () {
 				settings.audioInterrupt      = o.interrupt || 50;
 			}
 
-			tracker.updatePanels();
-			tracker.updateTracklist();
-			tracker.updateSampleEditor(true);
-			tracker.smpornedit.updateOrnamentEditor(true);
+			console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
+				title: data.title,
+				author: data.author,
+				samples: count.smp,
+				ornaments: count.orn,
+				patterns: count.pat,
+				positions: count.pos,
+				version: data.version
+			});
 
-			console.log('Tracker.file', 'JSON file "%s" (v%s) successfully loaded...',
-					data.title, data.version);
+			updateAll();
 			return true;
 		};
 //---------------------------------------------------------------------------------------
@@ -537,14 +584,11 @@ var STMFile = (function () {
 			tracker.modeEditColumn = 0;
 			tracker.workingPattern = 0;
 
-			tracker.updatePanels();
-			tracker.updateTracklist();
-			tracker.updateSampleEditor(true);
-			tracker.smpornedit.updateOrnamentEditor(true);
-
 			this.modified = false;
 			this.yetSaved = false;
 			this.fileName = '';
+
+			updateAll();
 		};
 //---------------------------------------------------------------------------------------
 		this.loadDemosong = function (fileName) {
@@ -585,7 +629,7 @@ var STMFile = (function () {
 			data = localStorage.getItem(obj.storageId + '-dat');
 			console.log('Tracker.file', 'Compressed JSON file format loaded, size: ' + data.length * 2);
 			data = LZString.decompressFromUTF16(data);
-			console.log('Tracker.file', '%d bytes after LZString decompression, parsing...', data.length);
+			console.log('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
 
 			if (!this.parseJSON(data)) {
 				console.log('Tracker.file', 'Cannot parse file!');
@@ -623,7 +667,7 @@ var STMFile = (function () {
 			data = this.createJSON();
 			console.log('Tracker.file', 'JSON file format built, original size: ' + data.length);
 			data = LZString.compressToUTF16(data);
-			console.log('Tracker.file', 'Compressed with LZString to size: ' + data.length * 2);
+			console.log('Tracker.file', 'Compressed with LZW to ' + data.length * 2);
 
 			if (mod) {
 				obj = storageMap[i];
@@ -663,8 +707,6 @@ var STMFile = (function () {
 			return true;
 		};
 
-//---------------------------------------------------------------------------------------
-//-- GUI METHODS ------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 		this.dialog = function (mode) {
 			var dlg = $('#filedialog'),
@@ -715,7 +757,10 @@ var STMFile = (function () {
 						return true;
 					};
 
-				dlg.addClass(mode).find('.modal-title').text(titles[mode] + '\u2026');
+				dlg.addClass(mode)
+					.before($('<div/>').addClass('modal-backdrop in').css('z-index', '1030'));
+
+				dlg.find('.modal-title').text(titles[mode] + '\u2026');
 				dlg.find('.file-name>input').val(fn);
 				dlg.find('.storage-usage i').text(storageBytesUsed + ' bytes used');
 				dlg.find('.storage-usage .progress-bar').css('width', percent + '%');
@@ -753,7 +798,7 @@ var STMFile = (function () {
 							title: 'Remove file\u2026',
 							text: 'Do you really want to remove this file from storage?',
 							buttons: 'yesno',
-							style: 'warning',
+							style: 'danger',
 							callback: function (btn) {
 								if (btn !== 'yes')
 									return;
@@ -782,11 +827,16 @@ var STMFile = (function () {
 					: '.file-list>button:first-child').focus();
 
 			}).on('hide.bs.modal', function() {
-				dlg.removeClass(mode).off().find('.file-list').off().empty();
+				dlg.removeClass(mode).prev('.modal-backdrop').remove();
+				dlg.off().find('.file-list').off().empty();
 				dlg.find('.modal-footer>button').off();
 
-			}).modal('show');
+			}).modal({
+				show: true,
+				backdrop: false
+			});
 		};
+//---------------------------------------------------------------------------------------
 
 		this.reloadStorage();
 	}

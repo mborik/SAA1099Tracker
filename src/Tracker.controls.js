@@ -156,9 +156,9 @@ Tracker.prototype.onCmdFileNew = function () {
 
 	$('#dialoque').confirm({
 		title: 'Create new file\u2026',
-		text: 'Do you really want to clean whole song?',
+		text: 'Do you really want to clear all song data and lost all of your changes?',
 		buttons: 'yesno',
-		style: 'warning',
+		style: 'danger',
 		callback: function (btn) {
 			if (btn !== 'yes')
 				return;
@@ -170,7 +170,23 @@ Tracker.prototype.onCmdFileNew = function () {
 Tracker.prototype.onCmdFileOpen = function () {
 	if (this.modePlay)
 		return;
-	this.file.dialog('load');
+
+	var file = this.file;
+	if (file.modified) {
+		$('#dialoque').confirm({
+			title: 'Open file\u2026',
+			text: 'You should lost all of your changes! Do you really want to continue?',
+			buttons: 'yesno',
+			style: 'warning',
+			callback: function (btn) {
+				if (btn !== 'yes')
+					return;
+				file.dialog('load');
+			}
+		});
+	}
+	else
+		file.dialog('load');
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileSave = function (as) {
@@ -178,7 +194,7 @@ Tracker.prototype.onCmdFileSave = function (as) {
 		return;
 
 	var file = this.file;
-	if (as || (file.modified && !file.yetSaved))
+	if (as || !file.yetSaved || file.modified)
 		file.dialog('save');
 	else if (!as && file.yetSaved && file.fileName)
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
@@ -221,8 +237,8 @@ Tracker.prototype.onCmdPosPlayStart = function () {
 	this.modePlay = this.player.playPosition(false, false, true);
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdToggleLoop = function () {
-	var state = (this.player.loopMode = !this.player.loopMode),
+Tracker.prototype.onCmdToggleLoop = function (newState) {
+	var state = (typeof newState === 'boolean') ? newState : (this.player.loopMode = !this.player.loopMode),
 		el = $('a#miToggleLoop>span'),
 		icon1 = 'glyphicon-repeat', icon2 = 'glyphicon-remove-circle',
 		glyph = state ? icon1 : icon2,
@@ -232,8 +248,8 @@ Tracker.prototype.onCmdToggleLoop = function () {
 	el.addClass(glyph).css({ 'color': color });
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdToggleEditMode = function () {
-	var state = (this.modeEdit = !this.modeEdit),
+Tracker.prototype.onCmdToggleEditMode = function (newState) {
+	var state = (typeof newState === 'boolean') ? newState : (this.modeEdit = !this.modeEdit),
 		el = $('.tracklist-panel');
 
 	if (!state)
@@ -305,6 +321,7 @@ Tracker.prototype.onCmdPatCreate = function () {
 	pt.end = len;
 	this.workingPattern = id;
 	this.updatePanelPattern();
+	this.file.modified = true;
 
 	$('#scPatternLen').focus();
 };
@@ -353,6 +370,7 @@ Tracker.prototype.onCmdPatDelete = function () {
 			app.updatePanelPattern();
 			app.updatePanelPosition();
 			app.updateTracklist();
+			app.file.modified = true;
 		}
 	});
 };
@@ -386,6 +404,7 @@ Tracker.prototype.onCmdPatClean = function () {
 
 			app.updatePanelInfo();
 			app.updateTracklist();
+			app.file.modified = true;
 		}
 	});
 };
@@ -410,6 +429,7 @@ Tracker.prototype.onCmdPosCreate = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosInsert = function () {
@@ -436,6 +456,7 @@ Tracker.prototype.onCmdPosInsert = function () {
 	this.updatePanelPattern();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosDelete = function () {
@@ -459,6 +480,7 @@ Tracker.prototype.onCmdPosDelete = function () {
 			app.updatePanelPattern();
 			app.updatePanelPosition();
 			app.updateTracklist();
+			app.file.modified = true;
 		}
 	});
 };
@@ -480,6 +502,7 @@ Tracker.prototype.onCmdPosMoveUp = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveDown = function () {
@@ -500,6 +523,7 @@ Tracker.prototype.onCmdPosMoveDown = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpPlay = function () {
@@ -517,6 +541,7 @@ Tracker.prototype.onCmdSmpSwap = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolUp = function () {
@@ -527,6 +552,7 @@ Tracker.prototype.onCmdSmpLVolUp = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolDown = function () {
@@ -535,6 +561,7 @@ Tracker.prototype.onCmdSmpLVolDown = function () {
 			data[i].volume.L--;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolUp = function () {
@@ -545,6 +572,7 @@ Tracker.prototype.onCmdSmpRVolUp = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolDown = function () {
@@ -553,6 +581,7 @@ Tracker.prototype.onCmdSmpRVolDown = function () {
 			data[i].volume.R--;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyLR = function () {
@@ -560,6 +589,7 @@ Tracker.prototype.onCmdSmpCopyLR = function () {
 		data[i].volume.R = data[i].volume.L;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyRL = function () {
@@ -567,6 +597,7 @@ Tracker.prototype.onCmdSmpCopyRL = function () {
 		data[i].volume.L = data[i].volume.R;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotL = function () {
@@ -585,6 +616,7 @@ Tracker.prototype.onCmdSmpRotL = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotR = function () {
@@ -603,6 +635,7 @@ Tracker.prototype.onCmdSmpRotR = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpEnable = function () {
@@ -611,6 +644,7 @@ Tracker.prototype.onCmdSmpEnable = function () {
 			data[i].enable_freq = true;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpDisable = function () {
@@ -618,6 +652,7 @@ Tracker.prototype.onCmdSmpDisable = function () {
 		data[i].enable_freq = false;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnPlay = function () {
@@ -631,6 +666,7 @@ Tracker.prototype.onCmdOrnClear = function () {
 	orn.loop = orn.end = 0;
 
 	this.smpornedit.updateOrnamentEditor(true);
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftLeft = function () {
@@ -642,6 +678,7 @@ Tracker.prototype.onCmdOrnShiftLeft = function () {
 		data[i] = (i < 255) ? data[i + 1] : ref;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftRight = function () {
@@ -653,6 +690,7 @@ Tracker.prototype.onCmdOrnShiftRight = function () {
 		data[i] = (i > 0) ? data[i - 1] : ref;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnTransUp = function () {
@@ -660,6 +698,7 @@ Tracker.prototype.onCmdOrnTransUp = function () {
 		orn.data[i]++;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnTransDown = function () {
@@ -667,6 +706,7 @@ Tracker.prototype.onCmdOrnTransDown = function () {
 		orn.data[i]--;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnCompress = function () {
@@ -682,6 +722,7 @@ Tracker.prototype.onCmdOrnCompress = function () {
 	orn.end >>= 1;
 
 	this.smpornedit.updateOrnamentEditor(true);
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnExpand = function () {
@@ -698,5 +739,6 @@ Tracker.prototype.onCmdOrnExpand = function () {
 	orn.end <<= 1;
 
 	this.smpornedit.updateOrnamentEditor(true);
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /** Tracker.gui submodule - template loader and element populator with jQuery */
-/* global getCompatible, AudioDriver, SyncTimer, Player */
+/* global dev, getCompatible, AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
 	var app = this;
@@ -213,6 +213,7 @@ Tracker.prototype.populateGUI = function () {
 				app.updatePanelPattern();
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scPosCurrent',
@@ -254,6 +255,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scPosSpeed',
@@ -281,6 +283,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scPosRepeat',
@@ -294,6 +297,8 @@ Tracker.prototype.populateGUI = function () {
 				}
 				else
 					app.player.repeatPosition = $(this).val() - 1;
+
+				app.file.modified = true;
 			}
 		}, {
 			selector: 'input[id^="scChnPattern"]',
@@ -321,6 +326,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: 'input[id^="scChnTrans"]',
@@ -342,6 +348,8 @@ Tracker.prototype.populateGUI = function () {
 					}
 					else
 						pos.ch[chn].pitch = el.value - 0;
+
+					app.file.modified = true;
 				});
 			}
 		}, {
@@ -402,11 +410,17 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#txSampleName',
 			method:   'change',
-			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
+			handler:  function(e) {
+				app.player.sample[app.workingSample].name = e.target.value;
+				app.file.modified = true;
+			}
 		}, {
 			selector: '#txOrnName',
 			method:   'change',
-			handler:  function(e) { app.player.ornament[app.workingOrnament].name = e.target.value }
+			handler:  function(e) {
+				app.player.ornament[app.workingOrnament].name = e.target.value;
+				app.file.modified = true;
+			}
 		}, {
 			selector: '#scSampleTone,#scOrnTone',
 			method:   'each',
@@ -452,6 +466,7 @@ Tracker.prototype.populateGUI = function () {
 				if (sample.end !== sample.loop)
 					sample.releasable = e.target.checked;
 				app.updateSampleEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scSampleLength',
@@ -465,6 +480,7 @@ Tracker.prototype.populateGUI = function () {
 				sample.loop = ((sample.end - looper) < 0) ? 0 : looper;
 
 				app.updateSampleEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scSampleRepeat',
@@ -475,6 +491,7 @@ Tracker.prototype.populateGUI = function () {
 
 				sample.loop = sample.end - value;
 				app.updateSampleEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#fxOrnChords button',
@@ -503,6 +520,7 @@ Tracker.prototype.populateGUI = function () {
 						orn.data[i] = chord.sequence[i];
 
 					app.smpornedit.updateOrnamentEditor(true);
+					app.file.modified = true;
 				});
 			}
 		}, {
@@ -517,6 +535,7 @@ Tracker.prototype.populateGUI = function () {
 				orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
 
 				app.smpornedit.updateOrnamentEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scOrnRepeat',
@@ -527,6 +546,7 @@ Tracker.prototype.populateGUI = function () {
 
 				orn.loop = orn.end - value;
 				app.smpornedit.updateOrnamentEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#sample-tabpanel a[data-toggle="tab"]',

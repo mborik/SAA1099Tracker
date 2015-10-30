@@ -576,7 +576,7 @@
 	.modal-content.warning {
 		.confirm-gradient(@modal-content-bg, lighten(@brand-warning, 49%));
 	}
-	.modal-content.error {
+	.modal-content.danger {
 		.confirm-gradient(@modal-content-bg, lighten(@brand-danger, 50%));
 	}
 
@@ -600,6 +600,8 @@
 }
 
 #filedialog {
+	z-index: 1031;
+
 	&.save .file-open { display: none; }
 	&.load {
 		& .file-name,
