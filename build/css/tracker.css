@@ -623,7 +623,7 @@
   background-image: radial-gradient(ellipse, #ffffff, #fdf9f4);
   background-repeat: no-repeat;
 }
-#dialoque .modal-content.error {
+#dialoque .modal-content.danger {
   background-image: -webkit-radial-gradient(ellipse, #ffffff, #feebe9);
   background-image: radial-gradient(ellipse, #ffffff, #feebe9);
   background-repeat: no-repeat;
@@ -642,6 +642,122 @@
 }
 #dialoque .modal-footer button:focus {
   outline-color: #3388cc;
+}
+#filedialog {
+  z-index: 1031;
+}
+#filedialog.save .file-open {
+  display: none;
+}
+#filedialog.load .file-name,
+#filedialog.load .file-remove,
+#filedialog.load .file-download,
+#filedialog.load .file-save,
+#filedialog.load .btn-separator {
+  display: none !important;
+}
+#filedialog .modal-header > .file-name {
+  width: 100%;
+  margin: 16px 0 0 0;
+}
+#filedialog .modal-header > .file-name > input {
+  margin-top: 5px;
+  font-weight: bold;
+}
+#filedialog .modal-body.scrollable-container {
+  margin-bottom: 0;
+  height: 316px;
+}
+#filedialog .modal-body > .file-list {
+  display: -webkit-flex;
+  -webkit-flex: none;
+  -webkit-flex-flow: column wrap;
+  -webkit-justify-content: flex-start;
+  display: -moz-flex;
+  -moz-box-flex: none;
+  -moz-flex-flow: column wrap;
+  -moz-justify-content: flex-start;
+  display: flex;
+  flex: none;
+  flex-flow: column wrap;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 10px;
+  margin: 0;
+  height: 300px;
+}
+#filedialog .modal-body > .file-list > .cell {
+  display: block;
+  padding: 8px;
+  margin: 0;
+  width: 212px;
+  height: 50px;
+  min-height: 50px;
+  margin: 0 10px 5px 0;
+  border: 1px solid #cccccc;
+  text-align: left;
+  background-image: -webkit-linear-gradient(top, #f9f9f9 0%, #eeeeee 100%);
+  background-image: -o-linear-gradient(top, #f9f9f9 0%, #eeeeee 100%);
+  background-image: linear-gradient(to bottom, #f9f9f9 0%, #eeeeee 100%);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff9f9f9', endColorstr='#ffeeeeee', GradientType=0);
+}
+#filedialog .modal-body > .file-list > .cell.selected {
+  outline: 3px solid #3388cc;
+  outline-offset: -2px;
+  background-image: -webkit-linear-gradient(top, #ebf3fa 0%, #d6e7f5 100%);
+  background-image: -o-linear-gradient(top, #ebf3fa 0%, #d6e7f5 100%);
+  background-image: linear-gradient(to bottom, #ebf3fa 0%, #d6e7f5 100%);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffebf3fa', endColorstr='#ffd6e7f5', GradientType=0);
+}
+#filedialog .modal-body > .file-list > .cell > span {
+  display: block;
+  white-space: nowrap;
+  width: 196px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#filedialog .modal-body > .file-list > .cell > .filename {
+  font-weight: bold;
+  font-size: 13px;
+}
+#filedialog .modal-body > .file-list > .cell > .fileinfo {
+  padding-top: 5px;
+  font-size: 10px;
+}
+#filedialog .modal-footer .storage-usage {
+  width: 40%;
+  float: left;
+  text-align: left;
+}
+#filedialog .modal-footer .storage-usage i {
+  float: right;
+  text-align: right;
+  width: 60%;
+  font-size: 11px;
+  font-style: normal;
+  padding-top: 2px;
+}
+#filedialog .modal-footer .storage-usage .progress {
+  clear: both;
+  height: 8px;
+  margin: 0;
+  margin-top: 5px;
+}
+#filedialog .modal-footer .btn-separator {
+  content: '\A0';
+  display: inline-block;
+  vertical-align: middle;
+  background: #eeeeee;
+  margin: 0 5px;
+  height: 24px;
+  width: 1px;
+}
+#filedialog .modal-footer .btn {
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: default !important;
 }
 #statusbar {
   position: absolute;

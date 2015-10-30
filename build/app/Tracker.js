@@ -1,5 +1,5 @@
 /*!
- * SAA1099Tracker v1.1.5.
+ * SAA1099Tracker v1.1.6.
  * Copyright (c) 2012-2015 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -20,7 +20,909 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.5') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.6') });
+//---------------------------------------------------------------------------------------
+/** Tracker.file submodule */
+/* global atob, btoa, getCompatible, Blob, LZString, Player, pPosition */
+//---------------------------------------------------------------------------------------
+var STMFile = (function () {
+	function STMFile (tracker) {
+		var player = tracker.player,
+			settings = tracker.settings,
+			storageMap = [], storageLastId, storageBytesUsed = 0;
+
+		this.yetSaved = false;
+		this.modified = false;
+		this.fileName = '';
+
+//- private methods ---------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+		function storageSortAndSum () {
+			storageBytesUsed = 0;
+			storageMap.sort(function (a, b) { b.timeModified - a.timeModified });
+			storageMap.forEach(function (obj) { storageBytesUsed += (obj.length + 40) * 2 });
+		}
+
+		function updateAll () {
+			var bakLine = player.currentLine;
+
+			tracker.onCmdToggleEditMode(tracker.modeEdit);
+			tracker.onCmdToggleLoop(player.loopMode);
+
+			$('#scPattern').val(tracker.workingPattern.toString());
+			$('#scPosRepeat').val((player.repeatPosition + 1).toString());
+			$('#scPosCurrent').val(player.currentPosition.toString());
+
+			tracker.updatePanels();
+			player.currentLine = bakLine;
+			tracker.updateTracklist();
+
+			$('#scSampleNumber').val(tracker.workingSample.toString(32).toUpperCase());
+			$('#scOrnNumber').val(tracker.workingOrnament.toString(16).toUpperCase());
+			$('#scOrnTestSample').val(tracker.workingOrnTestSample.toString(32).toUpperCase());
+			$('#scSampleTone,#scOrnTone').val(tracker.workingSampleTone.toString()).trigger('change');
+			$('#sbSampleScroll').scrollLeft(0);
+
+			tracker.updateSampleEditor(true);
+			tracker.smpornedit.updateOrnamentEditor(true);
+
+			$('#main-tabpanel a').eq(tracker.activeTab).tab('show');
+		}
+
+// public methods -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+		/**
+		 * This method builds internal database of stored songs in localStorage...
+		 */
+		this.reloadStorage = function () {
+			storageMap.splice(0);
+			storageLastId = -1;
+
+			var i, m, id, n, s, dat,
+				l = localStorage.length;
+
+			for (i = 0; i < l; i++) {
+				if ((m = localStorage.key(i).match(/^(stmf([0-9a-f]{3}))\-nfo/))) {
+					n = parseInt(m[2], 16);
+					id = m[1];
+
+					s = localStorage.getItem(m[0]);
+					dat = localStorage.getItem(id + '-dat');
+
+					if (!dat) {
+						console.log('Tracker.file', 'Unable to read data for file in localStorage\n\t%s:"%s"', m[2], s);
+						localStorage.removeItem(m[0]);
+						continue;
+					}
+
+					if (!(m = s.match(/^(.+)\|(\d+?)\|(\d+?)\|(\d\d:\d\d)$/)))
+						continue;
+
+					storageLastId = Math.max(storageLastId, n);
+					storageMap.push({
+						"id": n,
+						"storageId": id,
+						"fileName": m[1],
+						"timeCreated": parseInt(m[2], 10),
+						"timeModified": parseInt(m[3], 10),
+						"duration": m[4],
+						"length": dat.length
+					});
+				}
+			}
+
+			storageSortAndSum();
+		};
+
+//---------------------------------------------------------------------------------------
+		/**
+		 * This method creates JSON format of song data from tracker,
+		 * more specifically full snapshot of tracker state.
+		 * @param pretty {bool} set if you want pretty-formatted JSON output.
+		 */
+		this.createJSON = function (pretty) {
+			var i, j, k, l, o, s, it, obj, dat;
+			var output = {
+					'title':     tracker.songTitle,
+					'author':    tracker.songAuthor,
+					'samples':   [],
+					'ornaments': [],
+					'patterns':  [],
+					'positions': [],
+					'repeatPos': player.repeatPosition,
+
+					'current': {
+						'sample':     tracker.workingSample,
+						'ornament':   tracker.workingOrnament,
+						'ornSample':  tracker.workingOrnTestSample,
+						'smpornTone': tracker.workingSampleTone,
+
+						'position':   player.currentPosition,
+						'pattern':    tracker.workingPattern,
+
+						'line':       player.currentLine,
+						'channel':    tracker.modeEditChannel,
+						'column':     tracker.modeEditColumn
+					},
+					'ctrl': {
+						'octave':   tracker.ctrlOctave,
+						'sample':   tracker.ctrlSample,
+						'ornament': tracker.ctrlOrnament,
+						'rowStep':  tracker.ctrlRowStep
+					},
+					'config': {
+						'interrupt': settings.audioInterrupt,
+						'activeTab': tracker.activeTab,
+						'editMode':  tracker.modeEdit,
+						'loopMode':  player.loopMode
+					},
+
+					'version': '1.2'
+				};
+
+			// storing samples going backward and unshifting array...
+			for (i = 31; i > 0; i--) {
+				it = player.sample[i], dat = it.data;
+				obj = {};
+
+				if (it.name)
+					obj.name = it.name;
+
+				obj.loop = it.loop;
+				obj.end = it.end;
+
+				if (it.releasable)
+					obj.rel = it.releasable;
+
+				// only meaningful data will be stored and therefore
+				// we going backward from end of sample and unshifting array...
+				obj.data = [];
+				for (j = 255; j >= 0; j--) {
+					o = dat[j];
+					k = 0 | o.enable_freq | (o.enable_noise << 1) | (o.noise_value << 2);
+
+					if (!obj.data.length && !k && !o.volume.byte && !o.shift)
+						continue;
+
+					s = k.toString(16) + ('0' + o.volume.byte.toString(16)).substr(-2);
+					if (o.shift)
+						s = s.concat(
+							((o.shift < 0) ? '-' : '+'),
+							('00' + o.shift.abs().toString(16)).substr(-3)
+						);
+
+					obj.data.unshift(s.toUpperCase());
+				}
+
+				// for optimize reasons, we are detecting empty items in arrays...
+				if (!obj.data.length)
+					obj.data = null;
+				if (obj.data === null && !obj.loop && !obj.end && !obj.rel && !obj.name)
+					obj = null;
+				if (!output.samples.length && obj === null)
+					continue;
+
+				output.samples.unshift(obj);
+			}
+
+			// storing ornaments going backward and unshifting array...
+			for (i = 15; i > 0; i--) {
+				it = player.ornament[i];
+				obj = {};
+
+				if (it.name)
+					obj.name = it.name;
+
+				obj.loop = it.loop;
+				obj.end = it.end;
+
+				// only meaningful data will be stored and therefore
+				// we going backward from end of sample and unshifting array...
+				obj.data = [];
+				for (j = 255; j >= 0; j--) {
+					k = it.data[j];
+
+					if (!obj.data.length && !k)
+						continue;
+
+					obj.data.unshift(''.concat(
+						((k < 0) ? '-' : '+'),
+						('0' + k.abs().toString(10)).substr(-2)
+					).toUpperCase());
+				}
+
+				// for optimize reasons, we are detecting empty items in arrays...
+				if (!obj.data.length)
+					obj.data = null;
+				if (obj.data === null && !obj.loop && !obj.end && !obj.name)
+					obj = null;
+				if (!output.ornaments.length && obj === null)
+					continue;
+
+				output.ornaments.unshift(obj);
+			}
+
+			// storing patterns...
+			for (i = 1, l = player.pattern.length; i < l; i++) {
+				it = player.pattern[i], dat = it.data;
+				obj = { end: it.end };
+
+				// only meaningful data will be stored and therefore
+				// we going backward from end of sample and unshifting array...
+				obj.data = [];
+				for (j = Player.maxPatternLen; j > 0;) {
+					o = dat[--j];
+					k = o.orn_release ? 33 : o.orn;
+					s = o.release ? '--' : ('0' + o.tone.toString(10)).substr(-2);
+
+					if (!obj.data.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
+						continue;
+
+					obj.data.unshift(s.concat(
+						o.smp.toString(32),
+						k.toString(36),
+						('0' + o.volume.byte.toString(16)).substr(-2),
+						o.cmd.toString(16),
+						('0' + o.cmd_data.toString(16)).substr(-2)
+					).toUpperCase());
+				}
+
+				// for optimize reasons, we are detecting empty items in arrays...
+				if (!obj.data.length)
+					obj.data = null;
+				if (obj.data === null && !obj.end)
+					obj = null;
+				if (!output.patterns.length && obj === null)
+					continue;
+
+				output.patterns.push(obj);
+			}
+
+			// storing positions, no optimalizations needed...
+			for (i = 0, l = player.position.length; i < l; i++) {
+				it = player.position[i], dat = it.ch;
+				obj = {
+					length: it.length,
+					speed:  it.speed,
+					ch: []
+				};
+
+				for (j = 0; j < 6; j++) {
+					k = dat[j].pitch;
+					s = ('00' + dat[j].pattern.toString(10)).substr(-3);
+
+					if (k)
+						s = s.concat(
+							((k < 0) ? '-' : '+'),
+							('0' + k.abs().toString(10)).substr(-2)
+						);
+
+					obj.ch.push(s);
+				}
+
+				output.positions.push(obj);
+			}
+
+			return pretty ?
+				JSON.stringify(output, null, '\t').replace(/\},\n\t+?\{/g, '}, {') :
+				JSON.stringify(output);
+		};
+//---------------------------------------------------------------------------------------
+		/**
+		 * This method can parse input JSON with song data in both supported formats:
+		 * - v1.1 import from previous MIF85Tracker project
+		 * - v1.2 current SAA1099Tracker format specification
+		 *
+		 * @param data {string|object} song data in JSON
+		 */
+		this.parseJSON = function (data) {
+			if (typeof data === 'string') {
+				try {
+					var json = data;
+					data = JSON.parse(json);
+				}
+				catch (e) { return false }
+			}
+			if (typeof data !== 'object')
+				return false;
+
+			var i, j, k, l, o, s, it, obj, dat,
+				count = { smp: 0, orn: 0, pat: 0, pos: 0 },
+				oldVer = false;
+
+			// detection of old JSON format v1.1 from previous project MIF85Tracker...
+			if (data.version && data.version == '1.1')
+				oldVer = true;
+			else if (!data.version || (data.version && data.version != '1.2'))
+				return false;
+
+			player.clearSong();
+			player.clearSamples();
+			player.clearOrnaments();
+
+			//~~~ CREDITS ~~~
+			tracker.songTitle = data.title || '';
+			tracker.songAuthor = data.author || '';
+
+			//~~~ SAMPLES ~~~
+			if (data.samples && data.samples.length) {
+				if (oldVer) // ignore empty zero sample
+					data.samples.shift();
+
+				for (i = 1; i < 32; i++) {
+					if (!!(obj = data.samples[i - 1])) {
+						it = player.sample[i];
+						dat = it.data;
+
+						if (obj.name)
+							it.name = obj.name;
+						it.loop = obj.loop || 0;
+						it.end = obj.end || 0;
+						it.releasable = !!obj.rel;
+
+						if (oldVer) {
+							// v1.1
+							// - whole sample data stored binary in one BASE64 string,
+							//   every tick in 3 bytes...
+
+							o = atob(obj.data);
+							for (j = 0, k = 0, l = o.length; j < l && k < 32; j += 3, k++) {
+								s = (o.charCodeAt(j + 1) & 0xff);
+
+								dat = it.data[k];
+								dat.volume.byte  = (o.charCodeAt(j) & 0xff);
+								dat.enable_freq  = !!(s & 0x80);
+								dat.enable_noise = !!(s & 0x40);
+								dat.noise_value  = (s & 0x30) >> 4;
+
+								dat.shift = ((s & 7) << 8) | (o.charCodeAt(j + 2) & 0xff);
+								if (!!(s & 8))
+									dat.shift *= -1;
+							}
+						}
+						else {
+							// v1.2
+							// - every tick stored as simple string with hex values...
+
+							for (j = 0, l = Math.min(256, obj.data.length); j < l; j++) {
+								dat = it.data[j];
+
+								s = obj.data[j];
+								k = parseInt(s[0], 16) || 0;
+
+								dat.enable_freq  = !!(k & 1);
+								dat.enable_noise = !!(k & 2);
+								dat.noise_value  =  (k >> 2);
+								dat.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
+
+								dat.shift = parseInt(s.substr(3), 16) || 0;
+							}
+						}
+
+						count.smp++;
+					}
+				}
+			}
+
+			//~~~ ORNAMENTS ~~~
+			if (data.ornaments && data.ornaments.length) {
+				if (oldVer) // ignore empty zero ornament
+					data.ornaments.shift();
+
+				for (i = 1; i < 16; i++) {
+					if (!!(obj = data.ornaments[i - 1])) {
+						it = player.ornament[i];
+						dat = it.data;
+
+						if (obj.name)
+							it.name = obj.name;
+						it.loop = obj.loop || 0;
+						it.end = obj.end || 0;
+
+						if (oldVer) {
+							// v1.1
+							// - whole ornament data stored binary in one BASE64 string
+
+							o = atob(obj.data);
+							for (j = 0, l = Math.min(256, o.length); j < l; j++)
+								dat[j] = o.charCodeAt(j);
+						}
+						else {
+							// v1.2
+							// - every tick stored as simple string with signed hex value
+
+							o = obj.data;
+							for (j = 0, l = Math.min(256, o.length); j < l; j++)
+								dat[j] = parseInt(o[j], 16) || 0;
+						}
+
+						count.orn++;
+					}
+				}
+			}
+
+			//~~~ PATTERNS ~~~
+			if (data.patterns && data.patterns.length) {
+				if (oldVer) // ignore empty zero pattern
+					data.patterns.shift();
+
+				for (i = 0; i < data.patterns.length; i++) {
+					if (!!(obj = data.patterns[i])) {
+						it = player.pattern[player.addNewPattern()];
+
+						if (oldVer) {
+							// v1.1
+							// - whole pattern data stored binary in one BASE64 string,
+							//   starts with pattern length, next every line in 5 bytes
+
+							o = atob(obj);
+							it.end = (o.charCodeAt(0) & 0xff);
+
+							for (j = 1, k = 0, l = o.length; j < l && k < Player.maxPatternLen; j += 5, k++) {
+								dat = it.data[k];
+
+								dat.tone = (o.charCodeAt(j) & 0x7f);
+								dat.release = !!(o.charCodeAt(j) & 0x80);
+								dat.smp = (o.charCodeAt(j + 1) & 0x1f);
+								dat.orn_release = !!(o.charCodeAt(j + 1) & 0x80);
+								dat.volume.byte = (o.charCodeAt(j + 2) & 0xff);
+								dat.orn = (o.charCodeAt(j + 3) & 0x0f);
+								dat.cmd = (o.charCodeAt(j + 3) & 0xf0) >> 4;
+								dat.cmd_data = (o.charCodeAt(j + 4) & 0xff);
+							}
+						}
+						else {
+							// v1.2
+							// - lines encoded into string with values like in tracklist
+
+							it.end = obj.end || 0;
+
+							for (j = 0, l = Math.min(Player.maxPatternLen, obj.data.length); j < l; j++) {
+								s = obj.data[j] || '';
+								dat = it.data[j];
+
+								k = parseInt(s.substr(0, 2), 10);
+								dat.tone = isNaN(k) ? ((dat.release = true) && 0) : k;
+
+								k = parseInt(s[3], 16);
+								dat.orn = isNaN(k) ? ((dat.orn_release = true) && 0) : k;
+
+								dat.sample = parseInt(s[2], 32) || 0;
+								dat.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
+								dat.cmd = parseInt(s[6], 16) || 0;
+								dat.cmd_data = parseInt(s.substr(7), 16) || 0;
+							}
+						}
+
+						count.pat++;
+					}
+				}
+			}
+
+			//~~~ POSITIONS ~~~
+			if (data.positions && data.positions.length) {
+				for (i = 0; i < data.positions.length; i++) {
+					if (!!(obj = data.positions[i])) {
+						it = new pPosition(obj.length, obj.speed);
+
+						if (oldVer)
+							o = atob(obj.ch);
+
+						for (j = 0, k = 0; j < 6; j++) {
+							if (oldVer) {
+								it.ch[j].pattern = (o.charCodeAt(k++) & 0xff);
+								it.ch[j].pitch = o.charCodeAt(k++);
+							}
+							else {
+								s = obj.ch[j];
+								it.ch[j].pattern = parseInt(s.substr(0, 3), 10) || 0;
+								it.ch[j].pitch = parseInt(s.substr(3), 10) || 0;
+							}
+						}
+
+						player.position.push(it);
+						player.countPositionFrames(i);
+
+						count.pos++;
+					}
+				}
+			}
+
+			//~~~ CURRENT STATE ~~~
+			if (oldVer && typeof data.config === 'object') {
+				o = data.config;
+
+				player.repeatPosition        = o.repeatPosition || 0;
+				player.currentPosition       = o.currentPosition || 0;
+				player.currentLine           = o.currentLine || 0;
+
+				tracker.activeTab            = 0;
+				tracker.modeEdit             = false;
+				tracker.modeEditColumn       = 0;
+				tracker.modeEditChannel      = o.editChannel || 0;
+
+				tracker.ctrlOctave           = o.ctrlOctave || 2;
+				tracker.ctrlSample           = o.ctrlSample || 0;
+				tracker.ctrlOrnament         = o.ctrlOrnament || 0;
+				tracker.ctrlRowStep          = o.ctrlRowStep || 0;
+
+				settings.audioInterrupt      = o.audioInterrupt || 50;
+			}
+			else if (typeof data.current === 'object') {
+				o = data.current;
+
+				player.repeatPosition        = data.repeatPos || 0;
+				player.currentPosition       = o.position || 0;
+				player.currentLine           = o.line || 0;
+
+				tracker.workingPattern       = o.pattern || 0;
+				tracker.workingSample        = o.sample || 1;
+				tracker.workingOrnament      = o.ornament || 1;
+				tracker.workingOrnTestSample = o.ornSample || 1;
+				tracker.workingSampleTone    = o.smpornTone || 37;
+				tracker.modeEditChannel      = o.channel || 0;
+				tracker.modeEditColumn       = o.column || 0;
+
+				o = $.extend({}, data.ctrl, data.config);
+
+				player.loopMode              = o.loopMode || true;
+
+				tracker.ctrlOctave           = o.octave || 2;
+				tracker.ctrlSample           = o.sample || 0;
+				tracker.ctrlOrnament         = o.ornament || 0;
+				tracker.ctrlRowStep          = o.rowStep || 0;
+				tracker.activeTab            = o.activeTab || 0;
+				tracker.modeEdit             = o.editMode || false;
+
+				settings.audioInterrupt      = o.interrupt || 50;
+			}
+
+			console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
+				title: data.title,
+				author: data.author,
+				samples: count.smp,
+				ornaments: count.orn,
+				patterns: count.pat,
+				positions: count.pos,
+				version: data.version
+			});
+
+			updateAll();
+			return true;
+		};
+//---------------------------------------------------------------------------------------
+		this.new = function () {
+			player.clearSong();
+			player.clearSamples();
+			player.clearOrnaments();
+
+			tracker.songTitle = '';
+			tracker.songAuthor = '';
+
+			player.currentPosition = 0;
+			player.repeatPosition = 0;
+			player.currentLine = 0;
+
+			tracker.modeEdit = false;
+			tracker.modeEditChannel = 0;
+			tracker.modeEditColumn = 0;
+			tracker.workingPattern = 0;
+
+			this.modified = false;
+			this.yetSaved = false;
+			this.fileName = '';
+
+			updateAll();
+		};
+//---------------------------------------------------------------------------------------
+		this.loadDemosong = function (fileName) {
+			var file = this;
+
+			console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
+			$.getJSON('demosongs/' + fileName + '.json', function (data) {
+				file.parseJSON(data);
+				file.modified = false;
+				file.yetSaved = false;
+				file.fileName = '';
+			});
+		};
+//---------------------------------------------------------------------------------------
+		this.loadFile = function (fileNameOrId) {
+			var i, l = storageMap.length, name, obj, data;
+
+			if (typeof fileNameOrId === 'string')
+				name = fileNameOrId.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '').trim();
+
+			for (i = 0; i < l; i++) {
+				obj = storageMap[i];
+
+				if (name && obj.fileName === name)
+					break;
+				else if (!name && typeof fileNameOrId === 'number' && obj.id === fileNameOrId) {
+					name = obj.fileName;
+					break;
+				}
+			}
+
+			if (i === l) {
+				console.log('Tracker.file', 'File "' + fileNameOrId + '" not found!');
+				return false;
+			}
+
+			console.log('Tracker.file', 'Loading "%s" from localStorage...', name);
+			data = localStorage.getItem(obj.storageId + '-dat');
+			console.log('Tracker.file', 'Compressed JSON file format loaded, size: ' + data.length * 2);
+			data = LZString.decompressFromUTF16(data);
+			console.log('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
+
+			if (!this.parseJSON(data)) {
+				console.log('Tracker.file', 'JSON file parsing failed!');
+				return false;
+			}
+
+			data = null;
+			this.modified = false;
+			this.yetSaved = true;
+			this.fileName = name;
+			return true;
+		};
+//---------------------------------------------------------------------------------------
+		this.saveFile = function (fileName, duration, oldId) {
+			var i, l = storageMap.length,
+				now = ~~(Date.now() / 1000),
+				mod = false, obj, data;
+
+			fileName = fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '');
+			console.log('Tracker.file', 'Storing "%s" to localStorage...', fileName);
+
+			for (i = 0; i < l; i++) {
+				obj = storageMap[i];
+				if (obj.id === oldId || obj.fileName === fileName) {
+					console.log('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
+					mod = true;
+					break;
+				}
+			}
+
+			if (oldId !== void 0 && !mod) {
+				console.log('Tracker.file', 'Cannot find given storageId: %d!', oldId);
+				return false;
+			}
+
+			data = this.createJSON();
+			console.log('Tracker.file', 'JSON file format built, original size: ' + data.length);
+			data = LZString.compressToUTF16(data);
+			console.log('Tracker.file', 'Compressed with LZW to ' + data.length * 2);
+
+			if (mod) {
+				obj = storageMap[i];
+
+				obj.fileName = fileName;
+				obj.timeModified = now;
+				obj.duration = duration;
+				obj.length = data.length;
+			}
+			else obj = {
+				"id": ++storageLastId,
+				"storageId": 'stmf' + ('00' + storageLastId.toString(16)).substr(-3),
+				"fileName": fileName,
+				"timeCreated": now,
+				"timeModified": now,
+				"duration": duration,
+				"length": data.length
+			};
+
+			localStorage.setItem(obj.storageId + '-nfo', fileName.concat(
+				'|', obj.timeCreated.toString(),
+				'|', obj.timeModified.toString(),
+				'|', obj.duration
+			));
+
+			localStorage.setItem(obj.storageId + '-dat', data);
+			data = null;
+
+			if (!mod)
+				storageMap.push(obj);
+			storageSortAndSum();
+
+			this.yetSaved = true;
+			this.modified = false;
+			this.fileName = obj.fileName;
+
+			console.log('Tracker.file', 'Everything stored into localStorage...');
+			return true;
+		};
+
+//---------------------------------------------------------------------------------------
+		this.dialog = function (mode) {
+			var dlg = $('#filedialog'),
+				file = this,
+				fn = this.fileName || tracker.songTitle || 'Untitled',
+				saveFlag = (mode === 'save'),
+				titles = {
+					load: 'Open file from storage',
+					save: 'Save file to storage'
+				};
+
+			if (!titles[mode] || (!saveFlag && !storageMap.length))
+				return false;
+
+			dlg.on('show.bs.modal', function () {
+				var percent = Math.ceil(100 / ((2 * 1024 * 1024) / storageBytesUsed)),
+					selectedItem = null,
+					defaultHandler = function () {
+						if (saveFlag) {
+							var fileName = dlg.find('.file-name>input').val(),
+								duration = $('#stInfoPanel u:eq(3)').text();
+
+							file.saveFile(fileName, duration, (selectedItem && selectedItem.id) || undefined);
+						}
+						else {
+							if (!selectedItem)
+								return false;
+							file.loadFile(selectedItem.id);
+						}
+
+						dlg.modal('hide');
+						return true;
+					},
+					itemClickHandler = function (e) {
+						e.stopPropagation();
+						selectedItem = (e.data && typeof e.data.id === 'number') ? storageMap[e.data.id] : null;
+
+						dlg.find('.file-list>button').removeClass('selected');
+
+						if (selectedItem)
+							$(this).addClass('selected');
+						if (saveFlag) {
+							if (selectedItem)
+								dlg.find('.file-name>input').val(selectedItem.fileName);
+							dlg.find('.file-remove').prop('disabled', !selectedItem);
+						}
+
+						return true;
+					};
+
+				dlg.addClass(mode)
+					.before($('<div/>').addClass('modal-backdrop in').css('z-index', '1030'));
+
+				dlg.find('.modal-title').text(titles[mode] + '\u2026');
+				dlg.find('.file-name>input').val(fn);
+				dlg.find('.storage-usage i').text(storageBytesUsed + ' bytes used');
+				dlg.find('.storage-usage .progress-bar').css('width', percent + '%');
+				dlg.find('.btn-success').on('click', defaultHandler);
+
+				var i, l = storageMap.length, obj, d,
+					el = dlg.find('.file-list').empty(),
+					span = $('<span/>'),
+					cell = $('<button class="cell"/>');
+
+				for (i = 0; i < l; i++) {
+					obj = storageMap[i];
+					d = (new Date(obj.timeModified * 1000))
+							.toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
+
+					cell.clone()
+						.append(span.clone().addClass('filename').text(obj.fileName))
+						.append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
+						.prop('tabindex', i + 1)
+						.appendTo(el)
+						.on('click focus', { id: i }, itemClickHandler)
+						.on('dblclick', defaultHandler);
+				}
+
+				dlg.find('.file-open,.file-save').on('click', defaultHandler);
+
+				if (saveFlag) {
+					dlg.find('.file-list').on('click', itemClickHandler);
+					dlg.find('.file-remove').on('click', function(e) {
+					    e.stopPropagation();
+					    if (!selectedItem)
+					    	return false;
+
+					    $('#dialoque').confirm({
+							title: 'Remove file\u2026',
+							text: 'Do you really want to remove this file from storage?',
+							buttons: 'yesno',
+							style: 'danger',
+							callback: function (btn) {
+								if (btn !== 'yes')
+									return;
+								for (var i = 0, l = storageMap.length; i < l; i++) {
+									if (storageMap[i].storageId === selectedItem.storageId) {
+										storageMap.splice(i, 1);
+										localStorage.removeItem(selectedItem.storageId + '-nfo');
+										localStorage.removeItem(selectedItem.storageId + '-dat');
+
+										itemClickHandler(e);
+										dlg.modal('hide');
+										file.dialog(mode);
+										return;
+									}
+								}
+							}
+					    });
+
+					    return true;
+					});
+
+					dlg.find('.file-download').on('click', function(e) {
+					    e.stopPropagation();
+
+						console.log('Tracker.file', 'Preparing file output to Blob...');
+
+						var el = $(this),
+							data = file.createJSON(true),
+							mime = 'text/x-saa1099tracker',
+							blob, url;
+
+						try {
+							blob = new Blob([ data ], {
+								type: mime,
+								endings: 'native'
+							});
+						}
+						catch (ex) {
+							console.log('Tracker.file', 'Blob feature missing [%o], fallback to BlobBuilder...', ex);
+
+							try {
+								var bb = getCompatible(window, 'BlobBuilder', true);
+								bb.append(data);
+								blob = bb.getBlob(mime);
+							}
+							catch (ex2) {
+								console.log('Tracker.file', 'BlobBuilder feature missing [%o], fallback to BASE64 output...', ex2);
+
+								blob = undefined;
+								url = 'data:' + mime + ';base64,' + btoa(data);
+							}
+						}
+
+						if (blob) try {
+							url = getCompatible(window, 'URL').createObjectURL(blob) + '';
+						}
+						catch (ex) {
+							console.log('Tracker.file', 'URL feature for Blob missing [%o], fallback to BASE64 output...', ex);
+							url = 'data:' + mime + ';base64,' + btoa(data);
+						}
+
+						el.attr({
+							'href': url,
+							'download': file.fileName + '.STMF.json'
+						});
+
+						data = null;
+						url = null;
+
+						dlg.modal('hide');
+						setTimeout(function () { el.attr({ href: '', download: '' }) }, 50);
+
+					    return true;
+					});
+				}
+
+			}).on('shown.bs.modal', function() {
+				dlg.find(saveFlag
+					? '.file-name>input'
+					: '.file-list>button:first-child').focus();
+
+			}).on('hide.bs.modal', function() {
+				dlg.removeClass(mode).prev('.modal-backdrop').remove();
+				dlg.off().find('.file-list').off().empty();
+				dlg.find('.modal-footer>.btn').off();
+
+			}).modal({
+				show: true,
+				backdrop: false
+			});
+		};
+//---------------------------------------------------------------------------------------
+
+		this.reloadStorage();
+	}
+
+	return STMFile;
+})();
 //---------------------------------------------------------------------------------------
 /** Tracker.tracklist submodule */
 //---------------------------------------------------------------------------------------
@@ -393,7 +1295,7 @@ var SmpOrnEditor = (function () {
 })();
 //---------------------------------------------------------------------------------------
 /** Tracker.core submodule */
-/* global browser, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor */
+/* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
@@ -456,6 +1358,8 @@ var Tracker = (function() {
 			);
 
 		if (this.player) {
+			this.file = new STMFile(this);
+
 			this.populateGUI();
 			this.initializeGUI();
 		}
@@ -472,101 +1376,6 @@ var Tracker = (function() {
 			this.player.changedPosition = false;
 			this.player.changedLine = false;
 		}
-	};
-
-	Tracker.prototype.loadDemosong = function (name) {
-		var tracker = this;
-		var player = this.player;
-		var settings = this.settings;
-
-		console.log('Tracker.core', 'Loading "%s" demosong...', name);
-		$.getJSON('demosongs/' + name + '.json', function(data) {
-			console.log('Tracker.core', 'Demosong "%s/%s" (v%s) loaded...', data.author, data.title, data.version);
-
-			player.clearSong();
-			player.clearSamples();
-			player.clearOrnaments();
-
-			tracker.songTitle = data.title;
-			tracker.songAuthor = data.author;
-
-			var a, c, d, i, j, k, o, p, q, s;
-			for (i = 0; i < 32; i++) {
-				if (a = data.samples[i]) {
-					s = player.sample[i];
-					s.name = a.name;
-					s.loop = a.loop;
-					s.end = a.end;
-					s.releasable = !!a.rel;
-					for (j = 0, k = 0, d = atob(a.data); j < d.length; j += 3, k++) {
-						c = (d.charCodeAt(j + 1) & 0xff);
-						s.data[k].volume.byte = (d.charCodeAt(j) & 0xff);
-						s.data[k].enable_freq = !!(c & 0x80);
-						s.data[k].enable_noise = !!(c & 0x40);
-						s.data[k].noise_value = (c & 0x30) >> 4;
-						s.data[k].shift = ((c & 7) << 8) | (d.charCodeAt(j + 2) & 0xff);
-						if (!!(c & 8))
-							s.data[k].shift *= -1;
-					}
-				}
-			}
-
-			for (i = 0; i < 16; i++) {
-				if (a = data.ornaments[i]) {
-					o = player.ornament[i];
-					o.name = a.name;
-					o.loop = a.loop;
-					o.end = a.end;
-					for (j = 0, d = atob(a.data); j < d.length; j++)
-						o.data[j] = d.charCodeAt(j);
-				}
-			}
-
-			for (i = 0; i < data.patterns.length; i++) {
-				if (!!(d = data.patterns[i])) {
-					d = atob(d);
-					p = player.pattern[player.addNewPattern()];
-					p.end = (d.charCodeAt(0) & 0xff);
-					for (j = 1, k = 0; j < d.length; j += 5, k++) {
-						p.data[k].tone = (d.charCodeAt(j) & 0x7f);
-						p.data[k].release = !!(d.charCodeAt(j) & 0x80);
-						p.data[k].smp = (d.charCodeAt(j + 1) & 0x1f);
-						p.data[k].orn_release = !!(d.charCodeAt(j + 1) & 0x80);
-						p.data[k].volume.byte = (d.charCodeAt(j + 2) & 0xff);
-						p.data[k].orn = (d.charCodeAt(j + 3) & 0x0f);
-						p.data[k].cmd = (d.charCodeAt(j + 3) & 0xf0) >> 4;
-						p.data[k].cmd_data = (d.charCodeAt(j + 4) & 0xff);
-					}
-				}
-			}
-
-			for (i = 0; i < data.positions.length; i++) {
-				a = data.positions[i];
-				d = atob(a.ch);
-				q = player.position[i] = new pPosition(a.length, a.speed);
-				for (j = 0, k = 0; j < 6; j++) {
-					q.ch[j].pattern = (d.charCodeAt(k++) & 0xff);
-					q.ch[j].pitch = d.charCodeAt(k++);
-				}
-			}
-
-			player.setInterrupt((settings.audioInterrupt = data.config.audioInterrupt));
-			player.currentPosition = data.config.currentPosition;
-			player.repeatPosition = data.config.repeatPosition;
-			player.currentLine = data.config.currentLine;
-			tracker.modeEditChannel = data.config.editChannel;
-			tracker.ctrlOctave = data.config.ctrlOctave;
-			tracker.ctrlSample = data.config.ctrlSample;
-			tracker.ctrlOrnament = data.config.ctrlOrnament;
-			tracker.ctrlRowStep = data.config.ctrlRowStep;
-
-			tracker.updatePanels();
-			tracker.updateTracklist();
-			tracker.updateSampleEditor(true);
-			tracker.smpornedit.updateOrnamentEditor(true);
-
-			console.log('Tracker.core', 'Demosong completely loaded...');
-		});
 	};
 
 	return Tracker;
@@ -722,6 +1531,57 @@ Tracker.prototype.updatePanelPosition = function () {
 
 	pos = null;
 };
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tracker.prototype.onCmdFileNew = function () {
+	var file = this.file;
+	if (this.modePlay || !file.yetSaved && !file.modified && !file.fileName)
+		return;
+
+	$('#dialoque').confirm({
+		title: 'Create new file\u2026',
+		text: 'Do you really want to clear all song data and lost all of your changes?',
+		buttons: 'yesno',
+		style: 'danger',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
+			file.new();
+		}
+	});
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileOpen = function () {
+	if (this.modePlay)
+		return;
+
+	var file = this.file;
+	if (file.modified) {
+		$('#dialoque').confirm({
+			title: 'Open file\u2026',
+			text: 'You should lost all of your changes! Do you really want to continue?',
+			buttons: 'yesno',
+			style: 'warning',
+			callback: function (btn) {
+				if (btn !== 'yes')
+					return;
+				file.dialog('load');
+			}
+		});
+	}
+	else
+		file.dialog('load');
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileSave = function (as) {
+	if (this.modePlay || !this.player.position.length)
+		return;
+
+	var file = this.file;
+	if (as || !file.yetSaved || file.modified)
+		file.dialog('save');
+	else if (!as && file.yetSaved && file.fileName)
+		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
+};
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {
 	this.player.stopChannel();
@@ -760,8 +1620,8 @@ Tracker.prototype.onCmdPosPlayStart = function () {
 	this.modePlay = this.player.playPosition(false, false, true);
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdToggleLoop = function () {
-	var state = (this.player.loopMode = !this.player.loopMode),
+Tracker.prototype.onCmdToggleLoop = function (newState) {
+	var state = (typeof newState === 'boolean') ? newState : (this.player.loopMode = !this.player.loopMode),
 		el = $('a#miToggleLoop>span'),
 		icon1 = 'glyphicon-repeat', icon2 = 'glyphicon-remove-circle',
 		glyph = state ? icon1 : icon2,
@@ -771,8 +1631,8 @@ Tracker.prototype.onCmdToggleLoop = function () {
 	el.addClass(glyph).css({ 'color': color });
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdToggleEditMode = function () {
-	var state = (this.modeEdit = !this.modeEdit),
+Tracker.prototype.onCmdToggleEditMode = function (newState) {
+	var state = (typeof newState === 'boolean') ? newState : (this.modeEdit = !this.modeEdit),
 		el = $('.tracklist-panel');
 
 	if (!state)
@@ -844,6 +1704,7 @@ Tracker.prototype.onCmdPatCreate = function () {
 	pt.end = len;
 	this.workingPattern = id;
 	this.updatePanelPattern();
+	this.file.modified = true;
 
 	$('#scPatternLen').focus();
 };
@@ -892,6 +1753,7 @@ Tracker.prototype.onCmdPatDelete = function () {
 			app.updatePanelPattern();
 			app.updatePanelPosition();
 			app.updateTracklist();
+			app.file.modified = true;
 		}
 	});
 };
@@ -925,6 +1787,7 @@ Tracker.prototype.onCmdPatClean = function () {
 
 			app.updatePanelInfo();
 			app.updateTracklist();
+			app.file.modified = true;
 		}
 	});
 };
@@ -949,6 +1812,7 @@ Tracker.prototype.onCmdPosCreate = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosInsert = function () {
@@ -975,6 +1839,7 @@ Tracker.prototype.onCmdPosInsert = function () {
 	this.updatePanelPattern();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosDelete = function () {
@@ -998,6 +1863,7 @@ Tracker.prototype.onCmdPosDelete = function () {
 			app.updatePanelPattern();
 			app.updatePanelPosition();
 			app.updateTracklist();
+			app.file.modified = true;
 		}
 	});
 };
@@ -1019,6 +1885,7 @@ Tracker.prototype.onCmdPosMoveUp = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveDown = function () {
@@ -1039,6 +1906,7 @@ Tracker.prototype.onCmdPosMoveDown = function () {
 	this.updatePanelInfo();
 	this.updatePanelPosition();
 	this.updateTracklist();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpPlay = function () {
@@ -1056,6 +1924,7 @@ Tracker.prototype.onCmdSmpSwap = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolUp = function () {
@@ -1066,6 +1935,7 @@ Tracker.prototype.onCmdSmpLVolUp = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolDown = function () {
@@ -1074,6 +1944,7 @@ Tracker.prototype.onCmdSmpLVolDown = function () {
 			data[i].volume.L--;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolUp = function () {
@@ -1084,6 +1955,7 @@ Tracker.prototype.onCmdSmpRVolUp = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolDown = function () {
@@ -1092,6 +1964,7 @@ Tracker.prototype.onCmdSmpRVolDown = function () {
 			data[i].volume.R--;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyLR = function () {
@@ -1099,6 +1972,7 @@ Tracker.prototype.onCmdSmpCopyLR = function () {
 		data[i].volume.R = data[i].volume.L;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyRL = function () {
@@ -1106,6 +1980,7 @@ Tracker.prototype.onCmdSmpCopyRL = function () {
 		data[i].volume.L = data[i].volume.R;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotL = function () {
@@ -1124,6 +1999,7 @@ Tracker.prototype.onCmdSmpRotL = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotR = function () {
@@ -1142,6 +2018,7 @@ Tracker.prototype.onCmdSmpRotR = function () {
 	}
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpEnable = function () {
@@ -1150,6 +2027,7 @@ Tracker.prototype.onCmdSmpEnable = function () {
 			data[i].enable_freq = true;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpDisable = function () {
@@ -1157,6 +2035,7 @@ Tracker.prototype.onCmdSmpDisable = function () {
 		data[i].enable_freq = false;
 
 	this.updateSampleEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnPlay = function () {
@@ -1170,6 +2049,7 @@ Tracker.prototype.onCmdOrnClear = function () {
 	orn.loop = orn.end = 0;
 
 	this.smpornedit.updateOrnamentEditor(true);
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftLeft = function () {
@@ -1181,6 +2061,7 @@ Tracker.prototype.onCmdOrnShiftLeft = function () {
 		data[i] = (i < 255) ? data[i + 1] : ref;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftRight = function () {
@@ -1192,6 +2073,7 @@ Tracker.prototype.onCmdOrnShiftRight = function () {
 		data[i] = (i > 0) ? data[i - 1] : ref;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnTransUp = function () {
@@ -1199,6 +2081,7 @@ Tracker.prototype.onCmdOrnTransUp = function () {
 		orn.data[i]++;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnTransDown = function () {
@@ -1206,6 +2089,7 @@ Tracker.prototype.onCmdOrnTransDown = function () {
 		orn.data[i]--;
 
 	this.smpornedit.updateOrnamentEditor();
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnCompress = function () {
@@ -1221,6 +2105,7 @@ Tracker.prototype.onCmdOrnCompress = function () {
 	orn.end >>= 1;
 
 	this.smpornedit.updateOrnamentEditor(true);
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnExpand = function () {
@@ -1237,6 +2122,7 @@ Tracker.prototype.onCmdOrnExpand = function () {
 	orn.end <<= 1;
 
 	this.smpornedit.updateOrnamentEditor(true);
+	this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 /** Tracker.keyboard submodule */
@@ -2964,7 +3850,7 @@ Tracker.prototype.doc = {
 };
 //---------------------------------------------------------------------------------------
 /** Tracker.gui submodule - template loader and element populator with jQuery */
-/* global getCompatible, AudioDriver, SyncTimer, Player */
+/* global dev, getCompatible, AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function () {
 	var app = this;
@@ -2974,10 +3860,7 @@ Tracker.prototype.populateGUI = function () {
 			'header':     '.fixed-container',
 			'trackedit':  '.fixed-container>.tab-content',
 			'smpedit':    '.fixed-container>.tab-content',
-			'ornedit':    '.fixed-container>.tab-content',
-			'dlg-commons': 'body',
-			'dlg-about':   'body',
-			'footer':      'body'
+			'ornedit':    '.fixed-container>.tab-content'
 		};
 
 	var populatedElementsTable = [
@@ -3007,7 +3890,8 @@ Tracker.prototype.populateGUI = function () {
 			method:   'bind',
 			param:    'beforeunload',
 			handler:  function() {
-				return 'All unsaved changes in SAA1099Tracker will be lost.';
+				if (!dev)
+					return 'All unsaved changes in SAA1099Tracker will be lost.';
 			}
 		}, {
 			global:   'window',
@@ -3180,6 +4064,7 @@ Tracker.prototype.populateGUI = function () {
 				app.updatePanelPattern();
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scPosCurrent',
@@ -3221,6 +4106,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scPosSpeed',
@@ -3248,6 +4134,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scPosRepeat',
@@ -3261,6 +4148,8 @@ Tracker.prototype.populateGUI = function () {
 				}
 				else
 					app.player.repeatPosition = $(this).val() - 1;
+
+				app.file.modified = true;
 			}
 		}, {
 			selector: 'input[id^="scChnPattern"]',
@@ -3269,7 +4158,7 @@ Tracker.prototype.populateGUI = function () {
 				var el = e.target,
 					pp = app.player.currentPosition,
 					chn = el.id.substr(-1) - 1,
-					pos = app.player.position[pp],
+					pos = app.player.position[pp] || app.player.nullPosition,
 					val = el.value - 0,
 					prev = pos.ch[chn].pattern;
 
@@ -3288,6 +4177,7 @@ Tracker.prototype.populateGUI = function () {
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
 				app.updatePanelInfo();
+				app.file.modified = true;
 			}
 		}, {
 			selector: 'input[id^="scChnTrans"]',
@@ -3309,6 +4199,8 @@ Tracker.prototype.populateGUI = function () {
 					}
 					else
 						pos.ch[chn].pitch = el.value - 0;
+
+					app.file.modified = true;
 				});
 			}
 		}, {
@@ -3345,7 +4237,7 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
 				$('#sbSampleScroll').scrollLeft(0);
-				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32));
+				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32).toUpperCase());
 			}
 		}, {
 			selector: '#scOrnTestSample',
@@ -3369,11 +4261,17 @@ Tracker.prototype.populateGUI = function () {
 		}, {
 			selector: '#txSampleName',
 			method:   'change',
-			handler:  function(e) { app.player.sample[app.workingSample].name = e.target.value }
+			handler:  function(e) {
+				app.player.sample[app.workingSample].name = e.target.value;
+				app.file.modified = true;
+			}
 		}, {
 			selector: '#txOrnName',
 			method:   'change',
-			handler:  function(e) { app.player.ornament[app.workingOrnament].name = e.target.value }
+			handler:  function(e) {
+				app.player.ornament[app.workingOrnament].name = e.target.value;
+				app.file.modified = true;
+			}
 		}, {
 			selector: '#scSampleTone,#scOrnTone',
 			method:   'each',
@@ -3419,6 +4317,7 @@ Tracker.prototype.populateGUI = function () {
 				if (sample.end !== sample.loop)
 					sample.releasable = e.target.checked;
 				app.updateSampleEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scSampleLength',
@@ -3432,6 +4331,7 @@ Tracker.prototype.populateGUI = function () {
 				sample.loop = ((sample.end - looper) < 0) ? 0 : looper;
 
 				app.updateSampleEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scSampleRepeat',
@@ -3442,6 +4342,7 @@ Tracker.prototype.populateGUI = function () {
 
 				sample.loop = sample.end - value;
 				app.updateSampleEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#fxOrnChords button',
@@ -3470,6 +4371,7 @@ Tracker.prototype.populateGUI = function () {
 						orn.data[i] = chord.sequence[i];
 
 					app.smpornedit.updateOrnamentEditor(true);
+					app.file.modified = true;
 				});
 			}
 		}, {
@@ -3484,6 +4386,7 @@ Tracker.prototype.populateGUI = function () {
 				orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
 
 				app.smpornedit.updateOrnamentEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#scOrnRepeat',
@@ -3494,6 +4397,7 @@ Tracker.prototype.populateGUI = function () {
 
 				orn.loop = orn.end - value;
 				app.smpornedit.updateOrnamentEditor(true);
+				app.file.modified = true;
 			}
 		}, {
 			selector: '#sample-tabpanel a[data-toggle="tab"]',
@@ -3510,7 +4414,7 @@ Tracker.prototype.populateGUI = function () {
 				var fn = $(this).data().filename;
 				if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
 					return false;
-				app.loadDemosong(fn);
+				app.file.loadDemosong(fn);
 			}
 		}, {
 			selector: 'a[id^="miHelp"]',
@@ -3522,6 +4426,22 @@ Tracker.prototype.populateGUI = function () {
 					return false;
 				app.onCmdShowDocumentation(fn);
 			}
+		}, {
+			selector: '#miFileNew',
+			method:   'click',
+			handler:  function() { app.onCmdFileNew() }
+		}, {
+			selector: '#miFileOpen',
+			method:   'click',
+			handler:  function() { app.onCmdFileOpen() }
+		}, {
+			selector: '#miFileSave',
+			method:   'click',
+			handler:  function() { app.onCmdFileSave() }
+		}, {
+			selector: '#miFileSaveAs',
+			method:   'click',
+			handler:  function() { app.onCmdFileSave(true) }
 		}, {
 			selector: '#miAbout',
 			method:   'click',
@@ -3597,7 +4517,7 @@ Tracker.prototype.populateGUI = function () {
 				o = templates[i];
 				console.log('Tracker.gui', 'Injecting "%s" template...', o.id);
 
-				selector = tplInjectionTable[o.id];
+				selector = tplInjectionTable[o.id] || 'body';
 				$(o).contents().appendTo(selector);
 			}
 
