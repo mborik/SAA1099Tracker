@@ -1,5 +1,5 @@
 /** Tracker.file submodule */
-/* global atob, LZString, Player, pPosition */
+/* global atob, btoa, getCompatible, Blob, LZString, Player, pPosition */
 //---------------------------------------------------------------------------------------
 var STMFile = (function () {
 	function STMFile (tracker) {
@@ -632,10 +632,11 @@ var STMFile = (function () {
 			console.log('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
 
 			if (!this.parseJSON(data)) {
-				console.log('Tracker.file', 'Cannot parse file!');
+				console.log('Tracker.file', 'JSON file parsing failed!');
 				return false;
 			}
 
+			data = null;
 			this.modified = false;
 			this.yetSaved = true;
 			this.fileName = name;
@@ -694,6 +695,7 @@ var STMFile = (function () {
 			));
 
 			localStorage.setItem(obj.storageId + '-dat', data);
+			data = null;
 
 			if (!mod)
 				storageMap.push(obj);
@@ -819,6 +821,60 @@ var STMFile = (function () {
 
 					    return true;
 					});
+
+					dlg.find('.file-download').on('click', function(e) {
+					    e.stopPropagation();
+
+						console.log('Tracker.file', 'Preparing file output to Blob...');
+
+						var el = $(this),
+							data = file.createJSON(true),
+							mime = 'text/x-saa1099tracker',
+							blob, url;
+
+						try {
+							blob = new Blob([ data ], {
+								type: mime,
+								endings: 'native'
+							});
+						}
+						catch (ex) {
+							console.log('Tracker.file', 'Blob feature missing [%o], fallback to BlobBuilder...', ex);
+
+							try {
+								var bb = getCompatible(window, 'BlobBuilder', true);
+								bb.append(data);
+								blob = bb.getBlob(mime);
+							}
+							catch (ex2) {
+								console.log('Tracker.file', 'BlobBuilder feature missing [%o], fallback to BASE64 output...', ex2);
+
+								blob = undefined;
+								url = 'data:' + mime + ';base64,' + btoa(data);
+							}
+						}
+
+						if (blob) try {
+							url = getCompatible(window, 'URL').createObjectURL(blob) + '';
+						}
+						catch (ex) {
+							console.log('Tracker.file', 'URL feature for Blob missing [%o], fallback to BASE64 output...', ex);
+							url = 'data:' + mime + ';base64,' + btoa(data);
+						}
+
+						el.attr({
+							'href': url,
+							'download': file.fileName + '.STMF.json'
+						});
+
+						data = null;
+						url = null;
+
+						dlg.modal('hide');
+						setTimeout(function () { el.attr({ href: '', download: '' }) }, 50);
+
+					    return true;
+					});
 				}
 
 			}).on('shown.bs.modal', function() {
@@ -829,7 +885,7 @@ var STMFile = (function () {
 			}).on('hide.bs.modal', function() {
 				dlg.removeClass(mode).prev('.modal-backdrop').remove();
 				dlg.off().find('.file-list').off().empty();
-				dlg.find('.modal-footer>button').off();
+				dlg.find('.modal-footer>.btn').off();
 
 			}).modal({
 				show: true,
