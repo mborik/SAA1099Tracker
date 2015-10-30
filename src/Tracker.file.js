@@ -515,7 +515,7 @@ var STMFile = (function () {
 			tracker.updateSampleEditor(true);
 			tracker.smpornedit.updateOrnamentEditor(true);
 
-			console.log('Tracker.file', 'Module "%s" (v%s) successfully loaded...',
+			console.log('Tracker.file', 'JSON file "%s" (v%s) successfully loaded...',
 					data.title, data.version);
 			return true;
 		};
@@ -668,22 +668,58 @@ var STMFile = (function () {
 //---------------------------------------------------------------------------------------
 		this.dialog = function (mode) {
 			var dlg = $('#filedialog'),
+				file = this,
 				fn = this.fileName || tracker.songTitle || 'Untitled',
+				saveFlag = (mode === 'save'),
 				titles = {
 					load: 'Open file from storage',
 					save: 'Save file to storage'
 				};
 
-			if (!titles[mode] || (mode === 'load' && !storageMap.length))
+			if (!titles[mode] || (!saveFlag && !storageMap.length))
 				return false;
 
 			dlg.on('show.bs.modal', function () {
-				var percent = Math.ceil(100 / ((2 * 1024 * 1024) / storageBytesUsed));
+				var percent = Math.ceil(100 / ((2 * 1024 * 1024) / storageBytesUsed)),
+					selectedItem = null,
+					defaultHandler = function () {
+						if (saveFlag) {
+							var fileName = dlg.find('.file-name>input').val(),
+								duration = $('#stInfoPanel u:eq(3)').text();
+
+							file.saveFile(fileName, duration, (selectedItem && selectedItem.id) || undefined);
+						}
+						else {
+							if (!selectedItem)
+								return false;
+							file.loadFile(selectedItem.id);
+						}
+
+						dlg.modal('hide');
+						return true;
+					},
+					itemClickHandler = function (e) {
+						e.stopPropagation();
+						selectedItem = (e.data && typeof e.data.id === 'number') ? storageMap[e.data.id] : null;
+
+						dlg.find('.file-list>button').removeClass('selected');
+
+						if (selectedItem)
+							$(this).addClass('selected');
+						if (saveFlag) {
+							if (selectedItem)
+								dlg.find('.file-name>input').val(selectedItem.fileName);
+							dlg.find('.file-remove').prop('disabled', !selectedItem);
+						}
+
+						return true;
+					};
 
 				dlg.addClass(mode).find('.modal-title').text(titles[mode] + '\u2026');
-				dlg.find('.file-name input').val(fn);
+				dlg.find('.file-name>input').val(fn);
 				dlg.find('.storage-usage i').text(storageBytesUsed + ' bytes used');
 				dlg.find('.storage-usage .progress-bar').css('width', percent + '%');
+				dlg.find('.btn-success').on('click', defaultHandler);
 
 				var i, l = storageMap.length, obj, d,
 					el = dlg.find('.file-list').empty(),
@@ -698,22 +734,56 @@ var STMFile = (function () {
 					cell.clone()
 						.append(span.clone().addClass('filename').text(obj.fileName))
 						.append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
-						.appendTo(el);
+						.prop('tabindex', i + 1)
+						.appendTo(el)
+						.on('click focus', { id: i }, itemClickHandler)
+						.on('dblclick', defaultHandler);
+				}
+
+				dlg.find('.file-open,.file-save').on('click', defaultHandler);
+
+				if (saveFlag) {
+					dlg.find('.file-list').on('click', itemClickHandler);
+					dlg.find('.file-remove').on('click', function(e) {
+					    e.stopPropagation();
+					    if (!selectedItem)
+					    	return false;
+
+					    $('#dialoque').confirm({
+							title: 'Remove file\u2026',
+							text: 'Do you really want to remove this file from storage?',
+							buttons: 'yesno',
+							style: 'warning',
+							callback: function (btn) {
+								if (btn !== 'yes')
+									return;
+								for (var i = 0, l = storageMap.length; i < l; i++) {
+									if (storageMap[i].storageId === selectedItem.storageId) {
+										storageMap.splice(i, 1);
+										localStorage.removeItem(selectedItem.storageId + '-nfo');
+										localStorage.removeItem(selectedItem.storageId + '-dat');
+
+										itemClickHandler(e);
+										dlg.modal('hide');
+										file.dialog(mode);
+										return;
+									}
+								}
+							}
+					    });
+
+					    return true;
+					});
 				}
 
 			}).on('shown.bs.modal', function() {
-				var el = $(this),
-					saveFlag = el.hasClass('save');
-
-				el.find(saveFlag
-					? '.file-name input'
-					: '.file-list button:first-child').focus();
+				dlg.find(saveFlag
+					? '.file-name>input'
+					: '.file-list>button:first-child').focus();
 
 			}).on('hide.bs.modal', function() {
-				dlg.removeClass(mode)
-					.off('show.bs.modal shown.bs.modal hide.bs.modal')
-					.find('.file-list')
-					.empty();
+				dlg.removeClass(mode).off().find('.file-list').off().empty();
+				dlg.find('.modal-footer>button').off();
 
 			}).modal('show');
 		};

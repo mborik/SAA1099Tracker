@@ -100,9 +100,9 @@ module.exports = function(grunt) {
 					'templates/trackedit.html',
 					'templates/smpedit.html',
 					'templates/ornedit.html',
-					'templates/dlg-commons.html',
-					'templates/dlg-file.html',
 					'templates/dlg-about.html',
+					'templates/dlg-file.html',
+					'templates/dlg-commons.html',
 					'templates/footer.html'
 				],
 				dest: '/tmp/templates.tmp'

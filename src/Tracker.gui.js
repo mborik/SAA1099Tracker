@@ -556,6 +556,22 @@ Tracker.prototype.populateGUI = function () {
 				app.onCmdShowDocumentation(fn);
 			}
 		}, {
+			selector: '#miFileNew',
+			method:   'click',
+			handler:  function() { app.onCmdFileNew() }
+		}, {
+			selector: '#miFileOpen',
+			method:   'click',
+			handler:  function() { app.onCmdFileOpen() }
+		}, {
+			selector: '#miFileSave',
+			method:   'click',
+			handler:  function() { app.onCmdFileSave() }
+		}, {
+			selector: '#miFileSaveAs',
+			method:   'click',
+			handler:  function() { app.onCmdFileSave(true) }
+		}, {
 			selector: '#miAbout',
 			method:   'click',
 			handler:  function() { app.onCmdAbout() }

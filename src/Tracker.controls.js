@@ -148,6 +148,41 @@ Tracker.prototype.updatePanelPosition = function () {
 
 	pos = null;
 };
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tracker.prototype.onCmdFileNew = function () {
+	var file = this.file;
+	if (this.modePlay || !file.yetSaved && !file.modified && !file.fileName)
+		return;
+
+	$('#dialoque').confirm({
+		title: 'Create new file\u2026',
+		text: 'Do you really want to clean whole song?',
+		buttons: 'yesno',
+		style: 'warning',
+		callback: function (btn) {
+			if (btn !== 'yes')
+				return;
+			file.new();
+		}
+	});
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileOpen = function () {
+	if (this.modePlay)
+		return;
+	this.file.dialog('load');
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileSave = function (as) {
+	if (this.modePlay || !this.player.position.length)
+		return;
+
+	var file = this.file;
+	if (as || (file.modified && !file.yetSaved))
+		file.dialog('save');
+	else if (!as && file.yetSaved && file.fileName)
+		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
+};
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {
 	this.player.stopChannel();

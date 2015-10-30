@@ -645,6 +645,12 @@
 				text-align: left;
 				#gradient.vertical(@table-bg-accent, @gray-lighter);
 
+				&.selected {
+					outline: 3px solid @blue-effect;
+					outline-offset: -2px;
+					#gradient.vertical(lighten(@blue-effect, 45%), lighten(@blue-effect, 40%));
+				}
+
 				> span {
 					display: block;
 					white-space: nowrap;
