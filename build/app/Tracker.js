@@ -487,7 +487,7 @@ var STMFile = (function () {
 								k = parseInt(s[3], 16);
 								dat.orn = isNaN(k) ? ((dat.orn_release = true) && 0) : k;
 
-								dat.sample = parseInt(s[2], 32) || 0;
+								dat.smp = parseInt(s[2], 32) || 0;
 								dat.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
 								dat.cmd = parseInt(s[6], 16) || 0;
 								dat.cmd_data = parseInt(s.substr(7), 16) || 0;
@@ -854,6 +854,7 @@ var STMFile = (function () {
 						var el = $(this),
 							data = file.createJSON(true),
 							mime = 'text/x-saa1099tracker',
+							name = dlg.find('.file-name>input').val().trim() || fn,
 							blob, url;
 
 						try {
@@ -888,7 +889,7 @@ var STMFile = (function () {
 
 						el.attr({
 							'href': url,
-							'download': file.fileName + '.STMF.json'
+							'download': name + '.STMF.json'
 						});
 
 						data = null;
