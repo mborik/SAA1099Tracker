@@ -378,7 +378,7 @@ Tracker.prototype.populateGUI = function () {
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
 				$('#sbSampleScroll').scrollLeft(0);
-				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32));
+				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32).toUpperCase());
 			}
 		}, {
 			selector: '#scOrnTestSample',
