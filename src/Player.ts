@@ -359,7 +359,7 @@ class Player {
 			chn: number, chn2nd: number, chn3rd: number,
 			oct: number = 0, noise: number, cmd: number, paramH: number, paramL: number,
 			samp: pSampleData, tone: pTone, c: number,
-			eMask: number, eFreq: number = 0, eNoiz: number = 0, eChar: number = 0;
+			eMask: number, eFreq: number = 0, eNoiz: number = 0, eChar: number = 0, ePlay: number = 0;
 
 		// We processing channels backward! It's because of SAA1099 register architecture
 		// which expect settings for pairs or triplets of adjacent channels. We need
@@ -378,6 +378,13 @@ class Player {
 			if (pp.playing) {
 				// if playback in channel is enabled, fetch all smp/orn values...
 				samp = pp.sample.data[pp.sample_cursor];
+
+				// set channel bit if it's enabled or sample is still playing...
+				if (!pp.sample.releasable && pp.sample_cursor >= pp.sample.end)
+					samp = this.sample[0].data[0];
+				else
+					ePlay |= eMask;
+
 				vol.byte = samp.volume.byte;
 				height = pp.ornament.data[pp.ornament_cursor];
 				noise = samp.noise_value | (<any>samp.enable_noise << 2);
@@ -627,20 +634,28 @@ class Player {
 				if (pp.sample_cursor + 1 >= pp.sample.end) {
 					// it had to be released?
 					if (pp.sample.releasable && pp.released) {
-						if (++pp.sample_cursor === 256)
-							this.clearPlayParams(chn);
+						if (pp.sample_cursor < 255)
+							pp.sample_cursor++;
+						else {
+							pp.playing = false;
+							ePlay &= ~eMask;
+							eFreq &= ~eMask;
+						}
 					}
-					// it had to be repeated at the end?
+					// it had to be stopped at the end?
 					else if (pp.sample.loop === pp.sample.end) {
-						if ((this.mode & pMode.PM_SAMP_OR_LINE))
-							this.clearPlayParams(chn);
-						else
+						if (!(this.mode & pMode.PM_SAMP_OR_LINE))
 							pp.sample_cursor = pp.sample.end;
+						pp.playing = false;
+						ePlay &= ~eMask;
+						eFreq &= ~eMask;
 					}
-					// it had to be stopped?
-					else if (this.mode === pMode.PM_LINE)
-						this.clearPlayParams(chn);
-					// it had to be in the loop?
+					else if (this.mode === pMode.PM_LINE) {
+						pp.playing = false;
+						ePlay &= ~eMask;
+						eFreq &= ~eMask;
+					}
+					// it had to be repeated?
 					else
 						pp.sample_cursor = pp.sample.loop;
 				}
@@ -665,8 +680,8 @@ class Player {
 				///~ SAA1099 DATA 10-12: Octave for generators 0-5
 				this.SAA1099.setRegData(16 + chn2nd, oct);
 
-				eFreq &= (0xff ^ eMask);
-				eNoiz &= (0xff ^ eMask);
+				eFreq &= ~eMask;
+				eNoiz &= ~eMask;
 			}
 		}
 
@@ -677,7 +692,7 @@ class Player {
 		///~ SAA1099 DATA 16: Noise generator clock frequency select
 		this.SAA1099.setRegData(22, eChar);
 
-		if ((this.mode & pMode.PM_SAMP_OR_LINE) && (eFreq | eNoiz) === 0) {
+		if ((this.mode & pMode.PM_SAMP_OR_LINE) && !ePlay) {
 			///~ SAA1099 DATA 18: Envelope generator 0
 			this.SAA1099.setRegData(24, 0);
 			///~ SAA1099 DATA 19: Envelope generator 1
