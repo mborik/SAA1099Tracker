@@ -370,19 +370,18 @@ Tracker.prototype.updateSampleEditor = function (update, limitFrom, limitTo) {
 	}
 
 	if (update) {
-		l = (sample.end === sample.loop);
+		i = (sample.end - sample.loop);
 
 		$('#txSampleName').val(sample.name);
 		$('#scSampleLength').val('' + sample.end);
-		$('#scSampleRepeat')
-			.trigger('touchspin.updatesettings', { min: 0, max: sample.end })
-			.val(sample.end - sample.loop);
+		$('#scSampleRepeat').val('' + i)
+			.trigger('touchspin.updatesettings', { min: 0, max: sample.end });
 
-		if (l && sample.releasable)
+		if (!i && sample.releasable)
 			sample.releasable = false;
 
 		$('#chSampleRelease').prop('checked', sample.releasable);
-		$('#chSampleRelease').prop('disabled', l).parent()[l ? 'addClass' : 'removeClass']('disabled');
+		$('#chSampleRelease').prop('disabled', !i).parent()[i ? 'removeClass' : 'addClass']('disabled');
 	}
 };
 //---------------------------------------------------------------------------------------

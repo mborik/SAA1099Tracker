@@ -193,7 +193,7 @@ var STMFile = (function () {
 				obj.end = it.end;
 
 				// only meaningful data will be stored and therefore
-				// we going backward from end of sample and unshifting array...
+				// we going backward from end of ornament and unshifting array...
 				obj.data = [];
 				for (j = 255; j >= 0; j--) {
 					k = it.data[j];
@@ -224,7 +224,7 @@ var STMFile = (function () {
 				obj = { end: it.end };
 
 				// only meaningful data will be stored and therefore
-				// we going backward from end of sample and unshifting array...
+				// we going backward from end of pattern and unshifting array...
 				obj.data = [];
 				for (j = Player.maxPatternLen; j > 0;) {
 					o = dat[--j];
@@ -409,7 +409,7 @@ var STMFile = (function () {
 
 							o = obj.data;
 							for (j = 0, l = Math.min(256, o.length); j < l; j++)
-								dat[j] = parseInt(o[j], 16) || 0;
+								dat[j] = parseInt(o[j], 10) || 0;
 						}
 
 						count.orn++;
@@ -597,7 +597,7 @@ var STMFile = (function () {
 			console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
 			$.getJSON('demosongs/' + fileName + '.json', function (data) {
 				file.parseJSON(data);
-				file.modified = false;
+				file.modified = true;
 				file.yetSaved = false;
 				file.fileName = '';
 			});

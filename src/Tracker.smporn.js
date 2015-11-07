@@ -176,9 +176,8 @@ var SmpOrnEditor = (function () {
 				$('#fxOrnEditor').parent().scrollLeft(0);
 
 				$('#scOrnLength').val('' + orn.end);
-				$('#scOrnRepeat')
-					.trigger('touchspin.updatesettings', { min: 0, max: orn.end })
-					.val(orn.end - orn.loop);
+				$('#scOrnRepeat').val('' + (orn.end - orn.loop))
+					.trigger('touchspin.updatesettings', { min: 0, max: orn.end });
 			}
 		};
 
