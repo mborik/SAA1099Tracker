@@ -170,12 +170,20 @@ Object.defineProperties(Number.prototype, {
 			return (a ^ s) - s;
 		}
 	},
-// align value to exact character width with zeroes from left...
+// align absolute decimal integer value to exact character width with zeroes from left...
 	'toWidth': {
 		enumerable: true,
 		value: function(width) {
 			var a = '' + this.abs();
 			return ('0000000000' + a).substr(-Math.max(width || 0, a.length));
+		}
+	},
+// align absolute integer value to hexadecimal string with exact character width...
+	'toHex': {
+		enumerable: true,
+		value: function(width) {
+			var a = this.abs().toString(16);
+			return ('00000000' + a).substr(-Math.max(width || 0, a.length));
 		}
 	},
 // format number of seconds to time string MM:SS...

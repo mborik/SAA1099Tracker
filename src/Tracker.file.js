@@ -160,11 +160,11 @@ var STMFile = (function () {
 					if (!obj.data.length && !k && !o.volume.byte && !o.shift)
 						continue;
 
-					s = k.toString(16) + ('0' + o.volume.byte.toString(16)).substr(-2);
+					s = k.toHex(1) + o.volume.byte.toHex(2);
 					if (o.shift)
 						s = s.concat(
 							((o.shift < 0) ? '-' : '+'),
-							('00' + o.shift.abs().toString(16)).substr(-3)
+							o.shift.toHex(3)
 						);
 
 					obj.data.unshift(s.toUpperCase());
@@ -237,9 +237,9 @@ var STMFile = (function () {
 					obj.data.unshift(s.concat(
 						o.smp.toString(32),
 						k.toString(36),
-						('0' + o.volume.byte.toString(16)).substr(-2),
-						o.cmd.toString(16),
-						('0' + o.cmd_data.toString(16)).substr(-2)
+						o.volume.byte.toHex(2),
+						o.cmd.toHex(1),
+						o.cmd_data.toHex(2)
 					).toUpperCase());
 				}
 
@@ -680,7 +680,7 @@ var STMFile = (function () {
 			}
 			else obj = {
 				"id": ++storageLastId,
-				"storageId": 'stmf' + ('00' + storageLastId.toString(16)).substr(-3),
+				"storageId": 'stmf' + storageLastId.toHex(3),
 				"fileName": fileName,
 				"timeCreated": now,
 				"timeModified": now,
