@@ -58,6 +58,11 @@ class pVolume {
 	}
 }
 
+class pMixer {
+	index: number = 0;
+	length: number = 0;
+}
+
 // Ornament interface (data length = 256)
 interface pOrnament {
 	name: string;
@@ -113,10 +118,10 @@ interface pChannel {
  * @property frames Number of interupts which takes every line in tracklist;
  */
 class pPosition {
-	public ch: pChannel[];
-	public speed: number;
-	public length: number;
-	public frames: number[];
+	ch: pChannel[];
+	speed: number;
+	length: number;
+	frames: number[];
 
 	constructor(length: number, speed: number = 6) {
 		this.ch = [];
@@ -157,9 +162,18 @@ interface pParams {
 	commandValue2: number;
 }
 
-class pMixer {
-	index: number = 0;
-	length: number = 0;
+class pRuntime extends SAASoundRegData {
+	params: pParams[];
+
+	constructor() {
+		super();
+		this.params = [];
+	}
+
+	public setRegData(reg: any, data: number) {
+		var index = 'R' + reg.toHex(2).toUpperCase();
+		this.regs[index] = data;
+	}
 }
 //---------------------------------------------------------------------------------------
 class Player {
@@ -182,8 +196,10 @@ class Player {
 	public currentTick: number;
 
 	private mode: number;
-	private playParams: pParams[];
 	private mixer: pMixer = new pMixer;
+
+	private rtSong: pRuntime = new pRuntime;
+	private rtSample: pRuntime = new pRuntime;
 
 	public SAA1099: SAASound;
 
@@ -193,7 +209,6 @@ class Player {
 
 		this.sample = [];
 		this.ornament = [];
-		this.playParams = [];
 		this.nullPosition = new pPosition(64, 6);
 
 		var tab_tones: any[] = [
@@ -229,7 +244,7 @@ class Player {
 			this.tones[i] = t;
 		}
 
-		this.clearSong();
+		this.clearSong(true);
 		this.clearSamples();
 		this.clearOrnaments();
 
@@ -243,7 +258,7 @@ class Player {
 	}
 
 	/** Clear song (positions, patterns, pointers and playParams). */
-	public clearSong() {
+	public clearSong(init?: boolean) {
 		this.position = [];
 		this.pattern = [];
 		this.addNewPattern();
@@ -256,8 +271,12 @@ class Player {
 		this.currentLine = 0;
 		this.currentTick = 0;
 
-		for (var chn: number = 0; chn < 6; chn++)
-			this.clearPlayParams(chn);
+		for (var chn: number = 0; chn < 6; chn++) {
+			this.clearPlayParams(chn, this.rtSong);
+
+			if (init)
+				this.clearPlayParams(chn, this.rtSample);
+		}
 
 		console.log('Player', 'Song cleared...');
 	}
@@ -284,13 +303,43 @@ class Player {
 	/**
 	 * Reset playParams for particular channel to default values.
 	 * @param chn Channel number;
+	 * @param rt Optional runtime parameters;
 	 */
-	private clearPlayParams(chn: number) {
-		if (this.playParams[chn]) {
-			delete this.playParams[chn].attenuation;
-			this.playParams[chn] = null;
+	private clearPlayParams(chn: number, rt?: pRuntime) {
+		var pp: pParams[];
+
+		if (chn < 0 || chn >= 6)
+			return;
+
+		if (rt && rt.params)
+			pp = rt.params;
+		else if (this.mode === pMode.PM_SAMPLE)
+			pp = this.rtSample.params;
+		else
+			pp = this.rtSong.params;
+
+		if (pp[chn]) {
+			delete pp[chn].attenuation;
+			pp[chn] = null;
 		}
-		this.playParams[chn] = { tone: 0, playing: false, sample: this.sample[0], ornament: this.ornament[0], sample_cursor: 0, ornament_cursor: 0, attenuation: new pVolume, slideShift: 0, globalPitch: 0, released: false, command: 0, commandParam: 0, commandPhase: 0, commandValue1: 0, commandValue2: 0 };
+
+		pp[chn] = {
+			tone: 0,
+			playing: false,
+			sample: this.sample[0],
+			ornament: this.ornament[0],
+			sample_cursor: 0,
+			ornament_cursor: 0,
+			attenuation: new pVolume,
+			slideShift: 0,
+			globalPitch: 0,
+			released: false,
+			command: 0,
+			commandParam: 0,
+			commandPhase: 0,
+			commandValue1: 0,
+			commandValue2: 0
+		};
 	}
 
 	/**
@@ -349,10 +398,7 @@ class Player {
 	 * Most important part of Player: Method needs to be called every interrupt/frame.
 	 * It handles all the pointers and settings to output values on SAA1099 registers.
 	 */
-	private prepareFrame(): void {
-		if (!this.mode)
-			return;
-
+	private prepareFrame(rt?: pRuntime): void {
 		var pp: pParams,
 			vol: pVolume = new pVolume,
 			height: number, val: number = 0,
@@ -360,6 +406,12 @@ class Player {
 			oct: number = 0, noise: number, cmd: number, paramH: number, paramL: number,
 			samp: pSampleData, tone: pTone, c: number,
 			eMask: number, eFreq: number = 0, eNoiz: number = 0, eChar: number = 0, ePlay: number = 0;
+
+		if (rt === void 0)
+			rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
+
+		if (!this.mode)
+			return this.SAA1099.setAllRegs(rt);
 
 		// We processing channels backward! It's because of SAA1099 register architecture
 		// which expect settings for pairs or triplets of adjacent channels. We need
@@ -369,7 +421,7 @@ class Player {
 		// Therefore, it is better to go from 6th channel to 1st and group it's values...
 		for (chn = 5; chn >= 0; chn--) {
 			// pick playParams for channel...
-			pp = this.playParams[chn];
+			pp = rt.params[chn];
 
 			eMask  = (1 << chn);      // bit mask of channel
 			chn2nd = (chn >> 1);      // calculate pair of channels
@@ -580,7 +632,7 @@ class Player {
 							pp.commandParam ^= 0x82;
 
 							///~ SAA1099 DATA 18/19: Envelope generator 0/1
-							this.SAA1099.setRegData(24 + chn3rd, pp.commandParam);
+							rt.setRegData(24 + chn3rd, pp.commandParam);
 							cmd = -1;
 						}
 						break;
@@ -602,14 +654,14 @@ class Player {
 				vol.R = Math.max(0, (vol.R - pp.attenuation.R));
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-				this.SAA1099.setRegData(chn, vol.byte);
+				rt.setRegData(chn, vol.byte);
 
 				// get tone from tracklist, calculate proper frequency to register...
 				if (pp.tone) {
 					tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
 
 					///~ SAA1099 DATA 08-0D: Tone generator 0-5
-					this.SAA1099.setRegData(8 + chn, tone.cent);
+					rt.setRegData(8 + chn, tone.cent);
 
 					oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
 					tone = null;
@@ -618,7 +670,7 @@ class Player {
 					oct = 0;
 
 				///~ SAA1099 DATA 10-12: Octave for generators 0-5
-				this.SAA1099.setRegData(16 + chn2nd, oct);
+				rt.setRegData(16 + chn2nd, oct);
 
 				// set frequency enable bit...
 				if (samp.enable_freq)
@@ -674,11 +726,11 @@ class Player {
 					oct = 0;
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-				this.SAA1099.setRegData(chn, 0);
+				rt.setRegData(chn, 0);
 				///~ SAA1099 DATA 08-0D: Tone generator 0-5
-				this.SAA1099.setRegData(8 + chn, 0);
+				rt.setRegData(0x08 + chn, 0);
 				///~ SAA1099 DATA 10-12: Octave for generators 0-5
-				this.SAA1099.setRegData(16 + chn2nd, oct);
+				rt.setRegData(0x10 + chn2nd, oct);
 
 				eFreq &= ~eMask;
 				eNoiz &= ~eMask;
@@ -686,24 +738,24 @@ class Player {
 		}
 
 		///~ SAA1099 DATA 14: Frequency enable bits
-		this.SAA1099.setRegData(20, eFreq);
+		rt.setRegData(0x14, eFreq);
 		///~ SAA1099 DATA 15: Noise enable bits
-		this.SAA1099.setRegData(21, eNoiz);
+		rt.setRegData(0x15, eNoiz);
 		///~ SAA1099 DATA 16: Noise generator clock frequency select
-		this.SAA1099.setRegData(22, eChar);
+		rt.setRegData(0x16, eChar);
 
 		if ((this.mode & pMode.PM_SAMP_OR_LINE) && !ePlay) {
 			///~ SAA1099 DATA 18: Envelope generator 0
-			this.SAA1099.setRegData(24, 0);
+			rt.setRegData(0x18, 0);
 			///~ SAA1099 DATA 19: Envelope generator 1
-			this.SAA1099.setRegData(25, 0);
+			rt.setRegData(0x19, 0);
 			///~ SAA1099 DATA 1C: Master reset and sync
-			this.SAA1099.setRegData(28, 2);
+			rt.setRegData(0x1C, 2);
 			this.mode = 0;
 		}
 		else {
 			///~ SAA1099 DATA 1C: Enable output
-			this.SAA1099.setRegData(28, 1);
+			rt.setRegData(0x1C, 1);
 
 			// is there time to next trackline?
 			if ((this.mode & pMode.PM_LINE) && this.currentTick > 0)
@@ -713,6 +765,7 @@ class Player {
 		}
 
 		vol = null;
+		this.SAA1099.setAllRegs(rt);
 	}
 
 	/**
@@ -721,7 +774,7 @@ class Player {
 	 * @param next Move to the next trackline (default true);
 	 * @returns {boolean} success or failure
 	 */
-	private prepareLine(next?: boolean): boolean {
+	private prepareLine(next?: boolean, rt?: pRuntime): boolean {
 		if (this.currentTick) {
 			this.currentTick--;
 			return true;
@@ -734,6 +787,9 @@ class Player {
 			this.currentLine++;
 			this.changedLine = true;
 		}
+
+		if (rt === void 0)
+			rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
 
 		var p: pPosition = this.position[this.currentPosition],
 			pc: pChannel,
@@ -775,7 +831,7 @@ class Player {
 			if (this.currentLine >= pt.end)
 				continue;
 
-			pp = this.playParams[chn];
+			pp = rt.params[chn];
 			pp.globalPitch = p.ch[chn].pitch;
 			pp.playing = true;
 
@@ -923,10 +979,12 @@ class Player {
 	 * @returns {number} channel (1-6) where the sample has been played or 0 if error
 	 */
 	public playSample(s: number, o: number, tone: number, chn?: number): number {
+		var rt: pRuntime = this.rtSample;
+
 		if (!chn) {
 			// first free channel detection
 			for (chn = 0; chn < 6; chn++)
-				if (!this.playParams[chn].playing)
+				if (!rt.params[chn].playing)
 					break;
 
 			// no free channel for playing,
@@ -937,9 +995,9 @@ class Player {
 					chnToStop = -1;
 
 				for (chn = 0; chn < 6; chn++) {
-					if (this.playParams[chn].sample === this.sample[s]) {
-						if (this.playParams[chn].sample_cursor > farther) {
-							farther = this.playParams[chn].sample_cursor;
+					if (rt.params[chn].sample === this.sample[s]) {
+						if (rt.params[chn].sample_cursor > farther) {
+							farther = rt.params[chn].sample_cursor;
 							chnToStop = chn;
 						}
 					}
@@ -954,14 +1012,14 @@ class Player {
 		}
 		else if (--chn > 5)
 			return 0;
-		else if (this.playParams[chn].playing)
+		else if (rt.params[chn].playing)
 			return 0;
 
-		this.clearPlayParams(chn);
-		this.playParams[chn].playing = true;
-		this.playParams[chn].tone = tone;
-		this.playParams[chn].sample = this.sample[s];
-		this.playParams[chn].ornament = this.ornament[o];
+		this.clearPlayParams(chn, rt);
+		rt.params[chn].playing = true;
+		rt.params[chn].tone = tone;
+		rt.params[chn].sample = this.sample[s];
+		rt.params[chn].ornament = this.ornament[o];
 
 		this.mixer.index = 0;
 		this.mode = pMode.PM_SAMPLE;

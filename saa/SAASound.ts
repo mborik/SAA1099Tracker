@@ -22,6 +22,19 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+class SAASoundRegisters {
+	R00: number = 0; R01: number = 0; R02: number = 0; R03: number = 0; R04: number = 0; R05: number = 0;
+	R08: number = 0; R09: number = 0; R0A: number = 0; R0B: number = 0; R0C: number = 0; R0D: number = 0;
+	R10: number = 0; R11: number = 0; R12: number = 0;
+	R14: number = 0; R15: number = 0; R16: number = 0;
+	R18: number = 0; R19: number = 0;
+	R1C: number = 0;
+};
+class SAASoundRegData {
+	public regs: SAASoundRegisters = new SAASoundRegisters;
+	public muted: boolean[] = [ false, false, false, false, false, false ];
+};
+//---------------------------------------------------------------------------------------
 class SAASound {
 	public static sampleRate: number;
 
@@ -237,6 +250,23 @@ class SAASound {
 		if (chn < 0 || chn >= 6)
 			return;
 		this.amp[chn].mute = (this.ampMuted[chn] = mute);
+	}
+
+	/**
+	 * fill all registers and (un)mute all channels
+	 * @param data SAASoundRegData
+	 */
+	public setAllRegs(data: SAASoundRegData) {
+		var i: any;
+
+		if (data.regs)
+			for (i in data.regs)
+				if (data.regs.hasOwnProperty(i))
+					this.setRegData(parseInt(i.substr(1), 16), data.regs[i]);
+
+		if (data.muted)
+			for (i = 0; i < 6; i++)
+				this.mute(i, data.muted[i]);
 	}
 
 //---------------------------------------------------------------------------------------

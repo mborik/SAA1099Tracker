@@ -31,8 +31,8 @@
 			'bootstrap',
 			'Commons',
 			'Audio',
-			'Player',
 			'SAASound',
+			'Player',
 			'Tracker'
 		];
 

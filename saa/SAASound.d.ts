@@ -1,3 +1,30 @@
+declare class SAASoundRegisters {
+    R00: number;
+    R01: number;
+    R02: number;
+    R03: number;
+    R04: number;
+    R05: number;
+    R08: number;
+    R09: number;
+    R0A: number;
+    R0B: number;
+    R0C: number;
+    R0D: number;
+    R10: number;
+    R11: number;
+    R12: number;
+    R14: number;
+    R15: number;
+    R16: number;
+    R18: number;
+    R19: number;
+    R1C: number;
+}
+declare class SAASoundRegData {
+    regs: SAASoundRegisters;
+    muted: boolean[];
+}
 declare class SAASound {
     static sampleRate: number;
     private register;
@@ -37,6 +64,11 @@ declare class SAASound {
      * @param mute boolean
      */
     mute(chn: number, mute: boolean): void;
+    /**
+     * fill all registers and (un)mute all channels
+     * @param data SAASoundRegData
+     */
+    setAllRegs(data: SAASoundRegData): void;
     output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset?: number): void;
 }
 declare class SAANoise {

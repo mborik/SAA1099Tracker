@@ -366,7 +366,7 @@ Tracker.prototype.populateGUI = function () {
 					width: 58
 				}).change(function(e) {
 					var el = e.target;
-					app.player.SAA1099.mute((el.value - 1), !el.checked);
+					app.player.rtSong.muted[el.value - 1] = !el.checked;
 				});
 			}
 		}, {
