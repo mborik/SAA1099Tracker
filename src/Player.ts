@@ -164,6 +164,9 @@ interface pParams {
 	commandValue2: number;
 }
 //---------------------------------------------------------------------------------------
+declare var jQuery: any;
+var __extends = jQuery.extend;
+
 class pRuntime extends SAASoundRegData {
 	params: pParams[];
 	clearPlayParams: (chn: number) => void;
