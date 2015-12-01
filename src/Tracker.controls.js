@@ -418,11 +418,9 @@ Tracker.prototype.onCmdPosCreate = function () {
 
 	var p = this.player,
 		total = p.position.length,
-		current = p.position[p.currentPosition] || p.nullPosition,
-		ps = new pPosition(current.length, current.speed);
+		current = p.position[p.currentPosition] || p.nullPosition;
 
-	p.position.push(ps);
-	p.countPositionFrames(total);
+	p.addNewPosition(current.length, current.speed);
 	p.currentPosition = total;
 	p.currentLine = 0;
 
@@ -441,7 +439,7 @@ Tracker.prototype.onCmdPosInsert = function () {
 	var p = this.player, chn,
 		i = p.currentPosition,
 		current = p.position[i] || p.nullPosition,
-		pt = new pPosition(current.length, current.speed);
+		pt = p.addNewPosition(current.length, current.speed, false);
 
 	for (chn = 0; chn < 6; chn++) {
 		pt.ch[chn].pattern = current.ch[chn].pattern;

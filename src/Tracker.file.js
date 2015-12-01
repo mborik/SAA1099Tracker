@@ -479,7 +479,7 @@ var STMFile = (function () {
 			if (data.positions && data.positions.length) {
 				for (i = 0; i < data.positions.length; i++) {
 					if (!!(obj = data.positions[i])) {
-						it = new pPosition(obj.length, obj.speed);
+						it = player.addNewPosition(obj.length, obj.speed);
 
 						if (oldVer)
 							o = atob(obj.ch);
@@ -496,9 +496,7 @@ var STMFile = (function () {
 							}
 						}
 
-						player.position.push(it);
 						player.countPositionFrames(i);
-
 						count.pos++;
 					}
 				}

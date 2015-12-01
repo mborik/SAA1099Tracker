@@ -122,12 +122,14 @@ class pPosition {
 	speed: number;
 	length: number;
 	frames: number[];
+	initParams: pRuntime;
 
 	constructor(length: number, speed: number = 6) {
 		this.ch = [];
 		this.speed = speed;
 		this.length = length;
 		this.frames = [];
+		this.initParams = void 0;
 
 		for (var i: number = 0; i < 6; i++)
 			this.ch[i] = { pattern: 0, pitch: 0 };
@@ -161,18 +163,77 @@ interface pParams {
 	commandValue1: number;
 	commandValue2: number;
 }
-
+//---------------------------------------------------------------------------------------
 class pRuntime extends SAASoundRegData {
 	params: pParams[];
+	clearPlayParams: (chn: number) => void;
 
-	constructor() {
+	constructor(player: any) {
 		super();
+
 		this.params = [];
+		this.clearPlayParams = function(chn: number) {
+			if (chn < 0 || chn >= 6)
+				return;
+
+			if (this.params[chn]) {
+				delete this.params[chn].attenuation;
+				this.params[chn] = null;
+			}
+
+			this.params[chn] = {
+				tone: 0,
+				playing: false,
+				sample: player.sample[0],
+				ornament: player.ornament[0],
+				sample_cursor: 0,
+				ornament_cursor: 0,
+				attenuation: new pVolume,
+				slideShift: 0,
+				globalPitch: 0,
+				released: false,
+				command: 0,
+				commandParam: 0,
+				commandPhase: 0,
+				commandValue1: 0,
+				commandValue2: 0
+			};
+		}
+
+		for (var chn: number = 0; chn < 6; chn++)
+			this.clearPlayParams(chn);
 	}
 
-	public setRegData(reg: any, data: number) {
-		var index = 'R' + reg.toHex(2).toUpperCase();
+	public setRegData(reg: number, data: number) {
+		var index = 'R' + (<any>reg).toHex(2).toUpperCase();
 		this.regs[index] = data;
+	}
+
+	public replace(data: pRuntime) {
+		var i: number,
+			idx: string,
+			src: any = data.regs,
+			dst: any = this.regs;
+
+		for (idx in dst)
+			if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx))
+				dst[idx] = src[idx];
+
+		for (i = 0; i < 6; i++) {
+			dst = this.params[i];
+			src = data.params[i];
+
+			for (idx in dst) {
+				if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx)) {
+					if (dst[idx] instanceof pVolume) {
+						dst[idx].L = src[idx].L;
+						dst[idx].R = src[idx].R;
+					}
+					else
+						dst[idx] = src[idx];
+				}
+			}
+		}
 	}
 }
 //---------------------------------------------------------------------------------------
@@ -196,10 +257,10 @@ class Player {
 	public currentTick: number;
 
 	private mode: number;
-	private mixer: pMixer = new pMixer;
+	private mixer: pMixer;
 
-	private rtSong: pRuntime = new pRuntime;
-	private rtSample: pRuntime = new pRuntime;
+	private rtSong: pRuntime;
+	private rtSample: pRuntime;
 
 	public SAA1099: SAASound;
 
@@ -209,7 +270,6 @@ class Player {
 
 		this.sample = [];
 		this.ornament = [];
-		this.nullPosition = new pPosition(64, 6);
 
 		var tab_tones: any[] = [
 			{ freq: 0x05, prefix: 'B-' },
@@ -244,12 +304,11 @@ class Player {
 			this.tones[i] = t;
 		}
 
-		this.clearSong(true);
-		this.clearSamples();
-		this.clearOrnaments();
+		this.mixer = new pMixer;
+		this.setInterrupt(50);
 
 		this.loopMode = true;
-		this.setInterrupt(50);
+		this.clearSong(true);
 
 		this.stopChannel(0);
 		this.mode = 0;
@@ -257,7 +316,7 @@ class Player {
 		console.log('Player', 'Initialization done...');
 	}
 
-	/** Clear song (positions, patterns, pointers and playParams). */
+	/** Clear or initialize song (positions, patterns, pointers and playParams). */
 	public clearSong(init?: boolean) {
 		this.position = [];
 		this.pattern = [];
@@ -271,14 +330,23 @@ class Player {
 		this.currentLine = 0;
 		this.currentTick = 0;
 
-		for (var chn: number = 0; chn < 6; chn++) {
-			this.clearPlayParams(chn, this.rtSong);
+		if (init) {
+			this.clearSamples();
+			this.clearOrnaments();
 
-			if (init)
-				this.clearPlayParams(chn, this.rtSample);
+			this.rtSong = new pRuntime(this);
+			this.rtSample = new pRuntime(this);
+
+			this.nullPosition = this.addNewPosition(64, 6, false);
+
+			console.log('Player', 'Song objects and parameters initialized...');
 		}
+		else {
+			for (var chn: number = 0; chn < 6; chn++)
+				this.rtSong.clearPlayParams(chn);
 
-		console.log('Player', 'Song cleared...');
+			console.log('Player', 'Song cleared...');
+		}
 	}
 
 	/** Clear all samples. */
@@ -301,48 +369,6 @@ class Player {
 	}
 
 	/**
-	 * Reset playParams for particular channel to default values.
-	 * @param chn Channel number;
-	 * @param rt Optional runtime parameters;
-	 */
-	private clearPlayParams(chn: number, rt?: pRuntime) {
-		var pp: pParams[];
-
-		if (chn < 0 || chn >= 6)
-			return;
-
-		if (rt && rt.params)
-			pp = rt.params;
-		else if (this.mode === pMode.PM_SAMPLE)
-			pp = this.rtSample.params;
-		else
-			pp = this.rtSong.params;
-
-		if (pp[chn]) {
-			delete pp[chn].attenuation;
-			pp[chn] = null;
-		}
-
-		pp[chn] = {
-			tone: 0,
-			playing: false,
-			sample: this.sample[0],
-			ornament: this.ornament[0],
-			sample_cursor: 0,
-			ornament_cursor: 0,
-			attenuation: new pVolume,
-			slideShift: 0,
-			globalPitch: 0,
-			released: false,
-			command: 0,
-			commandParam: 0,
-			commandPhase: 0,
-			commandValue1: 0,
-			commandValue2: 0
-		};
-	}
-
-	/**
 	 * Create bare pattern at the end of the array of patterns and return it's number.
 	 * @returns {number} new pattern number
 	 */
@@ -357,6 +383,24 @@ class Player {
 		this.pattern.push(pt);
 		return index;
 	}
+
+	/**
+	 * Create new position in given length and basic speed.
+	 * @param length Position length;
+	 * @param speed Basic position speed;
+	 * @param add Should be position added to stack?
+	 * @returns {pPosition} new position object;
+	 */
+	public addNewPosition(length: number, speed: number, add?: boolean): pPosition {
+		var pos = new pPosition(length, speed);
+		pos.initParams = new pRuntime(this);
+
+		if (add === void 0 || add === true)
+			this.position.push(pos);
+
+		return pos;
+	}
+
 //---------------------------------------------------------------------------------------
 	/**
 	 * Set processor's interrupt of virtual pseudo-emulated 8bit computer to the mixer.
@@ -783,7 +827,7 @@ class Player {
 		if (this.currentPosition >= this.position.length)
 			return false;
 
-		if (next === void 0 || next) {
+		if (next === void 0 || next === true) {
 			this.currentLine++;
 			this.changedLine = true;
 		}
@@ -870,7 +914,7 @@ class Player {
 				if (pp.sample.releasable && !pp.released)
 					pp.released = true;
 				else
-					this.clearPlayParams(chn);
+					rt.clearPlayParams(chn);
 				continue;
 			}
 			else if (pl.tone && pl.cmd == 0x3 && pl.cmd_data) {
@@ -950,9 +994,9 @@ class Player {
 	 * @returns {boolean} success or failure
 	 */
 	public playPosition(fromStart?: boolean, follow?: boolean, resetLine?: boolean): boolean {
-		if (fromStart === void 0 || fromStart)
+		if (fromStart === void 0 || fromStart === true)
 			this.currentPosition = 0;
-		if (resetLine === void 0 || resetLine)
+		if (resetLine === void 0 || resetLine === true)
 			this.currentLine = 0;
 		if (follow === void 0)
 			follow = true;
@@ -1015,7 +1059,7 @@ class Player {
 		else if (rt.params[chn].playing)
 			return 0;
 
-		this.clearPlayParams(chn, rt);
+		rt.clearPlayParams(chn);
 		rt.params[chn].playing = true;
 		rt.params[chn].tone = tone;
 		rt.params[chn].sample = this.sample[s];
@@ -1032,11 +1076,13 @@ class Player {
 	 * @param chn Zero or channel number (1-6);
 	 */
 	public stopChannel(chn: number = 0) {
+		var rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
+
 		if (chn < 0 || chn > 6)
 			return;
 		else if (chn === 0) {
 			for (; chn < 6; chn++)
-				this.clearPlayParams(chn);
+				rt.clearPlayParams(chn);
 
 			this.mode = pMode.PM_LINE;
 			this.prepareFrame();
@@ -1045,7 +1091,7 @@ class Player {
 			return;
 		}
 
-		this.clearPlayParams(--chn);
+		rt.clearPlayParams(--chn);
 	}
 //---------------------------------------------------------------------------------------
 	/**
