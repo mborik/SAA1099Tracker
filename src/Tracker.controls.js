@@ -448,6 +448,7 @@ Tracker.prototype.onCmdPosInsert = function () {
 
 	p.position.splice(i, 0, pt);
 	p.countPositionFrames(i);
+	p.storePositionRuntime(i);
 	p.currentLine = 0;
 
 	this.updatePanelInfo();

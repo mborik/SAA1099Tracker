@@ -497,6 +497,7 @@ var STMFile = (function () {
 						}
 
 						player.countPositionFrames(i);
+						player.storePositionRuntime(i);
 						count.pos++;
 					}
 				}

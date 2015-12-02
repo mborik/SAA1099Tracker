@@ -28,7 +28,8 @@ var pMode = {
 	PM_SONG_OR_POS: 3,
 	PM_SAMPLE: 4,
 	PM_LINE: 8,
-	PM_SAMP_OR_LINE: 12
+	PM_SAMP_OR_LINE: 12,
+	PM_SIMULATION: 129
 };
 
 // Tone parameters interface
@@ -313,7 +314,7 @@ class Player {
 		this.loopMode = true;
 		this.clearSong(true);
 
-		this.stopChannel(0);
+		this.stopChannel();
 		this.mode = 0;
 
 		console.log('Player', 'Initialization done...');
@@ -339,7 +340,6 @@ class Player {
 
 			this.rtSong = new pRuntime(this);
 			this.rtSample = new pRuntime(this);
-
 			this.nullPosition = this.addNewPosition(64, 6, false);
 
 			console.log('Player', 'Song objects and parameters initialized...');
@@ -428,7 +428,11 @@ class Player {
 		while (outi < length) {
 			if (this.mixer.index >= this.mixer.length) {
 				this.mixer.index = 0;
-				this.prepareFrame();
+
+				if (this.mode !== pMode.PM_SIMULATION) {
+					var rt = this.prepareFrame();
+					this.SAA1099.setAllRegs(rt);
+				}
 			}
 
 			remain = this.mixer.length - this.mixer.index;
@@ -442,10 +446,80 @@ class Player {
 	}
 
 	/**
+	 * This method do a simulation of playback in position for given number of lines.
+	 * @param lines Number of lines to simulate;
+	 * @param pos Optional position number in which do a simulation;
+	 * @param rt Simulate over the custom runtime parameters;
+	 */
+	private simulation(lines: number, pos?: number, rt?: pRuntime): boolean {
+		if (lines <= 0)
+			return false;
+
+		if (pos === void 0)
+			pos = this.currentPosition;
+		if (rt === void 0)
+			rt = this.rtSong;
+
+		var backup, lastMode,
+			ps = this.position[pos];
+
+		if (!ps)
+			return false;
+
+		lastMode = this.mode;
+		if (this.currentPosition !== pos) {
+			backup = {
+				pos:   this.currentPosition,
+				line:  this.currentLine,
+				tick:  this.currentTick,
+				speed: this.currentSpeed
+			};
+
+			this.currentPosition = pos;
+		}
+
+		this.currentLine = 0;
+		this.currentTick = 0;
+		this.currentSpeed = ps.speed;
+
+		rt.replace(ps.initParams);
+
+		this.mode = pMode.PM_SIMULATION;
+		this.prepareLine(false, rt);
+		this.changedLine = false;
+		this.changedPosition = false;
+
+		while (lines > 0) {
+			this.prepareFrame(rt);
+
+			if (this.changedLine) {
+				this.changedLine = false;
+				lines--;
+			}
+			if (this.changedPosition) {
+				this.changedPosition = false;
+				break;
+			}
+		}
+
+		if (backup) {
+			this.currentLine = backup.line;
+			this.currentTick = backup.tick;
+			this.currentSpeed = backup.speed;
+			this.currentPosition = backup.pos;
+		}
+		else
+			this.currentTick++;
+
+		this.mode = lastMode;
+		return true;
+	}
+
+	/**
 	 * Most important part of Player: Method needs to be called every interrupt/frame.
 	 * It handles all the pointers and settings to output values on SAA1099 registers.
 	 */
-	private prepareFrame(rt?: pRuntime): void {
+	private prepareFrame(rt?: pRuntime): pRuntime {
 		var pp: pParams,
 			vol: pVolume = new pVolume,
 			height: number, val: number = 0,
@@ -458,7 +532,7 @@ class Player {
 			rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
 
 		if (!this.mode)
-			return this.SAA1099.setAllRegs(rt);
+			return rt;
 
 		// We processing channels backward! It's because of SAA1099 register architecture
 		// which expect settings for pairs or triplets of adjacent channels. We need
@@ -472,7 +546,7 @@ class Player {
 
 			eMask  = (1 << chn);      // bit mask of channel
 			chn2nd = (chn >> 1);      // calculate pair of channels
-			chn3rd = ((chn / 3) & 1); // calculate triple of channels
+			chn3rd = ~~(chn >= 3);    // calculate triple of channels
 
 			if (pp.playing) {
 				// if playback in channel is enabled, fetch all smp/orn values...
@@ -808,11 +882,11 @@ class Player {
 			if ((this.mode & pMode.PM_LINE) && this.currentTick > 0)
 				this.currentTick--;
 			else if ((this.mode & pMode.PM_SONG_OR_POS))
-				this.prepareLine();
+				this.prepareLine(true, rt);
 		}
 
 		vol = null;
-		this.SAA1099.setAllRegs(rt);
+		return rt;
 	}
 
 	/**
@@ -845,14 +919,14 @@ class Player {
 			pl: pPatternLine;
 
 		if (this.currentLine >= p.length) {
-			if (this.mode === pMode.PM_SONG) {
+			if (!!(this.mode & pMode.PM_SONG)) {
 				this.currentPosition++;
 				if (this.currentPosition >= this.position.length) {
 					if (this.loopMode)
 						this.currentPosition = this.repeatPosition;
 					else {
 						this.currentLine--;
-						this.stopChannel(0);
+						this.stopChannel();
 						return false;
 					}
 				}
@@ -865,10 +939,11 @@ class Player {
 				this.currentLine = 0;
 			else {
 				this.currentLine--;
-				this.stopChannel(0);
+				this.stopChannel();
 				return false;
 			}
 
+			rt.replace(p.initParams);
 			this.currentSpeed = p.speed;
 		}
 
@@ -1004,15 +1079,25 @@ class Player {
 		if (follow === void 0)
 			follow = true;
 
-		this.changedLine = true;
-		this.changedPosition = true;
 		if (this.currentPosition >= this.position.length)
 			return false;
 
-		this.stopChannel(0);
+		this.stopChannel();
 		this.mixer.index = 0;
+
+		var pos = this.position[this.currentPosition];
+		if (this.currentLine > 0)
+			this.simulation(this.currentLine);
+		else {
+			this.rtSong.replace(pos.initParams);
+			this.currentTick = 0;
+		}
+
+		this.changedLine = true;
+		this.changedPosition = true;
+
 		this.mode = follow ? pMode.PM_SONG : pMode.PM_POSITION;
-		this.currentSpeed = this.position[this.currentPosition].speed;
+		this.currentSpeed = pos.speed;
 
 		return this.prepareLine(false);
 	}
@@ -1026,8 +1111,10 @@ class Player {
 	 * @returns {number} channel (1-6) where the sample has been played or 0 if error
 	 */
 	public playSample(s: number, o: number, tone: number, chn?: number): number {
-		var rt: pRuntime = this.rtSample;
+		if (this.mode & (pMode.PM_SONG_OR_POS | pMode.PM_LINE))
+			return 0;
 
+		var rt: pRuntime = this.rtSample;
 		if (!chn) {
 			// first free channel detection
 			for (chn = 0; chn < 6; chn++)
@@ -1088,9 +1175,11 @@ class Player {
 				rt.clearPlayParams(chn);
 
 			this.mode = pMode.PM_LINE;
-			this.prepareFrame();
+			this.prepareFrame(rt);
 			this.currentTick = 0;
 			this.changedLine = true;
+
+			this.SAA1099.setAllRegs(rt);
 			return;
 		}
 
@@ -1203,6 +1292,26 @@ class Player {
 			this.position[pos].frames[line] = i;
 		}
 	}
+
+	/**
+	 * Method calculates runtime parameters by simulation of playback from start
+	 * of the previous position to first line of the actual position.
+	 * @param pos Position number bigger than zero;
+	 */
+	public storePositionRuntime(pos: number): boolean {
+		if (pos === void 0 || pos <= 0)
+			return false;
+
+		var prev = this.position[pos - 1] || this.nullPosition,
+			current = this.position[pos];
+
+		if (!(current && current.initParams))
+			return false;
+		current.initParams.replace(prev.initParams);
+
+		return this.simulation(prev.length, pos - 1, current.initParams);
+	}
+
 //---------------------------------------------------------------------------------------
 	private static vibratable: number[] = [
 		  0,   0,   0,   0,   0,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
