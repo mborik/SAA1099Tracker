@@ -530,6 +530,54 @@ Tracker.prototype.onCmdSmpPlay = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpClear = function () {
+	var app = this,
+		smp = this.player.sample[this.workingSample];
+
+	$('#dialoque').confirm({
+		title: 'Clear sample\u2026',
+		text: 'Which sample data do you want to clear?',
+		style: 'warning',
+		buttons:  [
+			{ caption: 'All', id: 7 },
+			{ caption: 'Amplitude', id: 1 },
+			{ caption: 'Noise', id: 2 },
+			{ caption: 'Pitch-shift', id: 4 },
+			{ caption: 'Cancel', id: 'cancel' }
+		],
+		callback: function (mask) {
+			if (mask === 'cancel')
+				return;
+
+			var data = smp.data, i,
+				all = (mask === 7);
+
+			for (i = 0; i < 256; i++) {
+				if (mask & 1) {
+					data[i].volume.byte = 0;
+					data[i].enable_freq = false;
+				}
+				if (mask & 2) {
+					data[i].enable_noise = false;
+					data[i].noise_value = 0;
+				}
+				if (mask & 4)
+					data[i].shift = 0;
+			}
+
+			if (all) {
+				smp.name = '';
+				smp.loop = 0;
+				smp.end = 0;
+				smp.releasable = false;
+			}
+
+			app.updateSampleEditor(all);
+			if (mask & 4)
+				app.smpornedit.updateSamplePitchShift();
+
+			app.file.modified = true;
+		}
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpSwap = function () {
@@ -661,6 +709,7 @@ Tracker.prototype.onCmdOrnPlay = function () {
 Tracker.prototype.onCmdOrnClear = function () {
 	var orn = this.player.ornament[this.workingOrnament];
 
+	orn.name = '';
 	orn.data.fill(0);
 	orn.loop = orn.end = 0;
 
