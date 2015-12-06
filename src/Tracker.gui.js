@@ -226,8 +226,12 @@ Tracker.prototype.populateGUI = function () {
 					return false;
 				}
 
-				app.player.currentPosition = $(this).val() - 1;
+				var pos = $(this).val() - 1;
+
+				app.player.currentPosition = pos;
 				app.player.currentLine = 0;
+
+				app.player.storePositionRuntime(pos);
 
 				app.updatePanelInfo();
 				app.updatePanelPosition();

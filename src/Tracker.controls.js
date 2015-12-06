@@ -214,12 +214,16 @@ Tracker.prototype.onCmdSongPlay = function () {
 		return;
 	if (this.activeTab === 0)
 		this.doc.setStatusText();
+	if (this.modeEdit)
+		this.player.storePositionRuntime(this.player.currentPosition);
 	this.modePlay = this.player.playPosition(false, true, true);
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSongPlayStart = function () {
 	if (this.activeTab === 0)
 		this.doc.setStatusText();
+	if (this.modeEdit)
+		this.player.storePositionRuntime(this.player.currentPosition);
 	this.modePlay = this.player.playPosition(true, true, true);
 };
 //---------------------------------------------------------------------------------------
@@ -228,12 +232,16 @@ Tracker.prototype.onCmdPosPlay = function () {
 		return;
 	if (this.activeTab === 0)
 		this.doc.setStatusText();
+	if (this.modeEdit)
+		this.player.storePositionRuntime(this.player.currentPosition);
 	this.modePlay = this.player.playPosition(false, false, false);
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosPlayStart = function () {
 	if (this.activeTab === 0)
 		this.doc.setStatusText();
+	if (this.modeEdit)
+		this.player.storePositionRuntime(this.player.currentPosition);
 	this.modePlay = this.player.playPosition(false, false, true);
 };
 //---------------------------------------------------------------------------------------
@@ -252,8 +260,10 @@ Tracker.prototype.onCmdToggleEditMode = function (newState) {
 	var state = (typeof newState === 'boolean') ? newState : (this.modeEdit = !this.modeEdit),
 		el = $('.tracklist-panel');
 
-	if (!state)
+	if (!state) {
 		this.doc.setStatusText();
+		this.player.storePositionRuntime(this.player.currentPosition);
+	}
 
 	el[state ? 'addClass' : 'removeClass']('edit');
 	this.updateTracklist(true);
