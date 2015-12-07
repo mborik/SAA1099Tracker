@@ -371,11 +371,11 @@ Tracker.prototype.onCmdPatDelete = function () {
 		msg = null;
 
 	if (p.countPatternUsage(pt) > 0)
-		msg = 'This pattern is used in some positions!\nAre you sure to delete it?';
+		msg = 'This pattern is used in some positions!\nAre you sure you want to delete it?';
 	if (pt !== len)
 		msg = 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?';
 	if (!msg)
-		msg = 'Are you sure to delete this pattern?';
+		msg = 'Are you sure you want to delete this pattern?';
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
@@ -422,7 +422,7 @@ Tracker.prototype.onCmdPatClean = function () {
 	keys.inDialog = true;
 	$('#dialoque').confirm({
 		title: 'Clean pattern\u2026',
-		text: 'Are you ready to clean a content of this pattern?',
+		text: 'Are you sure you want to clean a content of this pattern?',
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
@@ -502,12 +502,13 @@ Tracker.prototype.onCmdPosDelete = function () {
 		return;
 
 	var keys = this.globalKeyState,
+		pos = this.player.currentPosition,
 		app = this;
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
 		title: 'Delete position\u2026',
-		text: 'Are you ready to delete this position?',
+		text: 'Are you sure you want to delete this position?',
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
@@ -515,8 +516,10 @@ Tracker.prototype.onCmdPosDelete = function () {
 			if (btn !== 'yes')
 				return;
 
-			app.player.position.splice(app.player.currentPosition, 1);
 			app.player.currentLine = 0;
+			app.player.position.splice(pos, 1);
+			if (pos >= app.player.position.length)
+				app.player.currentPosition--;
 
 			app.updatePanelInfo();
 			app.updatePanelPattern();
@@ -753,14 +756,29 @@ Tracker.prototype.onCmdOrnPlay = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnClear = function () {
-	var orn = this.player.ornament[this.workingOrnament];
+	var keys = this.globalKeyState,
+		orn = this.player.ornament[this.workingOrnament],
+		app = this;
 
-	orn.name = '';
-	orn.data.fill(0);
-	orn.loop = orn.end = 0;
+	keys.inDialog = true;
+	$('#dialoque').confirm({
+		title: 'Clear ornament\u2026',
+		text: 'Are you sure you want to clear a content of this ornament?',
+		style: 'warning',
+		buttons: 'yesno',
+		callback: function (btn) {
+			keys.inDialog = false;
+			if (btn !== 'yes')
+				return;
 
-	this.smpornedit.updateOrnamentEditor(true);
-	this.file.modified = true;
+			orn.name = '';
+			orn.data.fill(0);
+			orn.loop = orn.end = 0;
+
+			app.smpornedit.updateOrnamentEditor(true);
+			app.file.modified = true;
+		}
+	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftLeft = function () {
