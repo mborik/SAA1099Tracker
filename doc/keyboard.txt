@@ -41,5 +41,5 @@ Delete                | clear trackline data under cursor
 ===============================================================================
 
 Ctrl+1..9|A..V        | change current sample/ornament
-Ctrl+Shift+1..8       | set base octave for sample/ornament editor test tone
+Ctrl+Num1..Num8       | set base octave for sample/ornament editor test tone
 Alphanum keys section | works like 2.5 octave piano keyboard

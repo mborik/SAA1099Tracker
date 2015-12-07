@@ -90,7 +90,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			return {
 				27: function () {
 					console.logHotkey('Esc - Stop');
-					if (app.modePlay)
+					if (app.modePlay || app.activeTab > 0)
 						app.onCmdStop();
 					else if (app.modeEdit)
 						app.onCmdToggleEditMode();
@@ -679,20 +679,36 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keydown)
 				return;
 
-			if (key > 48 && key < 57) { // numbers 1-8 (octave)
+			if (key > 96 && key < 105) { // Num1-Num8 (octave)
 				return function (key) {
-					var oct = (key - 49),
+					var oct = (key - 97),
 						base = app.workingSampleTone,
 						tone = ((base - 1) % 12) + (oct * 12) + 1;
 
 					if (base !== tone) {
-						console.logHotkey('Ctrl+' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
+						console.logHotkey('Ctrl+Num' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
 						app.workingSampleTone = tone;
 
 						$('#scSampleTone,#scOrnTone')
 							.val(tone.toString())
 							.prev().val(app.player.tones[tone].txt);
 					}
+				};
+			}
+			else if ((key > 48 && key <= 57) || (key > 64 && key <= 90)) {
+				return function (key) {
+					var num = key - 48,
+						orn = (app.activeTab === 2);
+
+					if (num > 9)
+						num -= 7;
+
+					if (num >= (orn ? 16 : 32))
+						return;
+
+					$(orn ? '#scOrnNumber' : '#scSampleNumber')
+						.val(num.toString(32).toUpperCase())
+						.trigger('change');
 				};
 			}
 			break;
