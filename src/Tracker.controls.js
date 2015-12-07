@@ -150,16 +150,19 @@ Tracker.prototype.updatePanelPosition = function () {
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Tracker.prototype.onCmdFileNew = function () {
-	var file = this.file;
+	var keys = this.globalKeyState,
+		file = this.file;
 	if (this.modePlay || !file.yetSaved && !file.modified && !file.fileName)
 		return;
 
+	keys.inDialog = true;
 	$('#dialoque').confirm({
 		title: 'Create new file\u2026',
 		text: 'Do you really want to clear all song data and lost all of your changes?',
 		buttons: 'yesno',
 		style: 'danger',
 		callback: function (btn) {
+			keys.inDialog = false;
 			if (btn !== 'yes')
 				return;
 			file.new();
@@ -171,16 +174,22 @@ Tracker.prototype.onCmdFileOpen = function () {
 	if (this.modePlay)
 		return;
 
-	var file = this.file;
+	var keys = this.globalKeyState,
+		file = this.file;
+
 	if (file.modified) {
+		keys.inDialog = true;
+
 		$('#dialoque').confirm({
 			title: 'Open file\u2026',
 			text: 'You should lost all of your changes! Do you really want to continue?',
 			buttons: 'yesno',
 			style: 'warning',
 			callback: function (btn) {
+				keys.inDialog = false;
 				if (btn !== 'yes')
 					return;
+
 				file.dialog('load');
 			}
 		});
@@ -272,6 +281,7 @@ Tracker.prototype.onCmdToggleEditMode = function (newState) {
 Tracker.prototype.onCmdShowDocumentation = function (name) {
 	var filename = 'doc/' + name + '.txt',
 		cache = this.doc.txtCache,
+		keys = this.globalKeyState,
 		data = cache[name],
 
 		dialog = $('#documodal'),
@@ -281,13 +291,17 @@ Tracker.prototype.onCmdShowDocumentation = function (name) {
 			'data-dismiss': 'modal'
 		}).text('\xd7');
 
-	if (!!data)
+	if (!!data) {
+		keys.inDialog = true;
 		dialog.modal('show')
-			.on('hidden.bs.modal', function () { $(this).find('.modal-body').empty() })
 			.find('.modal-body')
 			.html(data)
-			.prepend(button);
-
+			.prepend(button)
+			.on('hidden.bs.modal', function () {
+				keys.inDialog = false;
+				$(this).find('.modal-body').empty();
+			});
+	}
 	else {
 		$.ajax(filename, {
 			cache: true,
@@ -301,21 +315,30 @@ Tracker.prototype.onCmdShowDocumentation = function (name) {
 
 				cache[name] = data;
 				dialog.modal('show')
-					.on('hidden.bs.modal', function () { $(this).find('.modal-body').empty() })
 					.find('.modal-body')
 					.html(data)
-					.prepend(button);
+					.prepend(button)
+					.on('hidden.bs.modal', function () {
+						keys.inDialog = false;
+						$(this).find('.modal-body').empty();
+					});
 			}
 		});
 	}
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdAbout = function () {
-	var dialog = $('#about'),
+	var keys = this.globalKeyState,
+		dialog = $('#about'),
 		data = dialog.data();
 
-	if (!data.hasOwnProperty('bs.modal'))
-		dialog.find('.ver').text('v' + this.version);
+	if (!data.hasOwnProperty('bs.modal')) {
+		dialog
+			.on('show.bs.modal', function () { keys.inDialog = true })
+			.on('hidden.bs.modal', function () { keys.inDialog = false })
+			.find('.ver')
+			.text('v' + this.version);
+	}
 
 	dialog.modal('toggle');
 };
@@ -343,6 +366,7 @@ Tracker.prototype.onCmdPatDelete = function () {
 	var app = this,
 		p = this.player,
 		pt = this.workingPattern,
+		keys = this.globalKeyState,
 		len = p.pattern.length - 1,
 		msg = null;
 
@@ -353,12 +377,14 @@ Tracker.prototype.onCmdPatDelete = function () {
 	if (!msg)
 		msg = 'Are you sure to delete this pattern?';
 
+	keys.inDialog = true;
 	$('#dialoque').confirm({
 		title: 'Delete pattern\u2026',
 		text: msg,
 		buttons: 'yesno',
 		style: (pt !== len) ? 'warning' : 'info',
 		callback: function (btn) {
+			keys.inDialog = false;
 			if (btn !== 'yes')
 				return;
 
@@ -390,14 +416,17 @@ Tracker.prototype.onCmdPatClean = function () {
 		return;
 
 	var app = this,
+		keys = this.globalKeyState,
 		pt = this.player.pattern[this.workingPattern].data;
 
+	keys.inDialog = true;
 	$('#dialoque').confirm({
 		title: 'Clean pattern\u2026',
 		text: 'Are you ready to clean a content of this pattern?',
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
+			keys.inDialog = false;
 			if (btn !== 'yes')
 				return;
 
@@ -472,13 +501,17 @@ Tracker.prototype.onCmdPosDelete = function () {
 	if (this.modePlay || !this.player.position.length)
 		return;
 
-	var app = this;
+	var keys = this.globalKeyState,
+		app = this;
+
+	keys.inDialog = true;
 	$('#dialoque').confirm({
 		title: 'Delete position\u2026',
 		text: 'Are you ready to delete this position?',
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
+			keys.inDialog = false;
 			if (btn !== 'yes')
 				return;
 
@@ -543,6 +576,8 @@ Tracker.prototype.onCmdSmpClear = function () {
 	var app = this,
 		smp = this.player.sample[this.workingSample];
 
+	this.globalKeyState.inDialog = true;
+
 	$('#dialoque').confirm({
 		title: 'Clear sample\u2026',
 		text: 'Which sample data do you want to clear?',
@@ -555,6 +590,7 @@ Tracker.prototype.onCmdSmpClear = function () {
 			{ caption: 'Cancel', id: 'cancel' }
 		],
 		callback: function (mask) {
+			app.globalKeyState.inDialog = false;
 			if (mask === 'cancel')
 				return;
 

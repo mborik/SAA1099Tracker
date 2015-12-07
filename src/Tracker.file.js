@@ -722,6 +722,7 @@ var STMFile = (function () {
 			if (!titles[mode] || (!saveFlag && !storageMap.length))
 				return false;
 
+			tracker.globalKeyState.inDialog = true;
 			dlg.on('show.bs.modal', function () {
 				var percent = Math.ceil(100 / ((2 * 1024 * 1024) / storageBytesUsed)),
 					selectedItem = null,
@@ -738,6 +739,7 @@ var STMFile = (function () {
 							file.loadFile(selectedItem.id);
 						}
 
+						tracker.globalKeyState.inDialog = false;
 						dlg.modal('hide');
 						return true;
 					},
@@ -886,6 +888,7 @@ var STMFile = (function () {
 				dlg.removeClass(mode).prev('.modal-backdrop').remove();
 				dlg.off().find('.file-list').off().empty();
 				dlg.find('.modal-footer>.btn').off();
+				tracker.globalKeyState.inDialog = false;
 
 			}).modal({
 				show: true,

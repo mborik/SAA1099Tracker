@@ -1,4 +1,5 @@
 /** Tracker.keyboard submodule */
+/* global browser, Player */
 //---------------------------------------------------------------------------------------
 /*
 	JavaScript KeyboardEvent keymap:
@@ -70,6 +71,9 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				},
 				83: function () {
 					console.logHotkey('Ctrl+S - Save');
+				},
+				80: function () {
+					console.logHotkey('Ctrl+P - Preferences');
 				},
 				89: function () {
 					console.logHotkey('Ctrl+Y - Redo');
@@ -715,7 +719,6 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
 		type = e.type,
 		isInput = (e.target && e.target.type === 'text'),
-		isSpin = (isInput && /touchspin/.test(e.target.parentElement.className)),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -747,11 +750,11 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if ((isSpin && !this.handleHotkeys('test', key)) || (!isSpin && isInput && !o[9]))
+		if (isInput && !this.handleHotkeys('test', key, isInput))
 			return true;
 
-		if (!this.handleHotkeys(type, key)) {
-			if (this.activeTab === 0) {
+		if (!this.handleHotkeys(type, key, isInput)) {
+			if (!o.inDialog && this.activeTab === 0) {
 				// ENTER (hold to play position at current line)
 				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
 					this.modePlay = this.player.playPosition(false, false, false);
@@ -765,18 +768,12 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				}
 			}
 		}
-
-		if (isInput && o[9]) {
-			delete o[9];
-			o.length--;
-			e.target.blur();
-		}
 	}
 	else if (type === 'keyup') {
-		if (o[key] && this.handleHotkeys(type, key))
+		if (o[key] && this.handleHotkeys(type, key, isInput))
 			isInput = false;
 
-		if (!o.modsHandled && canPlay) {
+		if (!o.modsHandled && !o.inDialog && canPlay) {
 			// RIGHT SHIFT (play position)
 			if (o.length === 1 && o[272]) {
 				if (this.modePlay && o.lastPlayMode === 1) {
@@ -809,7 +806,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			}
 		}
 
-		if (this.activeTab === 0) {
+		if (!o.inDialog && this.activeTab === 0) {
 			// ENTER (hold to play position at current line)
 			if (o[13] && this.modePlay && o.lastPlayMode === 3) {
 				this.modePlay = false;
@@ -839,11 +836,12 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleHotkeys = function (type, key) {
+Tracker.prototype.handleHotkeys = function (type, key, isInput) {
 	var o = this.globalKeyState,
-		fn = false;
+		fn = false,
+		restrict = o.inDialog || isInput;
 
-	if (o[17] && key !== 17) { // handle Ctrl+
+	if (o[17] && key !== 17) { // handle Left Ctrl
 		if (key === 90 && o[16]) { // convert Ctrl+Shift+Z to Ctrl+Y
 			delete o[key];
 			delete o[16];
@@ -853,24 +851,42 @@ Tracker.prototype.handleHotkeys = function (type, key) {
 		}
 
 		if (o.length === 2) {
-			if (key === 82 || key === 116) {
+			if (isInput && key === 67 || key === 86)
+				return false;
+			else if (key === 82 || key === 116) {
 				fn = true; // disable refresh browser hotkeys
 				type = 'test';
 			}
-			else if (!(fn = this.hotkeyMap(type, 'globalCtrl', key))) {
-				if (this.activeTab === 0 && !(fn = this.hotkeyMap(type, 'trackerCtrl', key)))
-					fn = this.hotkeyMap(type, 'editorCtrl', key);
-				else if (this.activeTab > 0)
+			else if (!o.inDialog && !(fn = this.hotkeyMap(type, 'globalCtrl', key)) && !isInput) {
+				if (this.activeTab === 0)
+					fn = this.hotkeyMap(type, 'trackerCtrl', key);
+				else
 					fn = this.hotkeyMap(type, 'smpornCtrl', key);
 			}
 		}
-		else if (o.length === 3 && o[16] && this.activeTab === 0)
+		else if (!o.inDialog && o.length === 3 && o[16] && this.activeTab === 0)
 			fn = this.hotkeyMap(type, 'trackerCtrlShift', key);
+
+		if (o.inDialog && !fn) {
+			fn = true; // restrict all ctrl hotkeys in dialogs
+			type = 'test';
+			o.modsHandled = true;
+		}
 	}
-	else if (o[16] && key !== 16 && o.length === 2 && this.activeTab === 0)
+	else if (o[273] && key !== 273) { // handle Right Ctrl
+		fn = true; // restrict all right ctrl hotkeys
+		type = 'test';
+		o.modsHandled = true;
+	}
+	else if (!restrict && o[16] && key !== 16 && o.length === 2 && this.activeTab === 0)
 		fn = this.hotkeyMap(type, 'editorShift', key);
 	else if (o.length === 1) {
-		if (!(fn = this.hotkeyMap(type, 'globalFs', key))) {
+		if (o.inDialog && (key >= 112 && key <= 123) || key === 272) {
+			fn = true; // disable F1-F12 keys in dialogs
+			type = 'test';
+			o.modsHandled = true;
+		}
+		else if (!o.inDialog && !(fn = this.hotkeyMap(type, 'globalFs', key)) && !isInput) {
 			if (this.activeTab === 0) {
 				if (!(fn = this.hotkeyMap(type, 'editorKeys', key)) && this.player.position.length && this.modeEdit)
 					fn = this.hotkeyMap(type, 'editorEdit', key);
