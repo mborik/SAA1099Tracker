@@ -28,7 +28,8 @@ var pMode = {
     PM_SONG_OR_POS: 3,
     PM_SAMPLE: 4,
     PM_LINE: 8,
-    PM_SAMP_OR_LINE: 12
+    PM_SAMP_OR_LINE: 12,
+    PM_SIMULATION: 129
 };
 // Tone parameters interface
 var pTone = (function () {
@@ -67,6 +68,13 @@ var pVolume = (function () {
     });
     return pVolume;
 })();
+var pMixer = (function () {
+    function pMixer() {
+        this.index = 0;
+        this.length = 0;
+    }
+    return pMixer;
+})();
 /**
  * Position class declaration with 6 channels definition, length and default speed.
  * @property frames Number of interupts which takes every line in tracklist;
@@ -78,6 +86,7 @@ var pPosition = (function () {
         this.speed = speed;
         this.length = length;
         this.frames = [];
+        this.initParams = void 0;
         for (var i = 0; i < 6; i++)
             this.ch[i] = { pattern: 0, pitch: 0 };
         for (var i = 0, line = 0; line <= Player.maxPatternLen; line++, i += speed)
@@ -92,23 +101,73 @@ var pPosition = (function () {
     };
     return pPosition;
 })();
-var pMixer = (function () {
-    function pMixer() {
-        this.index = 0;
-        this.length = 0;
+var __extends = jQuery.extend;
+var pRuntime = (function (_super) {
+    __extends(pRuntime, _super);
+    function pRuntime(player) {
+        _super.call(this);
+        this.params = [];
+        this.clearPlayParams = function (chn) {
+            if (chn < 0 || chn >= 6)
+                return;
+            if (this.params[chn]) {
+                delete this.params[chn].attenuation;
+                this.params[chn] = null;
+            }
+            this.params[chn] = {
+                tone: 0,
+                playing: false,
+                sample: player.sample[0],
+                ornament: player.ornament[0],
+                sample_cursor: 0,
+                ornament_cursor: 0,
+                attenuation: new pVolume,
+                slideShift: 0,
+                globalPitch: 0,
+                released: false,
+                command: 0,
+                commandParam: 0,
+                commandPhase: 0,
+                commandValue1: 0,
+                commandValue2: 0
+            };
+        };
+        for (var chn = 0; chn < 6; chn++)
+            this.clearPlayParams(chn);
     }
-    return pMixer;
-})();
+    pRuntime.prototype.setRegData = function (reg, data) {
+        var index = 'R' + reg.toHex(2).toUpperCase();
+        this.regs[index] = data;
+    };
+    pRuntime.prototype.replace = function (data) {
+        var i, idx, src = data.regs, dst = this.regs;
+        for (idx in dst)
+            if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx))
+                dst[idx] = src[idx];
+        for (i = 0; i < 6; i++) {
+            dst = this.params[i];
+            src = data.params[i];
+            for (idx in dst) {
+                if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx)) {
+                    if (dst[idx] instanceof pVolume) {
+                        dst[idx].L = src[idx].L;
+                        dst[idx].R = src[idx].R;
+                    }
+                    else
+                        dst[idx] = src[idx];
+                }
+            }
+        }
+    };
+    return pRuntime;
+})(SAASoundRegData);
 //---------------------------------------------------------------------------------------
 var Player = (function () {
     function Player(SAA1099) {
-        this.mixer = new pMixer;
         this.SAA1099 = SAA1099;
         console.log('Player', 'Initializing module player connected to %o...', this.SAA1099);
         this.sample = [];
         this.ornament = [];
-        this.playParams = [];
-        this.nullPosition = new pPosition(64, 6);
         var tab_tones = [
             { freq: 0x05, prefix: 'B-' },
             { freq: 0x21, prefix: 'C-' },
@@ -138,17 +197,16 @@ var Player = (function () {
             t.cent = c;
             this.tones[i] = t;
         }
-        this.clearSong();
-        this.clearSamples();
-        this.clearOrnaments();
-        this.loopMode = true;
+        this.mixer = new pMixer;
         this.setInterrupt(50);
-        this.stopChannel(0);
+        this.loopMode = true;
+        this.clearSong(true);
+        this.stopChannel();
         this.mode = 0;
         console.log('Player', 'Initialization done...');
     }
-    /** Clear song (positions, patterns, pointers and playParams). */
-    Player.prototype.clearSong = function () {
+    /** Clear or initialize song (positions, patterns, pointers and playParams). */
+    Player.prototype.clearSong = function (init) {
         this.position = [];
         this.pattern = [];
         this.addNewPattern();
@@ -159,9 +217,19 @@ var Player = (function () {
         this.currentSpeed = 6;
         this.currentLine = 0;
         this.currentTick = 0;
-        for (var chn = 0; chn < 6; chn++)
-            this.clearPlayParams(chn);
-        console.log('Player', 'Song cleared...');
+        if (init) {
+            this.clearSamples();
+            this.clearOrnaments();
+            this.rtSong = new pRuntime(this);
+            this.rtSample = new pRuntime(this);
+            this.nullPosition = this.addNewPosition(64, 6, false);
+            console.log('Player', 'Song objects and parameters initialized...');
+        }
+        else {
+            for (var chn = 0; chn < 6; chn++)
+                this.rtSong.clearPlayParams(chn);
+            console.log('Player', 'Song cleared...');
+        }
     };
     /** Clear all samples. */
     Player.prototype.clearSamples = function () {
@@ -179,17 +247,6 @@ var Player = (function () {
         console.log('Player', 'Ornaments cleared...');
     };
     /**
-     * Reset playParams for particular channel to default values.
-     * @param chn Channel number;
-     */
-    Player.prototype.clearPlayParams = function (chn) {
-        if (this.playParams[chn]) {
-            delete this.playParams[chn].attenuation;
-            this.playParams[chn] = null;
-        }
-        this.playParams[chn] = { tone: 0, playing: false, sample: this.sample[0], ornament: this.ornament[0], sample_cursor: 0, ornament_cursor: 0, attenuation: new pVolume, slideShift: 0, globalPitch: 0, released: false, command: 0, commandParam: 0, commandPhase: 0, commandValue1: 0, commandValue2: 0 };
-    };
-    /**
      * Create bare pattern at the end of the array of patterns and return it's number.
      * @returns {number} new pattern number
      */
@@ -199,6 +256,20 @@ var Player = (function () {
             pt.data[i] = { tone: 0, release: false, smp: 0, orn: 0, orn_release: false, volume: new pVolume, cmd: 0, cmd_data: 0 };
         this.pattern.push(pt);
         return index;
+    };
+    /**
+     * Create new position in given length and basic speed.
+     * @param length Position length;
+     * @param speed Basic position speed;
+     * @param add Should be position added to stack?
+     * @returns {pPosition} new position object;
+     */
+    Player.prototype.addNewPosition = function (length, speed, add) {
+        var pos = new pPosition(length, speed);
+        pos.initParams = new pRuntime(this);
+        if (add === void 0 || add === true)
+            this.position.push(pos);
+        return pos;
     };
     //---------------------------------------------------------------------------------------
     /**
@@ -222,7 +293,10 @@ var Player = (function () {
         while (outi < length) {
             if (this.mixer.index >= this.mixer.length) {
                 this.mixer.index = 0;
-                this.prepareFrame();
+                if (this.mode !== pMode.PM_SIMULATION) {
+                    var rt = this.prepareFrame();
+                    this.SAA1099.setAllRegs(rt);
+                }
             }
             remain = this.mixer.length - this.mixer.index;
             if ((outi + remain) > length)
@@ -233,13 +307,71 @@ var Player = (function () {
         }
     };
     /**
+     * This method do a simulation of playback in position for given number of lines.
+     * @param lines Number of lines to simulate;
+     * @param pos Optional position number in which do a simulation;
+     * @param rt Simulate over the custom runtime parameters;
+     */
+    Player.prototype.simulation = function (lines, pos, rt) {
+        if (lines <= 0)
+            return false;
+        if (pos === void 0)
+            pos = this.currentPosition;
+        if (rt === void 0)
+            rt = this.rtSong;
+        var backup, lastMode, ps = this.position[pos];
+        if (!ps)
+            return false;
+        lastMode = this.mode;
+        if (this.currentPosition !== pos) {
+            backup = {
+                pos: this.currentPosition,
+                line: this.currentLine,
+                tick: this.currentTick,
+                speed: this.currentSpeed
+            };
+            this.currentPosition = pos;
+        }
+        this.currentLine = 0;
+        this.currentTick = 0;
+        this.currentSpeed = ps.speed;
+        rt.replace(ps.initParams);
+        this.mode = pMode.PM_SIMULATION;
+        this.prepareLine(false, rt);
+        this.changedLine = false;
+        this.changedPosition = false;
+        while (lines > 0) {
+            this.prepareFrame(rt);
+            if (this.changedLine) {
+                this.changedLine = false;
+                lines--;
+            }
+            if (this.changedPosition) {
+                this.changedPosition = false;
+                break;
+            }
+        }
+        if (backup) {
+            this.currentLine = backup.line;
+            this.currentTick = backup.tick;
+            this.currentSpeed = backup.speed;
+            this.currentPosition = backup.pos;
+        }
+        else
+            this.currentTick++;
+        this.mode = lastMode;
+        return true;
+    };
+    /**
      * Most important part of Player: Method needs to be called every interrupt/frame.
      * It handles all the pointers and settings to output values on SAA1099 registers.
      */
-    Player.prototype.prepareFrame = function () {
+    Player.prototype.prepareFrame = function (rt) {
+        var pp, vol = new pVolume, height, val = 0, chn, chn2nd, chn3rd, oct = 0, noise, cmd, paramH, paramL, samp, tone, c, eMask, eFreq = 0, eNoiz = 0, eChar = 0, ePlay = 0;
+        if (rt === void 0)
+            rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
         if (!this.mode)
-            return;
-        var pp, vol = new pVolume, height, val = 0, chn, chn2nd, chn3rd, oct = 0, noise, cmd, paramH, paramL, samp, tone, c, eMask, eFreq = 0, eNoiz = 0, eChar = 0;
+            return rt;
         // We processing channels backward! It's because of SAA1099 register architecture
         // which expect settings for pairs or triplets of adjacent channels. We need
         // to know e.g. tone octave of every pair of channel and store to one register.
@@ -248,13 +380,18 @@ var Player = (function () {
         // Therefore, it is better to go from 6th channel to 1st and group it's values...
         for (chn = 5; chn >= 0; chn--) {
             // pick playParams for channel...
-            pp = this.playParams[chn];
+            pp = rt.params[chn];
             eMask = (1 << chn); // bit mask of channel
             chn2nd = (chn >> 1); // calculate pair of channels
-            chn3rd = ((chn / 3) & 1); // calculate triple of channels
+            chn3rd = ~~(chn >= 3); // calculate triple of channels
             if (pp.playing) {
                 // if playback in channel is enabled, fetch all smp/orn values...
                 samp = pp.sample.data[pp.sample_cursor];
+                // set channel bit if it's enabled or sample is still playing...
+                if (!pp.sample.releasable && pp.sample_cursor >= pp.sample.end)
+                    samp = this.sample[0].data[0];
+                else
+                    ePlay |= eMask;
                 vol.byte = samp.volume.byte;
                 height = pp.ornament.data[pp.ornament_cursor];
                 noise = samp.noise_value | (samp.enable_noise << 2);
@@ -430,7 +567,7 @@ var Player = (function () {
                             pp.commandParam = ((pp.commandParam & 0x0E) << 1) | (pp.commandParam & 0x81);
                             pp.commandParam ^= 0x82;
                             ///~ SAA1099 DATA 18/19: Envelope generator 0/1
-                            this.SAA1099.setRegData(24 + chn3rd, pp.commandParam);
+                            rt.setRegData(24 + chn3rd, pp.commandParam);
                             cmd = -1;
                         }
                         break;
@@ -448,19 +585,19 @@ var Player = (function () {
                 vol.L = Math.max(0, (vol.L - pp.attenuation.L));
                 vol.R = Math.max(0, (vol.R - pp.attenuation.R));
                 ///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-                this.SAA1099.setRegData(chn, vol.byte);
+                rt.setRegData(chn, vol.byte);
                 // get tone from tracklist, calculate proper frequency to register...
                 if (pp.tone) {
                     tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
                     ///~ SAA1099 DATA 08-0D: Tone generator 0-5
-                    this.SAA1099.setRegData(8 + chn, tone.cent);
+                    rt.setRegData(8 + chn, tone.cent);
                     oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
                     tone = null;
                 }
                 else if ((chn & 1))
                     oct = 0;
                 ///~ SAA1099 DATA 10-12: Octave for generators 0-5
-                this.SAA1099.setRegData(16 + chn2nd, oct);
+                rt.setRegData(16 + chn2nd, oct);
                 // set frequency enable bit...
                 if (samp.enable_freq)
                     eFreq |= eMask;
@@ -474,17 +611,26 @@ var Player = (function () {
                 if (pp.sample_cursor + 1 >= pp.sample.end) {
                     // it had to be released?
                     if (pp.sample.releasable && pp.released) {
-                        if (++pp.sample_cursor === 256)
-                            this.clearPlayParams(chn);
+                        if (pp.sample_cursor < 255)
+                            pp.sample_cursor++;
+                        else {
+                            pp.playing = false;
+                            ePlay &= ~eMask;
+                            eFreq &= ~eMask;
+                        }
                     }
                     else if (pp.sample.loop === pp.sample.end) {
-                        if ((this.mode & pMode.PM_SAMP_OR_LINE))
-                            this.clearPlayParams(chn);
-                        else
+                        if (!(this.mode & pMode.PM_SAMP_OR_LINE))
                             pp.sample_cursor = pp.sample.end;
+                        pp.playing = false;
+                        ePlay &= ~eMask;
+                        eFreq &= ~eMask;
                     }
-                    else if (this.mode === pMode.PM_LINE)
-                        this.clearPlayParams(chn);
+                    else if (this.mode === pMode.PM_LINE) {
+                        pp.playing = false;
+                        ePlay &= ~eMask;
+                        eFreq &= ~eMask;
+                    }
                     else
                         pp.sample_cursor = pp.sample.loop;
                 }
@@ -501,40 +647,41 @@ var Player = (function () {
                 if ((chn & 1))
                     oct = 0;
                 ///~ SAA1099 DATA 00-05: Amplitude controller 0-5
-                this.SAA1099.setRegData(chn, 0);
+                rt.setRegData(chn, 0);
                 ///~ SAA1099 DATA 08-0D: Tone generator 0-5
-                this.SAA1099.setRegData(8 + chn, 0);
+                rt.setRegData(0x08 + chn, 0);
                 ///~ SAA1099 DATA 10-12: Octave for generators 0-5
-                this.SAA1099.setRegData(16 + chn2nd, oct);
-                eFreq &= (0xff ^ eMask);
-                eNoiz &= (0xff ^ eMask);
+                rt.setRegData(0x10 + chn2nd, oct);
+                eFreq &= ~eMask;
+                eNoiz &= ~eMask;
             }
         }
         ///~ SAA1099 DATA 14: Frequency enable bits
-        this.SAA1099.setRegData(20, eFreq);
+        rt.setRegData(0x14, eFreq);
         ///~ SAA1099 DATA 15: Noise enable bits
-        this.SAA1099.setRegData(21, eNoiz);
+        rt.setRegData(0x15, eNoiz);
         ///~ SAA1099 DATA 16: Noise generator clock frequency select
-        this.SAA1099.setRegData(22, eChar);
-        if ((this.mode & pMode.PM_SAMP_OR_LINE) && (eFreq | eNoiz) === 0) {
+        rt.setRegData(0x16, eChar);
+        if ((this.mode & pMode.PM_SAMP_OR_LINE) && !ePlay) {
             ///~ SAA1099 DATA 18: Envelope generator 0
-            this.SAA1099.setRegData(24, 0);
+            rt.setRegData(0x18, 0);
             ///~ SAA1099 DATA 19: Envelope generator 1
-            this.SAA1099.setRegData(25, 0);
+            rt.setRegData(0x19, 0);
             ///~ SAA1099 DATA 1C: Master reset and sync
-            this.SAA1099.setRegData(28, 2);
+            rt.setRegData(0x1C, 2);
             this.mode = 0;
         }
         else {
             ///~ SAA1099 DATA 1C: Enable output
-            this.SAA1099.setRegData(28, 1);
+            rt.setRegData(0x1C, 1);
             // is there time to next trackline?
             if ((this.mode & pMode.PM_LINE) && this.currentTick > 0)
                 this.currentTick--;
             else if ((this.mode & pMode.PM_SONG_OR_POS))
-                this.prepareLine();
+                this.prepareLine(true, rt);
         }
         vol = null;
+        return rt;
     };
     /**
      * Another very important part of Player, sibling to prepareFrame():
@@ -542,27 +689,29 @@ var Player = (function () {
      * @param next Move to the next trackline (default true);
      * @returns {boolean} success or failure
      */
-    Player.prototype.prepareLine = function (next) {
+    Player.prototype.prepareLine = function (next, rt) {
         if (this.currentTick) {
             this.currentTick--;
             return true;
         }
         if (this.currentPosition >= this.position.length)
             return false;
-        if (next === void 0 || next) {
+        if (next === void 0 || next === true) {
             this.currentLine++;
             this.changedLine = true;
         }
+        if (rt === void 0)
+            rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
         var p = this.position[this.currentPosition], pc, pp, pt, pl;
         if (this.currentLine >= p.length) {
-            if (this.mode === pMode.PM_SONG) {
+            if (!!(this.mode & pMode.PM_SONG)) {
                 this.currentPosition++;
                 if (this.currentPosition >= this.position.length) {
                     if (this.loopMode)
                         this.currentPosition = this.repeatPosition;
                     else {
                         this.currentLine--;
-                        this.stopChannel(0);
+                        this.stopChannel();
                         return false;
                     }
                 }
@@ -574,9 +723,10 @@ var Player = (function () {
                 this.currentLine = 0;
             else {
                 this.currentLine--;
-                this.stopChannel(0);
+                this.stopChannel();
                 return false;
             }
+            rt.replace(p.initParams);
             this.currentSpeed = p.speed;
         }
         for (var chn = 0; chn < 6; chn++) {
@@ -584,7 +734,7 @@ var Player = (function () {
             pt = this.pattern[((pc.pattern < this.pattern.length) ? pc.pattern : 0)];
             if (this.currentLine >= pt.end)
                 continue;
-            pp = this.playParams[chn];
+            pp = rt.params[chn];
             pp.globalPitch = p.ch[chn].pitch;
             pp.playing = true;
             pl = pt.data[this.currentLine];
@@ -616,7 +766,7 @@ var Player = (function () {
                 if (pp.sample.releasable && !pp.released)
                     pp.released = true;
                 else
-                    this.clearPlayParams(chn);
+                    rt.clearPlayParams(chn);
                 continue;
             }
             else if (pl.tone && pl.cmd == 0x3 && pl.cmd_data) {
@@ -687,20 +837,27 @@ var Player = (function () {
      * @returns {boolean} success or failure
      */
     Player.prototype.playPosition = function (fromStart, follow, resetLine) {
-        if (fromStart === void 0 || fromStart)
+        if (fromStart === void 0 || fromStart === true)
             this.currentPosition = 0;
-        if (resetLine === void 0 || resetLine)
+        if (resetLine === void 0 || resetLine === true)
             this.currentLine = 0;
         if (follow === void 0)
             follow = true;
-        this.changedLine = true;
-        this.changedPosition = true;
         if (this.currentPosition >= this.position.length)
             return false;
-        this.stopChannel(0);
+        this.stopChannel();
         this.mixer.index = 0;
+        var pos = this.position[this.currentPosition];
+        if (this.currentLine > 0)
+            this.simulation(this.currentLine);
+        else {
+            this.rtSong.replace(pos.initParams);
+            this.currentTick = 0;
+        }
+        this.changedLine = true;
+        this.changedPosition = true;
         this.mode = follow ? pMode.PM_SONG : pMode.PM_POSITION;
-        this.currentSpeed = this.position[this.currentPosition].speed;
+        this.currentSpeed = pos.speed;
         return this.prepareLine(false);
     };
     /**
@@ -712,10 +869,13 @@ var Player = (function () {
      * @returns {number} channel (1-6) where the sample has been played or 0 if error
      */
     Player.prototype.playSample = function (s, o, tone, chn) {
+        if (this.mode & (pMode.PM_SONG_OR_POS | pMode.PM_LINE))
+            return 0;
+        var rt = this.rtSample;
         if (!chn) {
             // first free channel detection
             for (chn = 0; chn < 6; chn++)
-                if (!this.playParams[chn].playing)
+                if (!rt.params[chn].playing)
                     break;
             // no free channel for playing,
             // we can try find channel, that playing same sample
@@ -723,9 +883,9 @@ var Player = (function () {
             if (chn === 6) {
                 var farther = -1, chnToStop = -1;
                 for (chn = 0; chn < 6; chn++) {
-                    if (this.playParams[chn].sample === this.sample[s]) {
-                        if (this.playParams[chn].sample_cursor > farther) {
-                            farther = this.playParams[chn].sample_cursor;
+                    if (rt.params[chn].sample === this.sample[s]) {
+                        if (rt.params[chn].sample_cursor > farther) {
+                            farther = rt.params[chn].sample_cursor;
                             chnToStop = chn;
                         }
                     }
@@ -738,13 +898,13 @@ var Player = (function () {
         }
         else if (--chn > 5)
             return 0;
-        else if (this.playParams[chn].playing)
+        else if (rt.params[chn].playing)
             return 0;
-        this.clearPlayParams(chn);
-        this.playParams[chn].playing = true;
-        this.playParams[chn].tone = tone;
-        this.playParams[chn].sample = this.sample[s];
-        this.playParams[chn].ornament = this.ornament[o];
+        rt.clearPlayParams(chn);
+        rt.params[chn].playing = true;
+        rt.params[chn].tone = tone;
+        rt.params[chn].sample = this.sample[s];
+        rt.params[chn].ornament = this.ornament[o];
         this.mixer.index = 0;
         this.mode = pMode.PM_SAMPLE;
         return ++chn;
@@ -756,18 +916,20 @@ var Player = (function () {
      */
     Player.prototype.stopChannel = function (chn) {
         if (chn === void 0) { chn = 0; }
+        var rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
         if (chn < 0 || chn > 6)
             return;
         else if (chn === 0) {
             for (; chn < 6; chn++)
-                this.clearPlayParams(chn);
+                rt.clearPlayParams(chn);
             this.mode = pMode.PM_LINE;
-            this.prepareFrame();
+            this.prepareFrame(rt);
             this.currentTick = 0;
             this.changedLine = true;
+            this.SAA1099.setAllRegs(rt);
             return;
         }
-        this.clearPlayParams(--chn);
+        rt.clearPlayParams(--chn);
     };
     //---------------------------------------------------------------------------------------
     /**
@@ -855,6 +1017,20 @@ var Player = (function () {
             // and at last: total number of interupts for all tracklines of pattern...
             this.position[pos].frames[line] = i;
         }
+    };
+    /**
+     * Method calculates runtime parameters by simulation of playback from start
+     * of the previous position to first line of the actual position.
+     * @param pos Position number bigger than zero;
+     */
+    Player.prototype.storePositionRuntime = function (pos) {
+        if (pos === void 0 || pos <= 0)
+            return false;
+        var prev = this.position[pos - 1] || this.nullPosition, current = this.position[pos];
+        if (!(current && current.initParams))
+            return false;
+        current.initParams.replace(prev.initParams);
+        return this.simulation(prev.length, pos - 1, current.initParams);
     };
     Player.maxPatternLen = 128;
     //---------------------------------------------------------------------------------------

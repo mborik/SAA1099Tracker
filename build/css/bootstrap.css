@@ -7069,6 +7069,15 @@ button {
 .btn {
   font-family: "Droid Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+.btn:focus {
+  outline: 0;
+}
+.btn:focus:focus {
+  border-color: #aaaaaa;
+  outline: 0;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(170, 170, 170, 0.6);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(170, 170, 170, 0.6);
+}
 .btn-default,
 .btn-default:hover {
   background-image: -webkit-linear-gradient(#f6f6f6, #eeeeee 6%, #e7e7e7);

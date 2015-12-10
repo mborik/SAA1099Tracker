@@ -22,6 +22,42 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+var SAASoundRegisters = (function () {
+    function SAASoundRegisters() {
+        this.R00 = 0;
+        this.R01 = 0;
+        this.R02 = 0;
+        this.R03 = 0;
+        this.R04 = 0;
+        this.R05 = 0;
+        this.R08 = 0;
+        this.R09 = 0;
+        this.R0A = 0;
+        this.R0B = 0;
+        this.R0C = 0;
+        this.R0D = 0;
+        this.R10 = 0;
+        this.R11 = 0;
+        this.R12 = 0;
+        this.R14 = 0;
+        this.R15 = 0;
+        this.R16 = 0;
+        this.R18 = 0;
+        this.R19 = 0;
+        this.R1C = 0;
+    }
+    return SAASoundRegisters;
+})();
+;
+var SAASoundRegData = (function () {
+    function SAASoundRegData() {
+        this.regs = new SAASoundRegisters;
+        this.muted = [false, false, false, false, false, false];
+    }
+    return SAASoundRegData;
+})();
+;
+//---------------------------------------------------------------------------------------
 var SAASound = (function () {
     function SAASound(sampleRate) {
         this.register = 0;
@@ -198,6 +234,20 @@ var SAASound = (function () {
         if (chn < 0 || chn >= 6)
             return;
         this.amp[chn].mute = (this.ampMuted[chn] = mute);
+    };
+    /**
+     * fill all registers and (un)mute all channels
+     * @param data SAASoundRegData
+     */
+    SAASound.prototype.setAllRegs = function (data) {
+        var i;
+        if (data.regs)
+            for (i in data.regs)
+                if (data.regs.hasOwnProperty(i))
+                    this.setRegData(parseInt(i.substr(1), 16), data.regs[i]);
+        if (data.muted)
+            for (i = 0; i < 6; i++)
+                this.mute(i, data.muted[i]);
     };
     //---------------------------------------------------------------------------------------
     SAASound.prototype.output = function (leftBuf, rightBuf, length, offset) {

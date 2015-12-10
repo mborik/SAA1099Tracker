@@ -6,7 +6,7 @@ SAA1099Tracker is a offline-storage HTML5/JavaScript chiptune music tracker for 
   - few sound interfaces for **ZX-Spectrum**
 
 ### Version
-1.1.6 (first public alpha)
+1.1.7 (first public alpha)
 
 ### Browser compatibilty
   - Chrome: **21+** _(but **41+** recomended for nicer pixelated rendering)_

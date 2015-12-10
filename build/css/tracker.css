@@ -270,6 +270,7 @@
   padding: 4px;
 }
 .col-tracklist canvas.tracklist {
+  outline: 0;
   display: block;
   margin: 0 auto;
   width: 1104px;
