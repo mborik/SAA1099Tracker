@@ -747,6 +747,9 @@ var STMFile = (function () {
 						e.stopPropagation();
 						selectedItem = (e.data && typeof e.data.id === 'number') ? storageMap[e.data.id] : null;
 
+						if (e.pageX === 0 && e.pageY === 0) // on enter keypress
+							return defaultHandler();
+
 						dlg.find('.file-list>button').removeClass('selected');
 
 						if (selectedItem)
@@ -782,7 +785,7 @@ var STMFile = (function () {
 					cell.clone()
 						.append(span.clone().addClass('filename').text(obj.fileName))
 						.append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
-						.prop('tabindex', i + 1)
+						.prop('tabindex', 300)
 						.appendTo(el)
 						.on('click focus', { id: i }, itemClickHandler)
 						.on('dblclick', defaultHandler);

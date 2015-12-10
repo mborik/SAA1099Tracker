@@ -26,7 +26,8 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			return;
 
 		if (e.type === 'mousewheel') {
-			e.target.focus();
+			if (document.activeElement !== e.target)
+				document.activeElement.blur();
 
 			if (e.delta < 0)
 				obj.moveCurrentline(1);
@@ -35,8 +36,6 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			redraw = true;
 		}
 		else if (e.type === 'mousedown') {
-			e.target.focus();
-
 			if (leftButton && point.line < pp.length)
 				sel.start.set(point);
 		}
@@ -50,7 +49,8 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			}
 			else {
 				if (!this.modeEdit)
-					this.modeEdit = redraw = true;
+					e.target.focus();
+
 				if (point.line === line) {
 					this.modeEditChannel = sel.start.channel;
 					this.modeEditColumn = sel.start.column;
@@ -63,6 +63,9 @@ Tracker.prototype.handleMouseEvent = function (part, obj, e) {
 			sel.line = point.line;
 			sel.channel = point.channel;
 			sel.isDragging = false;
+
+			if (!this.modeEdit)
+				e.target.focus();
 
 			this.modeEditChannel = sel.start.channel;
 			this.modeEditColumn = sel.start.column;

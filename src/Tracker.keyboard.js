@@ -734,7 +734,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
 		type = e.type,
-		isInput = (e.target && e.target.type === 'text'),
+		isInput = (e.target && (/^a|input|button$/i.test(e.target.tagName)) || e.target.id === 'documodal'),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 

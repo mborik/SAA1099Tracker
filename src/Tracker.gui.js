@@ -91,6 +91,11 @@ Tracker.prototype.populateGUI = function () {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
 					getCompatible(o.ctx, 'imageSmoothingEnabled', true, false);
+
+					$(this).bind('focus', function(e) {
+						if (app.player.position.length && !app.modeEdit)
+							app.onCmdToggleEditMode();
+					});
 				}
 				else if (name === 'smpornedit') {
 					name = el.id.replace('smpedit_', '');
@@ -444,6 +449,7 @@ Tracker.prototype.populateGUI = function () {
 				  .prop('readonly', true)
 				  .clone(false)
 				  .removeAttr('id')
+				  .removeAttr('tabindex')
 				  .insertBefore(this);
 
 				$(this).trigger('change');

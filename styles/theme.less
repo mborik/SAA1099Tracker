@@ -111,6 +111,10 @@ button {
 .btn {
 	font-family: @headings-font-family;
 }
+.btn:focus {
+	outline: 0;
+	.form-control-focus();
+}
 
 .btn-default,
 .btn-default:hover {
