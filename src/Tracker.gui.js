@@ -25,14 +25,24 @@ Tracker.prototype.populateGUI = function () {
 			global:   'window',
 			method:   'resize',
 			handler:  function() {
-				var c = app.tracklist.countTracklines();
-				if (c !== app.settings.tracklistLineHeight) {
-					app.tracklist.setHeight(c);
-					app.updateTracklist(true);
+				var c = 0;
 
-					var offset = $('#statusbar').offset();
-					$('#documodal .modal-body').css('height', offset.top * 0.8);
+				if (app.activeTab === 0) {
+					c = app.tracklist.countTracklines();
+					if (c !== app.settings.tracklistLines) {
+						app.tracklist.setHeight(c);
+						app.updateTracklist(true);
+					}
 				}
+				else if (app.activeTab === 1 && app.smpornedit.initialized) {
+					var o = app.smpornedit;
+
+					c = $(o.amp.obj).offset().left;
+					o.smpeditOffset.left = c;
+				}
+
+				if (!!(c = $('#statusbar').offset().top))
+					$('#documodal .modal-body').css('height', (c * 0.9) | 0);
 			}
 		}, {
 			global:   'window',
@@ -130,7 +140,10 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#main-tabpanel a[data-toggle="tab"]',
 			method:   'on',
 			param:    'shown.bs.tab',
-			handler:  function(e) { app.activeTab = parseInt($(this).data().value, 10) }
+			handler:  function(e) {
+				app.activeTab = parseInt($(this).data().value, 10);
+				$(window).trigger('resize');
+			}
 		}, {
 			selector: '#scOctave',
 			method:   'TouchSpin',
