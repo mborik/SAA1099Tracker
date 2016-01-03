@@ -139,36 +139,16 @@ var STMFile = (function () {
 			// storing samples going backward and unshifting array...
 			for (i = 31; i > 0; i--) {
 				it = player.sample[i], dat = it.data;
-				obj = {};
+				obj = {
+					loop: it.loop,
+					end: it.end,
+					data: it.export()
+				};
 
 				if (it.name)
 					obj.name = it.name;
-
-				obj.loop = it.loop;
-				obj.end = it.end;
-
 				if (it.releasable)
 					obj.rel = it.releasable;
-
-				// only meaningful data will be stored and therefore
-				// we going backward from end of sample and unshifting array...
-				obj.data = [];
-				for (j = 255; j >= 0; j--) {
-					o = dat[j];
-					k = 0 | o.enable_freq | (o.enable_noise << 1) | (o.noise_value << 2);
-
-					if (!obj.data.length && !k && !o.volume.byte && !o.shift)
-						continue;
-
-					s = k.toHex(1) + o.volume.byte.toHex(2);
-					if (o.shift)
-						s = s.concat(
-							((o.shift < 0) ? '-' : '+'),
-							o.shift.toHex(3)
-						);
-
-					obj.data.unshift(s.toUpperCase());
-				}
 
 				// for optimize reasons, we are detecting empty items in arrays...
 				if (!obj.data.length)
@@ -184,28 +164,14 @@ var STMFile = (function () {
 			// storing ornaments going backward and unshifting array...
 			for (i = 15; i > 0; i--) {
 				it = player.ornament[i];
-				obj = {};
+				obj = {
+					loop: it.loop,
+					end: it.end,
+					data: it.export()
+				};
 
 				if (it.name)
 					obj.name = it.name;
-
-				obj.loop = it.loop;
-				obj.end = it.end;
-
-				// only meaningful data will be stored and therefore
-				// we going backward from end of ornament and unshifting array...
-				obj.data = [];
-				for (j = 255; j >= 0; j--) {
-					k = it.data[j];
-
-					if (!obj.data.length && !k)
-						continue;
-
-					obj.data.unshift(''.concat(
-						((k < 0) ? '-' : '+'),
-						('0' + k.abs().toString(10)).substr(-2)
-					).toUpperCase());
-				}
 
 				// for optimize reasons, we are detecting empty items in arrays...
 				if (!obj.data.length)
@@ -221,27 +187,10 @@ var STMFile = (function () {
 			// storing patterns...
 			for (i = 1, l = player.pattern.length; i < l; i++) {
 				it = player.pattern[i], dat = it.data;
-				obj = { end: it.end };
-
-				// only meaningful data will be stored and therefore
-				// we going backward from end of pattern and unshifting array...
-				obj.data = [];
-				for (j = Player.maxPatternLen; j > 0;) {
-					o = dat[--j];
-					k = o.orn_release ? 33 : o.orn;
-					s = o.release ? '--' : ('0' + o.tone.toString(10)).substr(-2);
-
-					if (!obj.data.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
-						continue;
-
-					obj.data.unshift(s.concat(
-						o.smp.toString(32),
-						k.toString(36),
-						o.volume.byte.toHex(2),
-						o.cmd.toHex(1),
-						o.cmd_data.toHex(2)
-					).toUpperCase());
-				}
+				obj = {
+					end: it.end,
+					data: it.export()
+				};
 
 				// for optimize reasons, we are detecting empty items in arrays...
 				if (!obj.data.length)
@@ -256,25 +205,12 @@ var STMFile = (function () {
 
 			// storing positions, no optimalizations needed...
 			for (i = 0, l = player.position.length; i < l; i++) {
-				it = player.position[i], dat = it.ch;
+				it = player.position[i];
 				obj = {
 					length: it.length,
 					speed:  it.speed,
-					ch: []
+					ch: it.export()
 				};
-
-				for (j = 0; j < 6; j++) {
-					k = dat[j].pitch;
-					s = ('00' + dat[j].pattern.toString(10)).substr(-3);
-
-					if (k)
-						s = s.concat(
-							((k < 0) ? '-' : '+'),
-							('0' + k.abs().toString(10)).substr(-2)
-						);
-
-					obj.ch.push(s);
-				}
 
 				output.positions.push(obj);
 			}
@@ -869,7 +805,7 @@ var STMFile = (function () {
 
 						el.attr({
 							'href': url,
-							'download': name + '.STMF.json'
+							'download': name + '.STMF'
 						});
 
 						data = null;

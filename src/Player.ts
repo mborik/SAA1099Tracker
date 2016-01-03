@@ -64,12 +64,34 @@ class pMixer {
 	length: number = 0;
 }
 
-// Ornament interface (data length = 256)
-interface pOrnament {
-	name: string;
-	data: Int8Array;
-	loop: number;
-	end: number;
+// Ornament class
+class pOrnament {
+	name: string = '';
+	data: Int8Array = new Int8Array(256);
+	loop: number = 0;
+	end: number = 0;
+
+	/**
+	 * Export ornament data to array of readable strings.
+	 * We going backward from the end of ornament and unshifting array because of pack
+	 * reasons when "pack" param is true and then only meaningful data will be stored.
+	 */
+	export(pack: boolean = true): string[] {
+		var arr: string[] = [],
+			i: number,
+			k: any;
+
+		for (i = 255; i >= 0; i--) {
+			k = (0 | this.data[i]);
+
+			if (pack && !arr.length && !k)
+				continue;
+
+			arr.unshift(((k < 0) ? '-' : '+') + k.toWidth(2));
+		}
+
+		return arr;
+	}
 }
 
 // Sample data interface
@@ -81,13 +103,55 @@ interface pSampleData {
 	shift: number;
 }
 
-// Sample interface (data length = 256)
-interface pSample {
-	name: string;
-	data: pSampleData[];
-	loop: number;
-	end: number;
-	releasable: boolean;
+// Sample class
+class pSample {
+	name: string = '';
+	data: pSampleData[] = [];
+	loop: number = 0;
+	end: number = 0;
+	releasable: boolean = false;
+
+	constructor() {
+		for (var i: number = 0; i < 256; i++)
+			this.data[i] = { // pSampleData
+				volume: new pVolume,
+				enable_freq: false,
+				enable_noise: false,
+				noise_value: 0,
+				shift: 0
+			}
+	}
+
+	/**
+	 * Export sample data to array of readable strings.
+	 * We going backward from the end of sample and unshifting array because of pack
+	 * reasons when "pack" param is true and then only meaningful data will be stored.
+	 */
+	export(pack: boolean = true): string[] {
+		var arr: string[] = [],
+			o: pSampleData,
+			s: string,
+			i: number,
+			k: any;
+
+		for (i = 255; i >= 0; i--) {
+			o = this.data[i];
+			k = 0 | (<any> o.enable_freq)
+			      | (<any> o.enable_noise << 1)
+			      | (o.noise_value << 2);
+
+			if (pack && !arr.length && !k && !o.volume.byte && !o.shift)
+				continue;
+
+			s = k.toHex(1) + (<any> o.volume.byte).toHex(2);
+			if (o.shift)
+				s += ((o.shift < 0) ? '-' : '+') + (<any> o.shift).toHex(3);
+
+			arr.unshift(s.toUpperCase());
+		}
+
+		return arr;
+	}
 }
 
 // Channel-pattern line interface
@@ -102,10 +166,54 @@ interface pPatternLine {
 	cmd_data: number;
 }
 
-// Pattern interface (data length = maxPatternLen)
-interface pPattern {
-	data: pPatternLine[];
+// Pattern class
+class pPattern {
+	data: pPatternLine[] = [];
 	end: number;
+
+	constructor(end: number = 0) {
+		this.end = end;
+
+		for (var i: number = 0; i < Player.maxPatternLen; i++)
+			this.data[i] = { // pPatternLine
+				tone: 0, release: false,
+				smp: 0, orn: 0, orn_release: false,
+				volume: new pVolume,
+				cmd: 0, cmd_data: 0
+			};
+	}
+
+	/**
+	 * Export pattern data to array of readable strings.
+	 * We going backward from the end of pattern and unshifting array because of pack
+	 * reasons when "pack" param is true and then only meaningful data will be stored.
+	 */
+	export(start: number = 0, length: number = Player.maxPatternLen, pack: boolean = true): string[] {
+		var arr: string[] = [],
+			o: pPatternLine,
+			s: string,
+			i: number,
+			k: any;
+
+		for (i = Math.min(Player.maxPatternLen, start + length); i > 0;) {
+			o = this.data[--i];
+			k = o.orn_release ? 33 : o.orn; // 33 = X
+			s = o.release ? '--' : (<any> o.tone).toWidth(2);
+
+			if (pack && !arr.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
+				continue;
+
+			arr.unshift(s.concat(
+				o.smp.toString(32),
+				k.toString(36),
+				(<any> o.volume.byte).toHex(2),
+				(<any> o.cmd).toHex(1),
+				(<any> o.cmd_data).toHex(2)
+			).toUpperCase());
+		}
+
+		return arr;
+	}
 }
 
 // Position channel definition interface
@@ -138,12 +246,31 @@ class pPosition {
 			this.frames[line] = i;
 	}
 
-	public hasPattern(pattern: number): boolean { return this.indexOf(pattern) >= 0; }
-	public indexOf(pattern: number): number {
+	hasPattern(pattern: number): boolean { return this.indexOf(pattern) >= 0; }
+	indexOf(pattern: number): number {
 		for (var i: number = 0, r: number = -1; r < 0 && i < 6; i++)
 			if (this.ch[i].pattern === pattern)
 				r = i;
 		return r;
+	}
+
+	export(): string[] {
+		var arr: string[] = [],
+			i: number,
+			s: string,
+			k: any;
+
+		for (i = 0; i < 6; i++) {
+			k = this.ch[i].pitch;
+			s = (<any> this.ch[i].pattern).toWidth(3);
+
+			if (k)
+				s += ((k < 0) ? '-' : '+') + k.toHex(2);
+
+			arr.push(s);
+		}
+
+		return arr;
 	}
 }
 
@@ -355,9 +482,14 @@ class Player {
 	/** Clear all samples. */
 	public clearSamples() {
 		for (var i: number = 0; i < 32; i++) {
-			this.sample[i] = { name: '', data: [], loop: 0, end: 0, releasable: false };
-			for (var c: number = 0; c < 256; c++)
-				this.sample[i].data[c] = { volume: new pVolume, enable_freq: false, enable_noise: false, noise_value: 0, shift: 0 }
+			if (this.sample[i]) {
+				for (var c: number = 0; c < 256; c++)
+					delete this.sample[i].data[c].volume;
+				this.sample[i].data = null;
+				this.sample[i] = null;
+			}
+
+			this.sample[i] = new pSample;
 		}
 
 		console.log('Player', 'Samples cleared...');
@@ -365,8 +497,14 @@ class Player {
 
 	/** Clear all ornaments. */
 	public clearOrnaments() {
-		for (var i: number = 0; i < 16; i++)
-			this.ornament[i] = { name: '', data: new Int8Array(256), loop: 0, end: 0 };
+		for (var i: number = 0; i < 16; i++) {
+			if (this.ornament[i]) {
+				delete this.ornament[i].data;
+				this.ornament[i] = null;
+			}
+
+			this.ornament[i] = new pOrnament;
+		}
 
 		console.log('Player', 'Ornaments cleared...');
 	}
@@ -376,14 +514,8 @@ class Player {
 	 * @returns {number} new pattern number
 	 */
 	public addNewPattern(): number {
-		var i: number,
-			index: number = this.pattern.length,
-			pt: pPattern = { data: [], end: 0 };
-
-		for (i = 0; i < Player.maxPatternLen; i++)
-			pt.data[i] = { tone: 0, release: false, smp: 0, orn: 0, orn_release: false, volume: new pVolume, cmd: 0, cmd_data: 0 };
-
-		this.pattern.push(pt);
+		var index: number = this.pattern.length;
+		this.pattern.push(new pPattern);
 		return index;
 	}
 
