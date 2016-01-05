@@ -92,6 +92,14 @@ class pOrnament {
 
 		return arr;
 	}
+
+	/**
+	 * Parse ornament data from array of signed values stored in simple string.
+	 */
+	parse(arr: string[]) {
+		for (var i = 0; i < 256; i++)
+			this.data[i] = parseInt(arr[i], 10) || 0;
+	}
 }
 
 // Sample data interface
@@ -151,6 +159,25 @@ class pSample {
 		}
 
 		return arr;
+	}
+
+	/**
+	 * Parse sample data from array of buch of hex values stored in simple string.
+	 */
+	parse(arr: string[]) {
+		for (var i = 0, s, k, o; i < 256; i++) {
+			o = this.data[i];
+
+			s = arr[i] || '';
+			k = parseInt(s[0], 16) || 0;
+
+			o.enable_freq  = !!(k & 1);
+			o.enable_noise = !!(k & 2);
+			o.noise_value  =  (k >> 2);
+			o.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
+
+			o.shift = parseInt(s.substr(3), 16) || 0;
+		}
 	}
 }
 
@@ -213,6 +240,30 @@ class pPattern {
 		}
 
 		return arr;
+	}
+
+	/**
+	 * Parse pattern data from array of strings with values like in tracklist.
+	 */
+	parse(arr: string[], start: number = 0, length: number = Player.maxPatternLen) {
+		var i = start, j, k, s, o,
+			l = Math.min(Player.maxPatternLen, start + length);
+
+		for (j = 0; i < l; i++, j++) {
+			s = arr[j] || '';
+			o = this.data[i];
+
+			k = parseInt(s.substr(0, 2), 10);
+			o.tone = isNaN(k) ? ((o.release = true) && 0) : k;
+
+			k = parseInt(s[3], 16);
+			o.orn = isNaN(k) ? ((o.orn_release = true) && 0) : k;
+
+			o.smp = parseInt(s[2], 32) || 0;
+			o.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
+			o.cmd = parseInt(s[6], 16) || 0;
+			o.cmd_data = parseInt(s.substr(7), 16) || 0;
+		}
 	}
 }
 

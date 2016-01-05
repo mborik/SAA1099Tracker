@@ -140,9 +140,9 @@ var STMFile = (function () {
 			for (i = 31; i > 0; i--) {
 				it = player.sample[i], dat = it.data;
 				obj = {
-					loop: it.loop,
-					end: it.end,
-					data: it.export()
+					'loop': it.loop,
+					'end':  it.end,
+					'data': it.export()
 				};
 
 				if (it.name)
@@ -165,9 +165,9 @@ var STMFile = (function () {
 			for (i = 15; i > 0; i--) {
 				it = player.ornament[i];
 				obj = {
-					loop: it.loop,
-					end: it.end,
-					data: it.export()
+					'loop': it.loop,
+					'end':  it.end,
+					'data': it.export()
 				};
 
 				if (it.name)
@@ -188,8 +188,8 @@ var STMFile = (function () {
 			for (i = 1, l = player.pattern.length; i < l; i++) {
 				it = player.pattern[i], dat = it.data;
 				obj = {
-					end: it.end,
-					data: it.export()
+					'end':  it.end,
+					'data': it.export()
 				};
 
 				// for optimize reasons, we are detecting empty items in arrays...
@@ -207,9 +207,9 @@ var STMFile = (function () {
 			for (i = 0, l = player.position.length; i < l; i++) {
 				it = player.position[i];
 				obj = {
-					length: it.length,
-					speed:  it.speed,
-					ch: it.export()
+					'length': it.length,
+					'speed':  it.speed,
+					'ch':     it.export()
 				};
 
 				output.positions.push(obj);
@@ -264,7 +264,6 @@ var STMFile = (function () {
 				for (i = 1; i < 32; i++) {
 					if (!!(obj = data.samples[i - 1])) {
 						it = player.sample[i];
-						dat = it.data;
 
 						if (obj.name)
 							it.name = obj.name;
@@ -277,6 +276,7 @@ var STMFile = (function () {
 							// - whole sample data stored binary in one BASE64 string,
 							//   every tick in 3 bytes...
 
+							dat = it.data;
 							o = atob(obj.data);
 							for (j = 0, k = 0, l = o.length; j < l && k < 32; j += 3, k++) {
 								s = (o.charCodeAt(j + 1) & 0xff);
@@ -292,24 +292,8 @@ var STMFile = (function () {
 									dat.shift *= -1;
 							}
 						}
-						else {
-							// v1.2
-							// - every tick stored as simple string with hex values...
-
-							for (j = 0, l = Math.min(256, obj.data.length); j < l; j++) {
-								dat = it.data[j];
-
-								s = obj.data[j];
-								k = parseInt(s[0], 16) || 0;
-
-								dat.enable_freq  = !!(k & 1);
-								dat.enable_noise = !!(k & 2);
-								dat.noise_value  =  (k >> 2);
-								dat.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
-
-								dat.shift = parseInt(s.substr(3), 16) || 0;
-							}
-						}
+						else // v1.2
+							it.parse(obj.data);
 
 						count.smp++;
 					}
@@ -324,7 +308,6 @@ var STMFile = (function () {
 				for (i = 1; i < 16; i++) {
 					if (!!(obj = data.ornaments[i - 1])) {
 						it = player.ornament[i];
-						dat = it.data;
 
 						if (obj.name)
 							it.name = obj.name;
@@ -335,18 +318,13 @@ var STMFile = (function () {
 							// v1.1
 							// - whole ornament data stored binary in one BASE64 string
 
+							dat = it.data;
 							o = atob(obj.data);
 							for (j = 0, l = Math.min(256, o.length); j < l; j++)
 								dat[j] = o.charCodeAt(j);
 						}
-						else {
-							// v1.2
-							// - every tick stored as simple string with signed hex value
-
-							o = obj.data;
-							for (j = 0, l = Math.min(256, o.length); j < l; j++)
-								dat[j] = parseInt(o[j], 10) || 0;
-						}
+						else // v1.2
+							it.parse(obj.data);
 
 						count.orn++;
 					}
@@ -385,25 +363,9 @@ var STMFile = (function () {
 						}
 						else {
 							// v1.2
-							// - lines encoded into string with values like in tracklist
 
 							it.end = obj.end || 0;
-
-							for (j = 0, l = Math.min(Player.maxPatternLen, obj.data.length); j < l; j++) {
-								s = obj.data[j] || '';
-								dat = it.data[j];
-
-								k = parseInt(s.substr(0, 2), 10);
-								dat.tone = isNaN(k) ? ((dat.release = true) && 0) : k;
-
-								k = parseInt(s[3], 16);
-								dat.orn = isNaN(k) ? ((dat.orn_release = true) && 0) : k;
-
-								dat.smp = parseInt(s[2], 32) || 0;
-								dat.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
-								dat.cmd = parseInt(s[6], 16) || 0;
-								dat.cmd_data = parseInt(s.substr(7), 16) || 0;
-							}
+							it.parse(obj.data);
 						}
 
 						count.pat++;
