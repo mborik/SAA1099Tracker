@@ -74,6 +74,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					console.logHotkey('Ctrl+V - Paste');
 					app.onCmdEditPaste();
 				},
+				88: function () {
+					console.logHotkey('Ctrl+X - Cut');
+					app.onCmdEditCut();
+				},
 				79: function () {
 					console.logHotkey('Ctrl+O - Open');
 					app.onCmdFileOpen();

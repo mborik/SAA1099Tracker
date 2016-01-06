@@ -209,6 +209,14 @@ Tracker.prototype.onCmdFileSave = function (as) {
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditCut = function () {
+	if (this.activeTab === 0 && this.modeEdit) {
+		this.manager.copyFromTracklist('cut');
+		this.player.countPositionFrames(this.player.currentPosition + 1);
+		this.updateEditorCombo(0);
+	}
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCopy = function () {
 	if (this.activeTab === 0 && this.modeEdit)
 		this.manager.copyFromTracklist();

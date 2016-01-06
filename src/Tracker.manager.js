@@ -4,7 +4,7 @@ var Manager = (function () {
 	function Manager(app) {
 	    this.clipboard = '';
 
-        this.copyFromTracklist = function () {
+        this.copyFromTracklist = function (cut) {
 			var p = app.player,
 				sel = app.tracklist.selection,
 				ch = sel.len ? sel.channel : app.modeEditChannel,
@@ -15,6 +15,9 @@ var Manager = (function () {
 				data = pp.export(line, len, false);
 
             this.clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
+
+			if (cut)
+				pp.parse([], line, len);
         };
 
         this.pasteToTracklist = function () {

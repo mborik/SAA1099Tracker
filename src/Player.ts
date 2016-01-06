@@ -250,7 +250,7 @@ class pPattern {
 			l = Math.min(Player.maxPatternLen, start + length);
 
 		for (j = 0; i < l; i++, j++) {
-			s = arr[j] || '';
+			s = arr[j] || '000000000';
 			o = this.data[i];
 
 			k = parseInt(s.substr(0, 2), 10);
