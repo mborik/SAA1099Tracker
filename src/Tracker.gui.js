@@ -615,6 +615,14 @@ Tracker.prototype.populateGUI = function () {
 			method:   'click',
 			handler:  function() { app.onCmdFileSave(true) }
 		}, {
+			selector: '#miEditCopy',
+			method:   'click',
+			handler:  function() { app.onCmdEditCopy() }
+		}, {
+			selector: '#miEditPaste',
+			method:   'click',
+			handler:  function() { app.onCmdEditPaste() }
+		}, {
 			selector: '#miAbout',
 			method:   'click',
 			handler:  function() { app.onCmdAbout() }

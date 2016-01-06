@@ -66,11 +66,21 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				return;
 
 			return {
+				67: function () {
+					console.logHotkey('Ctrl+C - Copy');
+					app.onCmdEditCopy();
+				},
+				86: function () {
+					console.logHotkey('Ctrl+V - Paste');
+					app.onCmdEditPaste();
+				},
 				79: function () {
 					console.logHotkey('Ctrl+O - Open');
+					app.onCmdFileOpen();
 				},
 				83: function () {
 					console.logHotkey('Ctrl+S - Save');
+					app.onCmdFileSave();
 				},
 				80: function () {
 					console.logHotkey('Ctrl+P - Preferences');
@@ -867,7 +877,7 @@ Tracker.prototype.handleHotkeys = function (type, key, isInput) {
 		}
 
 		if (o.length === 2) {
-			if (isInput && key === 67 || key === 86)
+			if (isInput && (key === 67 || key === 86))
 				return false;
 			else if (key === 82 || key === 116) {
 				fn = true; // disable refresh browser hotkeys

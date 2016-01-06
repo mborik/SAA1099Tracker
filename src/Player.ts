@@ -222,7 +222,7 @@ class pPattern {
 			i: number,
 			k: any;
 
-		for (i = Math.min(Player.maxPatternLen, start + length); i > 0;) {
+		for (i = Math.min(Player.maxPatternLen, start + length); i > start;) {
 			o = this.data[--i];
 			k = o.orn_release ? 33 : o.orn; // 33 = X
 			s = o.release ? '--' : (<any> o.tone).toWidth(2);

@@ -1,5 +1,5 @@
 /** Tracker.core submodule */
-/* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor */
+/* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor, Manager */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
@@ -46,6 +46,7 @@ var Tracker = (function() {
 		};
 
 		this.pixelfont  = { obj: null, ctx: null };
+		this.manager    = new Manager(this);
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
 

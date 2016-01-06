@@ -209,6 +209,20 @@ Tracker.prototype.onCmdFileSave = function (as) {
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditCopy = function () {
+	if (this.activeTab === 0 && this.modeEdit)
+		this.manager.copyFromTracklist();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditPaste = function () {
+	if (this.activeTab === 0 && this.modeEdit) {
+		if (this.manager.pasteToTracklist()) {
+			this.player.countPositionFrames(this.player.currentPosition + 1);
+			this.updateEditorCombo(this.ctrlRowStep);
+		}
+	}
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {
 	this.player.stopChannel();
 	this.modePlay = false;
