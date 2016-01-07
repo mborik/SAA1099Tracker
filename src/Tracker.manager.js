@@ -4,7 +4,19 @@ var Manager = (function () {
 	function Manager(app) {
 	    this.clipboard = '';
 
-        this.copyFromTracklist = function (cut) {
+        this.clearFromTracklist = function () {
+			var p = app.player,
+				sel = app.tracklist.selection,
+				ch = sel.len ? sel.channel : app.modeEditChannel,
+				line = sel.len ? sel.line : p.currentLine,
+				len = sel.len + 1,
+				pos = p.position[p.currentPosition] || p.nullPosition,
+				pp = p.pattern[pos.ch[ch].pattern];
+
+			pp.parse([], line, len);
+        };
+
+        this.copyFromTracklist = function () {
 			var p = app.player,
 				sel = app.tracklist.selection,
 				ch = sel.len ? sel.channel : app.modeEditChannel,
@@ -15,9 +27,6 @@ var Manager = (function () {
 				data = pp.export(line, len, false);
 
             this.clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
-
-			if (cut)
-				pp.parse([], line, len);
         };
 
         this.pasteToTracklist = function () {
@@ -33,9 +42,7 @@ var Manager = (function () {
 				pp = p.pattern[pos.ch[ch].pattern],
 				data = this.clipboard.substr(9);
 
-			try {
-				data = JSON.parse(data);
-			}
+			try { data = JSON.parse(data) }
 			catch (e) { return false }
 
             if (!(data instanceof Array && data.length > 0))

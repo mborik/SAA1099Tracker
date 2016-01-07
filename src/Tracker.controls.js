@@ -211,8 +211,10 @@ Tracker.prototype.onCmdFileSave = function (as) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function () {
 	if (this.activeTab === 0 && this.modeEdit) {
-		this.manager.copyFromTracklist('cut');
-		this.player.countPositionFrames(this.player.currentPosition + 1);
+		this.manager.copyFromTracklist();
+		this.manager.clearFromTracklist();
+
+		this.player.countPositionFrames(this.player.currentPosition);
 		this.updateEditorCombo(0);
 	}
 };
@@ -225,10 +227,22 @@ Tracker.prototype.onCmdEditCopy = function () {
 Tracker.prototype.onCmdEditPaste = function () {
 	if (this.activeTab === 0 && this.modeEdit) {
 		if (this.manager.pasteToTracklist()) {
-			this.player.countPositionFrames(this.player.currentPosition + 1);
+			this.player.countPositionFrames(this.player.currentPosition);
 			this.updateEditorCombo(this.ctrlRowStep);
 		}
 	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditClear = function () {
+	if (this.activeTab === 0 && this.modeEdit) {
+		this.manager.clearFromTracklist();
+		this.player.countPositionFrames(this.player.currentPosition);
+		this.updateEditorCombo(0);
+	}
+	else if (this.activeTab === 1)
+		this.onCmdSmpClear();
+	else if (this.activeTab === 2)
+		this.onCmdOrnClear();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {

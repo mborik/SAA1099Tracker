@@ -580,105 +580,66 @@ Tracker.prototype.populateGUI = function () {
 					app.smpornedit.updateSamplePitchShift();
 			}
 		}, {
-			selector: 'a[id^="miFileImportDemo"]',
+			selector: 'a[id^="mi"]', // all menu items
 			method:   'click',
 			handler:  function() {
-				var fn = $(this).data().filename;
-				if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
+				var fn,
+					name = this.id.replace(/^mi/, 'onCmd');
+
+				if (app[name])
+					app[name]();
+				else if (name === 'onCmdFileSaveAs')
+					app.onCmdFileSave(true);
+				else if (this.id.match(/^miFileImportDemo/)) {
+					fn = $(this).data().filename;
+					if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
+						return false;
+					app.file.loadDemosong(fn);
+				}
+				else if (this.id.match(/^miHelp/)) {
+					fn = $(this).data().filename;
+					if (!fn)
+						return false;
+					app.onCmdShowDocumentation(fn);
+				}
+				else
 					return false;
-				app.file.loadDemosong(fn);
 			}
-		}, {
-			selector: 'a[id^="miHelp"]',
-			method:   'click',
-			handler:  function() {
-				var el = $(this),
-					fn = el.data().filename;
-				if (!fn)
-					return false;
-				app.onCmdShowDocumentation(fn);
-			}
-		}, {
-			selector: '#miFileNew',
-			method:   'click',
-			handler:  function() { app.onCmdFileNew() }
-		}, {
-			selector: '#miFileOpen',
-			method:   'click',
-			handler:  function() { app.onCmdFileOpen() }
-		}, {
-			selector: '#miFileSave',
-			method:   'click',
-			handler:  function() { app.onCmdFileSave() }
-		}, {
-			selector: '#miFileSaveAs',
-			method:   'click',
-			handler:  function() { app.onCmdFileSave(true) }
-		}, {
-			selector: '#miEditCut',
-			method:   'click',
-			handler:  function() { app.onCmdEditCut() }
-		}, {
-			selector: '#miEditCopy',
-			method:   'click',
-			handler:  function() { app.onCmdEditCopy() }
-		}, {
-			selector: '#miEditPaste',
-			method:   'click',
-			handler:  function() { app.onCmdEditPaste() }
-		}, {
-			selector: '#miAbout',
-			method:   'click',
-			handler:  function() { app.onCmdAbout() }
-		}, {
-			selector: '#miStop',
-			method:   'click',
-			handler:  function() { app.onCmdStop() }
-		}, {
-			selector: '#miSongPlay',
-			method:   'click',
-			handler:  function() { app.onCmdSongPlay() }
-		}, {
-			selector: '#miSongPlayStart',
-			method:   'click',
-			handler:  function() { app.onCmdSongPlayStart() }
-		}, {
-			selector: '#miPosPlay',
-			method:   'click',
-			handler:  function() { app.onCmdPosPlay() }
-		}, {
-			selector: '#miPosPlayStart',
-			method:   'click',
-			handler:  function() { app.onCmdPosPlayStart() }
-		}, {
-			selector: '#miToggleLoop',
-			method:   'click',
-			handler:  function() { app.onCmdToggleLoop() }
 		}, {
 			selector: 'button[id^="btPattern"]',
 			method:   'click',
-			handler:  function() { app[this.id.replace('btPattern', 'onCmdPat')]() }
+			handler:  function() {
+				var name = this.id.replace(/^btPattern/, 'onCmdPat');
+				if (app[name])
+					app[name]();
+			}
 		}, {
-			selector: 'button[id^=btPos]',
+			selector: 'button[id^="btPos"]',
 			method:   'click',
-			handler:  function() { app[this.id.replace('bt', 'onCmd')]() }
+			handler:  function() {
+				var name = this.id.replace(/^bt/, 'onCmd');
+				if (app[name])
+					app[name]();
+			}
 		}, {
 			selector: 'button[id^="btSample"]',
 			method:   'click',
 			handler:  function() {
 				var name = this.id.replace('btSample', 'onCmdSmp');
-				if (name.endsWith('Stop'))
-					name = name.replace('Smp', '');
-				app[name]();
+				if (name.match(/Stop$/))
+					return app.onCmdStop();
+				if (app[name])
+					app[name]();
 			}
 		}, {
 			selector: 'button[id^="btOrn"]',
 			method:   'click',
 			handler:  function() {
 				var name = this.id.replace('btOrn', 'onCmdOrn');
-				if (name.endsWith('Stop'))
-					name = name.replace('Orn', '');
-				app[name]();
+				if (name.match(/Stop$/))
+					return app.onCmdStop();
+				if (app[name])
+					app[name]();
 			}
 		}
 	];

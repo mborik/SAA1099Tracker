@@ -70,6 +70,21 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					console.logHotkey('Ctrl+C - Copy');
 					app.onCmdEditCopy();
 				},
+				68: function () {
+					console.logHotkey('Ctrl+D - Clear/Delete');
+					app.onCmdEditClear();
+				},
+				79: function () {
+					console.logHotkey('Ctrl+O - Open');
+					app.onCmdFileOpen();
+				},
+				80: function () {
+					console.logHotkey('Ctrl+P - Preferences');
+				},
+				83: function () {
+					console.logHotkey('Ctrl+S - Save');
+					app.onCmdFileSave();
+				},
 				86: function () {
 					console.logHotkey('Ctrl+V - Paste');
 					app.onCmdEditPaste();
@@ -77,17 +92,6 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				88: function () {
 					console.logHotkey('Ctrl+X - Cut');
 					app.onCmdEditCut();
-				},
-				79: function () {
-					console.logHotkey('Ctrl+O - Open');
-					app.onCmdFileOpen();
-				},
-				83: function () {
-					console.logHotkey('Ctrl+S - Save');
-					app.onCmdFileSave();
-				},
-				80: function () {
-					console.logHotkey('Ctrl+P - Preferences');
 				},
 				89: function () {
 					console.logHotkey('Ctrl+Y - Redo');
@@ -693,14 +697,14 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keydown)
 				return;
 
-			if (key > 96 && key < 105) { // Num1-Num8 (octave)
+			if (key > 48 && key < 57) { // numbers 1-8 (octave)
 				return function (key) {
-					var oct = (key - 97),
+					var oct = (key - 49),
 						base = app.workingSampleTone,
 						tone = ((base - 1) % 12) + (oct * 12) + 1;
 
 					if (base !== tone) {
-						console.logHotkey('Ctrl+Num' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
+						console.logHotkey('Ctrl+' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
 						app.workingSampleTone = tone;
 
 						$('#scSampleTone,#scOrnTone')
@@ -709,7 +713,13 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					}
 				};
 			}
-			else if ((key > 48 && key <= 57) || (key > 64 && key <= 90)) {
+			break;
+
+		case 'smpornCtrlShift':
+			if (!keydown)
+				return;
+
+			if ((key > 48 && key <= 57) || (key > 64 && key <= 90)) { // 1-9 | A-V
 				return function (key) {
 					var num = key - 48,
 						orn = (app.activeTab === 2);
@@ -719,6 +729,9 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 					if (num >= (orn ? 16 : 32))
 						return;
+
+					console.logHotkey('Ctrl+Shift' + String.fromCharCode(key) +
+						' - Set active ' + (orn ? 'ornament' : 'sample'));
 
 					$(orn ? '#scOrnNumber' : '#scSampleNumber')
 						.val(num.toString(32).toUpperCase())
@@ -731,6 +744,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keydown)
 				return;
 
+			// 2.5 octave piano-roll on keyboard
 			var oct  = app.player.tones[app.workingSampleTone].oct,
 				tone = Math.min(app.getKeynote(key, oct), 96),
 				sample = (app.activeTab === 1) ? app.workingSample : app.workingOrnTestSample,
@@ -894,8 +908,12 @@ Tracker.prototype.handleHotkeys = function (type, key, isInput) {
 					fn = this.hotkeyMap(type, 'smpornCtrl', key);
 			}
 		}
-		else if (!o.inDialog && o.length === 3 && o[16] && this.activeTab === 0)
-			fn = this.hotkeyMap(type, 'trackerCtrlShift', key);
+		else if (!o.inDialog && o.length === 3 && o[16]) {
+			if (this.activeTab === 0)
+				fn = this.hotkeyMap(type, 'trackerCtrlShift', key);
+			else
+				fn = this.hotkeyMap(type, 'smpornCtrlShift', key);
+		}
 
 		if (o.inDialog && !fn) {
 			fn = true; // restrict all ctrl hotkeys in dialogs
