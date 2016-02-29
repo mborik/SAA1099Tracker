@@ -17,7 +17,7 @@ Ctrl+O                | open
 Ctrl+S                | save
 Ctrl+X                | cut
 Ctrl+C                | copy
-Ctrl+P                | paste
+Ctrl+V                | paste
 Ctrl+D                | clear/delete
 Ctrl+Z                | undo
 Ctrl+Y, Ctrl+Shift+Z  | redo

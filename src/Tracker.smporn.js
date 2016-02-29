@@ -136,7 +136,7 @@ var SmpOrnEditor = (function () {
 
 					data[e.data.index].shift = parseInt(el.value, radix);
 				})
-				.prop('tabindex', i + 9);
+				.prop('tabindex', 9);
 			}
 		};
 //---------------------------------------------------------------------------------------

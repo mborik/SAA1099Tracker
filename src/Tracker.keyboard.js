@@ -763,6 +763,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
 		type = e.type,
 		isInput = (e.target && (/^a|input|button$/i.test(e.target.tagName)) || e.target.id === 'documodal'),
+		textInput = (isInput && e.target.id.indexOf('tx') === 0),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -794,10 +795,10 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if (isInput && !this.handleHotkeys('test', key, isInput))
+		if (isInput && !this.handleHotkeys('test', key, isInput, textInput))
 			return true;
 
-		if (!this.handleHotkeys(type, key, isInput)) {
+		if (!this.handleHotkeys(type, key, isInput, textInput)) {
 			if (!o.inDialog && this.activeTab === 0) {
 				// ENTER (hold to play position at current line)
 				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
@@ -814,7 +815,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 		}
 	}
 	else if (type === 'keyup') {
-		if (o[key] && this.handleHotkeys(type, key, isInput))
+		if (o[key] && this.handleHotkeys(type, key, isInput, textInput))
 			isInput = false;
 
 		if (!o.modsHandled && !o.inDialog && canPlay) {
@@ -880,7 +881,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleHotkeys = function (type, key, isInput) {
+Tracker.prototype.handleHotkeys = function (type, key, isInput, textInput) {
 	var o = this.globalKeyState,
 		fn = false,
 		restrict = o.inDialog || isInput;
@@ -895,7 +896,7 @@ Tracker.prototype.handleHotkeys = function (type, key, isInput) {
 		}
 
 		if (o.length === 2) {
-			if (isInput && (key === 67 || key === 86))
+			if (textInput && (key === 67 || key === 86))
 				return false;
 			else if (key === 82 || key === 116) {
 				fn = true; // disable refresh browser hotkeys

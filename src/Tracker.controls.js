@@ -217,11 +217,26 @@ Tracker.prototype.onCmdEditCut = function () {
 		this.player.countPositionFrames(this.player.currentPosition);
 		this.updateEditorCombo(0);
 	}
+	else if (this.activeTab === 1) {
+		this.manager.copySample();
+		this.manager.clearSample();
+		this.updateSampleEditor(true);
+		this.smpornedit.updateSamplePitchShift();
+	}
+	else if (this.activeTab === 2) {
+		this.manager.copyOrnament();
+		this.manager.clearOrnament();
+		this.smpornedit.updateOrnamentEditor(true);
+	}
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCopy = function () {
 	if (this.activeTab === 0 && this.modeEdit)
 		this.manager.copyFromTracklist();
+	else if (this.activeTab === 1)
+		this.manager.copySample();
+	else if (this.activeTab === 2)
+		this.manager.copyOrnament();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditPaste = function () {
@@ -230,6 +245,15 @@ Tracker.prototype.onCmdEditPaste = function () {
 			this.player.countPositionFrames(this.player.currentPosition);
 			this.updateEditorCombo(this.ctrlRowStep);
 		}
+	}
+	else if (this.activeTab === 1) {
+		this.manager.pasteSample();
+		this.updateSampleEditor(true);
+		this.smpornedit.updateSamplePitchShift();
+	}
+	else if (this.activeTab === 2) {
+		this.manager.pasteOrnament();
+		this.smpornedit.updateOrnamentEditor(true);
 	}
 };
 //---------------------------------------------------------------------------------------

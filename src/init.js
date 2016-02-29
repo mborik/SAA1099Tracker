@@ -36,7 +36,7 @@
 			'Tracker'
 		];
 
-	if (el && el.src.match(js))
+	if (el && el.src.substr(0, 4) === 'http' && el.src.match(js))
 		path = el.src.replace(js, path).replace(loc.origin, '');
 
 	el = document.getElementsByTagName('head')[0];
