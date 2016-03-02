@@ -50,7 +50,7 @@ Tracker.prototype.populateGUI = function () {
 			param:    'beforeunload',
 			handler:  function() {
 				if (!dev)
-					return 'All unsaved changes in SAA1099Tracker will be lost.';
+					return i18n.app.msg.unsaved;
 			}
 		}, {
 			global:   'window',

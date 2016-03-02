@@ -157,8 +157,8 @@ Tracker.prototype.onCmdFileNew = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Create new file\u2026',
-		text: 'Do you really want to clear all song data and lost all of your changes?',
+		title: i18n.dialog.file.new.title,
+		text: i18n.dialog.file.new.msg,
 		buttons: 'yesno',
 		style: 'danger',
 		callback: function (btn) {
@@ -181,8 +181,8 @@ Tracker.prototype.onCmdFileOpen = function () {
 		keys.inDialog = true;
 
 		$('#dialoque').confirm({
-			title: 'Open file\u2026',
-			text: 'You should lost all of your changes! Do you really want to continue?',
+			title: i18n.dialog.file.open.title,
+			text: i18n.dialog.file.open.msg,
 			buttons: 'yesno',
 			style: 'warning',
 			callback: function (btn) {
@@ -431,15 +431,15 @@ Tracker.prototype.onCmdPatDelete = function () {
 		msg = null;
 
 	if (p.countPatternUsage(pt) > 0)
-		msg = 'This pattern is used in some positions!\nAre you sure you want to delete it?';
+		msg = i18n.dialog.pattern.delete.msg.used;
 	if (pt !== len)
-		msg = 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?';
+		msg = i18n.dialog.pattern.delete.msg.notlast;
 	if (!msg)
-		msg = 'Are you sure you want to delete this pattern?';
+		msg = i18n.dialog.pattern.delete.msg.sure;
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Delete pattern\u2026',
+		title: i18n.dialog.pattern.delete.title,
 		text: msg,
 		buttons: 'yesno',
 		style: (pt !== len) ? 'warning' : 'info',
@@ -481,8 +481,8 @@ Tracker.prototype.onCmdPatClean = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Clean pattern\u2026',
-		text: 'Are you sure you want to clean a content of this pattern?',
+		title: i18n.dialog.pattern.clean.title,
+		text: i18n.dialog.pattern.clean.msg,
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
@@ -567,8 +567,8 @@ Tracker.prototype.onCmdPosDelete = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Delete position\u2026',
-		text: 'Are you sure you want to delete this position?',
+		title: i18n.dialog.position.delete.title,
+		text: i18n.dialog.position.delete.msg,
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
@@ -642,15 +642,15 @@ Tracker.prototype.onCmdSmpClear = function () {
 	this.globalKeyState.inDialog = true;
 
 	$('#dialoque').confirm({
-		title: 'Clear sample\u2026',
-		text: 'Which sample data do you want to clear?',
+		title: i18n.dialog.sample.clear.title,
+		text: i18n.dialog.sample.clear.msg,
 		style: 'warning',
 		buttons:  [
-			{ caption: 'All', id: 7 },
-			{ caption: 'Amplitude', id: 1 },
-			{ caption: 'Noise', id: 2 },
-			{ caption: 'Pitch-shift', id: 4 },
-			{ caption: 'Cancel', id: 'cancel' }
+			{ caption: i18n.dialog.sample.clear.options[0], id: 7 },
+			{ caption: i18n.dialog.sample.clear.options[1], id: 1 },
+			{ caption: i18n.dialog.sample.clear.options[2], id: 2 },
+			{ caption: i18n.dialog.sample.clear.options[3], id: 4 },
+			{ caption: i18n.dialog.sample.clear.options[4], id: 'cancel' }
 		],
 		callback: function (mask) {
 			app.globalKeyState.inDialog = false;
@@ -822,8 +822,8 @@ Tracker.prototype.onCmdOrnClear = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Clear ornament\u2026',
-		text: 'Are you sure you want to clear a content of this ornament?',
+		title: i18n.dialog.ornament.clear.title,
+		text: i18n.dialog.ornament.clear.msg,
 		style: 'warning',
 		buttons: 'yesno',
 		callback: function (btn) {

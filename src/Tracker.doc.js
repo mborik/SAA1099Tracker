@@ -4,6 +4,31 @@ Tracker.prototype.doc = {
 	// ajax cache for text documentations:
 	txtCache: {},
 
+	i18n: {
+		'app.msg.unsaved': 'All unsaved changes in SAA1099Tracker will be lost.',
+		'dialog.file.new.title': 'Create new file...',
+		'dialog.file.new.msg': 'Do you really want to clear all song data and lost all of your changes?',
+		'dialog.file.open.title': 'Open file...',
+		'dialog.file.open.msg': 'You could lost all of your changes! Do you really want to continue?',
+		'dialog.file.remove.title': 'Remove file...',
+		'dialog.file.remove.msg': 'Do you really want to remove this file from storage?',
+		'dialog.pattern.delete.title': 'Delete pattern...',
+		'dialog.pattern.delete.msg.used': 'This pattern is used in some positions!\nAre you sure you want to delete it?',
+		'dialog.pattern.delete.msg.notlast': 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?',
+		'dialog.pattern.delete.msg.sure': 'Are you sure you want to delete this pattern?',
+		'dialog.pattern.clean.title': 'Clean pattern...',
+		'dialog.pattern.clean.msg': 'Are you sure you want to clean a content of this pattern?',
+		'dialog.position.delete.title': 'Delete position...',
+		'dialog.position.delete.msg': 'Are you sure you want to delete this position?',
+		'dialog.sample.clear.title': 'Clear sample...',
+		'dialog.sample.clear.msg': 'Which sample data do you want to clear?',
+		'dialog.sample.clear.options': [ 'All', 'Amplitude', 'Noise', 'Pitch-shift', 'Cancel' ],
+		'dialog.ornament.clear.title': 'Clear ornament...',
+		'dialog.ornament.clear.msg': 'Are you sure you want to clear a content of this ornament?',
+		'app.error.ie': 'don\'t be evil,\bstop using IE',
+		'app.error.webaudio': 'WebAudio\bnot supported'
+	},
+
 	tooltip: {
 		'miFileNew'       : 'New',
 		'miFileOpen'      : 'Open [Ctrl+O]',
@@ -186,6 +211,32 @@ Tracker.prototype.doc = {
 		}
 
 		this.setStatusText(i);
+	},
+
+	i18nInit: function () {
+		Object.keys(this.i18n).forEach(function (idx) {
+			var i, p, deepIn,
+				value = this[idx],
+				path = idx.split('.'),
+				len = path.length;
+
+			i = 0;
+			deepIn = this;
+			while (i < len) {
+				p = path[i];
+				deepIn[p] = deepIn[p] || {};
+
+				if (++i === len)
+					break;
+				deepIn = deepIn[p];
+			}
+
+			if (typeof value === 'string')
+				value = value.replace('...', '\u2026').replace('\b', '<br />');
+			deepIn[p] = value;
+
+			delete this[idx];
+		}, window.i18n = this.i18n);
 	}
 };
 //---------------------------------------------------------------------------------------

@@ -52,6 +52,8 @@ var Tracker = (function() {
 
 
 	// constructor {
+		this.doc.i18nInit();
+
 		if (AudioDriver) {
 			this.player = new Player(new SAASound(AudioDriver.sampleRate));
 			AudioDriver.init(this.player);
@@ -59,8 +61,8 @@ var Tracker = (function() {
 		else
 			$('#overlay>span').html(
 				browser.isIE ?
-					"don't be evil,<br>stop using IE" :
-					"WebAudio<br>not supported"
+					i18n.app.error.ie :
+					i18n.app.error.webaudio
 			);
 
 		if (this.player) {

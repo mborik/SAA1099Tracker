@@ -699,8 +699,8 @@ var STMFile = (function () {
 					    	return false;
 
 					    $('#dialoque').confirm({
-							title: 'Remove file\u2026',
-							text: 'Do you really want to remove this file from storage?',
+							title: i18n.dialog.file.remove.title,
+							text: i18n.dialog.file.remove.msg,
 							buttons: 'yesno',
 							style: 'danger',
 							callback: function (btn) {
