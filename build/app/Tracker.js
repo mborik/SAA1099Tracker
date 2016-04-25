@@ -1,6 +1,6 @@
 /*!
- * SAA1099Tracker v1.1.7.
- * Copyright (c) 2012-2015 Martin Borik <mborik@users.sourceforge.net>
+ * SAA1099Tracker v1.1.8
+ * Copyright (c) 2012-2016 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.7') });
+$(document).ready(function() { window.Tracker = new Tracker('1.1.8') });
 //---------------------------------------------------------------------------------------
 /** Tracker.file submodule */
 /* global atob, btoa, getCompatible, Blob, LZString, Player, pPosition */
@@ -163,36 +163,16 @@ var STMFile = (function () {
 			// storing samples going backward and unshifting array...
 			for (i = 31; i > 0; i--) {
 				it = player.sample[i], dat = it.data;
-				obj = {};
+				obj = {
+					'loop': it.loop,
+					'end':  it.end,
+					'data': it.export()
+				};
 
 				if (it.name)
 					obj.name = it.name;
-
-				obj.loop = it.loop;
-				obj.end = it.end;
-
 				if (it.releasable)
 					obj.rel = it.releasable;
-
-				// only meaningful data will be stored and therefore
-				// we going backward from end of sample and unshifting array...
-				obj.data = [];
-				for (j = 255; j >= 0; j--) {
-					o = dat[j];
-					k = 0 | o.enable_freq | (o.enable_noise << 1) | (o.noise_value << 2);
-
-					if (!obj.data.length && !k && !o.volume.byte && !o.shift)
-						continue;
-
-					s = k.toHex(1) + o.volume.byte.toHex(2);
-					if (o.shift)
-						s = s.concat(
-							((o.shift < 0) ? '-' : '+'),
-							o.shift.toHex(3)
-						);
-
-					obj.data.unshift(s.toUpperCase());
-				}
 
 				// for optimize reasons, we are detecting empty items in arrays...
 				if (!obj.data.length)
@@ -208,28 +188,14 @@ var STMFile = (function () {
 			// storing ornaments going backward and unshifting array...
 			for (i = 15; i > 0; i--) {
 				it = player.ornament[i];
-				obj = {};
+				obj = {
+					'loop': it.loop,
+					'end':  it.end,
+					'data': it.export()
+				};
 
 				if (it.name)
 					obj.name = it.name;
-
-				obj.loop = it.loop;
-				obj.end = it.end;
-
-				// only meaningful data will be stored and therefore
-				// we going backward from end of ornament and unshifting array...
-				obj.data = [];
-				for (j = 255; j >= 0; j--) {
-					k = it.data[j];
-
-					if (!obj.data.length && !k)
-						continue;
-
-					obj.data.unshift(''.concat(
-						((k < 0) ? '-' : '+'),
-						('0' + k.abs().toString(10)).substr(-2)
-					).toUpperCase());
-				}
 
 				// for optimize reasons, we are detecting empty items in arrays...
 				if (!obj.data.length)
@@ -245,27 +211,10 @@ var STMFile = (function () {
 			// storing patterns...
 			for (i = 1, l = player.pattern.length; i < l; i++) {
 				it = player.pattern[i], dat = it.data;
-				obj = { end: it.end };
-
-				// only meaningful data will be stored and therefore
-				// we going backward from end of pattern and unshifting array...
-				obj.data = [];
-				for (j = Player.maxPatternLen; j > 0;) {
-					o = dat[--j];
-					k = o.orn_release ? 33 : o.orn;
-					s = o.release ? '--' : ('0' + o.tone.toString(10)).substr(-2);
-
-					if (!obj.data.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
-						continue;
-
-					obj.data.unshift(s.concat(
-						o.smp.toString(32),
-						k.toString(36),
-						o.volume.byte.toHex(2),
-						o.cmd.toHex(1),
-						o.cmd_data.toHex(2)
-					).toUpperCase());
-				}
+				obj = {
+					'end':  it.end,
+					'data': it.export()
+				};
 
 				// for optimize reasons, we are detecting empty items in arrays...
 				if (!obj.data.length)
@@ -280,25 +229,12 @@ var STMFile = (function () {
 
 			// storing positions, no optimalizations needed...
 			for (i = 0, l = player.position.length; i < l; i++) {
-				it = player.position[i], dat = it.ch;
+				it = player.position[i];
 				obj = {
-					length: it.length,
-					speed:  it.speed,
-					ch: []
+					'length': it.length,
+					'speed':  it.speed,
+					'ch':     it.export()
 				};
-
-				for (j = 0; j < 6; j++) {
-					k = dat[j].pitch;
-					s = ('00' + dat[j].pattern.toString(10)).substr(-3);
-
-					if (k)
-						s = s.concat(
-							((k < 0) ? '-' : '+'),
-							('0' + k.abs().toString(10)).substr(-2)
-						);
-
-					obj.ch.push(s);
-				}
 
 				output.positions.push(obj);
 			}
@@ -352,7 +288,6 @@ var STMFile = (function () {
 				for (i = 1; i < 32; i++) {
 					if (!!(obj = data.samples[i - 1])) {
 						it = player.sample[i];
-						dat = it.data;
 
 						if (obj.name)
 							it.name = obj.name;
@@ -365,6 +300,7 @@ var STMFile = (function () {
 							// - whole sample data stored binary in one BASE64 string,
 							//   every tick in 3 bytes...
 
+							dat = it.data;
 							o = atob(obj.data);
 							for (j = 0, k = 0, l = o.length; j < l && k < 32; j += 3, k++) {
 								s = (o.charCodeAt(j + 1) & 0xff);
@@ -380,24 +316,8 @@ var STMFile = (function () {
 									dat.shift *= -1;
 							}
 						}
-						else {
-							// v1.2
-							// - every tick stored as simple string with hex values...
-
-							for (j = 0, l = Math.min(256, obj.data.length); j < l; j++) {
-								dat = it.data[j];
-
-								s = obj.data[j];
-								k = parseInt(s[0], 16) || 0;
-
-								dat.enable_freq  = !!(k & 1);
-								dat.enable_noise = !!(k & 2);
-								dat.noise_value  =  (k >> 2);
-								dat.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
-
-								dat.shift = parseInt(s.substr(3), 16) || 0;
-							}
-						}
+						else // v1.2
+							it.parse(obj.data);
 
 						count.smp++;
 					}
@@ -412,7 +332,6 @@ var STMFile = (function () {
 				for (i = 1; i < 16; i++) {
 					if (!!(obj = data.ornaments[i - 1])) {
 						it = player.ornament[i];
-						dat = it.data;
 
 						if (obj.name)
 							it.name = obj.name;
@@ -423,18 +342,13 @@ var STMFile = (function () {
 							// v1.1
 							// - whole ornament data stored binary in one BASE64 string
 
+							dat = it.data;
 							o = atob(obj.data);
 							for (j = 0, l = Math.min(256, o.length); j < l; j++)
 								dat[j] = o.charCodeAt(j);
 						}
-						else {
-							// v1.2
-							// - every tick stored as simple string with signed hex value
-
-							o = obj.data;
-							for (j = 0, l = Math.min(256, o.length); j < l; j++)
-								dat[j] = parseInt(o[j], 10) || 0;
-						}
+						else // v1.2
+							it.parse(obj.data);
 
 						count.orn++;
 					}
@@ -473,25 +387,9 @@ var STMFile = (function () {
 						}
 						else {
 							// v1.2
-							// - lines encoded into string with values like in tracklist
 
 							it.end = obj.end || 0;
-
-							for (j = 0, l = Math.min(Player.maxPatternLen, obj.data.length); j < l; j++) {
-								s = obj.data[j] || '';
-								dat = it.data[j];
-
-								k = parseInt(s.substr(0, 2), 10);
-								dat.tone = isNaN(k) ? ((dat.release = true) && 0) : k;
-
-								k = parseInt(s[3], 16);
-								dat.orn = isNaN(k) ? ((dat.orn_release = true) && 0) : k;
-
-								dat.smp = parseInt(s[2], 32) || 0;
-								dat.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
-								dat.cmd = parseInt(s[6], 16) || 0;
-								dat.cmd_data = parseInt(s.substr(7), 16) || 0;
-							}
+							it.parse(obj.data);
 						}
 
 						count.pat++;
@@ -825,8 +723,8 @@ var STMFile = (function () {
 					    	return false;
 
 					    $('#dialoque').confirm({
-							title: 'Remove file\u2026',
-							text: 'Do you really want to remove this file from storage?',
+							title: i18n.dialog.file.remove.title,
+							text: i18n.dialog.file.remove.msg,
 							buttons: 'yesno',
 							style: 'danger',
 							callback: function (btn) {
@@ -893,7 +791,7 @@ var STMFile = (function () {
 
 						el.attr({
 							'href': url,
-							'download': name + '.STMF.json'
+							'download': name + '.STMF'
 						});
 
 						data = null;
@@ -1225,7 +1123,7 @@ var SmpOrnEditor = (function () {
 
 					data[e.data.index].shift = parseInt(el.value, radix);
 				})
-				.prop('tabindex', i + 9);
+				.prop('tabindex', 9);
 			}
 		};
 //---------------------------------------------------------------------------------------
@@ -1300,7 +1198,7 @@ var SmpOrnEditor = (function () {
 })();
 //---------------------------------------------------------------------------------------
 /** Tracker.core submodule */
-/* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor */
+/* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor, Manager */
 //---------------------------------------------------------------------------------------
 var Tracker = (function() {
 	function Tracker(ver) {
@@ -1347,11 +1245,14 @@ var Tracker = (function() {
 		};
 
 		this.pixelfont  = { obj: null, ctx: null };
+		this.manager    = new Manager(this);
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
 
 
 	// constructor {
+		this.doc.i18nInit();
+
 		if (AudioDriver) {
 			this.player = new Player(new SAASound(AudioDriver.sampleRate));
 			AudioDriver.init(this.player);
@@ -1359,8 +1260,8 @@ var Tracker = (function() {
 		else
 			$('#overlay>span').html(
 				browser.isIE ?
-					"don't be evil,<br>stop using IE" :
-					"WebAudio<br>not supported"
+					i18n.app.error.ie :
+					i18n.app.error.webaudio
 			);
 
 		if (this.player) {
@@ -1385,6 +1286,148 @@ var Tracker = (function() {
 	};
 
 	return Tracker;
+})();
+//---------------------------------------------------------------------------------------
+/** Tracker.manager submodule */
+//---------------------------------------------------------------------------------------
+var Manager = (function () {
+	function Manager(app) {
+	    this.clipboard = '';
+
+//- private methods ---------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+		function getBlock () {
+			var p = app.player,
+				sel = app.tracklist.selection,
+				ch = sel.len ? sel.channel : app.modeEditChannel,
+				line = sel.len ? sel.line : p.currentLine,
+				length = sel.len ? (sel.len + 1) : void 0,
+				pos = p.position[p.currentPosition] || p.nullPosition;
+
+			return {
+				pp: p.pattern[pos.ch[ch].pattern],
+				line: line,
+				len: length
+			};
+		}
+
+// public methods -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+        this.clearFromTracklist = function () {
+        	var o = getBlock();
+			o.pp.parse([], o.line, o.len || 1);
+        };
+
+        this.copyFromTracklist = function () {
+			var o = getBlock(),
+				data = o.pp.export(o.line, o.len || 1, false);
+
+            this.clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
+        };
+
+        this.pasteToTracklist = function () {
+            if (this.clipboard.indexOf('STMF.trk:[') !== 0)
+                return false;
+
+            var o = getBlock(),
+				data = this.clipboard.substr(9);
+
+			try { data = JSON.parse(data) }
+			catch (e) { return false }
+
+            if (!(data instanceof Array && data.length > 0))
+                return false;
+
+            o.pp.parse(data, o.line, o.len || data.length);
+            return true;
+        };
+//---------------------------------------------------------------------------------------
+		this.clearSample = function () {
+			var smp = app.player.sample[app.workingSample];
+
+			smp.name = '';
+			smp.loop = 0;
+			smp.end = 0;
+			smp.releasable = false;
+			smp.parse([]);
+		};
+
+		this.copySample = function () {
+			var smp = app.player.sample[app.workingSample],
+				obj = {
+					name: smp.name,
+					loop: smp.loop,
+					end: smp.end,
+					releasable: smp.releasable,
+					data: smp.export(false)
+				};
+
+            this.clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
+		};
+
+		this.pasteSample = function () {
+            if (this.clipboard.indexOf('STMF.smp:{') !== 0)
+                return false;
+
+			var smp = app.player.sample[app.workingSample],
+				obj = this.clipboard.substr(9);
+
+			try { obj = JSON.parse(obj) }
+			catch (e) { return false }
+
+            if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0))
+                return false;
+
+			smp.parse(obj.data);
+			smp.name = obj.name;
+			smp.loop = obj.loop;
+			smp.end = obj.end;
+			smp.releasable = obj.releasable;
+			return true;
+		};
+//---------------------------------------------------------------------------------------
+		this.clearOrnament = function () {
+			var orn = app.player.ornament[app.workingOrnament];
+
+			orn.name = '';
+			orn.data.fill(0);
+			orn.loop = orn.end = 0;
+		};
+
+		this.copyOrnament = function () {
+			var orn = app.player.ornament[app.workingOrnament],
+				obj = {
+					name: orn.name,
+					loop: orn.loop,
+					end:  orn.end,
+					data: orn.export(false)
+				};
+
+            this.clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
+		};
+
+		this.pasteOrnament = function () {
+            if (this.clipboard.indexOf('STMF.orn:{') !== 0)
+                return false;
+
+			var orn = app.player.ornament[app.workingOrnament],
+				obj = this.clipboard.substr(9);
+
+			try { obj = JSON.parse(obj) }
+			catch (e) { return false }
+
+            if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0))
+                return false;
+
+			orn.parse(obj.data);
+			orn.name = obj.name;
+			orn.loop = obj.loop;
+			orn.end = obj.end;
+			return true;
+		};
+	}
+
+	return Manager;
 })();
 //---------------------------------------------------------------------------------------
 /** Tracker.controls submodule */
@@ -1546,8 +1589,8 @@ Tracker.prototype.onCmdFileNew = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Create new file\u2026',
-		text: 'Do you really want to clear all song data and lost all of your changes?',
+		title: i18n.dialog.file.new.title,
+		text: i18n.dialog.file.new.msg,
 		buttons: 'yesno',
 		style: 'danger',
 		callback: function (btn) {
@@ -1570,8 +1613,8 @@ Tracker.prototype.onCmdFileOpen = function () {
 		keys.inDialog = true;
 
 		$('#dialoque').confirm({
-			title: 'Open file\u2026',
-			text: 'You should lost all of your changes! Do you really want to continue?',
+			title: i18n.dialog.file.open.title,
+			text: i18n.dialog.file.open.msg,
 			buttons: 'yesno',
 			style: 'warning',
 			callback: function (btn) {
@@ -1596,6 +1639,66 @@ Tracker.prototype.onCmdFileSave = function (as) {
 		file.dialog('save');
 	else if (!as && file.yetSaved && file.fileName)
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditCut = function () {
+	if (this.activeTab === 0 && this.modeEdit) {
+		this.manager.copyFromTracklist();
+		this.manager.clearFromTracklist();
+
+		this.player.countPositionFrames(this.player.currentPosition);
+		this.updateEditorCombo(0);
+	}
+	else if (this.activeTab === 1) {
+		this.manager.copySample();
+		this.manager.clearSample();
+		this.updateSampleEditor(true);
+		this.smpornedit.updateSamplePitchShift();
+	}
+	else if (this.activeTab === 2) {
+		this.manager.copyOrnament();
+		this.manager.clearOrnament();
+		this.smpornedit.updateOrnamentEditor(true);
+	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditCopy = function () {
+	if (this.activeTab === 0 && this.modeEdit)
+		this.manager.copyFromTracklist();
+	else if (this.activeTab === 1)
+		this.manager.copySample();
+	else if (this.activeTab === 2)
+		this.manager.copyOrnament();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditPaste = function () {
+	if (this.activeTab === 0 && this.modeEdit) {
+		if (this.manager.pasteToTracklist()) {
+			this.player.countPositionFrames(this.player.currentPosition);
+			this.updateEditorCombo(this.ctrlRowStep);
+		}
+	}
+	else if (this.activeTab === 1) {
+		this.manager.pasteSample();
+		this.updateSampleEditor(true);
+		this.smpornedit.updateSamplePitchShift();
+	}
+	else if (this.activeTab === 2) {
+		this.manager.pasteOrnament();
+		this.smpornedit.updateOrnamentEditor(true);
+	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditClear = function () {
+	if (this.activeTab === 0 && this.modeEdit) {
+		this.manager.clearFromTracklist();
+		this.player.countPositionFrames(this.player.currentPosition);
+		this.updateEditorCombo(0);
+	}
+	else if (this.activeTab === 1)
+		this.onCmdSmpClear();
+	else if (this.activeTab === 2)
+		this.onCmdOrnClear();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {
@@ -1760,15 +1863,15 @@ Tracker.prototype.onCmdPatDelete = function () {
 		msg = null;
 
 	if (p.countPatternUsage(pt) > 0)
-		msg = 'This pattern is used in some positions!\nAre you sure you want to delete it?';
+		msg = i18n.dialog.pattern.delete.msg.used;
 	if (pt !== len)
-		msg = 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?';
+		msg = i18n.dialog.pattern.delete.msg.notlast;
 	if (!msg)
-		msg = 'Are you sure you want to delete this pattern?';
+		msg = i18n.dialog.pattern.delete.msg.sure;
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Delete pattern\u2026',
+		title: i18n.dialog.pattern.delete.title,
 		text: msg,
 		buttons: 'yesno',
 		style: (pt !== len) ? 'warning' : 'info',
@@ -1810,8 +1913,8 @@ Tracker.prototype.onCmdPatClean = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Clean pattern\u2026',
-		text: 'Are you sure you want to clean a content of this pattern?',
+		title: i18n.dialog.pattern.clean.title,
+		text: i18n.dialog.pattern.clean.msg,
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
@@ -1896,8 +1999,8 @@ Tracker.prototype.onCmdPosDelete = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Delete position\u2026',
-		text: 'Are you sure you want to delete this position?',
+		title: i18n.dialog.position.delete.title,
+		text: i18n.dialog.position.delete.msg,
 		buttons: 'yesno',
 		style: 'info',
 		callback: function (btn) {
@@ -1971,15 +2074,15 @@ Tracker.prototype.onCmdSmpClear = function () {
 	this.globalKeyState.inDialog = true;
 
 	$('#dialoque').confirm({
-		title: 'Clear sample\u2026',
-		text: 'Which sample data do you want to clear?',
+		title: i18n.dialog.sample.clear.title,
+		text: i18n.dialog.sample.clear.msg,
 		style: 'warning',
 		buttons:  [
-			{ caption: 'All', id: 7 },
-			{ caption: 'Amplitude', id: 1 },
-			{ caption: 'Noise', id: 2 },
-			{ caption: 'Pitch-shift', id: 4 },
-			{ caption: 'Cancel', id: 'cancel' }
+			{ caption: i18n.dialog.sample.clear.options[0], id: 7 },
+			{ caption: i18n.dialog.sample.clear.options[1], id: 1 },
+			{ caption: i18n.dialog.sample.clear.options[2], id: 2 },
+			{ caption: i18n.dialog.sample.clear.options[3], id: 4 },
+			{ caption: i18n.dialog.sample.clear.options[4], id: 'cancel' }
 		],
 		callback: function (mask) {
 			app.globalKeyState.inDialog = false;
@@ -2151,8 +2254,8 @@ Tracker.prototype.onCmdOrnClear = function () {
 
 	keys.inDialog = true;
 	$('#dialoque').confirm({
-		title: 'Clear ornament\u2026',
-		text: 'Are you sure you want to clear a content of this ornament?',
+		title: i18n.dialog.ornament.clear.title,
+		text: i18n.dialog.ornament.clear.msg,
 		style: 'warning',
 		buttons: 'yesno',
 		callback: function (btn) {
@@ -2311,14 +2414,32 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 				return;
 
 			return {
+				67: function () {
+					console.logHotkey('Ctrl+C - Copy');
+					app.onCmdEditCopy();
+				},
+				68: function () {
+					console.logHotkey('Ctrl+D - Clear/Delete');
+					app.onCmdEditClear();
+				},
 				79: function () {
 					console.logHotkey('Ctrl+O - Open');
-				},
-				83: function () {
-					console.logHotkey('Ctrl+S - Save');
+					app.onCmdFileOpen();
 				},
 				80: function () {
 					console.logHotkey('Ctrl+P - Preferences');
+				},
+				83: function () {
+					console.logHotkey('Ctrl+S - Save');
+					app.onCmdFileSave();
+				},
+				86: function () {
+					console.logHotkey('Ctrl+V - Paste');
+					app.onCmdEditPaste();
+				},
+				88: function () {
+					console.logHotkey('Ctrl+X - Cut');
+					app.onCmdEditCut();
 				},
 				89: function () {
 					console.logHotkey('Ctrl+Y - Redo');
@@ -2924,14 +3045,14 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keydown)
 				return;
 
-			if (key > 96 && key < 105) { // Num1-Num8 (octave)
+			if (key > 48 && key < 57) { // numbers 1-8 (octave)
 				return function (key) {
-					var oct = (key - 97),
+					var oct = (key - 49),
 						base = app.workingSampleTone,
 						tone = ((base - 1) % 12) + (oct * 12) + 1;
 
 					if (base !== tone) {
-						console.logHotkey('Ctrl+Num' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
+						console.logHotkey('Ctrl+' + String.fromCharCode(key) + ' - Set octave for sample/ornament editor test tone');
 						app.workingSampleTone = tone;
 
 						$('#scSampleTone,#scOrnTone')
@@ -2940,7 +3061,13 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					}
 				};
 			}
-			else if ((key > 48 && key <= 57) || (key > 64 && key <= 90)) {
+			break;
+
+		case 'smpornCtrlShift':
+			if (!keydown)
+				return;
+
+			if ((key > 48 && key <= 57) || (key > 64 && key <= 90)) { // 1-9 | A-V
 				return function (key) {
 					var num = key - 48,
 						orn = (app.activeTab === 2);
@@ -2950,6 +3077,9 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 
 					if (num >= (orn ? 16 : 32))
 						return;
+
+					console.logHotkey('Ctrl+Shift' + String.fromCharCode(key) +
+						' - Set active ' + (orn ? 'ornament' : 'sample'));
 
 					$(orn ? '#scOrnNumber' : '#scSampleNumber')
 						.val(num.toString(32).toUpperCase())
@@ -2962,6 +3092,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 			if (!keydown)
 				return;
 
+			// 2.5 octave piano-roll on keyboard
 			var oct  = app.player.tones[app.workingSampleTone].oct,
 				tone = Math.min(app.getKeynote(key, oct), 96),
 				sample = (app.activeTab === 1) ? app.workingSample : app.workingOrnTestSample,
@@ -2980,6 +3111,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	var o = this.globalKeyState,
 		type = e.type,
 		isInput = (e.target && (/^a|input|button$/i.test(e.target.tagName)) || e.target.id === 'documodal'),
+		textInput = (isInput && e.target.id.indexOf('tx') === 0),
 		key = e.which || e.charCode || e.keyCode,
 		canPlay = !!this.player.position.length;
 
@@ -3011,10 +3143,10 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			o.length++;
 		}
 
-		if (isInput && !this.handleHotkeys('test', key, isInput))
+		if (isInput && !this.handleHotkeys('test', key, isInput, textInput))
 			return true;
 
-		if (!this.handleHotkeys(type, key, isInput)) {
+		if (!this.handleHotkeys(type, key, isInput, textInput)) {
 			if (!o.inDialog && this.activeTab === 0) {
 				// ENTER (hold to play position at current line)
 				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
@@ -3031,7 +3163,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 		}
 	}
 	else if (type === 'keyup') {
-		if (o[key] && this.handleHotkeys(type, key, isInput))
+		if (o[key] && this.handleHotkeys(type, key, isInput, textInput))
 			isInput = false;
 
 		if (!o.modsHandled && !o.inDialog && canPlay) {
@@ -3097,7 +3229,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 	return false;
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.handleHotkeys = function (type, key, isInput) {
+Tracker.prototype.handleHotkeys = function (type, key, isInput, textInput) {
 	var o = this.globalKeyState,
 		fn = false,
 		restrict = o.inDialog || isInput;
@@ -3112,7 +3244,7 @@ Tracker.prototype.handleHotkeys = function (type, key, isInput) {
 		}
 
 		if (o.length === 2) {
-			if (isInput && key === 67 || key === 86)
+			if (textInput && (key === 67 || key === 86))
 				return false;
 			else if (key === 82 || key === 116) {
 				fn = true; // disable refresh browser hotkeys
@@ -3125,8 +3257,12 @@ Tracker.prototype.handleHotkeys = function (type, key, isInput) {
 					fn = this.hotkeyMap(type, 'smpornCtrl', key);
 			}
 		}
-		else if (!o.inDialog && o.length === 3 && o[16] && this.activeTab === 0)
-			fn = this.hotkeyMap(type, 'trackerCtrlShift', key);
+		else if (!o.inDialog && o.length === 3 && o[16]) {
+			if (this.activeTab === 0)
+				fn = this.hotkeyMap(type, 'trackerCtrlShift', key);
+			else
+				fn = this.hotkeyMap(type, 'smpornCtrlShift', key);
+		}
 
 		if (o.inDialog && !fn) {
 			fn = true; // restrict all ctrl hotkeys in dialogs
@@ -3816,6 +3952,31 @@ Tracker.prototype.doc = {
 	// ajax cache for text documentations:
 	txtCache: {},
 
+	i18n: {
+		'app.msg.unsaved': 'All unsaved changes in SAA1099Tracker will be lost.',
+		'dialog.file.new.title': 'Create new file...',
+		'dialog.file.new.msg': 'Do you really want to clear all song data and lost all of your changes?',
+		'dialog.file.open.title': 'Open file...',
+		'dialog.file.open.msg': 'You could lost all of your changes! Do you really want to continue?',
+		'dialog.file.remove.title': 'Remove file...',
+		'dialog.file.remove.msg': 'Do you really want to remove this file from storage?',
+		'dialog.pattern.delete.title': 'Delete pattern...',
+		'dialog.pattern.delete.msg.used': 'This pattern is used in some positions!\nAre you sure you want to delete it?',
+		'dialog.pattern.delete.msg.notlast': 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease, take a note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?',
+		'dialog.pattern.delete.msg.sure': 'Are you sure you want to delete this pattern?',
+		'dialog.pattern.clean.title': 'Clean pattern...',
+		'dialog.pattern.clean.msg': 'Are you sure you want to clean a content of this pattern?',
+		'dialog.position.delete.title': 'Delete position...',
+		'dialog.position.delete.msg': 'Are you sure you want to delete this position?',
+		'dialog.sample.clear.title': 'Clear sample...',
+		'dialog.sample.clear.msg': 'Which sample data do you want to clear?',
+		'dialog.sample.clear.options': [ 'All', 'Amplitude', 'Noise', 'Pitch-shift', 'Cancel' ],
+		'dialog.ornament.clear.title': 'Clear ornament...',
+		'dialog.ornament.clear.msg': 'Are you sure you want to clear a content of this ornament?',
+		'app.error.ie': 'don\'t be evil,\bstop using IE',
+		'app.error.webaudio': 'WebAudio\bnot supported'
+	},
+
 	tooltip: {
 		'miFileNew'       : 'New',
 		'miFileOpen'      : 'Open [Ctrl+O]',
@@ -3866,7 +4027,7 @@ Tracker.prototype.doc = {
 		'scSampleTone'    : 'Base tone and octave\nto test this sample',
 		'btSamplePlay'    : 'Play current sample',
 		'btSampleStop'    : 'Stop playback [Esc]',
-		'btSampleClear'   : 'Clear sample or\npart of sample data',
+		'btSampleClear'   : 'Clear sample or\npart of sample data [Ctrl+D]',
 		'btSampleSwap'    : 'Swap volume data between channels',
 		'btSampleLVolUp'  : 'Volume up left channel',
 		'btSampleLVolDown': 'Volume down left channel',
@@ -3887,7 +4048,7 @@ Tracker.prototype.doc = {
 		'scOrnTone'       : 'Base tone and octave\nto test this ornament',
 		'btOrnPlay'       : 'Play current ornament\nwith test sample',
 		'btOrnStop'       : 'Stop playback [Esc]',
-		'btOrnClear'      : 'Clear ornament',
+		'btOrnClear'      : 'Clear ornament [Ctrl+D]',
 		'btOrnShiftLeft'  : 'Shift whole ornament data\nto the left side',
 		'btOrnShiftRight' : 'Shift whole ornament data\nto the right side',
 		'btOrnTransUp'    : 'Transpose ornament data\nup a halftone',
@@ -3998,6 +4159,32 @@ Tracker.prototype.doc = {
 		}
 
 		this.setStatusText(i);
+	},
+
+	i18nInit: function () {
+		Object.keys(this.i18n).forEach(function (idx) {
+			var i, p, deepIn,
+				value = this[idx],
+				path = idx.split('.'),
+				len = path.length;
+
+			i = 0;
+			deepIn = this;
+			while (i < len) {
+				p = path[i];
+				deepIn[p] = deepIn[p] || {};
+
+				if (++i === len)
+					break;
+				deepIn = deepIn[p];
+			}
+
+			if (typeof value === 'string')
+				value = value.replace('...', '\u2026').replace('\b', '<br />');
+			deepIn[p] = value;
+
+			delete this[idx];
+		}, window.i18n = this.i18n);
 	}
 };
 //---------------------------------------------------------------------------------------
@@ -4028,14 +4215,24 @@ Tracker.prototype.populateGUI = function () {
 			global:   'window',
 			method:   'resize',
 			handler:  function() {
-				var c = app.tracklist.countTracklines();
-				if (c !== app.settings.tracklistLineHeight) {
-					app.tracklist.setHeight(c);
-					app.updateTracklist(true);
+				var c = 0;
 
-					var offset = $('#statusbar').offset();
-					$('#documodal .modal-body').css('height', offset.top * 0.8);
+				if (app.activeTab === 0) {
+					c = app.tracklist.countTracklines();
+					if (c !== app.settings.tracklistLines) {
+						app.tracklist.setHeight(c);
+						app.updateTracklist(true);
+					}
 				}
+				else if (app.activeTab === 1 && app.smpornedit.initialized) {
+					var o = app.smpornedit;
+
+					c = $(o.amp.obj).offset().left;
+					o.smpeditOffset.left = c;
+				}
+
+				if (!!(c = $('#statusbar').offset().top))
+					$('#documodal .modal-body').css('height', (c * 0.9) | 0);
 			}
 		}, {
 			global:   'window',
@@ -4043,7 +4240,7 @@ Tracker.prototype.populateGUI = function () {
 			param:    'beforeunload',
 			handler:  function() {
 				if (!dev)
-					return 'All unsaved changes in SAA1099Tracker will be lost.';
+					return i18n.app.msg.unsaved;
 			}
 		}, {
 			global:   'window',
@@ -4133,7 +4330,10 @@ Tracker.prototype.populateGUI = function () {
 			selector: '#main-tabpanel a[data-toggle="tab"]',
 			method:   'on',
 			param:    'shown.bs.tab',
-			handler:  function(e) { app.activeTab = parseInt($(this).data().value, 10) }
+			handler:  function(e) {
+				app.activeTab = parseInt($(this).data().value, 10);
+				$(window).trigger('resize');
+			}
 		}, {
 			selector: '#scOctave',
 			method:   'TouchSpin',
@@ -4570,93 +4770,66 @@ Tracker.prototype.populateGUI = function () {
 					app.smpornedit.updateSamplePitchShift();
 			}
 		}, {
-			selector: 'a[id^="miFileImportDemo"]',
+			selector: 'a[id^="mi"]', // all menu items
 			method:   'click',
 			handler:  function() {
-				var fn = $(this).data().filename;
-				if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
+				var fn,
+					name = this.id.replace(/^mi/, 'onCmd');
+
+				if (app[name])
+					app[name]();
+				else if (name === 'onCmdFileSaveAs')
+					app.onCmdFileSave(true);
+				else if (this.id.match(/^miFileImportDemo/)) {
+					fn = $(this).data().filename;
+					if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
+						return false;
+					app.file.loadDemosong(fn);
+				}
+				else if (this.id.match(/^miHelp/)) {
+					fn = $(this).data().filename;
+					if (!fn)
+						return false;
+					app.onCmdShowDocumentation(fn);
+				}
+				else
 					return false;
-				app.file.loadDemosong(fn);
 			}
-		}, {
-			selector: 'a[id^="miHelp"]',
-			method:   'click',
-			handler:  function() {
-				var el = $(this),
-					fn = el.data().filename;
-				if (!fn)
-					return false;
-				app.onCmdShowDocumentation(fn);
-			}
-		}, {
-			selector: '#miFileNew',
-			method:   'click',
-			handler:  function() { app.onCmdFileNew() }
-		}, {
-			selector: '#miFileOpen',
-			method:   'click',
-			handler:  function() { app.onCmdFileOpen() }
-		}, {
-			selector: '#miFileSave',
-			method:   'click',
-			handler:  function() { app.onCmdFileSave() }
-		}, {
-			selector: '#miFileSaveAs',
-			method:   'click',
-			handler:  function() { app.onCmdFileSave(true) }
-		}, {
-			selector: '#miAbout',
-			method:   'click',
-			handler:  function() { app.onCmdAbout() }
-		}, {
-			selector: '#miStop',
-			method:   'click',
-			handler:  function() { app.onCmdStop() }
-		}, {
-			selector: '#miSongPlay',
-			method:   'click',
-			handler:  function() { app.onCmdSongPlay() }
-		}, {
-			selector: '#miSongPlayStart',
-			method:   'click',
-			handler:  function() { app.onCmdSongPlayStart() }
-		}, {
-			selector: '#miPosPlay',
-			method:   'click',
-			handler:  function() { app.onCmdPosPlay() }
-		}, {
-			selector: '#miPosPlayStart',
-			method:   'click',
-			handler:  function() { app.onCmdPosPlayStart() }
-		}, {
-			selector: '#miToggleLoop',
-			method:   'click',
-			handler:  function() { app.onCmdToggleLoop() }
 		}, {
 			selector: 'button[id^="btPattern"]',
 			method:   'click',
-			handler:  function() { app[this.id.replace('btPattern', 'onCmdPat')]() }
+			handler:  function() {
+				var name = this.id.replace(/^btPattern/, 'onCmdPat');
+				if (app[name])
+					app[name]();
+			}
 		}, {
-			selector: 'button[id^=btPos]',
+			selector: 'button[id^="btPos"]',
 			method:   'click',
-			handler:  function() { app[this.id.replace('bt', 'onCmd')]() }
+			handler:  function() {
+				var name = this.id.replace(/^bt/, 'onCmd');
+				if (app[name])
+					app[name]();
+			}
 		}, {
 			selector: 'button[id^="btSample"]',
 			method:   'click',
 			handler:  function() {
 				var name = this.id.replace('btSample', 'onCmdSmp');
-				if (name.endsWith('Stop'))
-					name = name.replace('Smp', '');
-				app[name]();
+				if (name.match(/Stop$/))
+					return app.onCmdStop();
+				if (app[name])
+					app[name]();
 			}
 		}, {
 			selector: 'button[id^="btOrn"]',
 			method:   'click',
 			handler:  function() {
 				var name = this.id.replace('btOrn', 'onCmdOrn');
-				if (name.endsWith('Stop'))
-					name = name.replace('Orn', '');
-				app[name]();
+				if (name.match(/Stop$/))
+					return app.onCmdStop();
+				if (app[name])
+					app[name]();
 			}
 		}
 	];

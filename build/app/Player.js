@@ -75,6 +75,151 @@ var pMixer = (function () {
     }
     return pMixer;
 })();
+// Ornament class
+var pOrnament = (function () {
+    function pOrnament() {
+        this.name = '';
+        this.data = new Int8Array(256);
+        this.loop = 0;
+        this.end = 0;
+    }
+    /**
+     * Export ornament data to array of readable strings.
+     * We going backward from the end of ornament and unshifting array because of pack
+     * reasons when "pack" param is true and then only meaningful data will be stored.
+     */
+    pOrnament.prototype.export = function (pack) {
+        if (pack === void 0) { pack = true; }
+        var arr = [], i, k;
+        for (i = 255; i >= 0; i--) {
+            k = (0 | this.data[i]);
+            if (pack && !arr.length && !k)
+                continue;
+            arr.unshift(((k < 0) ? '-' : '+') + k.toWidth(2));
+        }
+        return arr;
+    };
+    /**
+     * Parse ornament data from array of signed values stored in simple string.
+     */
+    pOrnament.prototype.parse = function (arr) {
+        for (var i = 0; i < 256; i++)
+            this.data[i] = parseInt(arr[i], 10) || 0;
+    };
+    return pOrnament;
+})();
+// Sample class
+var pSample = (function () {
+    function pSample() {
+        this.name = '';
+        this.data = [];
+        this.loop = 0;
+        this.end = 0;
+        this.releasable = false;
+        for (var i = 0; i < 256; i++)
+            this.data[i] = {
+                volume: new pVolume,
+                enable_freq: false,
+                enable_noise: false,
+                noise_value: 0,
+                shift: 0
+            };
+    }
+    /**
+     * Export sample data to array of readable strings.
+     * We going backward from the end of sample and unshifting array because of pack
+     * reasons when "pack" param is true and then only meaningful data will be stored.
+     */
+    pSample.prototype.export = function (pack) {
+        if (pack === void 0) { pack = true; }
+        var arr = [], o, s, i, k;
+        for (i = 255; i >= 0; i--) {
+            o = this.data[i];
+            k = 0 | o.enable_freq
+                | (o.enable_noise << 1)
+                | (o.noise_value << 2);
+            if (pack && !arr.length && !k && !o.volume.byte && !o.shift)
+                continue;
+            s = k.toHex(1) + o.volume.byte.toHex(2);
+            if (o.shift)
+                s += ((o.shift < 0) ? '-' : '+') + o.shift.toHex(3);
+            arr.unshift(s.toUpperCase());
+        }
+        return arr;
+    };
+    /**
+     * Parse sample data from array of buch of hex values stored in simple string.
+     */
+    pSample.prototype.parse = function (arr) {
+        for (var i = 0, s, k, o; i < 256; i++) {
+            o = this.data[i];
+            s = arr[i] || '';
+            k = parseInt(s[0], 16) || 0;
+            o.enable_freq = !!(k & 1);
+            o.enable_noise = !!(k & 2);
+            o.noise_value = (k >> 2);
+            o.volume.byte = parseInt(s.substr(1, 2), 16) || 0;
+            o.shift = parseInt(s.substr(3), 16) || 0;
+        }
+    };
+    return pSample;
+})();
+// Pattern class
+var pPattern = (function () {
+    function pPattern(end) {
+        if (end === void 0) { end = 0; }
+        this.data = [];
+        this.end = end;
+        for (var i = 0; i < Player.maxPatternLen; i++)
+            this.data[i] = {
+                tone: 0, release: false,
+                smp: 0, orn: 0, orn_release: false,
+                volume: new pVolume,
+                cmd: 0, cmd_data: 0
+            };
+    }
+    /**
+     * Export pattern data to array of readable strings.
+     * We going backward from the end of pattern and unshifting array because of pack
+     * reasons when "pack" param is true and then only meaningful data will be stored.
+     */
+    pPattern.prototype.export = function (start, length, pack) {
+        if (start === void 0) { start = 0; }
+        if (length === void 0) { length = Player.maxPatternLen; }
+        if (pack === void 0) { pack = true; }
+        var arr = [], o, s, i, k;
+        for (i = Math.min(Player.maxPatternLen, start + length); i > start;) {
+            o = this.data[--i];
+            k = o.orn_release ? 33 : o.orn; // 33 = X
+            s = o.release ? '--' : o.tone.toWidth(2);
+            if (pack && !arr.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
+                continue;
+            arr.unshift(s.concat(o.smp.toString(32), k.toString(36), o.volume.byte.toHex(2), o.cmd.toHex(1), o.cmd_data.toHex(2)).toUpperCase());
+        }
+        return arr;
+    };
+    /**
+     * Parse pattern data from array of strings with values like in tracklist.
+     */
+    pPattern.prototype.parse = function (arr, start, length) {
+        if (start === void 0) { start = 0; }
+        if (length === void 0) { length = Player.maxPatternLen; }
+        var i = start, j, k, s, o, l = Math.min(Player.maxPatternLen, start + length);
+        for (j = 0; i < l; i++, j++) {
+            s = arr[j] || '000000000';
+            o = this.data[i];
+            k = parseInt(s.substr(0, 2), 10);
+            o.tone = isNaN(k) ? ((o.release = true) && 0) : k;
+            k = parseInt(s[3], 16);
+            o.orn = isNaN(k) ? ((o.orn_release = true) && 0) : k;
+            o.smp = parseInt(s[2], 32) || 0;
+            o.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
+            o.cmd = parseInt(s[6], 16) || 0;
+            o.cmd_data = parseInt(s.substr(7), 16) || 0;
+        }
+    };
+    return pPattern;
+})();
 /**
  * Position class declaration with 6 channels definition, length and default speed.
  * @property frames Number of interupts which takes every line in tracklist;
@@ -98,6 +243,17 @@ var pPosition = (function () {
             if (this.ch[i].pattern === pattern)
                 r = i;
         return r;
+    };
+    pPosition.prototype.export = function () {
+        var arr = [], i, s, k;
+        for (i = 0; i < 6; i++) {
+            k = this.ch[i].pitch;
+            s = this.ch[i].pattern.toWidth(3);
+            if (k)
+                s += ((k < 0) ? '-' : '+') + k.toHex(2);
+            arr.push(s);
+        }
+        return arr;
     };
     return pPosition;
 })();
@@ -234,16 +390,25 @@ var Player = (function () {
     /** Clear all samples. */
     Player.prototype.clearSamples = function () {
         for (var i = 0; i < 32; i++) {
-            this.sample[i] = { name: '', data: [], loop: 0, end: 0, releasable: false };
-            for (var c = 0; c < 256; c++)
-                this.sample[i].data[c] = { volume: new pVolume, enable_freq: false, enable_noise: false, noise_value: 0, shift: 0 };
+            if (this.sample[i]) {
+                for (var c = 0; c < 256; c++)
+                    delete this.sample[i].data[c].volume;
+                this.sample[i].data = null;
+                this.sample[i] = null;
+            }
+            this.sample[i] = new pSample;
         }
         console.log('Player', 'Samples cleared...');
     };
     /** Clear all ornaments. */
     Player.prototype.clearOrnaments = function () {
-        for (var i = 0; i < 16; i++)
-            this.ornament[i] = { name: '', data: new Int8Array(256), loop: 0, end: 0 };
+        for (var i = 0; i < 16; i++) {
+            if (this.ornament[i]) {
+                delete this.ornament[i].data;
+                this.ornament[i] = null;
+            }
+            this.ornament[i] = new pOrnament;
+        }
         console.log('Player', 'Ornaments cleared...');
     };
     /**
@@ -251,10 +416,8 @@ var Player = (function () {
      * @returns {number} new pattern number
      */
     Player.prototype.addNewPattern = function () {
-        var i, index = this.pattern.length, pt = { data: [], end: 0 };
-        for (i = 0; i < Player.maxPatternLen; i++)
-            pt.data[i] = { tone: 0, release: false, smp: 0, orn: 0, orn_release: false, volume: new pVolume, cmd: 0, cmd_data: 0 };
-        this.pattern.push(pt);
+        var index = this.pattern.length;
+        this.pattern.push(new pPattern);
         return index;
     };
     /**
