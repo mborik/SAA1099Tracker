@@ -729,7 +729,7 @@ Tracker.prototype.initializeGUI = function () {
 
 			console.log('Tracker.gui', 'Starting audio playback and initializing 50Hz refresh timer...');
 			AudioDriver.play();
-			SyncTimer.start(function() { app.baseTimer() }, 20);
+			SyncTimer.start(app.baseTimer.bind(app));
 			return true;
 		},
 		function () {

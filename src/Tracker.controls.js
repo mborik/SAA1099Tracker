@@ -270,6 +270,8 @@ Tracker.prototype.onCmdEditClear = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {
+	SyncTimer.pause();
+
 	this.player.stopChannel();
 	this.modePlay = false;
 	this.globalKeyState.lastPlayMode = 0;
@@ -285,7 +287,9 @@ Tracker.prototype.onCmdSongPlay = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(false, true, true);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSongPlayStart = function () {
@@ -293,7 +297,9 @@ Tracker.prototype.onCmdSongPlayStart = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(true, true, true);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosPlay = function () {
@@ -303,7 +309,9 @@ Tracker.prototype.onCmdPosPlay = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(false, false, false);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosPlayStart = function () {
@@ -311,7 +319,9 @@ Tracker.prototype.onCmdPosPlayStart = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(false, false, true);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdToggleLoop = function (newState) {

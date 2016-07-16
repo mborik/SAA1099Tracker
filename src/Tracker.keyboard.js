@@ -804,8 +804,10 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
 					this.modePlay = this.player.playPosition(false, false, false);
 					o.lastPlayMode = 3;
+					SyncTimer.resume();
 				}
 				else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
+					SyncTimer.pause();
 					this.modePlay = false;
 					this.player.stopChannel();
 					this.updateTracklist();
@@ -822,6 +824,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			// RIGHT SHIFT (play position)
 			if (o.length === 1 && o[272]) {
 				if (this.modePlay && o.lastPlayMode === 1) {
+					SyncTimer.pause();
 					this.modePlay = false;
 					this.player.stopChannel();
 					this.updateTracklist();
@@ -830,6 +833,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				else {
 					this.modePlay = this.player.playPosition(false, false, true);
 					o.lastPlayMode = 1;
+					SyncTimer.resume();
 				}
 
 				o.modsHandled = true;
@@ -837,6 +841,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			// RIGHT CTRL (play song)
 			else if (o.length === 1 && o[273]) {
 				if (this.modePlay && o.lastPlayMode === 2) {
+					SyncTimer.pause();
 					this.modePlay = false;
 					this.player.stopChannel();
 					this.updateTracklist();
@@ -845,6 +850,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				else {
 					this.modePlay = this.player.playPosition(false, true, true);
 					o.lastPlayMode = 2;
+					SyncTimer.resume();
 				}
 
 				o.modsHandled = true;
@@ -854,6 +860,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 		if (!o.inDialog && this.activeTab === 0) {
 			// ENTER (hold to play position at current line)
 			if (o[13] && this.modePlay && o.lastPlayMode === 3) {
+				SyncTimer.pause();
 				this.modePlay = false;
 				this.player.stopChannel();
 				this.updateTracklist();

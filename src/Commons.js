@@ -68,23 +68,26 @@
 		this.callback = function(){};
 		this.interval = 20; // 50Hz
 
-		this.start = function(callback, interval) {
+		this.start = function(callback, interval, startImmediately) {
 			if (enabled)
 				return false;
 
-			if (callback !== void 0)
+			if (callback !== void 0 && typeof callback === 'function')
 				that.callback = callback;
-			if (interval !== void 0)
+			if (Number.isFinite(interval))
 				that.interval = interval;
+			enabled = !!startImmediately;
 
-			enabled = true;
-			timer(that.loop);
-
+			if (enabled)
+				timer(that.loop);
 			return true;
 		};
 
 		this.pause = function() { enabled = false };
-		this.resume = function() { enabled = true };
+		this.resume = function() {
+			enabled = true;
+			timer(that.loop);
+		};
 
 		this.loop = function(t) {
 			if (enabled)
