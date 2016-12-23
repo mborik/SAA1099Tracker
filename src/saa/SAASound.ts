@@ -1,6 +1,6 @@
 /*!
  * SAASound is a Phillips SAA 1099 sound chip emulator
- * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
  * Based on SAASound - portable C/C++ library
  * Copyright (c) 1998-2004 Dave Hooper <stripwax@users.sourceforge.net>
  *
@@ -23,12 +23,14 @@
  */
 //---------------------------------------------------------------------------------------
 class SAASoundRegisters {
-	R00: number = 0; R01: number = 0; R02: number = 0; R03: number = 0; R04: number = 0; R05: number = 0;
-	R08: number = 0; R09: number = 0; R0A: number = 0; R0B: number = 0; R0C: number = 0; R0D: number = 0;
-	R10: number = 0; R11: number = 0; R12: number = 0;
-	R14: number = 0; R15: number = 0; R16: number = 0;
-	R18: number = 0; R19: number = 0;
-	R1C: number = 0;
+	R00 = 0; R01 = 0; R02 = 0; R03 = 0; R04 = 0; R05 = 0;
+	R08 = 0; R09 = 0; R0A = 0; R0B = 0; R0C = 0; R0D = 0;
+	R10 = 0; R11 = 0; R12 = 0;
+	R14 = 0; R15 = 0; R16 = 0;
+	R18 = 0; R19 = 0;
+	R1C = 0;
+
+	[key: string]: number;
 };
 class SAASoundRegData {
 	public regs: SAASoundRegisters = new SAASoundRegisters;
@@ -38,43 +40,43 @@ class SAASoundRegData {
 class SAASound {
 	public static sampleRate: number;
 
-	private register: number = 0;
-	private enabled: boolean = false;
-	private ampMuted: boolean[] = [ false, false, false, false, false, false ];
-	private sync: boolean;
+	private _register: number = 0;
+	private _enabled: boolean = false;
+	private _ampMuted: boolean[] = [ false, false, false, false, false, false ];
+	private _sync: boolean;
 
-	private env: SAAEnv[];
-	private noise: SAANoise[];
-	private freq: SAAFreq[];
-	private amp: SAAAmp[];
+	private _env: SAAEnv[];
+	private _noise: SAANoise[];
+	private _freq: SAAFreq[];
+	private _amp: SAAAmp[];
 
 	constructor(sampleRate: number) {
 		console.log('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
 		SAASound.sampleRate = sampleRate;
 
-		this.env = [ new SAAEnv, new SAAEnv ];
+		this._env = [ new SAAEnv, new SAAEnv ];
 
-		this.noise = [
+		this._noise = [
 			new SAANoise(0x14af5209),
 			new SAANoise(0x76a9b11e)
 		];
 
-		this.freq = [
-			new SAAFreq(this.noise[0]),
-			new SAAFreq(null, this.env[0]),
+		this._freq = [
+			new SAAFreq(this._noise[0]),
+			new SAAFreq(null, this._env[0]),
 			new SAAFreq(),
-			new SAAFreq(this.noise[1]),
-			new SAAFreq(null, this.env[1]),
+			new SAAFreq(this._noise[1]),
+			new SAAFreq(null, this._env[1]),
 			new SAAFreq()
 		];
 
-		this.amp = [
-			new SAAAmp(this.freq[0], this.noise[0]),
-			new SAAAmp(this.freq[1], this.noise[0]),
-			new SAAAmp(this.freq[2], this.noise[0], this.env[0]),
-			new SAAAmp(this.freq[3], this.noise[1]),
-			new SAAAmp(this.freq[4], this.noise[1]),
-			new SAAAmp(this.freq[5], this.noise[1], this.env[1])
+		this._amp = [
+			new SAAAmp(this._freq[0], this._noise[0]),
+			new SAAAmp(this._freq[1], this._noise[0]),
+			new SAAAmp(this._freq[2], this._noise[0], this._env[0]),
+			new SAAAmp(this._freq[3], this._noise[1]),
+			new SAAAmp(this._freq[4], this._noise[1]),
+			new SAAAmp(this._freq[5], this._noise[1], this._env[1])
 		];
 
 		this.reset();
@@ -86,9 +88,10 @@ class SAASound {
 		this.setRegData(28, 2);
 
 		// sets regs 00-31 (except 28) to 0
-		for (var i = 31; i >= 0; i--) {
-			if (i != 28)
+		for (let i: number = 31; i >= 0; i--) {
+			if (i != 28) {
 				this.setRegData(i, 0);
+			}
 		}
 
 		// sets reg 28 to 0
@@ -105,7 +108,7 @@ class SAASound {
 	public setData(data: number) {
 		data &= 0xff;
 
-		var reg: number = this.register;
+		let reg: number = this._register;
 		switch(reg) {
 		// Amplitude data (==> amp)
 			case 0:
@@ -114,7 +117,7 @@ class SAASound {
 			case 3:
 			case 4:
 			case 5:
-				this.amp[reg].setLevel(data);
+				this._amp[reg].setLevel(data);
 				break;
 
 		// Freq data (==> freq)
@@ -124,88 +127,72 @@ class SAASound {
 			case 11:
 			case 12:
 			case 13:
-				this.freq[(reg & 0x07)].setOffset(data);
+				this._freq[(reg & 0x07)].setOffset(data);
 				break;
 
 		// Freq octave data (==> freq) for channels 0,1
 			case 16:
-				this.freq[0].setOctave(data & 0x07);
-				this.freq[1].setOctave((data >> 4) & 0x07);
+				this._freq[0].setOctave(data & 0x07);
+				this._freq[1].setOctave((data >> 4) & 0x07);
 				break;
 
 		// Freq octave data (==> freq) for channels 2,3
 			case 17:
-				this.freq[2].setOctave(data & 0x07);
-				this.freq[3].setOctave((data >> 4) & 0x07);
+				this._freq[2].setOctave(data & 0x07);
+				this._freq[3].setOctave((data >> 4) & 0x07);
 				break;
 
 		// Freq octave data (==> freq) for channels 4,5
 			case 18:
-				this.freq[4].setOctave(data & 0x07);
-				this.freq[5].setOctave((data >> 4) & 0x07);
+				this._freq[4].setOctave(data & 0x07);
+				this._freq[5].setOctave((data >> 4) & 0x07);
 				break;
 
 		// Tone mixer control (==> amp)
 			case 20:
-				this.amp[0].setFreqMixer(data & 0x01);
-				this.amp[1].setFreqMixer(data & 0x02);
-				this.amp[2].setFreqMixer(data & 0x04);
-				this.amp[3].setFreqMixer(data & 0x08);
-				this.amp[4].setFreqMixer(data & 0x10);
-				this.amp[5].setFreqMixer(data & 0x20);
+				this._amp.forEach((a: SAAAmp, i: number) => {
+					a.setFreqMixer(data & (0x01 << i))
+				});
 				break;
 
 		// noise mixer control (==> amp)
 			case 21:
-				this.amp[0].setNoiseMixer(data & 0x01);
-				this.amp[1].setNoiseMixer(data & 0x02);
-				this.amp[2].setNoiseMixer(data & 0x04);
-				this.amp[3].setNoiseMixer(data & 0x08);
-				this.amp[4].setNoiseMixer(data & 0x10);
-				this.amp[5].setNoiseMixer(data & 0x20);
+				this._amp.forEach((a: SAAAmp, i: number) => {
+					a.setNoiseMixer(data & (0x01 << i))
+				});
 				break;
 
 		// noise frequency/source control (==> noise)
 			case 22:
-				this.noise[0].set(data & 0x03);
-				this.noise[1].set((data >> 4) & 0x03);
+				this._noise[0].set(data & 0x03);
+				this._noise[1].set((data >> 4) & 0x03);
 				break;
 
 		// Envelope control data (==> env) for envelope controller #0
 			case 24:
-				this.env[0].set(data);
+				this._env[0].set(data);
 				break;
 
 		// Envelope control data (==> env) for envelope controller #1
 			case 25:
-				this.env[1].set(data);
+				this._env[1].set(data);
 				break;
 
 		// sync/unsync all devices and reset them all to a known state
-			case 28:
-				var i;
-				var mute: boolean = !(data & 0x01);
-				var sync: boolean = !!(data & 0x02);
+			case 28: {
+				let mute: boolean = !(data & 0x01);
+				let sync: boolean = !!(data & 0x02);
 
-				for (i = 0; i < 6; i++)
-					this.freq[i].setSync(sync);
-				this.noise[0].setSync(sync);
-				this.noise[1].setSync(sync);
-				this.sync = sync;
+				this._freq.forEach(f => f.setSync(sync));
+				this._noise.forEach(n => n.setSync(sync));
+				this._amp.forEach((amp: SAAAmp, i: number) => {
+					amp.mute = (mute || this._ampMuted[i])
+				}, this);
 
-				// mute all amps
-				if (mute) {
-					for (i = 0; i < 6; i++)
-						this.amp[i].mute = mute;
-					this.enabled = false;
-				}
-				// unmute all amps - sound 'enabled'
-				else {
-					for (i = 0; i < 6; i++)
-						this.amp[i].mute = this.ampMuted[i];
-					this.enabled = true;
-				}
+				this._enabled = !mute;
+				this._sync = sync;
 				break;
+			}
 
 			default:
 				break;
@@ -216,19 +203,21 @@ class SAASound {
 	 * get current register
 	 * @returns {number} BYTE in range 0-31
 	 */
-	public getReg(): number { return this.register; }
+	public getReg(): number { return this._register; }
 
 	/**
 	 * set current register
 	 * @param reg BYTE in range 0-31
 	 */
 	public setReg(reg: number) {
-		this.register = (reg &= 0x1f);
+		this._register = (reg &= 0x1f);
 
-		if (reg === 24)
-			this.env[0].tickExt();
-		else if (reg === 25)
-			this.env[1].tickExt();
+		if (reg === 24) {
+			this._env[0].tickExt();
+		}
+		else if (reg === 25) {
+			this._env[1].tickExt();
+		}
 	}
 
 	/**
@@ -247,9 +236,10 @@ class SAASound {
 	 * @param mute boolean
 	 */
 	public mute(chn: number, mute: boolean) {
-		if (chn < 0 || chn >= 6)
+		if (chn < 0 || chn >= 6) {
 			return;
-		this.amp[chn].mute = (this.ampMuted[chn] = mute);
+		}
+		this._amp[chn].mute = (this._ampMuted[chn] = mute);
 	}
 
 	/**
@@ -257,36 +247,32 @@ class SAASound {
 	 * @param data SAASoundRegData
 	 */
 	public setAllRegs(data: SAASoundRegData) {
-		var i: any;
+		if (data.regs) {
+			Object.keys(data.regs).forEach(key => {
+				let reg: number = parseInt(key.substr(1), 16);
+				let dat: number = data.regs[key];
 
-		if (data.regs)
-			for (i in data.regs)
-				if (data.regs.hasOwnProperty(i))
-					this.setRegData(parseInt(i.substr(1), 16), data.regs[i]);
+				this.setRegData(reg, dat);
+			}, this);
+		}
 
-		if (data.muted)
-			for (i = 0; i < 6; i++)
-				this.mute(i, data.muted[i]);
+		if (data.muted) {
+			data.muted.forEach((m: boolean, i: number) => this.mute(i, m), this);
+		}
 	}
 
 //---------------------------------------------------------------------------------------
-	public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset?: number) {
-		var i: number = 0,
-			ptr: number = (offset || 0),
-			len: number = length + ptr,
-			val: Float32Array = new Float32Array([0, 0]);
+	public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset: number = 0) {
+		let ptr: number = offset;
+		let len: number = length + ptr;
+		let val: Float32Array = new Float32Array([0, 0]);
 
 		for (; ptr < len; ptr++) {
-			this.noise[0].tick();
-			this.noise[1].tick();
+			this._noise[0].tick();
+			this._noise[1].tick();
 
 			val[0] = val[1] = 0;
-			this.amp[0].output(val);
-			this.amp[1].output(val);
-			this.amp[2].output(val);
-			this.amp[3].output(val);
-			this.amp[4].output(val);
-			this.amp[5].output(val);
+			this._amp.forEach(a => a.output(val));
 
 			leftBuf[ptr]  = val[0];
 			rightBuf[ptr] = val[1];

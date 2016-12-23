@@ -1,18 +1,10 @@
 module.exports = function(grunt) {
+	"use strict";
+
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		year: grunt.template.today('yyyy'),
 
-		jshint: {
-			jshintrc: '/.jshintrc',
-			files: [
-				'build/app/Audio.js',
-				'build/app/Commons.js',
-				'build/app/Player.js',
-				'build/app/SAASound.js',
-				'build/app/Tracker.js'
-			]
-		},
 		copy: {
 			'bootstrap': {
 				files: [{
@@ -34,14 +26,6 @@ module.exports = function(grunt) {
 					filter: 'isFile'
 				}]
 			},
-			'Commons': {
-				src: 'src/Commons.js',
-				dest: 'build/app/Commons.js'
-			},
-			'Audio': {
-				src: 'src/Audio.js',
-				dest: 'build/app/Audio.js'
-			},
 			'LZString': {
 				files: [{
 					expand: true,
@@ -51,7 +35,28 @@ module.exports = function(grunt) {
 					flatten: true,
 					filter: 'isFile'
 				}]
+			},
+			'project-files': {
+				files: [{
+					expand: true,
+					cwd: 'src/',
+					src: [
+						'Player.js*',
+						'SAASound.js*',
+						'Commons.js',
+						'Audio.js'
+					],
+					dest: 'build/app',
+					flatten: true,
+					filter: 'isFile'
+				}]
 			}
+		},
+		clean: {
+			'project-files': [
+				'src/Player.js*',
+				'src/SAASound.js*'
+			]
 		},
 		concat: {
 			'bootstrap': {
@@ -62,8 +67,8 @@ module.exports = function(grunt) {
 					'build/app/bootstrap.js': [
 						'bower_components/bootstrap/dist/js/bootstrap.js',
 						'bower_components/bootstrap-toggle/js/bootstrap-toggle.js',
-						'src/touchspin.mod/jquery.bootstrap-touchspin.js',
-						'src/confirm.mod/jquery.bootstrap-confirm.js'
+						'src/jquery.mods/touchspin/jquery.bootstrap-touchspin.js',
+						'src/jquery.mods/confirm/jquery.bootstrap-confirm.js'
 					]
 				}
 			},
@@ -109,35 +114,6 @@ module.exports = function(grunt) {
 				dest: '/tmp/templates.tmp'
 			}
 		},
-		typescript: {
-			'SAASound': {
-				src: [
-					'saa/SAASound.ts',
-					'saa/SAANoise.ts',
-					'saa/SAAEnv.ts',
-					'saa/SAAFreq.ts',
-					'saa/SAAAmp.ts'
-				],
-				dest: 'build/app/SAASound.js',
-				options: {
-					module: 'commonjs',
-					target: 'ES5',
-					declaration: true,
-					sourceMap: true
-				}
-			},
-			'Player': {
-				src: ['src/Player.ts'],
-				dest: 'build/app/Player.js',
-				options: {
-					module: 'commonjs',
-					target: 'ES5',
-					noEmitHelpers: true,
-					preserveConstEnums: true,
-					sourceMap: true
-				}
-			}
-		},
 		less: {
 			'styles': {
 				options: {
@@ -163,9 +139,11 @@ module.exports = function(grunt) {
 					'build/app/bootstrap.min.js': 'build/app/bootstrap.js',
 					'build/app/Commons.min.js': 'build/app/Commons.js',
 					'build/app/Audio.min.js': 'build/app/Audio.js',
+/* ES6 uglify issues :(
 					'build/app/SAASound.min.js': 'build/app/SAASound.js',
 					'build/app/Player.min.js': 'build/app/Player.js',
 					'build/app/Tracker.min.js': 'build/app/Tracker.js'
+*/
 				}
 			}
 		},
@@ -184,7 +162,7 @@ module.exports = function(grunt) {
 					sourceMap: true,
 					processImport: false,
 					roundingPrecision: 1,
-					banner: "/*!\n * SAA1099Tracker v<%= pkg.version %>\n * Copyright (c) <%= year %> Martin Borik <mborik@users.sourceforge.net>\n * Licensed under MIT\n */"
+					banner: "/*!\n * SAA1099Tracker v<%= pkg.version %>\n * Copyright (c) <%= year %> Martin Borik <mborik@users.sourceforge.net>\n * Licensed under MIT\n *\/"
 				},
 				files: {
 					'build/css/styles.min.css': 'build/css/styles.css',
@@ -205,11 +183,40 @@ module.exports = function(grunt) {
 				dest: 'build/app/Tracker.tpl.html'
 			}
 		},
-		rename: {
+		ts: {
+			options: {
+				compile: true,
+				sourceMap: true,
+				declaration: true,
+				newLine: 'LF',
+				target: 'ES6',
+				alwaysStrict: true,
+				noImplicitAny: true,
+				noImplicitReturns: true,
+				preserveConstEnums: true,
+				types: [ 'console' ]
+			},
 			'SAASound': {
-				ignore: true,
-				src: 'build/app/SAASound.d.ts',
-				dest: 'saa/SAASound.d.ts'
+				src: [
+					'src/saa/SAASound.ts',
+					'src/saa/SAANoise.ts',
+					'src/saa/SAAEnv.ts',
+					'src/saa/SAAFreq.ts',
+					'src/saa/SAAAmp.ts'
+				],
+				out: 'src/SAASound.js'
+			},
+			'Player': {
+				src: [
+					"src/player/globals.ts",
+					"src/player/sample.ts",
+					"src/player/ornament.ts",
+					"src/player/pattern.ts",
+					"src/player/position.ts",
+					"src/player/runtime.ts",
+					"src/player/core.ts"
+				],
+				out: 'src/Player.js'
 			}
 		}
 	});
@@ -218,18 +225,17 @@ module.exports = function(grunt) {
 	grunt.util.linefeed = '\n';
 
 	// Load required modules
-	grunt.loadNpmTasks('grunt-typescript');
+
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-less');
-	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
 	grunt.loadNpmTasks('grunt-contrib-htmlmin');
-	grunt.loadNpmTasks('grunt-rename');
+	grunt.loadNpmTasks('grunt-ts');
 
 	// Task definitions
-	grunt.registerTask('default', [ 'typescript','copy','concat','less','uglify','cssmin','htmlmin','rename' ]);
+	grunt.registerTask('default', [ 'ts','copy','clean','concat','less','uglify','cssmin','htmlmin' ]);
 	grunt.registerTask('styles', [ 'less','uglify','cssmin' ]);
-	grunt.registerTask('test', [ 'jshint' ]);
 };

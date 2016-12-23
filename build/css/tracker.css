@@ -112,7 +112,7 @@
 .row.separator {
   margin: 0 0 5px 0;
   padding: 0;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid #eee;
 }
 .col-label {
   position: relative;
@@ -128,7 +128,7 @@
   padding: 0 0 5px 5px;
   float: left;
   padding: 0 5px 5px 5px;
-  border-right: 1px solid #eeeeee;
+  border-right: 1px solid #eee;
   margin-right: 5px;
 }
 .col-buttons button {
@@ -200,7 +200,7 @@
   display: inline;
   margin-left: -12px;
   vertical-align: middle;
-  color: #cccccc;
+  color: #ccc;
   font-weight: bold;
   padding-right: 4px;
 }
@@ -210,7 +210,7 @@
 .col-infopanel {
   width: 370px;
   height: 22px;
-  border: 1px solid #cccccc;
+  border: 1px solid #ccc;
   margin-left: 74px;
   margin-top: -2px;
   font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
@@ -223,7 +223,7 @@
   text-decoration: none;
 }
 .col-infopanel b {
-  color: #000000;
+  color: #000;
 }
 .col-chn-label {
   position: relative;
@@ -251,7 +251,7 @@
 }
 .row-chn-brd {
   padding: 5px 5px 0;
-  border: 1px solid #eeeeee;
+  border: 1px solid #eee;
   margin-bottom: -5px;
 }
 .col-tracklist {
@@ -261,7 +261,7 @@
   float: left;
 }
 .col-tracklist > .tracklist-panel {
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd;
   margin-right: -5px;
   padding: 5px;
 }
@@ -300,7 +300,7 @@
   float: right;
   width: 160px;
   padding: 8px 0 8px 8px;
-  border-left: 1px solid #eeeeee;
+  border-left: 1px solid #eee;
   margin: -8px 0;
 }
 .col-smpornactions button {
@@ -341,7 +341,7 @@
 .col-smpornactions .actions-amp > .rowcell > .separator,
 .col-smpornactions .actions-orn > .rowcell > .separator {
   height: 1px;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid #eee;
   margin: 5px -5px;
 }
 .col-smpornactions .actions-amp > .rowcell > .btnpair,
@@ -370,7 +370,7 @@
 }
 .col-smpornactions .actions-range > .bottom > .separator {
   height: 1px;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid #eee;
   margin: 5px -5px;
 }
 .col-smpornactions .actions-range > .bottom > .halfing > * {
@@ -406,8 +406,8 @@
 #txSampleTone > input:first-child,
 #txOrnTone > input:first-child {
   z-index: 0;
-  color: #000000;
-  background: #ffffff;
+  color: #000;
+  background: #fff;
 }
 #txSampleTone > input:last-child,
 #txOrnTone > input:last-child {
@@ -416,7 +416,7 @@
   background: transparent;
 }
 #sampledata canvas.smpornedit {
-  border: 1px solid #cccccc;
+  border: 1px solid #ccc;
   padding: 0;
   margin: 0;
   margin-bottom: 5px;
@@ -463,7 +463,7 @@
   margin: 0;
   padding-right: 5px;
   margin-right: 5px;
-  border-right: 1px solid #eeeeee;
+  border-right: 1px solid #eee;
 }
 #fxSampleShift > .cell span.bootstrap-touchspin-prefix,
 #fxOrnEditor > .cell span.bootstrap-touchspin-prefix {
@@ -478,7 +478,7 @@
 }
 #fxSampleShift > .cell.on input,
 #fxOrnEditor > .cell.on input {
-  background-color: #ffffff;
+  background-color: #fff;
 }
 #fxSampleShift > .cell.on span.bootstrap-touchspin-prefix,
 #fxOrnEditor > .cell.on span.bootstrap-touchspin-prefix {
@@ -505,7 +505,7 @@
   user-select: initial;
   height: 50ex;
   min-height: 50ex;
-  color: #000000;
+  color: #000;
   overflow: hidden;
   overflow-y: auto !important;
 }
@@ -518,7 +518,7 @@
   font-size: 15px;
   font-weight: bold;
   border: 0;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid #ccc;
   padding: 5px 0;
   margin: 5px 0 10px 0;
 }
@@ -591,12 +591,12 @@
   top: 213px;
   left: 16px;
   font-weight: bold;
-  border: 1px solid #3388cc;
+  border: 1px solid #38c;
   padding: 6px;
   border-radius: 3px;
 }
 #about > .modal-dialog > .modal-content > .modal-body > .link > a {
-  color: #3388cc;
+  color: #38c;
 }
 #about > .modal-dialog > .modal-content > .modal-body > .ok {
   position: absolute;
@@ -615,18 +615,18 @@
   border-radius: 0;
 }
 #dialoque .modal-content.info {
-  background-image: -webkit-radial-gradient(ellipse, #ffffff, #f3f8fc);
-  background-image: radial-gradient(ellipse, #ffffff, #f3f8fc);
+  background-image: -webkit-radial-gradient(ellipse, #fff, #f3f8fc);
+  background-image: radial-gradient(ellipse, #fff, #f3f8fc);
   background-repeat: no-repeat;
 }
 #dialoque .modal-content.warning {
-  background-image: -webkit-radial-gradient(ellipse, #ffffff, #fdf9f4);
-  background-image: radial-gradient(ellipse, #ffffff, #fdf9f4);
+  background-image: -webkit-radial-gradient(ellipse, #fff, #fdf9f4);
+  background-image: radial-gradient(ellipse, #fff, #fdf9f4);
   background-repeat: no-repeat;
 }
 #dialoque .modal-content.danger {
-  background-image: -webkit-radial-gradient(ellipse, #ffffff, #feebe9);
-  background-image: radial-gradient(ellipse, #ffffff, #feebe9);
+  background-image: -webkit-radial-gradient(ellipse, #fff, #feebe9);
+  background-image: radial-gradient(ellipse, #fff, #feebe9);
   background-repeat: no-repeat;
 }
 #dialoque .modal-body {
@@ -642,7 +642,7 @@
   width: 16%;
 }
 #dialoque .modal-footer button:focus {
-  outline-color: #3388cc;
+  outline-color: #38c;
 }
 #filedialog {
   z-index: 1031;
@@ -695,7 +695,7 @@
   height: 50px;
   min-height: 50px;
   margin: 0 10px 5px 0;
-  border: 1px solid #cccccc;
+  border: 1px solid #ccc;
   text-align: left;
   background-image: -webkit-linear-gradient(top, #f9f9f9 0%, #eeeeee 100%);
   background-image: -o-linear-gradient(top, #f9f9f9 0%, #eeeeee 100%);
@@ -704,7 +704,7 @@
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff9f9f9', endColorstr='#ffeeeeee', GradientType=0);
 }
 #filedialog .modal-body > .file-list > .cell.selected {
-  outline: 3px solid #3388cc;
+  outline: 3px solid #38c;
   outline-offset: -2px;
   background-image: -webkit-linear-gradient(top, #ebf3fa 0%, #d6e7f5 100%);
   background-image: -o-linear-gradient(top, #ebf3fa 0%, #d6e7f5 100%);
@@ -750,7 +750,7 @@
   content: '\A0';
   display: inline-block;
   vertical-align: middle;
-  background: #eeeeee;
+  background: #eee;
   margin: 0 5px;
   height: 24px;
   width: 1px;
@@ -773,7 +773,7 @@
   z-index: 1000;
 }
 #statusbar > p {
-  color: #000000;
+  color: #000;
   font-size: 12px;
   letter-spacing: 1px;
   font-family: "BPmono", Menlo, Monaco, Consolas, monospace;
@@ -789,12 +789,12 @@
 }
 #statusbar > p > kbd {
   font-size: 100%;
-  color: #3388cc;
+  color: #38c;
   background-color: #ebf3fa;
   box-shadow: none;
 }
 #statusbar > p > strong {
-  color: #3388cc;
+  color: #38c;
 }
 #statusbar > p > em {
   font-weight: normal;

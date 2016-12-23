@@ -1,6 +1,6 @@
 /*!
  * Player: Core of player routine.
- * Copyright (c) 2012-2016 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,404 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path='../saa/SAASound.d.ts' />
-//---------------------------------------------------------------------------------------
-var pMode = {
-	PM_SONG: 1,
-	PM_POSITION: 2,
-	PM_SONG_OR_POS: 3,
-	PM_SAMPLE: 4,
-	PM_LINE: 8,
-	PM_SAMP_OR_LINE: 12,
-	PM_SIMULATION: 129
-};
-
-// Tone parameters interface
-class pTone {
-	public cent: number = 0;
-	public oct: number = 0;
-	public txt: string = '---';
-
-	constructor (word: number = 0) { this.word = word }
-
-	get word(): number { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); }
-	set word(v: number) {
-		this.cent = (v & 0xff);
-		this.oct = (v & 0x700) >> 8;
-	}
-}
-
-// Volume/Attenuation value interface (byte value splitted into left/right channel)
-class pVolume {
-	public L: number = 0;
-	public R: number = 0;
-
-	get byte(): number { return ((this.L & 0x0f) | ((this.R & 0x0f) << 4)); }
-	set byte(v: number) {
-		this.L = (v & 0x0f);
-		this.R = (v >> 4) & 0x0f;
-	}
-}
-
-class pMixer {
-	index: number = 0;
-	length: number = 0;
-}
-
-// Ornament class
-class pOrnament {
-	name: string = '';
-	data: Int8Array = new Int8Array(256);
-	loop: number = 0;
-	end: number = 0;
-
-	/**
-	 * Export ornament data to array of readable strings.
-	 * We going backward from the end of ornament and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
-	export(pack: boolean = true): string[] {
-		var arr: string[] = [],
-			i: number,
-			k: any;
-
-		for (i = 255; i >= 0; i--) {
-			k = (0 | this.data[i]);
-
-			if (pack && !arr.length && !k)
-				continue;
-
-			arr.unshift(((k < 0) ? '-' : '+') + k.toWidth(2));
-		}
-
-		return arr;
-	}
-
-	/**
-	 * Parse ornament data from array of signed values stored in simple string.
-	 */
-	parse(arr: string[]) {
-		for (var i = 0; i < 256; i++)
-			this.data[i] = parseInt(arr[i], 10) || 0;
-	}
-}
-
-// Sample data interface
-interface pSampleData {
-	volume: pVolume;
-	enable_freq: boolean;
-	enable_noise: boolean;
-	noise_value: number;
-	shift: number;
-}
-
-// Sample class
-class pSample {
-	name: string = '';
-	data: pSampleData[] = [];
-	loop: number = 0;
-	end: number = 0;
-	releasable: boolean = false;
-
-	constructor() {
-		for (var i: number = 0; i < 256; i++)
-			this.data[i] = { // pSampleData
-				volume: new pVolume,
-				enable_freq: false,
-				enable_noise: false,
-				noise_value: 0,
-				shift: 0
-			}
-	}
-
-	/**
-	 * Export sample data to array of readable strings.
-	 * We going backward from the end of sample and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
-	export(pack: boolean = true): string[] {
-		var arr: string[] = [],
-			o: pSampleData,
-			s: string,
-			i: number,
-			k: any;
-
-		for (i = 255; i >= 0; i--) {
-			o = this.data[i];
-			k = 0 | (<any> o.enable_freq)
-			      | (<any> o.enable_noise << 1)
-			      | (o.noise_value << 2);
-
-			if (pack && !arr.length && !k && !o.volume.byte && !o.shift)
-				continue;
-
-			s = k.toHex(1) + (<any> o.volume.byte).toHex(2);
-			if (o.shift)
-				s += ((o.shift < 0) ? '-' : '+') + (<any> o.shift).toHex(3);
-
-			arr.unshift(s.toUpperCase());
-		}
-
-		return arr;
-	}
-
-	/**
-	 * Parse sample data from array of buch of hex values stored in simple string.
-	 */
-	parse(arr: string[]) {
-		for (var i = 0, s, k, o; i < 256; i++) {
-			o = this.data[i];
-
-			s = arr[i] || '';
-			k = parseInt(s[0], 16) || 0;
-
-			o.enable_freq  = !!(k & 1);
-			o.enable_noise = !!(k & 2);
-			o.noise_value  =  (k >> 2);
-			o.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
-
-			o.shift = parseInt(s.substr(3), 16) || 0;
-		}
-	}
-}
-
-// Channel-pattern line interface
-interface pPatternLine {
-	tone: number;
-	release: boolean;
-	smp: number;
-	orn: number;
-	orn_release: boolean;
-	volume: pVolume;
-	cmd: number;
-	cmd_data: number;
-}
-
-// Pattern class
-class pPattern {
-	data: pPatternLine[] = [];
-	end: number;
-
-	constructor(end: number = 0) {
-		this.end = end;
-
-		for (var i: number = 0; i < Player.maxPatternLen; i++)
-			this.data[i] = { // pPatternLine
-				tone: 0, release: false,
-				smp: 0, orn: 0, orn_release: false,
-				volume: new pVolume,
-				cmd: 0, cmd_data: 0
-			};
-	}
-
-	/**
-	 * Export pattern data to array of readable strings.
-	 * We going backward from the end of pattern and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
-	export(start: number = 0, length: number = Player.maxPatternLen, pack: boolean = true): string[] {
-		var arr: string[] = [],
-			o: pPatternLine,
-			s: string,
-			i: number,
-			k: any;
-
-		for (i = Math.min(Player.maxPatternLen, start + length); i > start;) {
-			o = this.data[--i];
-			k = o.orn_release ? 33 : o.orn; // 33 = X
-			s = o.release ? '--' : (<any> o.tone).toWidth(2);
-
-			if (pack && !arr.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
-				continue;
-
-			arr.unshift(s.concat(
-				o.smp.toString(32),
-				k.toString(36),
-				(<any> o.volume.byte).toHex(2),
-				(<any> o.cmd).toHex(1),
-				(<any> o.cmd_data).toHex(2)
-			).toUpperCase());
-		}
-
-		return arr;
-	}
-
-	/**
-	 * Parse pattern data from array of strings with values like in tracklist.
-	 */
-	parse(arr: string[], start: number = 0, length: number = Player.maxPatternLen) {
-		var i = start, j, k, s, o,
-			l = Math.min(Player.maxPatternLen, start + length);
-
-		for (j = 0; i < l; i++, j++) {
-			s = arr[j] || '000000000';
-			o = this.data[i];
-
-			k = parseInt(s.substr(0, 2), 10);
-			o.tone = isNaN(k) ? ((o.release = true) && 0) : k;
-
-			k = parseInt(s[3], 16);
-			o.orn = isNaN(k) ? ((o.orn_release = true) && 0) : k;
-
-			o.smp = parseInt(s[2], 32) || 0;
-			o.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
-			o.cmd = parseInt(s[6], 16) || 0;
-			o.cmd_data = parseInt(s.substr(7), 16) || 0;
-		}
-	}
-}
-
-// Position channel definition interface
-interface pChannel {
-	pattern: number;
-	pitch: number
-}
-
-/**
- * Position class declaration with 6 channels definition, length and default speed.
- * @property frames Number of interupts which takes every line in tracklist;
- */
-class pPosition {
-	ch: pChannel[];
-	speed: number;
-	length: number;
-	frames: number[];
-	initParams: pRuntime;
-
-	constructor(length: number, speed: number = 6) {
-		this.ch = [];
-		this.speed = speed;
-		this.length = length;
-		this.frames = [];
-		this.initParams = void 0;
-
-		for (var i: number = 0; i < 6; i++)
-			this.ch[i] = { pattern: 0, pitch: 0 };
-		for (var i: number = 0, line: number = 0; line <= Player.maxPatternLen; line++, i+= speed)
-			this.frames[line] = i;
-	}
-
-	hasPattern(pattern: number): boolean { return this.indexOf(pattern) >= 0; }
-	indexOf(pattern: number): number {
-		for (var i: number = 0, r: number = -1; r < 0 && i < 6; i++)
-			if (this.ch[i].pattern === pattern)
-				r = i;
-		return r;
-	}
-
-	export(): string[] {
-		var arr: string[] = [],
-			i: number,
-			s: string,
-			k: any;
-
-		for (i = 0; i < 6; i++) {
-			k = this.ch[i].pitch;
-			s = (<any> this.ch[i].pattern).toWidth(3);
-
-			if (k)
-				s += ((k < 0) ? '-' : '+') + k.toHex(2);
-
-			arr.push(s);
-		}
-
-		return arr;
-	}
-}
-
-interface pParams {
-	tone: number;
-	playing: boolean;
-	sample: pSample;
-	ornament: pOrnament;
-	sample_cursor: number;
-	ornament_cursor: number;
-	attenuation: pVolume;
-	slideShift: number;
-	globalPitch: number;
-	released: boolean;
-	command: number;
-	commandParam: number;
-	commandPhase: number;
-	commandValue1: number;
-	commandValue2: number;
-}
-//---------------------------------------------------------------------------------------
-declare var jQuery: any;
-var __extends = jQuery.extend;
-
-class pRuntime extends SAASoundRegData {
-	params: pParams[];
-	clearPlayParams: (chn: number) => void;
-
-	constructor(player: any) {
-		super();
-
-		this.params = [];
-		this.clearPlayParams = function(chn: number) {
-			if (chn < 0 || chn >= 6)
-				return;
-
-			if (this.params[chn]) {
-				delete this.params[chn].attenuation;
-				this.params[chn] = null;
-			}
-
-			this.params[chn] = {
-				tone: 0,
-				playing: false,
-				sample: player.sample[0],
-				ornament: player.ornament[0],
-				sample_cursor: 0,
-				ornament_cursor: 0,
-				attenuation: new pVolume,
-				slideShift: 0,
-				globalPitch: 0,
-				released: false,
-				command: 0,
-				commandParam: 0,
-				commandPhase: 0,
-				commandValue1: 0,
-				commandValue2: 0
-			};
-		}
-
-		for (var chn: number = 0; chn < 6; chn++)
-			this.clearPlayParams(chn);
-	}
-
-	public setRegData(reg: number, data: number) {
-		var index = 'R' + (<any>reg).toHex(2).toUpperCase();
-		this.regs[index] = data;
-	}
-
-	public replace(data: pRuntime) {
-		var i: number,
-			idx: string,
-			src: any = data.regs,
-			dst: any = this.regs;
-
-		for (idx in dst)
-			if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx))
-				dst[idx] = src[idx];
-
-		for (i = 0; i < 6; i++) {
-			dst = this.params[i];
-			src = data.params[i];
-
-			for (idx in dst) {
-				if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx)) {
-					if (dst[idx] instanceof pVolume) {
-						dst[idx].L = src[idx].L;
-						dst[idx].R = src[idx].R;
-					}
-					else
-						dst[idx] = src[idx];
-				}
-			}
-		}
-	}
-}
+/// <reference path='../SAASound.d.ts' />
 //---------------------------------------------------------------------------------------
 class Player {
 	public static maxPatternLen: number = 128;
@@ -453,7 +56,7 @@ class Player {
 		this.sample = [];
 		this.ornament = [];
 
-		var tab_tones: any[] = [
+		const tab_tones: any[] = [
 			{ freq: 0x05, prefix: 'B-' },
 			{ freq: 0x21, prefix: 'C-' },
 			{ freq: 0x3C, prefix: 'C#' },
@@ -470,7 +73,7 @@ class Player {
 		];
 
 		this.tones = [ new pTone ];
-		for (var i: number = 1, o: number = 0, p: number = 1, c: number, t: pTone; i <= 96; i++, p++) {
+		for (let i: number = 1, o: number = 0, p: number = 1, c: number, t: pTone; i <= 96; i++, p++) {
 			t = new pTone;
 			t.txt = tab_tones[p].prefix + (o + 1);
 
@@ -523,7 +126,7 @@ class Player {
 			console.log('Player', 'Song objects and parameters initialized...');
 		}
 		else {
-			for (var chn: number = 0; chn < 6; chn++)
+			for (let chn: number = 0; chn < 6; chn++)
 				this.rtSong.clearPlayParams(chn);
 
 			console.log('Player', 'Song cleared...');
@@ -532,9 +135,9 @@ class Player {
 
 	/** Clear all samples. */
 	public clearSamples() {
-		for (var i: number = 0; i < 32; i++) {
+		for (let i: number = 0; i < 32; i++) {
 			if (this.sample[i]) {
-				for (var c: number = 0; c < 256; c++)
+				for (let c: number = 0; c < 256; c++)
 					delete this.sample[i].data[c].volume;
 				this.sample[i].data = null;
 				this.sample[i] = null;
@@ -548,7 +151,7 @@ class Player {
 
 	/** Clear all ornaments. */
 	public clearOrnaments() {
-		for (var i: number = 0; i < 16; i++) {
+		for (let i: number = 0; i < 16; i++) {
 			if (this.ornament[i]) {
 				delete this.ornament[i].data;
 				this.ornament[i] = null;
@@ -565,7 +168,7 @@ class Player {
 	 * @returns {number} new pattern number
 	 */
 	public addNewPattern(): number {
-		var index: number = this.pattern.length;
+		let index: number = this.pattern.length;
 		this.pattern.push(new pPattern);
 		return index;
 	}
@@ -578,7 +181,7 @@ class Player {
 	 * @returns {pPosition} new position object;
 	 */
 	public addNewPosition(length: number, speed: number, add?: boolean): pPosition {
-		var pos = new pPosition(length, speed);
+		let pos = new pPosition(length, speed);
 		pos.initParams = new pRuntime(this);
 
 		if (add === void 0 || add === true)
@@ -607,13 +210,13 @@ class Player {
 		if (!this.mode)
 			return this.SAA1099.output(leftBuf, rightBuf, length);
 
-		var outi = 0, remain;
+		let outi = 0, remain;
 		while (outi < length) {
 			if (this.mixer.index >= this.mixer.length) {
 				this.mixer.index = 0;
 
 				if (this.mode !== pMode.PM_SIMULATION) {
-					var rt = this.prepareFrame();
+					let rt = this.prepareFrame();
 					this.SAA1099.setAllRegs(rt);
 				}
 			}
@@ -643,7 +246,7 @@ class Player {
 		if (rt === void 0)
 			rt = this.rtSong;
 
-		var backup, lastMode,
+		let backup, lastMode,
 			ps = this.position[pos];
 
 		if (!ps)
@@ -703,7 +306,7 @@ class Player {
 	 * It handles all the pointers and settings to output values on SAA1099 registers.
 	 */
 	private prepareFrame(rt?: pRuntime): pRuntime {
-		var pp: pParams,
+		let pp: pParams,
 			vol: pVolume = new pVolume,
 			height: number, val: number = 0,
 			chn: number, chn2nd: number, chn3rd: number,
@@ -729,7 +332,7 @@ class Player {
 
 			eMask  = (1 << chn);      // bit mask of channel
 			chn2nd = (chn >> 1);      // calculate pair of channels
-			chn3rd = ~~(chn >= 3);    // calculate triple of channels
+			chn3rd = +(chn >= 3);     // calculate triple of channels
 
 			if (pp.playing) {
 				// if playback in channel is enabled, fetch all smp/orn values...
@@ -1095,7 +698,7 @@ class Player {
 		if (rt === void 0)
 			rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
 
-		var p: pPosition = this.position[this.currentPosition],
+		let p: pPosition = this.position[this.currentPosition],
 			pc: pChannel,
 			pp: pParams,
 			pt: pPattern,
@@ -1130,7 +733,7 @@ class Player {
 			this.currentSpeed = p.speed;
 		}
 
-		for (var chn: number = 0; chn < 6; chn++) {
+		for (let chn: number = 0; chn < 6; chn++) {
 			pc = p.ch[chn];
 			pt = this.pattern[((pc.pattern < this.pattern.length) ? pc.pattern : 0)];
 			if (this.currentLine >= pt.end)
@@ -1147,7 +750,7 @@ class Player {
 
 					this.currentSpeed = pl.cmd_data;
 					if (this.currentSpeed >= 0x20) {
-						var sH: number = (this.currentSpeed & 0xF0) >> 4,
+						let sH: number = (this.currentSpeed & 0xF0) >> 4,
 							sL: number =  this.currentSpeed & 0x0F;
 
 						if (sL < 2 || sH == sL) // invalid swing speed
@@ -1184,7 +787,7 @@ class Player {
 					pp.slideShift -= pp.commandValue2;
 				}
 
-				var base: pTone   = this.calculateTone(pp.tone, 0, 0, pp.slideShift),
+				let base: pTone   = this.calculateTone(pp.tone, 0, 0, pp.slideShift),
 					target: pTone = this.calculateTone(pl.tone, 0, 0, 0),
 					delta: number = target.word - base.word;
 
@@ -1268,7 +871,7 @@ class Player {
 		this.stopChannel();
 		this.mixer.index = 0;
 
-		var pos = this.position[this.currentPosition];
+		let pos = this.position[this.currentPosition];
 		if (this.currentLine > 0)
 			this.simulation(this.currentLine);
 		else {
@@ -1297,7 +900,7 @@ class Player {
 		if (this.mode & (pMode.PM_SONG_OR_POS | pMode.PM_LINE))
 			return 0;
 
-		var rt: pRuntime = this.rtSample;
+		let rt: pRuntime = this.rtSample;
 		if (!chn) {
 			// first free channel detection
 			for (chn = 0; chn < 6; chn++)
@@ -1308,7 +911,7 @@ class Player {
 			// we can try find channel, that playing same sample
 			// but on farther sample pointer...
 			if (chn === 6) {
-				var farther = -1,
+				let farther = -1,
 					chnToStop = -1;
 
 				for (chn = 0; chn < 6; chn++) {
@@ -1349,7 +952,7 @@ class Player {
 	 * @param chn Zero or channel number (1-6);
 	 */
 	public stopChannel(chn: number = 0) {
-		var rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
+		let rt = (this.mode === pMode.PM_SAMPLE) ? this.rtSample : this.rtSong;
 
 		if (chn < 0 || chn > 6)
 			return;
@@ -1379,7 +982,7 @@ class Player {
 	 * @returns {pTone} object
 	 */
 	private calculateTone(toneValue: number, globalShift: number, toneShift: number, slideShift: number): pTone {
-		var pitch: number = toneValue + globalShift + toneShift;
+		let pitch: number = toneValue + globalShift + toneShift;
 
 		// base tone overflowing in tones range
 		while (pitch < 0)
@@ -1411,9 +1014,9 @@ class Player {
 			return 0;
 
 		// proceed all positions/channels and count matches to 'c'
-		var c: number = 0;
-		for (var i: number = 0, l: number = this.position.length; i < l; i++)
-			for (var j: number = 0; j < 6; j++)
+		let c: number = 0;
+		for (let i: number = 0, l: number = this.position.length; i < l; i++)
+			for (let j: number = 0; j < 6; j++)
 				if (this.position[i].ch[j].pattern === patt)
 					c++;
 
@@ -1426,7 +1029,7 @@ class Player {
 	 * @param pos If ommited, method calls itself recursively for all positions;
 	 */
 	public countPositionFrames(pos?: number) {
-		var i: number, chn: number, line: number, speed: number, ptr: pPatternLine,
+		let i: number, chn: number, line: number, speed: number, ptr: pPatternLine,
 			l: number = this.position.length;
 
 		// if 'pos' wasn't specified, recursively calling itself for all positions
@@ -1449,7 +1052,7 @@ class Player {
 
 						// is it swing tempo change? we need to check validity...
 						if (speed >= 0x20) {
-							var sH: number = (speed & 0xf0) >> 4,
+							let sH: number = (speed & 0xf0) >> 4,
 								sL: number = (speed & 0x0f);
 
 							if (sL < 2 || sH === sL) // invalid swing speed!
@@ -1485,7 +1088,7 @@ class Player {
 		if (pos === void 0 || pos <= 0)
 			return false;
 
-		var prev = this.position[pos - 1] || this.nullPosition,
+		let prev = this.position[pos - 1] || this.nullPosition,
 			current = this.position[pos];
 
 		if (!(current && current.initParams))

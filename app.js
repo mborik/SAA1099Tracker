@@ -17,7 +17,6 @@ if (app.get('env') === 'development')
 	app.use(express.errorHandler());
 
 app.use('/doc', express.static(__dirname + '/doc'));
-app.use('/saa', express.static(__dirname + '/saa'));
 app.use('/src', express.static(__dirname + '/src'));
 app.get('/', function(req, res) {
 	res.render('index.html');
