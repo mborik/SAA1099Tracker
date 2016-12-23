@@ -1,0 +1,18 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+	"editor.insertSpaces": false,
+	"editor.scrollBeyondLastLine": false,
+	"editor.autoClosingBrackets": false,
+	"editor.renderIndentGuides": true,
+	"editor.renderControlCharacters": true,
+	"editor.rulers": [ 90, 120 ],
+
+	"files.exclude": {
+        "**/.git": true,
+        "**/*.js.map": true,
+        "**/*.js": {"when": "$(basename).ts"}
+    },
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 5000,
+	"files.trimTrailingWhitespace": true
+}

@@ -1,5 +1,5 @@
 /*!
- * SAA1099Tracker v1.1.8
+ * SAA1099Tracker v1.2.0
  * Copyright (c) 2012-2016 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-$(document).ready(function() { window.Tracker = new Tracker('1.1.8') });
+$(document).ready(function() { window.Tracker = new Tracker('1.2.0') });
 //---------------------------------------------------------------------------------------
 /** Tracker.file submodule */
 /* global atob, btoa, getCompatible, Blob, LZString, Player, pPosition */
@@ -1702,6 +1702,8 @@ Tracker.prototype.onCmdEditClear = function () {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function () {
+	SyncTimer.pause();
+
 	this.player.stopChannel();
 	this.modePlay = false;
 	this.globalKeyState.lastPlayMode = 0;
@@ -1717,7 +1719,9 @@ Tracker.prototype.onCmdSongPlay = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(false, true, true);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSongPlayStart = function () {
@@ -1725,7 +1729,9 @@ Tracker.prototype.onCmdSongPlayStart = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(true, true, true);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosPlay = function () {
@@ -1735,7 +1741,9 @@ Tracker.prototype.onCmdPosPlay = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(false, false, false);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosPlayStart = function () {
@@ -1743,7 +1751,9 @@ Tracker.prototype.onCmdPosPlayStart = function () {
 		this.doc.setStatusText();
 	if (this.modeEdit)
 		this.player.storePositionRuntime(this.player.currentPosition);
+
 	this.modePlay = this.player.playPosition(false, false, true);
+	SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdToggleLoop = function (newState) {
@@ -3152,8 +3162,10 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
 					this.modePlay = this.player.playPosition(false, false, false);
 					o.lastPlayMode = 3;
+					SyncTimer.resume();
 				}
 				else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
+					SyncTimer.pause();
 					this.modePlay = false;
 					this.player.stopChannel();
 					this.updateTracklist();
@@ -3170,6 +3182,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			// RIGHT SHIFT (play position)
 			if (o.length === 1 && o[272]) {
 				if (this.modePlay && o.lastPlayMode === 1) {
+					SyncTimer.pause();
 					this.modePlay = false;
 					this.player.stopChannel();
 					this.updateTracklist();
@@ -3178,6 +3191,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				else {
 					this.modePlay = this.player.playPosition(false, false, true);
 					o.lastPlayMode = 1;
+					SyncTimer.resume();
 				}
 
 				o.modsHandled = true;
@@ -3185,6 +3199,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 			// RIGHT CTRL (play song)
 			else if (o.length === 1 && o[273]) {
 				if (this.modePlay && o.lastPlayMode === 2) {
+					SyncTimer.pause();
 					this.modePlay = false;
 					this.player.stopChannel();
 					this.updateTracklist();
@@ -3193,6 +3208,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 				else {
 					this.modePlay = this.player.playPosition(false, true, true);
 					o.lastPlayMode = 2;
+					SyncTimer.resume();
 				}
 
 				o.modsHandled = true;
@@ -3202,6 +3218,7 @@ Tracker.prototype.handleKeyEvent = function (e) {
 		if (!o.inDialog && this.activeTab === 0) {
 			// ENTER (hold to play position at current line)
 			if (o[13] && this.modePlay && o.lastPlayMode === 3) {
+				SyncTimer.pause();
 				this.modePlay = false;
 				this.player.stopChannel();
 				this.updateTracklist();
@@ -4919,7 +4936,7 @@ Tracker.prototype.initializeGUI = function () {
 
 			console.log('Tracker.gui', 'Starting audio playback and initializing 50Hz refresh timer...');
 			AudioDriver.play();
-			SyncTimer.start(function() { app.baseTimer() }, 20);
+			SyncTimer.start(app.baseTimer.bind(app));
 			return true;
 		},
 		function () {
