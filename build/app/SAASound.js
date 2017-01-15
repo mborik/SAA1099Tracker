@@ -1,6 +1,7 @@
+"use strict";
 /*!
  * SAASound is a Phillips SAA 1099 sound chip emulator
- * Copyright (c) 2015 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
  * Based on SAASound - portable C/C++ library
  * Copyright (c) 1998-2004 Dave Hooper <stripwax@users.sourceforge.net>
  *
@@ -22,8 +23,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-var SAASoundRegisters = (function () {
-    function SAASoundRegisters() {
+class SAASoundRegisters {
+    constructor() {
         this.R00 = 0;
         this.R01 = 0;
         this.R02 = 0;
@@ -46,69 +47,68 @@ var SAASoundRegisters = (function () {
         this.R19 = 0;
         this.R1C = 0;
     }
-    return SAASoundRegisters;
-})();
+}
 ;
-var SAASoundRegData = (function () {
-    function SAASoundRegData() {
+class SAASoundRegData {
+    constructor() {
         this.regs = new SAASoundRegisters;
         this.muted = [false, false, false, false, false, false];
     }
-    return SAASoundRegData;
-})();
+}
 ;
 //---------------------------------------------------------------------------------------
-var SAASound = (function () {
-    function SAASound(sampleRate) {
-        this.register = 0;
-        this.enabled = false;
-        this.ampMuted = [false, false, false, false, false, false];
+class SAASound {
+    constructor(sampleRate) {
+        this._register = 0;
+        this._enabled = false;
+        this._ampMuted = [false, false, false, false, false, false];
         console.log('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
         SAASound.sampleRate = sampleRate;
-        this.env = [new SAAEnv, new SAAEnv];
-        this.noise = [
+        this._env = [new SAAEnv, new SAAEnv];
+        this._noise = [
             new SAANoise(0x14af5209),
             new SAANoise(0x76a9b11e)
         ];
-        this.freq = [
-            new SAAFreq(this.noise[0]),
-            new SAAFreq(null, this.env[0]),
+        this._freq = [
+            new SAAFreq(this._noise[0]),
+            new SAAFreq(null, this._env[0]),
             new SAAFreq(),
-            new SAAFreq(this.noise[1]),
-            new SAAFreq(null, this.env[1]),
+            new SAAFreq(this._noise[1]),
+            new SAAFreq(null, this._env[1]),
             new SAAFreq()
         ];
-        this.amp = [
-            new SAAAmp(this.freq[0], this.noise[0]),
-            new SAAAmp(this.freq[1], this.noise[0]),
-            new SAAAmp(this.freq[2], this.noise[0], this.env[0]),
-            new SAAAmp(this.freq[3], this.noise[1]),
-            new SAAAmp(this.freq[4], this.noise[1]),
-            new SAAAmp(this.freq[5], this.noise[1], this.env[1])
+        this._amp = [
+            new SAAAmp(this._freq[0], this._noise[0]),
+            new SAAAmp(this._freq[1], this._noise[0]),
+            new SAAAmp(this._freq[2], this._noise[0], this._env[0]),
+            new SAAAmp(this._freq[3], this._noise[1]),
+            new SAAAmp(this._freq[4], this._noise[1]),
+            new SAAAmp(this._freq[5], this._noise[1], this._env[1])
         ];
         this.reset();
         console.log('SAASound', 'Chip emulation initialized...');
     }
-    SAASound.prototype.reset = function () {
+    reset() {
         // sets reg 28 to 0x02 - sync and disabled
         this.setRegData(28, 2);
         // sets regs 00-31 (except 28) to 0
-        for (var i = 31; i >= 0; i--) {
-            if (i != 28)
+        for (let i = 31; i >= 0; i--) {
+            if (i != 28) {
                 this.setRegData(i, 0);
+            }
         }
         // sets reg 28 to 0
         this.setRegData(28, 0);
         // sets current reg to 0
         this.setReg(0);
-    };
+    }
     /**
      * route data to the appropriate place by current register
      * @param data BYTE
      */
-    SAASound.prototype.setData = function (data) {
+    setData(data) {
         data &= 0xff;
-        var reg = this.register;
+        let reg = this._register;
         switch (reg) {
             // Amplitude data (==> amp)
             case 0:
@@ -117,7 +117,7 @@ var SAASound = (function () {
             case 3:
             case 4:
             case 5:
-                this.amp[reg].setLevel(data);
+                this._amp[reg].setLevel(data);
                 break;
             // Freq data (==> freq)
             case 8:
@@ -126,324 +126,323 @@ var SAASound = (function () {
             case 11:
             case 12:
             case 13:
-                this.freq[(reg & 0x07)].setOffset(data);
+                this._freq[(reg & 0x07)].setOffset(data);
                 break;
             // Freq octave data (==> freq) for channels 0,1
             case 16:
-                this.freq[0].setOctave(data & 0x07);
-                this.freq[1].setOctave((data >> 4) & 0x07);
+                this._freq[0].setOctave(data & 0x07);
+                this._freq[1].setOctave((data >> 4) & 0x07);
                 break;
             // Freq octave data (==> freq) for channels 2,3
             case 17:
-                this.freq[2].setOctave(data & 0x07);
-                this.freq[3].setOctave((data >> 4) & 0x07);
+                this._freq[2].setOctave(data & 0x07);
+                this._freq[3].setOctave((data >> 4) & 0x07);
                 break;
             // Freq octave data (==> freq) for channels 4,5
             case 18:
-                this.freq[4].setOctave(data & 0x07);
-                this.freq[5].setOctave((data >> 4) & 0x07);
+                this._freq[4].setOctave(data & 0x07);
+                this._freq[5].setOctave((data >> 4) & 0x07);
                 break;
             // Tone mixer control (==> amp)
             case 20:
-                this.amp[0].setFreqMixer(data & 0x01);
-                this.amp[1].setFreqMixer(data & 0x02);
-                this.amp[2].setFreqMixer(data & 0x04);
-                this.amp[3].setFreqMixer(data & 0x08);
-                this.amp[4].setFreqMixer(data & 0x10);
-                this.amp[5].setFreqMixer(data & 0x20);
+                this._amp.forEach((a, i) => {
+                    a.setFreqMixer(data & (0x01 << i));
+                });
                 break;
             // noise mixer control (==> amp)
             case 21:
-                this.amp[0].setNoiseMixer(data & 0x01);
-                this.amp[1].setNoiseMixer(data & 0x02);
-                this.amp[2].setNoiseMixer(data & 0x04);
-                this.amp[3].setNoiseMixer(data & 0x08);
-                this.amp[4].setNoiseMixer(data & 0x10);
-                this.amp[5].setNoiseMixer(data & 0x20);
+                this._amp.forEach((a, i) => {
+                    a.setNoiseMixer(data & (0x01 << i));
+                });
                 break;
             // noise frequency/source control (==> noise)
             case 22:
-                this.noise[0].set(data & 0x03);
-                this.noise[1].set((data >> 4) & 0x03);
+                this._noise[0].set(data & 0x03);
+                this._noise[1].set((data >> 4) & 0x03);
                 break;
             // Envelope control data (==> env) for envelope controller #0
             case 24:
-                this.env[0].set(data);
+                this._env[0].set(data);
                 break;
             // Envelope control data (==> env) for envelope controller #1
             case 25:
-                this.env[1].set(data);
+                this._env[1].set(data);
                 break;
             // sync/unsync all devices and reset them all to a known state
-            case 28:
-                var i;
-                var mute = !(data & 0x01);
-                var sync = !!(data & 0x02);
-                for (i = 0; i < 6; i++)
-                    this.freq[i].setSync(sync);
-                this.noise[0].setSync(sync);
-                this.noise[1].setSync(sync);
-                this.sync = sync;
-                // mute all amps
-                if (mute) {
-                    for (i = 0; i < 6; i++)
-                        this.amp[i].mute = mute;
-                    this.enabled = false;
-                }
-                else {
-                    for (i = 0; i < 6; i++)
-                        this.amp[i].mute = this.ampMuted[i];
-                    this.enabled = true;
-                }
+            case 28: {
+                let mute = !(data & 0x01);
+                let sync = !!(data & 0x02);
+                this._freq.forEach(f => f.setSync(sync));
+                this._noise.forEach(n => n.setSync(sync));
+                this._amp.forEach((amp, i) => {
+                    amp.mute = (mute || this._ampMuted[i]);
+                }, this);
+                this._enabled = !mute;
+                this._sync = sync;
                 break;
+            }
             default:
                 break;
         }
-    };
+    }
     /**
      * get current register
      * @returns {number} BYTE in range 0-31
      */
-    SAASound.prototype.getReg = function () { return this.register; };
+    getReg() { return this._register; }
     /**
      * set current register
      * @param reg BYTE in range 0-31
      */
-    SAASound.prototype.setReg = function (reg) {
-        this.register = (reg &= 0x1f);
-        if (reg === 24)
-            this.env[0].tickExt();
-        else if (reg === 25)
-            this.env[1].tickExt();
-    };
+    setReg(reg) {
+        this._register = (reg &= 0x1f);
+        if (reg === 24) {
+            this._env[0].tickExt();
+        }
+        else if (reg === 25) {
+            this._env[1].tickExt();
+        }
+    }
     /**
      * combo!
      * @param reg
      * @param data
      */
-    SAASound.prototype.setRegData = function (reg, data) {
+    setRegData(reg, data) {
         this.setReg(reg);
         this.setData(data);
-    };
+    }
     /**
      * channel mutation
      * @param chn channel number 0-5
      * @param mute boolean
      */
-    SAASound.prototype.mute = function (chn, mute) {
-        if (chn < 0 || chn >= 6)
+    mute(chn, mute) {
+        if (chn < 0 || chn >= 6) {
             return;
-        this.amp[chn].mute = (this.ampMuted[chn] = mute);
-    };
+        }
+        this._amp[chn].mute = (this._ampMuted[chn] = mute);
+    }
     /**
      * fill all registers and (un)mute all channels
      * @param data SAASoundRegData
      */
-    SAASound.prototype.setAllRegs = function (data) {
-        var i;
-        if (data.regs)
-            for (i in data.regs)
-                if (data.regs.hasOwnProperty(i))
-                    this.setRegData(parseInt(i.substr(1), 16), data.regs[i]);
-        if (data.muted)
-            for (i = 0; i < 6; i++)
-                this.mute(i, data.muted[i]);
-    };
+    setAllRegs(data) {
+        if (data.regs) {
+            Object.keys(data.regs).forEach(key => {
+                let reg = parseInt(key.substr(1), 16);
+                let dat = data.regs[key];
+                this.setRegData(reg, dat);
+            }, this);
+        }
+        if (data.muted) {
+            data.muted.forEach((m, i) => this.mute(i, m), this);
+        }
+    }
     //---------------------------------------------------------------------------------------
-    SAASound.prototype.output = function (leftBuf, rightBuf, length, offset) {
-        var i = 0, ptr = (offset || 0), len = length + ptr, val = new Float32Array([0, 0]);
+    output(leftBuf, rightBuf, length, offset = 0) {
+        let ptr = offset;
+        let len = length + ptr;
+        let val = new Float32Array([0, 0]);
         for (; ptr < len; ptr++) {
-            this.noise[0].tick();
-            this.noise[1].tick();
+            this._noise[0].tick();
+            this._noise[1].tick();
             val[0] = val[1] = 0;
-            this.amp[0].output(val);
-            this.amp[1].output(val);
-            this.amp[2].output(val);
-            this.amp[3].output(val);
-            this.amp[4].output(val);
-            this.amp[5].output(val);
+            this._amp.forEach(a => a.output(val));
             leftBuf[ptr] = val[0];
             rightBuf[ptr] = val[1];
         }
         val = null;
-    };
-    return SAASound;
-})();
+    }
+}
 //---------------------------------------------------------------------------------------
+"use strict";
 /*! SAANoise: Noise generator */
 //---------------------------------------------------------------------------------------
-var SAANoise = (function () {
-    function SAANoise(seed) {
-        if (seed === void 0) { seed = 0x11111111; }
-        this.counter = 0;
-        this.add = 128e6; // 31250 << 12
-        this.sync = false;
-        this.smpRate = SAASound.sampleRate << 12;
-        this.src = 0;
-        this.rand = seed;
+class SAANoise {
+    constructor(seed = 0x11111111) {
+        this._counter = 0;
+        this._add = 128e6; // 31250 << 12
+        this._sync = false;
+        this._smpRate = SAASound.sampleRate << 12;
+        this._src = 0;
+        this._rand = seed;
     }
     /**
      * send command to noise generator
      * @param src values 0 to 3
      */
-    SAANoise.prototype.set = function (src) {
-        this.src = (src &= 3);
-        this.add = 128e6 >> src;
-    };
+    set(src) {
+        this._src = (src &= 3);
+        this._add = 128e6 >> src;
+    }
     /**
      * trigger() only does anything useful when we're
      * clocking from the frequency generator (i.e. SourceMode = 3).
      * So if we're clocking from the noise generator clock
      * (ie, SourceMode = 0, 1 or 2) then do nothing...
      */
-    SAANoise.prototype.trigger = function () {
-        if (this.src === 3)
-            this.rnd();
-    };
+    trigger() {
+        if (this._src === 3) {
+            this._rnd();
+        }
+    }
     /*
      * tick only does anything useful when we're
      * clocking from the noise generator clock (ie, SourceMode = 0, 1 or 2)
      * So, if SourceMode = 3 (ie, we're clocking from a frequency generator)
      * then do nothing...
      */
-    SAANoise.prototype.tick = function () {
-        if (!this.sync && (this.src != 3)) {
-            this.counter += this.add;
-            if (this.counter >= this.smpRate) {
-                while (this.counter >= this.smpRate) {
-                    this.counter -= this.smpRate;
-                    this.rnd();
+    tick() {
+        if (!this._sync && (this._src != 3)) {
+            this._counter += this._add;
+            if (this._counter >= this._smpRate) {
+                while (this._counter >= this._smpRate) {
+                    this._counter -= this._smpRate;
+                    this._rnd();
                 }
             }
         }
-        return (this.rand & 1);
-    };
-    SAANoise.prototype.setSync = function (sync) {
-        if (sync)
-            this.counter = 0;
-        this.sync = sync;
-    };
-    SAANoise.prototype.rnd = function () {
-        if (!!(this.rand & 0x40000004) && (this.rand & 0x40000004) != 0x40000004)
-            this.rand = (this.rand << 1) | 1;
-        else
-            this.rand <<= 1;
-        this.level = (this.rand & 1) << 1;
-    };
-    return SAANoise;
-})();
+        return (this._rand & 1);
+    }
+    setSync(sync) {
+        if (sync) {
+            this._counter = 0;
+        }
+        this._sync = sync;
+    }
+    _rnd() {
+        if (!!(this._rand & 0x40000004) && (this._rand & 0x40000004) != 0x40000004) {
+            this._rand = (this._rand << 1) | 1;
+        }
+        else {
+            this._rand <<= 1;
+        }
+        this.level = (this._rand & 1) << 1;
+    }
+}
 //---------------------------------------------------------------------------------------
-/*! SAAEnv: Envelope generator */
+"use strict";
 //---------------------------------------------------------------------------------------
-var SAAEnv = (function () {
-    function SAAEnv() {
-        this.envtable = [
+class SAAEnv {
+    constructor() {
+        this._envtable = [
             { plen: 1, loop: false, data: [
                     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]] },
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+                ] },
             { plen: 1, loop: true, data: [
                     [[15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
                         [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15]],
                     [[14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14],
-                        [14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]]] },
+                        [14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]]
+                ] },
             { plen: 1, loop: false, data: [
                     [[15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                     [[14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]] },
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+                ] },
             { plen: 1, loop: true, data: [
                     [[15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                     [[14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]] },
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+                ] },
             { plen: 2, loop: false, data: [
                     [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
                         [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]],
                     [[0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14],
-                        [14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0]]] },
+                        [14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0]]
+                ] },
             { plen: 2, loop: true, data: [
                     [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
                         [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]],
                     [[0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14],
-                        [14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0]]] },
+                        [14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0]]
+                ] },
             { plen: 1, loop: false, data: [
                     [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                     [[0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]] },
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+                ] },
             { plen: 1, loop: true, data: [
                     [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                     [[0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]] }
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+                ] }
         ];
         this.enabled = false;
-        this.newData = false;
-        this.nextData = 0;
-        this.processData = false;
-        this.loadData();
+        this._newData = false;
+        this._nextData = 0;
+        this._processData = false;
+        this._loadData();
     }
     /** Do the tick if envelope control is enabled and clock mode set to internal */
-    SAAEnv.prototype.tickInt = function () {
-        if (this.enabled && !this.extclock)
-            this.tick();
-    };
+    tickInt() {
+        if (this.enabled && !this._extclock) {
+            this._tick();
+        }
+    }
     /** Do the tick if envelope control is enabled and clock mode set to external */
-    SAAEnv.prototype.tickExt = function () {
-        if (this.enabled && this.extclock)
-            this.tick();
-    };
+    tickExt() {
+        if (this.enabled && this._extclock) {
+            this._tick();
+        }
+    }
     /**
      * send command to envgenerator
      * @param data BYTE
      */
-    SAAEnv.prototype.set = function (data) {
+    set(data) {
         // process immediate stuff first:
-        this.res = !!(data & 0x10);
+        this._res = !!(data & 0x10);
         this.enabled = !!(data & 0x80);
         if (!this.enabled) {
             // env control was enabled, and now disabled, so reset
             // pointers to start of envelope waveform
-            this.phase = 0;
-            this.position = 0;
-            this.ended = true;
-            this.processData = true;
+            this._phase = 0;
+            this._position = 0;
+            this._ended = true;
+            this._processData = true;
             // store current new data, and set the newdata flag:
-            this.newData = true;
-            this.nextData = data;
-            return this.setLevels();
+            this._newData = true;
+            this._nextData = data;
+            return this._setLevels();
         }
         // now buffered stuff: but only if it's ok to, and only if the
         // envgenerator is not disabled. otherwise it just stays buffered until
         // the tick() function sets okfornewdata to true and realises there is
         // already some new data waiting
-        if (this.processData) {
+        if (this._processData) {
             // also does the SetLevels() call for us.
-            this.loadData(data);
-            this.newData = false;
-            this.processData = false;
+            this._loadData(data);
+            this._newData = false;
+            this._processData = false;
         }
         else {
             // since the 'next resolution' changes arrive unbuffered, we
             // may need to change the current level because of this:
-            this.setLevels();
+            this._setLevels();
             // store current new data, and set the newdata flag:
-            this.newData = true;
-            this.nextData = data;
+            this._newData = true;
+            this._nextData = data;
         }
-    };
-    SAAEnv.prototype.tick = function () {
+    }
+    _tick() {
         // if disabled, do nothing and for sanity, reset stuff...
         if (!this.enabled) {
-            this.ended = true;
-            this.phase = 0;
-            this.position = 0;
-            this.processData = true;
+            this._ended = true;
+            this._phase = 0;
+            this._position = 0;
+            this._processData = true;
             return;
         }
-        else if (this.ended) {
+        else if (this._ended) {
             // do nothing
             // (specifically, don't change the values of ended,
             //  phase and position, as these will still be needed
@@ -458,31 +457,31 @@ var SAAEnv = (function () {
         // any changes that will affect the output levels of the env controller!!
         // SetLevels also handles left-right channel inverting
         // increment phase position
-        this.position += this.res ? 2 : 1;
+        this._position += this._res ? 2 : 1;
         // if this means we've gone past 16 (the end of a phase)
         // then change phase, and if necessary, loop
-        if (this.position >= 16) {
-            this.phase++;
-            this.position -= 16;
+        if (this._position >= 16) {
+            this._phase++;
+            this._position -= 16;
             // if we should loop, then do so - and we've reached position (4)
             // otherwise, if we shouldn't loop, then we've reached position (3)
             // and so we say that we're ok for new data.
-            if (this.phase === this.phaseLen) {
+            if (this._phase === this._phaseLen) {
                 // at position (3) or (4)
-                this.processData = true;
-                if (!this.loop) {
+                this._processData = true;
+                if (!this._loop) {
                     // position (3) only
-                    this.ended = true;
+                    this._ended = true;
                     // keep pointer at end of envelope for sustain
-                    this.phase = this.phaseLen - 1;
-                    this.position = 15;
-                    this.processData = true;
+                    this._phase = this._phaseLen - 1;
+                    this._position = 15;
+                    this._processData = true;
                 }
                 else {
                     // position (4) only
-                    this.ended = false;
+                    this._ended = false;
                     // set phase pointer to start of envelope for loop
-                    this.phase = 0;
+                    this._phase = 0;
                 }
             }
             else {
@@ -493,7 +492,7 @@ var SAAEnv = (function () {
                 //  triangle envelopes - but that's not important)
                 // any commands sent to this envelope controller
                 // will be buffered. Set the flag to indicate this.
-                this.processData = false;
+                this._processData = false;
             }
         }
         else {
@@ -501,105 +500,108 @@ var SAAEnv = (function () {
             // but, importantly, we are no longer at the start of the phase ...
             // so new data cannot be acted on immediately, and must
             // be buffered
-            this.processData = false;
+            this._processData = false;
         }
         // if we have new (buffered) data, now is the time to act on it
-        if (this.newData && this.processData) {
-            this.newData = false;
-            this.processData = false;
+        if (this._newData && this._processData) {
+            this._newData = false;
+            this._processData = false;
             // do we need to reset 'processData'?
             // if we do, then we can't overwrite env data just prior to
             // a new envelope starting - but what's correct? Who knows?
-            this.loadData(this.nextData);
+            this._loadData(this._nextData);
         }
         else {
             // ok, we didn't have any new buffered date to act on,
             // so we just call SetLevels() to calculate the output level
             // for whatever the current envelope is
-            this.setLevels();
+            this._setLevels();
         }
-    };
+    }
     /**
      * set envgenerator's levels according to the res:
      * Resolution of envelope waveform.
      *     true : 3-bit resolution;
      *     false: 4-bit resolution;
      */
-    SAAEnv.prototype.setLevels = function () {
-        var res = 0 + this.res;
-        this.left = this.envdata.data[res][this.phase][this.position];
-        if (this.stereo)
+    _setLevels() {
+        var res = 0 + this._res;
+        this.left = this._envdata.data[res][this._phase][this._position];
+        if (this._stereo) {
             this.right = (15 - res) - this.left;
-        else
+        }
+        else {
             this.right = this.left;
-    };
+        }
+    }
     /**
      * loads envgenerator's registers according to the bits set in 'data'
      * @param data BYTE
      */
-    SAAEnv.prototype.loadData = function (data) {
-        if (data === void 0) { data = 0; }
-        this.phase = 0;
-        this.position = 0;
-        this.envdata = this.envtable[(data >> 1) & 0x07];
-        this.stereo = !!(data & 0x01);
-        this.extclock = !!(data & 0x20);
-        this.phaseLen = this.envdata.plen;
-        this.loop = this.envdata.loop;
-        this.res = !!(data & 0x10);
+    _loadData(data = 0) {
+        this._phase = 0;
+        this._position = 0;
+        this._envdata = this._envtable[(data >> 1) & 0x07];
+        this._stereo = !!(data & 0x01);
+        this._extclock = !!(data & 0x20);
+        this._phaseLen = this._envdata.plen;
+        this._loop = this._envdata.loop;
+        this._res = !!(data & 0x10);
         this.enabled = !!(data & 0x80);
-        if (this.enabled)
-            this.ended = false;
+        if (this.enabled) {
+            this._ended = false;
+        }
         else {
             // DISABLED - so set stuff accordingly
-            this.ended = true;
-            this.phase = 0;
-            this.position = 0;
-            this.processData = true;
+            this._ended = true;
+            this._phase = 0;
+            this._position = 0;
+            this._processData = true;
         }
-        this.setLevels();
-    };
-    return SAAEnv;
-})();
+        this._setLevels();
+    }
+}
 //---------------------------------------------------------------------------------------
+"use strict";
 /*! SAAFreq: Frequency oscillator, 7-bit fractional accuracy */
 //---------------------------------------------------------------------------------------
-var SAAFreq = (function () {
-    function SAAFreq(pcNoise, pcEnv) {
-        this.counter = 0;
-        this.add = 0;
-        this.curOffset = 0;
-        this.curOctave = 0;
-        this.nextOffset = 0;
-        this.nextOctave = 0;
-        this.ignoreOffset = false;
-        this.newdata = false;
-        this.sync = false;
+class SAAFreq {
+    constructor(pcNoise, pcEnv) {
+        this._counter = 0;
+        this._add = 0;
+        this._curOffset = 0;
+        this._curOctave = 0;
+        this._nextOffset = 0;
+        this._nextOctave = 0;
+        this._ignoreOffset = false;
+        this._newdata = false;
+        this._sync = false;
         this.level = 2;
-        this.smpRate = SAASound.sampleRate << 12;
-        this.noiseGen = pcNoise;
-        this.envGen = pcEnv;
-        this.mode = (!pcNoise ? (!pcEnv ? 0 : 1) : 2);
+        this._smpRate = SAASound.sampleRate << 12;
+        this._noiseGen = pcNoise;
+        this._envGen = pcEnv;
+        this._mode = (!pcNoise ? (!pcEnv ? 0 : 1) : 2);
         // pregenerate frequency lookup table...
         if (!SAAFreq.freqs) {
             console.log('SAASound', 'Pregenerating lookup table with all frequencies...');
-            var freqs = [];
-            for (var o = 0, i; o < 8; o++) {
+            let freqs = [];
+            for (let o = 0, i; o < 8; o++) {
                 freqs[o] = [];
-                for (i = 0; i < 256; i++)
+                for (i = 0; i < 256; i++) {
                     freqs[o][i] = Math.round(((32e6 << o) >>> 0) / (511 - i)) << 2;
+                }
             }
             SAAFreq.freqs = freqs;
         }
-        this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
+        this._add = SAAFreq.freqs[this._curOctave][this._curOffset];
     }
     /**
      * @param offset between 0 and 255
      */
-    SAAFreq.prototype.setOffset = function (offset) {
-        if (!this.sync) {
-            this.nextOffset = offset;
-            this.newdata = true;
+    setOffset(offset) {
+        if (!this._sync) {
+            this._nextOffset = offset;
+            this._newdata = true;
             /**
              * According to Philips, if you send the SAA-1099
              * new Octave data and then new Offset data in that
@@ -607,34 +609,35 @@ var SAAFreq = (function () {
              * generator, ONLY the octave data is acted upon.
              * The offset data will be acted upon next time.
              */
-            if (this.nextOctave == this.curOctave)
-                this.ignoreOffset = true;
+            if (this._nextOctave == this._curOctave) {
+                this._ignoreOffset = true;
+            }
         }
         else {
             // updates straightaway if this.sync
-            this.newdata = false;
-            this.curOffset = offset;
-            this.curOctave = this.nextOctave;
-            this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
+            this._newdata = false;
+            this._curOffset = offset;
+            this._curOctave = this._nextOctave;
+            this._add = SAAFreq.freqs[this._curOctave][this._curOffset];
         }
-    };
+    }
     /**
      * @param octave between 0 and 7
      */
-    SAAFreq.prototype.setOctave = function (octave) {
-        if (!this.sync) {
-            this.nextOctave = octave;
-            this.newdata = true;
-            this.ignoreOffset = false;
+    setOctave(octave) {
+        if (!this._sync) {
+            this._nextOctave = octave;
+            this._newdata = true;
+            this._ignoreOffset = false;
         }
         else {
             // updates straightaway if this.sync
-            this.newdata = false;
-            this.curOctave = octave;
-            this.curOffset = this.nextOffset;
-            this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
+            this._newdata = false;
+            this._curOctave = octave;
+            this._curOffset = this._nextOffset;
+            this._add = SAAFreq.freqs[this._curOctave][this._curOffset];
         }
-    };
+    }
     /**
      * Loads the buffered new octave and new offset data into the current registers
      * and sets up the new frequency for this frequency generator (i.e. sets up this.add)
@@ -653,80 +656,84 @@ var SAAFreq = (function () {
      * signalling the offset data as 'new', so it will be acted upon next half-cycle.
      * Weird, I know. But that's how it works. Philips even documented as much...
      */
-    SAAFreq.prototype.update = function () {
-        if (!this.newdata)
+    update() {
+        if (!this._newdata) {
             return;
-        this.curOctave = this.nextOctave;
-        if (!this.ignoreOffset) {
-            this.curOffset = this.nextOffset;
-            this.newdata = false;
         }
-        this.ignoreOffset = false;
-        this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
-    };
-    SAAFreq.prototype.tick = function () {
+        this._curOctave = this._nextOctave;
+        if (!this._ignoreOffset) {
+            this._curOffset = this._nextOffset;
+            this._newdata = false;
+        }
+        this._ignoreOffset = false;
+        this._add = SAAFreq.freqs[this._curOctave][this._curOffset];
+    }
+    tick() {
         // set to the absolute level (0 or 2)
-        if (!this.sync) {
-            this.counter += this.add;
-            if (this.counter >= this.smpRate) {
+        if (!this._sync) {
+            this._counter += this._add;
+            if (this._counter >= this._smpRate) {
                 // period elapsed for one half-cycle of current frequency
                 // reset counter to zero (or thereabouts, taking into account
                 // the fractional part in the lower 12 bits)
-                while (this.counter >= this.smpRate) {
-                    this.counter -= this.smpRate;
+                while (this._counter >= this._smpRate) {
+                    this._counter -= this._smpRate;
                     // flip state - from 0 to -2 or vice versa
                     this.level = 2 - this.level;
                     // trigger any connected devices
-                    if (this.mode === 1)
-                        this.envGen.tickInt();
-                    else if (this.mode === 2)
-                        this.noiseGen.trigger();
+                    if (this._mode === 1) {
+                        this._envGen.tickInt();
+                    }
+                    else if (this._mode === 2) {
+                        this._noiseGen.trigger();
+                    }
                 }
                 // get new frequency (set period length this.add) if new data is waiting:
                 this.update();
             }
         }
         return this.level;
-    };
-    SAAFreq.prototype.setSync = function (sync) {
-        this.sync = sync;
+    }
+    setSync(sync) {
+        this._sync = sync;
         if (sync) {
-            this.counter = 0;
+            this._counter = 0;
             this.level = 2;
-            this.curOctave = this.nextOctave;
-            this.curOffset = this.nextOffset;
-            this.add = SAAFreq.freqs[this.curOctave][this.curOffset];
+            this._curOctave = this._nextOctave;
+            this._curOffset = this._nextOffset;
+            this._add = SAAFreq.freqs[this._curOctave][this._curOffset];
         }
-    };
-    return SAAFreq;
-})();
+    }
+}
 //---------------------------------------------------------------------------------------
+"use strict";
 /*! SAAAmp: Tone/Noise mixing, Envelope application and amplification */
 //---------------------------------------------------------------------------------------
-var SAAAmp = (function () {
-    function SAAAmp(ToneGenerator, NoiseGenerator, EnvGenerator) {
-        this.lastlvl = 0;
-        this.leftx16 = 0;
-        this.leftx32 = 0;
-        this.lefta0E = 0;
-        this.lefta0Ex2 = 0;
-        this.rightx16 = 0;
-        this.rightx32 = 0;
-        this.righta0E = 0;
-        this.righta0Ex2 = 0;
-        this.out = 0;
-        this.mix = 0;
-        this.toneGen = ToneGenerator;
-        this.noiseGen = NoiseGenerator;
-        this.envGen = EnvGenerator;
-        this.env = !!EnvGenerator;
+class SAAAmp {
+    constructor(ToneGenerator, NoiseGenerator, EnvGenerator) {
+        this._lastlvl = 0;
+        this._leftx16 = 0;
+        this._leftx32 = 0;
+        this._lefta0E = 0;
+        this._lefta0Ex2 = 0;
+        this._rightx16 = 0;
+        this._rightx32 = 0;
+        this._righta0E = 0;
+        this._righta0Ex2 = 0;
+        this._out = 0;
+        this._mix = 0;
+        this._toneGen = ToneGenerator;
+        this._noiseGen = NoiseGenerator;
+        this._envGen = EnvGenerator;
+        this._env = !!EnvGenerator;
         this.mute = true;
         // generate precalculated volume levels to Float32 for fast mix calculations...
         if (!SAAAmp.levels) {
             console.log('SAASound', 'Pregenerating lookup table with float 32bit volume levels...');
-            var levels = new Float32Array(512);
-            for (var i = 0; i < 512; i++)
+            let levels = new Float32Array(512);
+            for (let i = 0; i < 512; i++) {
                 levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
+            }
             SAAAmp.levels = levels;
         }
     }
@@ -734,76 +741,74 @@ var SAAAmp = (function () {
      * Set amplitude, but if level unchanged since last call then do nothing.
      * @param level BYTE
      */
-    SAAAmp.prototype.setLevel = function (level) {
-        if ((level &= 255) !== this.lastlvl) {
-            this.lastlvl = level;
-            this.lefta0E = level & 0xe;
-            this.lefta0Ex2 = this.lefta0E << 1;
-            this.leftx16 = (level & 0xf) << 4;
-            this.leftx32 = this.leftx16 << 1;
-            this.righta0E = (level >> 4) & 0xe;
-            this.righta0Ex2 = this.righta0E << 1;
-            this.rightx16 = level & 0xf0;
-            this.rightx32 = this.rightx16 << 1;
+    setLevel(level) {
+        if ((level &= 0xff) !== this._lastlvl) {
+            this._lastlvl = level;
+            this._lefta0E = level & 0xe;
+            this._lefta0Ex2 = this._lefta0E << 1;
+            this._leftx16 = (level & 0xf) << 4;
+            this._leftx32 = this._leftx16 << 1;
+            this._righta0E = (level >> 4) & 0xe;
+            this._righta0Ex2 = this._righta0E << 1;
+            this._rightx16 = level & 0xf0;
+            this._rightx32 = this._rightx16 << 1;
         }
-    };
-    SAAAmp.prototype.setFreqMixer = function (enable) { this.mix = enable ? (this.mix | 1) : (this.mix & 2); };
-    SAAAmp.prototype.setNoiseMixer = function (enable) { this.mix = enable ? (this.mix | 2) : (this.mix & 1); };
-    SAAAmp.prototype.tick = function () {
-        switch (this.mix) {
+    }
+    setFreqMixer(enable) { this._mix = enable ? (this._mix | 1) : (this._mix & 2); }
+    setNoiseMixer(enable) { this._mix = enable ? (this._mix | 2) : (this._mix & 1); }
+    tick() {
+        switch (this._mix) {
             case 0:
                 // no tones or noise for this channel
-                this.toneGen.tick();
-                this.out = 0;
+                this._toneGen.tick();
+                this._out = 0;
                 break;
             case 1:
                 // tones only for this channel
                 // NOTE: ConnectedToneGenerator returns either 0 or 2
-                this.out = this.toneGen.tick();
+                this._out = this._toneGen.tick();
                 break;
             case 2:
                 // noise only for this channel
-                this.toneGen.tick();
-                this.out = this.noiseGen.level;
+                this._toneGen.tick();
+                this._out = this._noiseGen.level;
                 break;
             case 3:
                 // tones+noise for this channel ... mixing algorithm:
-                this.out = this.toneGen.tick();
-                if (this.out === 2 && !!this.noiseGen.level)
-                    this.out = 1;
+                this._out = this._toneGen.tick();
+                if (this._out === 2 && !!this._noiseGen.level) {
+                    this._out = 1;
+                }
                 break;
         }
-    };
-    SAAAmp.prototype.output = function (last) {
+    }
+    output(last) {
         this.tick();
-        if (this.mute)
+        if (this.mute) {
             return;
+        }
         // now calculate the returned amplitude for this sample:
-        var e = (this.env && this.envGen.enabled), levels = SAAAmp.levels;
-        if (this.out === 0) {
-            if (e) {
-                last[0] += levels[this.envGen.left * this.lefta0Ex2];
-                last[1] += levels[this.envGen.right * this.righta0Ex2];
-            }
+        let e = (this._env && this._envGen.enabled);
+        let levels = SAAAmp.levels;
+        switch (this._out) {
+            case 0:
+                if (e) {
+                    last[0] += levels[this._envGen.left * this._lefta0Ex2];
+                    last[1] += levels[this._envGen.right * this._righta0Ex2];
+                }
+                break;
+            case 1:
+                last[0] += e ? levels[this._envGen.left * this._lefta0E] : levels[this._leftx16];
+                last[1] += e ? levels[this._envGen.right * this._righta0E] : levels[this._rightx16];
+                break;
+            case 2:
+                if (!e) {
+                    last[0] += levels[this._leftx32];
+                    last[1] += levels[this._rightx32];
+                }
+                break;
         }
-        else if (this.out === 1) {
-            if (e) {
-                last[0] += levels[this.envGen.left * this.lefta0E];
-                last[1] += levels[this.envGen.right * this.righta0E];
-            }
-            else {
-                last[0] += levels[this.leftx16];
-                last[1] += levels[this.rightx16];
-            }
-        }
-        else if (this.out === 2) {
-            if (!e) {
-                last[0] += levels[this.leftx32];
-                last[1] += levels[this.rightx32];
-            }
-        }
-    };
-    return SAAAmp;
-})();
+    }
+}
 //---------------------------------------------------------------------------------------
 //# sourceMappingURL=SAASound.js.map

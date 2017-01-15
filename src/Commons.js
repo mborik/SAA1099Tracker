@@ -26,8 +26,8 @@
 	 * or experimental features of the modern browsers.
 	 * @param base {string} Parent object or container which should had that property;
 	 * @param prop {string} Property name to find (future/final name from specification);
-	 * @param ret {bool} If property is constructor and we want a new object of this type
-	 *                   or if we want to set value of this property, set this to true;
+	 * @param ret {boolean} If property is constructor and we want a new object of this
+	 *               type or if we want to set value of this property, set this to true;
 	 * @param value {any} Value which we want to set, or fallback function - polyfill;
 	 */
 	window.getCompatible = function(base, prop, ret, value) {
@@ -101,20 +101,6 @@
 		return this;
 	}).call(function SyncTimer(){});
 
-	// compatibility fallback hooks
-	if (!('now' in window.Date))
-		Date.now = function() { return new Date().getTime() };
-
-	if (!('performance' in window))
-		window.performance = {};
-	if (!('now' in window.performance)) {
-		var d = Date.now();
-		if (window.performance.timing && window.performance.timing.navigationStart)
-			d = window.performance.timing.navigationStart;
-
-		window.performance.now = function now() { return Date.now() - d };
-	}
-
 	// browser detection:
 	window.browser = (function(window) {
 		var opera = (!!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0),
@@ -146,7 +132,7 @@
 			if (window.dev.logAll && arguments.length) {
 				var a = Array.prototype.slice.call(arguments, 0);
 				if (a.length > 1 && (typeof a[0] === 'string' && typeof a[1] === 'string'))
-					a.splice(0, 2, ('%c[' + a[0] + ']%c ' + a[1]), 'color:blue', 'color:initial');
+					a.splice(0, 2, ('%c[' + a[0] + ']%c ' + a[1]), 'color:steelblue', 'color:inherit');
 
 				this.apply(console, a);
 			}

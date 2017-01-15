@@ -6,6 +6,11 @@ Tracker.prototype.doc = {
 
 	i18n: {
 		'app.msg.unsaved': 'All unsaved changes in SAA1099Tracker will be lost.',
+		'app.smpedit.left': 'LEFT',
+		'app.smpedit.right': 'RIGHT',
+		'app.filedialog.untitled': 'Untitled',
+		'app.filedialog.title.load': 'Open file from storage',
+		'app.filedialog.title.save': 'Save file to storage',
 		'dialog.file.new.title': 'Create new file...',
 		'dialog.file.new.msg': 'Do you really want to clear all song data and lost all of your changes?',
 		'dialog.file.open.title': 'Open file...',

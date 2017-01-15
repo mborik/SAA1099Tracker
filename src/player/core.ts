@@ -1,4 +1,4 @@
-/*!
+/*
  * Player: Core of player routine.
  * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
  *
@@ -970,6 +970,10 @@ class Player {
 		}
 
 		rt.clearPlayParams(--chn);
+	}
+
+	get isPlaying(): boolean {
+		return !this.mode;
 	}
 //---------------------------------------------------------------------------------------
 	/**

@@ -190,12 +190,12 @@ Tracker.prototype.onCmdFileOpen = function () {
 				if (btn !== 'yes')
 					return;
 
-				file.dialog('load');
+				file.dialog.load();
 			}
 		});
 	}
 	else
-		file.dialog('load');
+		file.dialog.load();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileSave = function (as) {
@@ -204,7 +204,7 @@ Tracker.prototype.onCmdFileSave = function (as) {
 
 	var file = this.file;
 	if (as || !file.yetSaved || file.modified)
-		file.dialog('save');
+		file.dialog.save();
 	else if (!as && file.yetSaved && file.fileName)
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
 };

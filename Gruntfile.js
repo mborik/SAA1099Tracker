@@ -5,6 +5,53 @@ module.exports = function(grunt) {
 		pkg: grunt.file.readJSON('package.json'),
 		year: grunt.template.today('yyyy'),
 
+		ts: {
+			options: {
+				compile: true,
+				sourceMap: true,
+				declaration: true,
+				additionalFlags: '--alwaysStrict',
+				newLine: 'LF',
+				target: 'ES6',
+				noImplicitAny: true,
+				noImplicitReturns: true,
+				preserveConstEnums: true,
+				removeComments: false,
+				types: [ 'console' ]
+			},
+			'SAASound': {
+				src: [
+					'src/saa/SAASound.ts',
+					'src/saa/SAANoise.ts',
+					'src/saa/SAAEnv.ts',
+					'src/saa/SAAFreq.ts',
+					'src/saa/SAAAmp.ts'
+				],
+				out: 'src/SAASound.js'
+			},
+			'Player': {
+				src: [
+					"src/player/globals.ts",
+					"src/player/sample.ts",
+					"src/player/ornament.ts",
+					"src/player/pattern.ts",
+					"src/player/position.ts",
+					"src/player/runtime.ts",
+					"src/player/core.ts"
+				],
+				out: 'src/Player.js'
+			},
+			'Tracker': {
+				options: {
+					sourceMap: false,
+					declaration: false,
+					removeComments: true,
+					suppressImplicitAnyIndexErrors: true,
+					types: [ 'console', 'jquery', 'bootstrap', 'lz-string' ]
+				},
+				src: [ "src/tracker/*.ts" ]
+			}
+		},
 		copy: {
 			'bootstrap': {
 				files: [{
@@ -36,7 +83,7 @@ module.exports = function(grunt) {
 					filter: 'isFile'
 				}]
 			},
-			'project-files': {
+			'app': {
 				files: [{
 					expand: true,
 					cwd: 'src/',
@@ -52,12 +99,6 @@ module.exports = function(grunt) {
 				}]
 			}
 		},
-		clean: {
-			'project-files': [
-				'src/Player.js*',
-				'src/SAASound.js*'
-			]
-		},
 		concat: {
 			'bootstrap': {
 				options: {
@@ -67,8 +108,8 @@ module.exports = function(grunt) {
 					'build/app/bootstrap.js': [
 						'bower_components/bootstrap/dist/js/bootstrap.js',
 						'bower_components/bootstrap-toggle/js/bootstrap-toggle.js',
-						'src/jquery.mods/touchspin/jquery.bootstrap-touchspin.js',
-						'src/jquery.mods/confirm/jquery.bootstrap-confirm.js'
+						'src/bootstrap.mods/touchspin/bootstrap-touchspin.js',
+						'src/bootstrap.mods/confirm/bootstrap-confirm.js'
 					]
 				}
 			},
@@ -79,18 +120,19 @@ module.exports = function(grunt) {
 				},
 				files: {
 					'build/app/Tracker.js': [
-						'src/Tracker.init.js',
-						'src/Tracker.file.js',
-						'src/Tracker.tracklist.js',
-						'src/Tracker.smporn.js',
-						'src/Tracker.core.js',
-						'src/Tracker.manager.js',
-						'src/Tracker.controls.js',
-						'src/Tracker.keyboard.js',
-						'src/Tracker.mouse.js',
-						'src/Tracker.paint.js',
-						'src/Tracker.doc.js',
-						'src/Tracker.gui.js'
+						'src/tracker/init.js',
+						'src/tracker/file.js',
+						'src/tracker/file.dialog.js',
+						'src/tracker/tracklist.js',
+						'src/tracker/smporn.js',
+						'src/tracker/manager.js',
+						'src/tracker/core.js',
+						'src/tracker/controls.js',
+						'src/tracker/keyboard.js',
+						'src/tracker/mouse.js',
+						'src/tracker/paint.js',
+						'src/tracker/doc.js',
+						'src/tracker/gui.js'
 					]
 				}
 			},
@@ -111,8 +153,41 @@ module.exports = function(grunt) {
 					'templates/dlg-commons.html',
 					'templates/footer.html'
 				],
-				dest: '/tmp/templates.tmp'
+				dest: './.tmp/templates.tmp'
 			}
+		},
+		htmlmin: {
+			templates: {
+				options: {
+					process: true,
+					removeComments: true,
+					collapseWhitespace: true,
+					conservativeCollapse: false,
+					collapseBooleanAttributes: true,
+				},
+				src: './.tmp/templates.tmp',
+				dest: 'build/app/Tracker.tpl.html'
+			}
+		},
+		clean: {
+			'app': [
+				'src/Player.js*',
+				'src/SAASound.js*'
+			],
+			'Tracker': {
+				src: [ 'src/tracker/*.js' ],
+				filter: function(filepath) {
+					var path = require('path');
+					var fileobj = path.parse(filepath);
+					delete fileobj.base;
+					fileobj.ext = '.ts';
+					return grunt.file.exists(path.format(fileobj));
+				}
+			},
+			'temporary-dirs': [
+				'.tscache',
+				'.tmp'
+			]
 		},
 		less: {
 			'styles': {
@@ -129,7 +204,7 @@ module.exports = function(grunt) {
 		uglify: {
 			options: {
 				compress: { drop_console: true },
-				preserveComments: 'some',
+				preserveComments: /^!/,
 				ASCIIOnly: true,
 				screwIE8: true
 			},
@@ -169,55 +244,6 @@ module.exports = function(grunt) {
 					'build/css/tracker.min.css': 'build/css/tracker.css'
 				}
 			}
-		},
-		htmlmin: {
-			templates: {
-				options: {
-					process: true,
-					removeComments: true,
-					collapseWhitespace: true,
-					conservativeCollapse: false,
-					collapseBooleanAttributes: true,
-				},
-				src: '/tmp/templates.tmp',
-				dest: 'build/app/Tracker.tpl.html'
-			}
-		},
-		ts: {
-			options: {
-				compile: true,
-				sourceMap: true,
-				declaration: true,
-				newLine: 'LF',
-				target: 'ES6',
-				alwaysStrict: true,
-				noImplicitAny: true,
-				noImplicitReturns: true,
-				preserveConstEnums: true,
-				types: [ 'console' ]
-			},
-			'SAASound': {
-				src: [
-					'src/saa/SAASound.ts',
-					'src/saa/SAANoise.ts',
-					'src/saa/SAAEnv.ts',
-					'src/saa/SAAFreq.ts',
-					'src/saa/SAAAmp.ts'
-				],
-				out: 'src/SAASound.js'
-			},
-			'Player': {
-				src: [
-					"src/player/globals.ts",
-					"src/player/sample.ts",
-					"src/player/ornament.ts",
-					"src/player/pattern.ts",
-					"src/player/position.ts",
-					"src/player/runtime.ts",
-					"src/player/core.ts"
-				],
-				out: 'src/Player.js'
-			}
 		}
 	});
 
@@ -225,7 +251,6 @@ module.exports = function(grunt) {
 	grunt.util.linefeed = '\n';
 
 	// Load required modules
-
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-less');
 	grunt.loadNpmTasks('grunt-contrib-clean');
@@ -236,6 +261,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-ts');
 
 	// Task definitions
-	grunt.registerTask('default', [ 'ts','copy','clean','concat','less','uglify','cssmin','htmlmin' ]);
+	grunt.registerTask('default', [ 'ts','copy','concat','htmlmin','clean','less','uglify','cssmin' ]);
 	grunt.registerTask('styles', [ 'less','uglify','cssmin' ]);
 };
