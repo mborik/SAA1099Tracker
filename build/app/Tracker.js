@@ -1,6 +1,6 @@
 /*!
  * SAA1099Tracker v1.2.0
- * Copyright (c) 2012-2016 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -22,1181 +22,1060 @@
 //---------------------------------------------------------------------------------------
 $(document).ready(function() { window.Tracker = new Tracker('1.2.0') });
 //---------------------------------------------------------------------------------------
-/** Tracker.file submodule */
-/* global atob, btoa, getCompatible, Blob, LZString, Player, pPosition */
-//---------------------------------------------------------------------------------------
-var STMFile = (function () {
-	function STMFile (tracker) {
-		var player = tracker.player,
-			settings = tracker.settings,
-			storageMap = [], storageLastId, storageBytesUsed = 0;
-
-		this.yetSaved = false;
-		this.modified = false;
-		this.fileName = '';
-
-//- private methods ---------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-		function storageSortAndSum () {
-			storageBytesUsed = 0;
-			storageMap.sort(function (a, b) { b.timeModified - a.timeModified });
-			storageMap.forEach(function (obj) { storageBytesUsed += (obj.length + 40) * 2 });
-		}
-
-		function updateAll () {
-			var bakLine = player.currentLine;
-
-			tracker.onCmdToggleEditMode(tracker.modeEdit);
-			tracker.onCmdToggleLoop(player.loopMode);
-
-			$('#scPattern').val(tracker.workingPattern.toString());
-			$('#scPosRepeat').val((player.repeatPosition + 1).toString());
-			$('#scPosCurrent').val(player.currentPosition.toString());
-
-			tracker.updatePanels();
-			player.currentLine = bakLine;
-			tracker.updateTracklist();
-
-			$('#scSampleNumber').val(tracker.workingSample.toString(32).toUpperCase());
-			$('#scOrnNumber').val(tracker.workingOrnament.toString(16).toUpperCase());
-			$('#scOrnTestSample').val(tracker.workingOrnTestSample.toString(32).toUpperCase());
-			$('#scSampleTone,#scOrnTone').val(tracker.workingSampleTone.toString()).trigger('change');
-			$('#sbSampleScroll').scrollLeft(0);
-
-			tracker.updateSampleEditor(true);
-			tracker.smpornedit.updateOrnamentEditor(true);
-
-			$('#main-tabpanel a').eq(tracker.activeTab).tab('show');
-		}
-
-// public methods -----------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-		/**
-		 * This method builds internal database of stored songs in localStorage...
-		 */
-		this.reloadStorage = function () {
-			storageMap.splice(0);
-			storageLastId = -1;
-
-			var i, m, id, n, s, dat,
-				l = localStorage.length;
-
-			for (i = 0; i < l; i++) {
-				if ((m = localStorage.key(i).match(/^(stmf([0-9a-f]{3}))\-nfo/))) {
-					n = parseInt(m[2], 16);
-					id = m[1];
-
-					s = localStorage.getItem(m[0]);
-					dat = localStorage.getItem(id + '-dat');
-
-					if (!dat) {
-						console.log('Tracker.file', 'Unable to read data for file in localStorage\n\t%s:"%s"', m[2], s);
-						localStorage.removeItem(m[0]);
-						continue;
-					}
-
-					if (!(m = s.match(/^(.+)\|(\d+?)\|(\d+?)\|(\d\d:\d\d)$/)))
-						continue;
-
-					storageLastId = Math.max(storageLastId, n);
-					storageMap.push({
-						"id": n,
-						"storageId": id,
-						"fileName": m[1],
-						"timeCreated": parseInt(m[2], 10),
-						"timeModified": parseInt(m[3], 10),
-						"duration": m[4],
-						"length": dat.length
-					});
-				}
-			}
-
-			storageSortAndSum();
-		};
-
-//---------------------------------------------------------------------------------------
-		/**
-		 * This method creates JSON format of song data from tracker,
-		 * more specifically full snapshot of tracker state.
-		 * @param pretty {bool} set if you want pretty-formatted JSON output.
-		 */
-		this.createJSON = function (pretty) {
-			var i, j, k, l, o, s, it, obj, dat;
-			var output = {
-					'title':     tracker.songTitle,
-					'author':    tracker.songAuthor,
-					'samples':   [],
-					'ornaments': [],
-					'patterns':  [],
-					'positions': [],
-					'repeatPos': player.repeatPosition,
-
-					'current': {
-						'sample':     tracker.workingSample,
-						'ornament':   tracker.workingOrnament,
-						'ornSample':  tracker.workingOrnTestSample,
-						'smpornTone': tracker.workingSampleTone,
-
-						'position':   player.currentPosition,
-						'pattern':    tracker.workingPattern,
-
-						'line':       player.currentLine,
-						'channel':    tracker.modeEditChannel,
-						'column':     tracker.modeEditColumn
-					},
-					'ctrl': {
-						'octave':   tracker.ctrlOctave,
-						'sample':   tracker.ctrlSample,
-						'ornament': tracker.ctrlOrnament,
-						'rowStep':  tracker.ctrlRowStep
-					},
-					'config': {
-						'interrupt': settings.audioInterrupt,
-						'activeTab': tracker.activeTab,
-						'editMode':  tracker.modeEdit,
-						'loopMode':  player.loopMode
-					},
-
-					'version': '1.2'
-				};
-
-			// storing samples going backward and unshifting array...
-			for (i = 31; i > 0; i--) {
-				it = player.sample[i], dat = it.data;
-				obj = {
-					'loop': it.loop,
-					'end':  it.end,
-					'data': it.export()
-				};
-
-				if (it.name)
-					obj.name = it.name;
-				if (it.releasable)
-					obj.rel = it.releasable;
-
-				// for optimize reasons, we are detecting empty items in arrays...
-				if (!obj.data.length)
-					obj.data = null;
-				if (obj.data === null && !obj.loop && !obj.end && !obj.rel && !obj.name)
-					obj = null;
-				if (!output.samples.length && obj === null)
-					continue;
-
-				output.samples.unshift(obj);
-			}
-
-			// storing ornaments going backward and unshifting array...
-			for (i = 15; i > 0; i--) {
-				it = player.ornament[i];
-				obj = {
-					'loop': it.loop,
-					'end':  it.end,
-					'data': it.export()
-				};
-
-				if (it.name)
-					obj.name = it.name;
-
-				// for optimize reasons, we are detecting empty items in arrays...
-				if (!obj.data.length)
-					obj.data = null;
-				if (obj.data === null && !obj.loop && !obj.end && !obj.name)
-					obj = null;
-				if (!output.ornaments.length && obj === null)
-					continue;
-
-				output.ornaments.unshift(obj);
-			}
-
-			// storing patterns...
-			for (i = 1, l = player.pattern.length; i < l; i++) {
-				it = player.pattern[i], dat = it.data;
-				obj = {
-					'end':  it.end,
-					'data': it.export()
-				};
-
-				// for optimize reasons, we are detecting empty items in arrays...
-				if (!obj.data.length)
-					obj.data = null;
-				if (obj.data === null && !obj.end)
-					obj = null;
-				if (!output.patterns.length && obj === null)
-					continue;
-
-				output.patterns.push(obj);
-			}
-
-			// storing positions, no optimalizations needed...
-			for (i = 0, l = player.position.length; i < l; i++) {
-				it = player.position[i];
-				obj = {
-					'length': it.length,
-					'speed':  it.speed,
-					'ch':     it.export()
-				};
-
-				output.positions.push(obj);
-			}
-
-			return pretty ?
-				JSON.stringify(output, null, '\t').replace(/\},\n\t+?\{/g, '}, {') :
-				JSON.stringify(output);
-		};
-//---------------------------------------------------------------------------------------
-		/**
-		 * This method can parse input JSON with song data in both supported formats:
-		 * - v1.1 import from previous MIF85Tracker project
-		 * - v1.2 current SAA1099Tracker format specification
-		 *
-		 * @param data {string|object} song data in JSON
-		 */
-		this.parseJSON = function (data) {
-			if (typeof data === 'string') {
-				try {
-					var json = data;
-					data = JSON.parse(json);
-				}
-				catch (e) { return false }
-			}
-			if (typeof data !== 'object')
-				return false;
-
-			var i, j, k, l, o, s, it, obj, dat,
-				count = { smp: 0, orn: 0, pat: 0, pos: 0 },
-				oldVer = false;
-
-			// detection of old JSON format v1.1 from previous project MIF85Tracker...
-			if (data.version && data.version == '1.1')
-				oldVer = true;
-			else if (!data.version || (data.version && data.version != '1.2'))
-				return false;
-
-			player.clearSong();
-			player.clearSamples();
-			player.clearOrnaments();
-
-			//~~~ CREDITS ~~~
-			tracker.songTitle = data.title || '';
-			tracker.songAuthor = data.author || '';
-
-			//~~~ SAMPLES ~~~
-			if (data.samples && data.samples.length) {
-				if (oldVer) // ignore empty zero sample
-					data.samples.shift();
-
-				for (i = 1; i < 32; i++) {
-					if (!!(obj = data.samples[i - 1])) {
-						it = player.sample[i];
-
-						if (obj.name)
-							it.name = obj.name;
-						it.loop = obj.loop || 0;
-						it.end = obj.end || 0;
-						it.releasable = !!obj.rel;
-
-						if (oldVer) {
-							// v1.1
-							// - whole sample data stored binary in one BASE64 string,
-							//   every tick in 3 bytes...
-
-							dat = it.data;
-							o = atob(obj.data);
-							for (j = 0, k = 0, l = o.length; j < l && k < 32; j += 3, k++) {
-								s = (o.charCodeAt(j + 1) & 0xff);
-
-								dat = it.data[k];
-								dat.volume.byte  = (o.charCodeAt(j) & 0xff);
-								dat.enable_freq  = !!(s & 0x80);
-								dat.enable_noise = !!(s & 0x40);
-								dat.noise_value  = (s & 0x30) >> 4;
-
-								dat.shift = ((s & 7) << 8) | (o.charCodeAt(j + 2) & 0xff);
-								if (!!(s & 8))
-									dat.shift *= -1;
-							}
-						}
-						else // v1.2
-							it.parse(obj.data);
-
-						count.smp++;
-					}
-				}
-			}
-
-			//~~~ ORNAMENTS ~~~
-			if (data.ornaments && data.ornaments.length) {
-				if (oldVer) // ignore empty zero ornament
-					data.ornaments.shift();
-
-				for (i = 1; i < 16; i++) {
-					if (!!(obj = data.ornaments[i - 1])) {
-						it = player.ornament[i];
-
-						if (obj.name)
-							it.name = obj.name;
-						it.loop = obj.loop || 0;
-						it.end = obj.end || 0;
-
-						if (oldVer) {
-							// v1.1
-							// - whole ornament data stored binary in one BASE64 string
-
-							dat = it.data;
-							o = atob(obj.data);
-							for (j = 0, l = Math.min(256, o.length); j < l; j++)
-								dat[j] = o.charCodeAt(j);
-						}
-						else // v1.2
-							it.parse(obj.data);
-
-						count.orn++;
-					}
-				}
-			}
-
-			//~~~ PATTERNS ~~~
-			if (data.patterns && data.patterns.length) {
-				if (oldVer) // ignore empty zero pattern
-					data.patterns.shift();
-
-				for (i = 0; i < data.patterns.length; i++) {
-					if (!!(obj = data.patterns[i])) {
-						it = player.pattern[player.addNewPattern()];
-
-						if (oldVer) {
-							// v1.1
-							// - whole pattern data stored binary in one BASE64 string,
-							//   starts with pattern length, next every line in 5 bytes
-
-							o = atob(obj);
-							it.end = (o.charCodeAt(0) & 0xff);
-
-							for (j = 1, k = 0, l = o.length; j < l && k < Player.maxPatternLen; j += 5, k++) {
-								dat = it.data[k];
-
-								dat.tone = (o.charCodeAt(j) & 0x7f);
-								dat.release = !!(o.charCodeAt(j) & 0x80);
-								dat.smp = (o.charCodeAt(j + 1) & 0x1f);
-								dat.orn_release = !!(o.charCodeAt(j + 1) & 0x80);
-								dat.volume.byte = (o.charCodeAt(j + 2) & 0xff);
-								dat.orn = (o.charCodeAt(j + 3) & 0x0f);
-								dat.cmd = (o.charCodeAt(j + 3) & 0xf0) >> 4;
-								dat.cmd_data = (o.charCodeAt(j + 4) & 0xff);
-							}
-						}
-						else {
-							// v1.2
-
-							it.end = obj.end || 0;
-							it.parse(obj.data);
-						}
-
-						count.pat++;
-					}
-				}
-			}
-
-			//~~~ POSITIONS ~~~
-			if (data.positions && data.positions.length) {
-				for (i = 0; i < data.positions.length; i++) {
-					if (!!(obj = data.positions[i])) {
-						it = player.addNewPosition(obj.length, obj.speed);
-
-						if (oldVer)
-							o = atob(obj.ch);
-
-						for (j = 0, k = 0; j < 6; j++) {
-							if (oldVer) {
-								it.ch[j].pattern = (o.charCodeAt(k++) & 0xff);
-								it.ch[j].pitch = o.charCodeAt(k++);
-							}
-							else {
-								s = obj.ch[j];
-								it.ch[j].pattern = parseInt(s.substr(0, 3), 10) || 0;
-								it.ch[j].pitch = parseInt(s.substr(3), 10) || 0;
-							}
-						}
-
-						player.countPositionFrames(i);
-						player.storePositionRuntime(i);
-						count.pos++;
-					}
-				}
-			}
-
-			//~~~ CURRENT STATE ~~~
-			if (oldVer && typeof data.config === 'object') {
-				o = data.config;
-
-				player.repeatPosition        = o.repeatPosition || 0;
-				player.currentPosition       = o.currentPosition || 0;
-				player.currentLine           = o.currentLine || 0;
-
-				tracker.activeTab            = 0;
-				tracker.modeEdit             = false;
-				tracker.modeEditColumn       = 0;
-				tracker.modeEditChannel      = o.editChannel || 0;
-
-				tracker.ctrlOctave           = o.ctrlOctave || 2;
-				tracker.ctrlSample           = o.ctrlSample || 0;
-				tracker.ctrlOrnament         = o.ctrlOrnament || 0;
-				tracker.ctrlRowStep          = o.ctrlRowStep || 0;
-
-				settings.audioInterrupt      = o.audioInterrupt || 50;
-			}
-			else if (typeof data.current === 'object') {
-				o = data.current;
-
-				player.repeatPosition        = data.repeatPos || 0;
-				player.currentPosition       = o.position || 0;
-				player.currentLine           = o.line || 0;
-
-				tracker.workingPattern       = o.pattern || 0;
-				tracker.workingSample        = o.sample || 1;
-				tracker.workingOrnament      = o.ornament || 1;
-				tracker.workingOrnTestSample = o.ornSample || 1;
-				tracker.workingSampleTone    = o.smpornTone || 37;
-				tracker.modeEditChannel      = o.channel || 0;
-				tracker.modeEditColumn       = o.column || 0;
-
-				o = $.extend({}, data.ctrl, data.config);
-
-				player.loopMode              = o.loopMode || true;
-
-				tracker.ctrlOctave           = o.octave || 2;
-				tracker.ctrlSample           = o.sample || 0;
-				tracker.ctrlOrnament         = o.ornament || 0;
-				tracker.ctrlRowStep          = o.rowStep || 0;
-				tracker.activeTab            = o.activeTab || 0;
-				tracker.modeEdit             = o.editMode || false;
-
-				settings.audioInterrupt      = o.interrupt || 50;
-			}
-
-			console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
-				title: data.title,
-				author: data.author,
-				samples: count.smp,
-				ornaments: count.orn,
-				patterns: count.pat,
-				positions: count.pos,
-				version: data.version
-			});
-
-			updateAll();
-			return true;
-		};
-//---------------------------------------------------------------------------------------
-		this.new = function () {
-			player.clearSong();
-			player.clearSamples();
-			player.clearOrnaments();
-
-			tracker.songTitle = '';
-			tracker.songAuthor = '';
-
-			player.currentPosition = 0;
-			player.repeatPosition = 0;
-			player.currentLine = 0;
-
-			tracker.modeEdit = false;
-			tracker.modeEditChannel = 0;
-			tracker.modeEditColumn = 0;
-			tracker.workingPattern = 0;
-
-			this.modified = false;
-			this.yetSaved = false;
-			this.fileName = '';
-
-			updateAll();
-		};
-//---------------------------------------------------------------------------------------
-		this.loadDemosong = function (fileName) {
-			var file = this;
-
-			console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
-			$.getJSON('demosongs/' + fileName + '.json', function (data) {
-				file.parseJSON(data);
-				file.modified = true;
-				file.yetSaved = false;
-				file.fileName = '';
-			});
-		};
-//---------------------------------------------------------------------------------------
-		this.loadFile = function (fileNameOrId) {
-			var i, l = storageMap.length, name, obj, data;
-
-			if (typeof fileNameOrId === 'string')
-				name = fileNameOrId.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '').trim();
-
-			for (i = 0; i < l; i++) {
-				obj = storageMap[i];
-
-				if (name && obj.fileName === name)
-					break;
-				else if (!name && typeof fileNameOrId === 'number' && obj.id === fileNameOrId) {
-					name = obj.fileName;
-					break;
-				}
-			}
-
-			if (i === l) {
-				console.log('Tracker.file', 'File "' + fileNameOrId + '" not found!');
-				return false;
-			}
-
-			console.log('Tracker.file', 'Loading "%s" from localStorage...', name);
-			data = localStorage.getItem(obj.storageId + '-dat');
-			console.log('Tracker.file', 'Compressed JSON file format loaded, size: ' + data.length * 2);
-			data = LZString.decompressFromUTF16(data);
-			console.log('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
-
-			if (!this.parseJSON(data)) {
-				console.log('Tracker.file', 'JSON file parsing failed!');
-				return false;
-			}
-
-			data = null;
-			this.modified = false;
-			this.yetSaved = true;
-			this.fileName = name;
-			return true;
-		};
-//---------------------------------------------------------------------------------------
-		this.saveFile = function (fileName, duration, oldId) {
-			var i, l = storageMap.length,
-				now = ~~(Date.now() / 1000),
-				mod = false, obj, data;
-
-			fileName = fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '');
-			console.log('Tracker.file', 'Storing "%s" to localStorage...', fileName);
-
-			for (i = 0; i < l; i++) {
-				obj = storageMap[i];
-				if (obj.id === oldId || obj.fileName === fileName) {
-					console.log('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
-					mod = true;
-					break;
-				}
-			}
-
-			if (oldId !== void 0 && !mod) {
-				console.log('Tracker.file', 'Cannot find given storageId: %d!', oldId);
-				return false;
-			}
-
-			data = this.createJSON();
-			console.log('Tracker.file', 'JSON file format built, original size: ' + data.length);
-			data = LZString.compressToUTF16(data);
-			console.log('Tracker.file', 'Compressed with LZW to ' + data.length * 2);
-
-			if (mod) {
-				obj = storageMap[i];
-
-				obj.fileName = fileName;
-				obj.timeModified = now;
-				obj.duration = duration;
-				obj.length = data.length;
-			}
-			else obj = {
-				"id": ++storageLastId,
-				"storageId": 'stmf' + storageLastId.toHex(3),
-				"fileName": fileName,
-				"timeCreated": now,
-				"timeModified": now,
-				"duration": duration,
-				"length": data.length
-			};
-
-			localStorage.setItem(obj.storageId + '-nfo', fileName.concat(
-				'|', obj.timeCreated.toString(),
-				'|', obj.timeModified.toString(),
-				'|', obj.duration
-			));
-
-			localStorage.setItem(obj.storageId + '-dat', data);
-			data = null;
-
-			if (!mod)
-				storageMap.push(obj);
-			storageSortAndSum();
-
-			this.yetSaved = true;
-			this.modified = false;
-			this.fileName = obj.fileName;
-
-			console.log('Tracker.file', 'Everything stored into localStorage...');
-			return true;
-		};
-
-//---------------------------------------------------------------------------------------
-		this.dialog = function (mode) {
-			var dlg = $('#filedialog'),
-				file = this,
-				fn = this.fileName || tracker.songTitle || 'Untitled',
-				saveFlag = (mode === 'save'),
-				titles = {
-					load: 'Open file from storage',
-					save: 'Save file to storage'
-				};
-
-			if (!titles[mode] || (!saveFlag && !storageMap.length))
-				return false;
-
-			tracker.globalKeyState.inDialog = true;
-			dlg.on('show.bs.modal', function () {
-				var percent = Math.ceil(100 / ((2 * 1024 * 1024) / storageBytesUsed)),
-					selectedItem = null,
-					defaultHandler = function () {
-						if (saveFlag) {
-							var fileName = dlg.find('.file-name>input').val(),
-								duration = $('#stInfoPanel u:eq(3)').text();
-
-							file.saveFile(fileName, duration, (selectedItem && selectedItem.id) || undefined);
-						}
-						else {
-							if (!selectedItem)
-								return false;
-							file.loadFile(selectedItem.id);
-						}
-
-						tracker.globalKeyState.inDialog = false;
-						dlg.modal('hide');
-						return true;
-					},
-					itemClickHandler = function (e) {
-						e.stopPropagation();
-						selectedItem = (e.data && typeof e.data.id === 'number') ? storageMap[e.data.id] : null;
-
-						if (e.pageX === 0 && e.pageY === 0) // on enter keypress
-							return defaultHandler();
-
-						dlg.find('.file-list>button').removeClass('selected');
-
-						if (selectedItem)
-							$(this).addClass('selected');
-						if (saveFlag) {
-							if (selectedItem)
-								dlg.find('.file-name>input').val(selectedItem.fileName);
-							dlg.find('.file-remove').prop('disabled', !selectedItem);
-						}
-
-						return true;
-					};
-
-				dlg.addClass(mode)
-					.before($('<div/>').addClass('modal-backdrop in').css('z-index', '1030'));
-
-				dlg.find('.modal-title').text(titles[mode] + '\u2026');
-				dlg.find('.file-name>input').val(fn);
-				dlg.find('.storage-usage i').text(storageBytesUsed + ' bytes used');
-				dlg.find('.storage-usage .progress-bar').css('width', percent + '%');
-				dlg.find('.btn-success').on('click', defaultHandler);
-
-				var i, l = storageMap.length, obj, d,
-					el = dlg.find('.file-list').empty(),
-					span = $('<span/>'),
-					cell = $('<button class="cell"/>');
-
-				for (i = 0; i < l; i++) {
-					obj = storageMap[i];
-					d = (new Date(obj.timeModified * 1000))
-							.toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
-
-					cell.clone()
-						.append(span.clone().addClass('filename').text(obj.fileName))
-						.append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
-						.prop('tabindex', 300)
-						.appendTo(el)
-						.on('click focus', { id: i }, itemClickHandler)
-						.on('dblclick', defaultHandler);
-				}
-
-				dlg.find('.file-open,.file-save').on('click', defaultHandler);
-
-				if (saveFlag) {
-					dlg.find('.file-list').on('click', itemClickHandler);
-					dlg.find('.file-remove').on('click', function(e) {
-					    e.stopPropagation();
-					    if (!selectedItem)
-					    	return false;
-
-					    $('#dialoque').confirm({
-							title: i18n.dialog.file.remove.title,
-							text: i18n.dialog.file.remove.msg,
-							buttons: 'yesno',
-							style: 'danger',
-							callback: function (btn) {
-								if (btn !== 'yes')
-									return;
-								for (var i = 0, l = storageMap.length; i < l; i++) {
-									if (storageMap[i].storageId === selectedItem.storageId) {
-										storageMap.splice(i, 1);
-										localStorage.removeItem(selectedItem.storageId + '-nfo');
-										localStorage.removeItem(selectedItem.storageId + '-dat');
-
-										itemClickHandler(e);
-										dlg.modal('hide');
-										file.dialog(mode);
-										return;
-									}
-								}
-							}
-					    });
-
-					    return true;
-					});
-
-					dlg.find('.file-download').on('click', function(e) {
-					    e.stopPropagation();
-
-						console.log('Tracker.file', 'Preparing file output to Blob...');
-
-						var el = $(this),
-							data = file.createJSON(true),
-							mime = 'text/x-saa1099tracker',
-							name = dlg.find('.file-name>input').val().trim() || fn,
-							blob, url;
-
-						try {
-							blob = new Blob([ data ], {
-								type: mime,
-								endings: 'native'
-							});
-						}
-						catch (ex) {
-							console.log('Tracker.file', 'Blob feature missing [%o], fallback to BlobBuilder...', ex);
-
-							try {
-								var bb = getCompatible(window, 'BlobBuilder', true);
-								bb.append(data);
-								blob = bb.getBlob(mime);
-							}
-							catch (ex2) {
-								console.log('Tracker.file', 'BlobBuilder feature missing [%o], fallback to BASE64 output...', ex2);
-
-								blob = undefined;
-								url = 'data:' + mime + ';base64,' + btoa(data);
-							}
-						}
-
-						if (blob) try {
-							url = getCompatible(window, 'URL').createObjectURL(blob) + '';
-						}
-						catch (ex) {
-							console.log('Tracker.file', 'URL feature for Blob missing [%o], fallback to BASE64 output...', ex);
-							url = 'data:' + mime + ';base64,' + btoa(data);
-						}
-
-						el.attr({
-							'href': url,
-							'download': name + '.STMF'
-						});
-
-						data = null;
-						url = null;
-
-						dlg.modal('hide');
-						setTimeout(function () { el.attr({ href: '', download: '' }) }, 50);
-
-					    return true;
-					});
-				}
-
-			}).on('shown.bs.modal', function() {
-				dlg.find(saveFlag
-					? '.file-name>input'
-					: '.file-list>button:first-child').focus();
-
-			}).on('hide.bs.modal', function() {
-				dlg.removeClass(mode).prev('.modal-backdrop').remove();
-				dlg.off().find('.file-list').off().empty();
-				dlg.find('.modal-footer>.btn').off();
-				tracker.globalKeyState.inDialog = false;
-
-			}).modal({
-				show: true,
-				backdrop: false
-			});
-		};
-//---------------------------------------------------------------------------------------
-
-		this.reloadStorage();
-	}
-
-	return STMFile;
-})();
-//---------------------------------------------------------------------------------------
-/** Tracker.tracklist submodule */
-//---------------------------------------------------------------------------------------
-var TracklistPosition = (function () {
-	function TracklistPosition(y, line, channel, column, sx, sy) {
-		this.y = y || 0;
-		this.line = line || 0;
-		this.channel = channel || 0;
-		this.column = column || 0;
-		this.start = { x: (sx || 0), y: (sy || 0) };
-
-		this.set = function(p) {
-			if (!(p instanceof TracklistPosition))
-				throw 'invalid object type';
-
-			this.y = p.y;
-			this.line = p.line;
-			this.channel = p.channel;
-			this.column = p.column;
-			this.start.x = p.start.x;
-			this.start.y = p.start.y;
-		};
-
-		this.compare = function (p) {
-			if (p instanceof TracklistPosition)
-				return (this.y === p.y &&
-				        this.line === p.line &&
-				        this.channel === p.channel &&
-				        this.column === p.column);
-		};
-
-	}
-
-	return TracklistPosition;
-})();
-//---------------------------------------------------------------------------------------
-var Tracklist = (function () {
-	function Tracklist(app) {
-		this.initialized = false;
-
-		this.obj = null;
-		this.ctx = null;
-		this.zoom = 2;
-
-		// fontWidth = 6 : default width of pixelfont
-		this.canvasData = {
-			// offsets to column positions in channel data premultiplied by fontWidth:
-			//         0   4567 9AB
-			//        "A-4 ABFF C01"
-			columns: [ 0, 24, 30, 36, 42, 54, 60, 66 ],
-
-			// selection width: (12 columns + 1 padding) * fontWidth
-			selWidth : (12 + 1) * 6,
-
-			// channel width: (12 columns + 2 padding) * fontWidth
-			chnWidth : (12 + 2) * 6,
-
-			// trackline width:
-			// (((12 columns + 2 padding) * 6 channels) + 2 tracknum.columns) * fontWidth
-			lineWidth: (((12 + 2) * 6) + 2) * 6,
-
-			// horizontal centering of trackline to canvas width
-			center   : 0,
-
-			// trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
-			trkOffset: 0,
-
-			// vertical padding of pixelfont in trackline height
-			vpad     : 0,
-
-			// jQuery offset object
-			offset   : null
-		};
-
-		// calculated absolute positions of X:channels/columns and Y:tracklines in canvas
-		this.offsets = {
-			// 6 channels of 8 column (+1 padding) positions
-			x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
-			y: []
-		};
-
-		this.selection = {
-			isDragging: false,
-			start: new TracklistPosition,
-			len: 0,
-			line: 0,
-			channel: 0
-		};
-//---------------------------------------------------------------------------------------
-		this.countTracklines = function() {
-			var s = $('#statusbar').offset(),
-				t = $('#tracklist').offset(),
-				h = app.settings.tracklistLineHeight;
-			return Math.max(((((s.top - t.top) / h / this.zoom) | 1) - 2), 5);
-		};
-
-		this.setHeight = function(height) {
-			var sett = app.settings;
-
-			if (height === void 0) {
-				height = sett.tracklistAutosize
-					? this.countTracklines()
-					: sett.tracklistLines;
-			}
-
-			console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
-
-			sett.tracklistLines = height;
-			height *= sett.tracklistLineHeight;
-
-			$(this.obj).prop('height', height).css({ 'height': height * this.zoom });
-			this.canvasData.offset = $(this.obj).offset();
-		};
-
-		this.moveCurrentline = function(delta, noWrap) {
-			var player = app.player,
-				line = player.currentLine + delta,
-				pos = player.currentPosition,
-				pp = player.position[pos];
-
-			if (app.modePlay || pp === void 0)
-				return;
-
-			if (noWrap)
-				line = Math.min(Math.max(line, 0), pp.length - 1);
-			else if (line < 0)
-				line += pp.length;
-			else if (line >= pp.length)
-				line -= pp.length;
-
-			player.currentLine = line;
-		};
-
-		this.pointToTracklist = function(x, y) {
-			var i, j, chl,
-				lines = app.settings.tracklistLines,
-				tx = x / this.zoom, ty = y / this.zoom,
-				half = lines >> 1,
-				ln = app.player.currentLine - half;
-
-			for (i = 0; i < lines; i++, ln++) {
-				if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
-					for (chl = 0; chl < 6; chl++) {
-						if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
-							for (j = 0; j < 8; j++) {
-								if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1])
-									return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
-							}
-						}
-					}
-				}
-			}
-		};
-	}
-
-	return Tracklist;
-})();
-//---------------------------------------------------------------------------------------
-/** Tracker.smporn submodule */
-//---------------------------------------------------------------------------------------
-var SmpOrnEditor = (function () {
-	function SmpOrnEditor(app) {
-		this.initialized = false;
-
-		this.img = null;
-		this.amp = { obj: null, ctx: null };
-		this.noise = { obj: null, ctx: null };
-		this.range = { obj: null, ctx: null };
-
-		this.smpeditOffset = null;
-		this.smpeditScroll = 0;
-		this.columnWidth = 0;
-		this.halfing = 0;
-		this.centering = 0;
-		this.radix = 10;
-
-		this.drag = {
-			isDragging: false,
-			freqEnableState: false,
-			rangeStart: -1
-		};
-//---------------------------------------------------------------------------------------
-		this.init = function() {
-			var parts = [ 'amp', 'noise', 'range' ],
-				i, l, o, ctx, w, h, half;
-
-			console.log('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
-			for (i = 0, l = parts.length; i < l; i++) {
-				o = this[parts[i]];
-
-				ctx = o.ctx;
-				w = o.obj.width;
-				h = o.obj.height;
-				half = h >> 1;
-
-				ctx.miterLimit = 0;
-				ctx.fillStyle = '#fcfcfc';
-				ctx.fillRect(0, 0, 22, h);
-				ctx.fillStyle = '#ccc';
-				ctx.fillRect(22, 0, 1, h);
-
-				if (i === 0) {
-					this.halfing = (half -= 12);
-					this.columnWidth = ((w - 26) / 64) | 0;
-					this.centering = 26 + (w - (this.columnWidth * 64)) >> 1;
-
-					ctx.fillRect(22, half, w - 22, 1);
-					ctx.fillRect(22, 286, w - 22, 1);
-
-					ctx.save();
-					ctx.font = $('label').first().css('font');
-					ctx.translate(12, half);
-					ctx.rotate(-Math.PI / 2);
-					ctx.textBaseline = "middle";
-					ctx.fillStyle = '#888';
-					ctx.textAlign = "right";
-					ctx.fillText("RIGHT", -16, 0);
-					ctx.textAlign = "left";
-					ctx.fillText("LEFT", 16, 0);
-					ctx.restore();
-				}
-
-				ctx.drawImage(this.img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
-			}
-
-			this.updateOffsets();
-			this.createPitchShiftTable();
-			this.createOrnamentEditorTable();
-
-			app.updateSampleEditor(true);
-			this.initialized = true;
-
-			console.log('Tracker.smporn', 'Sample/Ornament editors completely initialized...');
-		};
-
-		this.updateOffsets = function () {
-			var amp = $(this.amp.obj).offset(),
-				noise = $(this.noise.obj).offset();
-
-			this.smpeditOffset = {
-				left: 0 | amp.left,
-				top: {
-					amp: 0 | amp.top,
-					noise: 0| noise.top
-				}
-			};
-
-			console.log('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s',
-				'color:gray', JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
-		};
-
-		this.updateSamplePitchShift = function () {
-			var sample = app.player.sample[app.workingSample],
-				noloop = (sample.end === sample.loop),
-				data;
-
-			$('#fxSampleShift>.cell').each(function (i, el) {
-				data = sample.data[i];
-
-				if (i >= sample.end && !sample.releasable)
-					el.className = 'cell';
-				else if (!noloop && i >= sample.loop && i < sample.end)
-					el.className = 'cell loop';
-				else
-					el.className = 'cell on';
-
-				$(el).find('input').val(parseInt(data.shift, this.radix));
-			});
-
-			$('#fxSampleShift').parent().scrollLeft(0);
-		};
-
-		this.createPitchShiftTable = function () {
-			var i, s,
-				el = $('#fxSampleShift').empty(),
-				cell = $('<div class="cell"/>'),
-				spin = $('<input type="text" class="form-control">');
-
-			console.log('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
-			for (i = 0; i < 256; i++) {
-				s = spin.clone();
-				cell.clone().append(s).appendTo(el);
-
-				s.TouchSpin({
-					prefix:  i.toWidth(3),
-					radix: (this.radix = app.settings.hexSampleFreq ? 16 : 10),
-					initval: 0, min: -1023, max: 1023
-				})
-				.change({ index: i }, function(e) {
-					var radix = app.settings.hexSampleFreq ? 16 : 10,
-						sample = app.player.sample[app.workingSample],
-						data = sample.data,
-						el = e.target;
-
-					data[e.data.index].shift = parseInt(el.value, radix);
-				})
-				.prop('tabindex', 9);
-			}
-		};
-//---------------------------------------------------------------------------------------
-		this.chords = {
-			'maj':    { sequence: [ 0, 4, 7 ],     name: 'major' },
-			'min':    { sequence: [ 0, 3, 7 ],     name: 'minor' },
-			'maj7':   { sequence: [ 0, 4, 7, 11 ], name: 'major 7th' },
-			'min7':   { sequence: [ 0, 3, 7, 10 ], name: 'minor 7th' },
-			'sus2':   { sequence: [ 0, 2, 7 ],     name: 'suspended 2nd' },
-			'sus4':   { sequence: [ 0, 5, 7 ],     name: 'suspended 4th' },
-			'6':      { sequence: [ 0, 4, 7, 9 ],  name: 'major 6th' },
-			'7':      { sequence: [ 0, 4, 7, 10 ], name: 'dominant 7th' },
-			'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
-			'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
-			'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
-			'dim':    { sequence: [ 0, 3, 6, 9 ],  name: 'diminished' },
-			'12th':   { sequence: [ 12, 0 ],       name: '12th' }
-		};
-
-		this.updateOrnamentEditor = function (update) {
-			var orn = app.player.ornament[app.workingOrnament],
-				noloop = (orn.end === orn.loop);
-
-			$('#fxOrnEditor>.cell').each(function (i, el) {
-				if (i >= orn.end)
-					el.className = 'cell';
-				else if (!noloop && i >= orn.loop && i < orn.end)
-					el.className = 'cell loop';
-				else
-					el.className = 'cell on';
-
-				$(el).find('input').val(orn.data[i]);
-			});
-
-			if (update) {
-				$('#txOrnName').val(orn.name);
-				$('#fxOrnEditor').parent().scrollLeft(0);
-
-				$('#scOrnLength').val('' + orn.end);
-				$('#scOrnRepeat').val('' + (orn.end - orn.loop))
-					.trigger('touchspin.updatesettings', { min: 0, max: orn.end });
-			}
-		};
-
-		this.createOrnamentEditorTable = function () {
-			var i, s,
-				el = $('#fxOrnEditor').empty(),
-				cell = $('<div class="cell"/>'),
-				spin = $('<input type="text" class="form-control">');
-
-			console.log('Tracker.smporn', 'Creating elements into Ornament editor...');
-			for (i = 0; i < 256; i++) {
-				s = spin.clone();
-				cell.clone().append(s).appendTo(el);
-
-				s.TouchSpin({
-					prefix:  i.toWidth(3),
-					initval: 0, min: -60, max: 60
-				})
-				.change({ index: i }, function(e) {
-					var orn = app.player.ornament[app.workingOrnament],
-						el = e.target;
-
-					orn.data[e.data.index] = parseInt(el.value, 10);
-				})
-				.prop('tabindex', 31);
-			}
-		};
-	}
-
-	return SmpOrnEditor;
-})();
-//---------------------------------------------------------------------------------------
+"use strict";
+class STMFile {
+    constructor($parent) {
+        this.$parent = $parent;
+        this.yetSaved = false;
+        this.modified = false;
+        this.fileName = '';
+        this._storageMap = [];
+        this._storageLastId = undefined;
+        this._storageBytesUsed = 0;
+        this._reloadStorage();
+        let usageHandler = (() => {
+            return {
+                bytes: this._storageBytesUsed,
+                percent: Math.ceil(100 / ((2 * 1024 * 1024) / this._storageBytesUsed))
+            };
+        });
+        this.dialog = new FileDialog(this.$parent, this, {
+            data: this._storageMap,
+            get usage() { return usageHandler(); }
+        });
+    }
+    _storageSortAndSum() {
+        this._storageBytesUsed = 0;
+        this._storageMap.sort((a, b) => (b.timeModified - a.timeModified));
+        this._storageMap.forEach(obj => {
+            this._storageBytesUsed += (obj.length + 40) * 2;
+        }, this);
+    }
+    _updateAll() {
+        const tracker = this.$parent;
+        const player = tracker.player;
+        let actualLine = player.currentLine;
+        tracker.onCmdToggleEditMode(tracker.modeEdit);
+        tracker.onCmdToggleLoop(player.loopMode);
+        $('#scPattern').val(tracker.workingPattern.toString());
+        $('#scPosRepeat').val((player.repeatPosition + 1).toString());
+        $('#scPosCurrent').val(player.currentPosition.toString());
+        tracker.updatePanels();
+        player.currentLine = actualLine;
+        tracker.updateTracklist();
+        $('#scSampleNumber').val(tracker.workingSample.toString(32).toUpperCase());
+        $('#scOrnNumber').val(tracker.workingOrnament.toString(16).toUpperCase());
+        $('#scOrnTestSample').val(tracker.workingOrnTestSample.toString(32).toUpperCase());
+        $('#scSampleTone,#scOrnTone').val(tracker.workingSampleTone.toString()).trigger('change');
+        $('#sbSampleScroll').scrollLeft(0);
+        tracker.updateSampleEditor(true);
+        tracker.smpornedit.updateOrnamentEditor(true);
+        $('#main-tabpanel a').eq(tracker.activeTab).tab('show');
+    }
+    _reloadStorage() {
+        this._storageMap.splice(0);
+        this._storageLastId = -1;
+        let match;
+        for (let i = 0, l = localStorage.length; i < l; i++) {
+            if ((match = localStorage.key(i).match(/^(stmf([0-9a-f]{3}))\-nfo/))) {
+                let id = parseInt(match[2], 16);
+                let storageId = match[1];
+                let s = localStorage.getItem(match[0]);
+                let data = localStorage.getItem(storageId + '-dat');
+                if (!data) {
+                    console.log('Tracker.file', 'Unable to read data for file in localStorage\n\t%s:"%s"', match[2], s);
+                    localStorage.removeItem(match[0]);
+                    continue;
+                }
+                if (!(match = s.match(/^(.+)\|(\d+?)\|(\d+?)\|(\d\d:\d\d)$/)))
+                    continue;
+                this._storageLastId = Math.max(this._storageLastId, id);
+                this._storageMap.push({
+                    id: id,
+                    storageId: storageId,
+                    fileName: match[1],
+                    timeCreated: parseInt(match[2], 10),
+                    timeModified: parseInt(match[3], 10),
+                    duration: match[4],
+                    length: data.length
+                });
+            }
+        }
+        this._storageSortAndSum();
+    }
+    _parseJSON(input) {
+        let data = undefined;
+        if (typeof input === 'string') {
+            try {
+                data = JSON.parse(input);
+                if (typeof data !== 'object') {
+                    return false;
+                }
+            }
+            catch (e) {
+                return false;
+            }
+        }
+        else if (typeof input === 'object') {
+            data = input;
+        }
+        else {
+            return false;
+        }
+        let tracker = this.$parent;
+        let settings = tracker.settings;
+        let player = tracker.player;
+        let count = { smp: 0, orn: 0, pat: 0, pos: 0 };
+        if (!data.version || (data.version && data.version != '1.2')) {
+            return false;
+        }
+        player.clearSong();
+        player.clearSamples();
+        player.clearOrnaments();
+        tracker.songTitle = data.title || '';
+        tracker.songAuthor = data.author || '';
+        if (data.samples && data.samples.length) {
+            for (let i = 1, obj; i < 32; i++) {
+                if (!!(obj = data.samples[i - 1])) {
+                    let it = player.sample[i];
+                    if (obj.name)
+                        it.name = obj.name;
+                    it.loop = obj.loop || 0;
+                    it.end = obj.end || 0;
+                    it.releasable = !!obj.rel;
+                    it.parse(obj.data);
+                    count.smp++;
+                }
+            }
+        }
+        if (data.ornaments && data.ornaments.length) {
+            for (let i = 1, obj; i < 16; i++) {
+                if (!!(obj = data.ornaments[i - 1])) {
+                    let it = player.ornament[i];
+                    if (obj.name)
+                        it.name = obj.name;
+                    it.loop = obj.loop || 0;
+                    it.end = obj.end || 0;
+                    it.parse(obj.data);
+                    count.orn++;
+                }
+            }
+        }
+        if (data.patterns) {
+            data.patterns.forEach(obj => {
+                let newIdx = player.addNewPattern();
+                let it = player.pattern[newIdx];
+                it.end = obj.end || 0;
+                it.parse(obj.data);
+                count.pat++;
+            });
+        }
+        if (data.positions) {
+            data.positions.forEach((obj, i) => {
+                let it = player.addNewPosition(obj.length, obj.speed);
+                for (let k = 0; k < 6; k++) {
+                    let s = obj.ch[k];
+                    it.ch[k].pattern = parseInt(s.substr(0, 3), 10) || 0;
+                    it.ch[k].pitch = parseInt(s.substr(3), 10) || 0;
+                }
+                player.countPositionFrames(i);
+                player.storePositionRuntime(i);
+                count.pos++;
+            });
+        }
+        if (typeof data.current === 'object') {
+            let o = data.current;
+            player.repeatPosition = data.repeatPos || 0;
+            player.currentPosition = o.position || 0;
+            player.currentLine = o.line || 0;
+            tracker.workingPattern = o.pattern || 0;
+            tracker.workingSample = o.sample || 1;
+            tracker.workingOrnament = o.ornament || 1;
+            tracker.workingOrnTestSample = o.ornSample || 1;
+            tracker.workingSampleTone = o.smpornTone || 37;
+            tracker.modeEditChannel = o.channel || 0;
+            tracker.modeEditColumn = o.column || 0;
+            let c = Object.assign({}, data.ctrl, data.config);
+            player.loopMode = c.loopMode || true;
+            tracker.ctrlOctave = c.octave || 2;
+            tracker.ctrlSample = c.sample || 0;
+            tracker.ctrlOrnament = c.ornament || 0;
+            tracker.ctrlRowStep = c.rowStep || 0;
+            tracker.activeTab = c.activeTab || 0;
+            tracker.modeEdit = c.editMode || false;
+            settings.audioInterrupt = c.interrupt || 50;
+        }
+        console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
+            title: data.title,
+            author: data.author,
+            samples: count.smp,
+            ornaments: count.orn,
+            patterns: count.pat,
+            positions: count.pos,
+            version: data.version
+        });
+        this._updateAll();
+        return true;
+    }
+    _fixFileName(fileName) {
+        return fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '').trim();
+    }
+    createJSON(pretty) {
+        let tracker = this.$parent;
+        let settings = tracker.settings;
+        let player = tracker.player;
+        let output = {
+            title: tracker.songTitle,
+            author: tracker.songAuthor,
+            samples: [],
+            ornaments: [],
+            patterns: [],
+            positions: [],
+            repeatPos: player.repeatPosition,
+            current: {
+                sample: tracker.workingSample,
+                ornament: tracker.workingOrnament,
+                ornSample: tracker.workingOrnTestSample,
+                smpornTone: tracker.workingSampleTone,
+                position: player.currentPosition,
+                pattern: tracker.workingPattern,
+                line: player.currentLine,
+                channel: tracker.modeEditChannel,
+                column: tracker.modeEditColumn
+            },
+            ctrl: {
+                octave: tracker.ctrlOctave,
+                sample: tracker.ctrlSample,
+                ornament: tracker.ctrlOrnament,
+                rowStep: tracker.ctrlRowStep
+            },
+            config: {
+                interrupt: settings.audioInterrupt,
+                activeTab: tracker.activeTab,
+                editMode: tracker.modeEdit,
+                loopMode: player.loopMode
+            },
+            version: '1.2'
+        };
+        for (let i = 31; i > 0; i--) {
+            let it = player.sample[i];
+            let obj = {
+                loop: it.loop,
+                end: it.end,
+                data: it.export()
+            };
+            if (it.name) {
+                obj.name = it.name;
+            }
+            if (it.releasable) {
+                obj.rel = it.releasable;
+            }
+            if (!obj.data.length) {
+                obj.data = null;
+            }
+            if (obj.data == null && !obj.loop && !obj.end && !obj.rel && !obj.name) {
+                obj = null;
+            }
+            if (!output.samples.length && obj == null) {
+                continue;
+            }
+            output.samples.unshift(obj);
+        }
+        for (let i = 15; i > 0; i--) {
+            let it = player.ornament[i];
+            let obj = {
+                loop: it.loop,
+                end: it.end,
+                data: it.export()
+            };
+            if (it.name) {
+                obj.name = it.name;
+            }
+            if (!obj.data.length) {
+                obj.data = null;
+            }
+            if (obj.data == null && !obj.loop && !obj.end && !obj.name) {
+                obj = null;
+            }
+            if (!output.ornaments.length && obj == null) {
+                continue;
+            }
+            output.ornaments.unshift(obj);
+        }
+        for (let i = 1, l = player.pattern.length; i < l; i++) {
+            let it = player.pattern[i];
+            let obj = {
+                end: it.end,
+                data: it.export()
+            };
+            if (!obj.data.length) {
+                obj.data = null;
+            }
+            if (obj.data == null && !obj.end) {
+                obj = null;
+            }
+            if (!output.patterns.length && obj == null) {
+                continue;
+            }
+            output.patterns.push(obj);
+        }
+        output.positions = player.position.map(it => ({
+            length: it.length,
+            speed: it.speed,
+            ch: it.export()
+        }));
+        return pretty ?
+            JSON.stringify(output, null, '\t').replace(/\},\n\t+?\{/g, '}, {') :
+            JSON.stringify(output);
+    }
+    new() {
+        let tracker = this.$parent;
+        let player = tracker.player;
+        player.clearSong();
+        player.clearSamples();
+        player.clearOrnaments();
+        tracker.songTitle = '';
+        tracker.songAuthor = '';
+        player.currentPosition = 0;
+        player.repeatPosition = 0;
+        player.currentLine = 0;
+        tracker.modeEdit = false;
+        tracker.modeEditChannel = 0;
+        tracker.modeEditColumn = 0;
+        tracker.workingPattern = 0;
+        this.modified = false;
+        this.yetSaved = false;
+        this.fileName = '';
+        this._updateAll();
+    }
+    loadDemosong(fileName) {
+        let file = this;
+        console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
+        $.getJSON('demosongs/' + fileName + '.json', (data) => {
+            file._parseJSON(data);
+            file.modified = true;
+            file.yetSaved = false;
+            file.fileName = '';
+        });
+    }
+    loadFile(fileNameOrId) {
+        let name;
+        if (typeof fileNameOrId === 'string') {
+            name = this._fixFileName(fileNameOrId);
+        }
+        let found = this._storageMap.find(obj => ((name && obj.fileName === name) ||
+            (!name && typeof fileNameOrId === 'number' && obj.id === fileNameOrId)));
+        if (!found) {
+            console.log('Tracker.file', 'File "' + fileNameOrId + '" not found!');
+            return false;
+        }
+        else if (!name) {
+            name = found.fileName;
+        }
+        console.log('Tracker.file', 'Loading "%s" from localStorage...', name);
+        let data = localStorage.getItem(found.storageId + '-dat');
+        console.log('Tracker.file', 'Compressed JSON file format loaded, size: ' + (data.length << 1));
+        data = LZString.decompressFromUTF16(data);
+        console.log('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
+        if (!this._parseJSON(data)) {
+            console.log('Tracker.file', 'JSON file parsing failed!');
+            return false;
+        }
+        data = null;
+        this.modified = false;
+        this.yetSaved = true;
+        this.fileName = name;
+        return true;
+    }
+    saveFile(fileName, duration, oldId) {
+        fileName = this._fixFileName(fileName);
+        console.log('Tracker.file', 'Storing "%s" to localStorage...', fileName);
+        var modify = false;
+        let found = this._storageMap.find(obj => {
+            if (obj.id === oldId || obj.fileName === fileName) {
+                console.log('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
+                return (modify = true);
+            }
+            return false;
+        });
+        if (typeof oldId === 'number' && !modify) {
+            console.log('Tracker.file', 'Cannot find given storageId: %d!', oldId);
+            return false;
+        }
+        let data = this.createJSON();
+        console.log('Tracker.file', 'JSON file format built, original size: ' + data.length);
+        data = LZString.compressToUTF16(data);
+        console.log('Tracker.file', 'Compressed with LZW to ' + (data.length << 1));
+        let now = (Date.now() / 1000).abs();
+        let storageItem;
+        if (modify) {
+            storageItem = found;
+            storageItem.fileName = fileName;
+            storageItem.timeModified = now;
+            storageItem.duration = duration;
+            storageItem.length = data.length;
+        }
+        else {
+            storageItem = {
+                id: ++this._storageLastId,
+                storageId: 'stmf' + this._storageLastId.toHex(3),
+                fileName: fileName,
+                timeCreated: now,
+                timeModified: now,
+                duration: duration,
+                length: data.length
+            };
+        }
+        localStorage.setItem(storageItem.storageId + '-nfo', fileName.concat('|', storageItem.timeCreated.toString(), '|', storageItem.timeModified.toString(), '|', storageItem.duration));
+        localStorage.setItem(storageItem.storageId + '-dat', data);
+        if (!modify) {
+            this._storageMap.push(storageItem);
+        }
+        this._storageSortAndSum();
+        data = null;
+        this.yetSaved = true;
+        this.modified = false;
+        this.fileName = storageItem.fileName;
+        console.log('Tracker.file', 'Everything stored into localStorage...');
+        return true;
+    }
+}
+"use strict";
+const mimeType = 'text/x-saa1099tracker';
+class FileDialog {
+    constructor($app, $parent, $storage) {
+        this.$app = $app;
+        this.$parent = $parent;
+        this.$storage = $storage;
+        this._obj = null;
+        this._saveFlag = false;
+        this._selectedItem = null;
+    }
+    load() { return this._openDialog('load'); }
+    save() { return this._openDialog('save'); }
+    _defaultHandler(e) {
+        e.stopPropagation();
+        let dlg = (e.data && e.data.$scope);
+        let file = dlg.$parent;
+        let globalKeyState = dlg.$app.globalKeyState;
+        let selectedItem = dlg._selectedItem;
+        if (dlg._saveFlag) {
+            let fileName = dlg._obj.find('.file-name>input').val();
+            let duration = $('#stInfoPanel u:eq(3)').text();
+            file.saveFile(fileName, duration, (selectedItem && selectedItem.id) || undefined);
+        }
+        else {
+            if (!selectedItem) {
+                return false;
+            }
+            file.loadFile(selectedItem.id);
+        }
+        globalKeyState.inDialog = false;
+        dlg._obj.modal('hide');
+        return true;
+    }
+    _itemClickHandler(e) {
+        e.stopPropagation();
+        let dlg = (e.data && e.data.$scope);
+        let file = dlg.$parent;
+        let globalKeyState = dlg.$app.globalKeyState;
+        let storageMap = dlg.$storage.data;
+        let selectedItem = (dlg._selectedItem =
+            (e.data && typeof e.data.id === 'number') ?
+                storageMap[e.data.id] : null);
+        if (e.pageX === 0 && e.pageY === 0) {
+            return dlg._defaultHandler(e);
+        }
+        dlg._obj.find('.file-list>button').removeClass('selected');
+        if (selectedItem) {
+            $(this).addClass('selected');
+        }
+        if (dlg._saveFlag) {
+            if (selectedItem) {
+                dlg._obj.find('.file-name>input').val(selectedItem.fileName);
+            }
+            dlg._obj.find('.file-remove').prop('disabled', !selectedItem);
+        }
+        return true;
+    }
+    _removeHandler(e) {
+        e.stopPropagation();
+        let dlg = (e.data && e.data.$scope);
+        let storageMap = dlg.$storage.data;
+        let selectedItem = dlg._selectedItem;
+        let mode = (dlg._saveFlag ? 'save' : 'load');
+        if (!selectedItem) {
+            return false;
+        }
+        $('#dialoque').confirm({
+            title: i18n.dialog.file.remove.title,
+            text: i18n.dialog.file.remove.msg,
+            buttons: 'yesno',
+            style: 'danger',
+            callback: (btn) => {
+                if (btn !== 'yes') {
+                    return;
+                }
+                let index = storageMap.findIndex(obj => (obj.storageId === selectedItem.storageId));
+                if (~index) {
+                    storageMap.splice(index, 1);
+                    localStorage.removeItem(selectedItem.storageId + '-nfo');
+                    localStorage.removeItem(selectedItem.storageId + '-dat');
+                    dlg._itemClickHandler(e);
+                    dlg._obj.modal('hide');
+                    dlg._openDialog(mode);
+                }
+            }
+        });
+        return true;
+    }
+    _downloadHandler(e) {
+        e.stopPropagation();
+        let dlg = (e.data && e.data.$scope);
+        let file = dlg.$parent;
+        let el = $(this);
+        let data = file.createJSON(true);
+        let fileName = dlg._obj.find('.file-name>input').val().trim() ||
+            (e.data && e.data.fileName);
+        console.log('Tracker.file', 'Preparing file output to Blob...');
+        let blob, url;
+        try {
+            blob = new Blob([data], {
+                type: mimeType,
+                endings: 'native'
+            });
+        }
+        catch (ex) {
+            console.log('Tracker.file', 'Blob feature missing [%o], fallback to BlobBuilder...', ex);
+            try {
+                let bb = getCompatible(window, 'BlobBuilder', true);
+                bb.append(data);
+                blob = bb.getBlob(mimeType);
+            }
+            catch (ex2) {
+                console.log('Tracker.file', 'BlobBuilder feature missing [%o], fallback to BASE64 output...', ex2);
+                blob = undefined;
+                url = 'data:' + mimeType + ';base64,' + btoa(data);
+            }
+        }
+        if (blob) {
+            try {
+                url = getCompatible(window, 'URL').createObjectURL(blob) + '';
+            }
+            catch (ex) {
+                console.log('Tracker.file', 'URL feature for Blob missing [%o], fallback to BASE64 output...', ex);
+                url = 'data:' + mimeType + ';base64,' + btoa(data);
+            }
+        }
+        el.attr({
+            'href': url,
+            'download': fileName + '.STMF'
+        });
+        data = null;
+        url = null;
+        dlg._obj.modal('hide');
+        setTimeout(() => {
+            el.attr({ href: '', download: '' });
+        }, 50);
+        return true;
+    }
+    _openDialog(mode) {
+        let tracker = this.$app;
+        let file = this.$parent;
+        let storageMap = this.$storage.data;
+        const fn = file.fileName || tracker.songTitle || i18n.app.filedialog.untitled;
+        const titles = i18n.app.filedialog.title;
+        const handleArgs = { $scope: this, fileName: fn };
+        this._saveFlag = (mode === 'save');
+        this._obj = $('#filedialog');
+        if (!titles[mode] || (!this._saveFlag && !storageMap.length)) {
+            return false;
+        }
+        tracker.globalKeyState.inDialog = true;
+        this._obj.on('show.bs.modal', $.proxy(() => {
+            let usage = this.$storage.usage;
+            this._selectedItem = null;
+            this._obj.addClass(mode)
+                .before($('<div/>')
+                .addClass('modal-backdrop in').css('z-index', '1030'));
+            this._obj.find('.modal-title').text(titles[mode] + '\u2026');
+            this._obj.find('.file-name>input').val(fn);
+            this._obj.find('.storage-usage i').text(usage.bytes + ' bytes used');
+            this._obj.find('.storage-usage .progress-bar').css('width', usage.percent + '%');
+            this._obj.find('.btn-success').on('click', handleArgs, this._defaultHandler);
+            let el = this._obj.find('.file-list').empty();
+            let span = $('<span/>');
+            let cell = $('<button class="cell"/>');
+            storageMap.forEach((obj, i) => {
+                let d = (new Date(obj.timeModified * 1000))
+                    .toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
+                cell.clone()
+                    .append(span.clone().addClass('filename').text(obj.fileName))
+                    .append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
+                    .prop('tabindex', 300)
+                    .appendTo(el)
+                    .on('click focus', Object.assign({ id: i }, handleArgs), this._itemClickHandler)
+                    .on('dblclick', handleArgs, this._defaultHandler);
+            }, this);
+            this._obj.find('.file-open,.file-save').on('click', handleArgs, this._defaultHandler);
+            if (this._saveFlag) {
+                this._obj.find('.file-list').on('click', handleArgs, this._itemClickHandler);
+                this._obj.find('.file-remove').on('click', handleArgs, this._removeHandler);
+                this._obj.find('.file-download').on('click', handleArgs, this._downloadHandler);
+            }
+        }, this)).on('shown.bs.modal', $.proxy(() => {
+            this._obj.find(this._saveFlag
+                ? '.file-name>input'
+                : '.file-list>button:first-child').focus();
+        }, this)).on('hide.bs.modal', $.proxy(() => {
+            this._obj.removeClass(mode).prev('.modal-backdrop').remove();
+            this._obj.off().find('.file-list').off().empty();
+            this._obj.find('.modal-footer>.btn').off();
+            tracker.globalKeyState.inDialog = false;
+        }, this)).modal({
+            show: true,
+            backdrop: false
+        });
+        return true;
+    }
+}
+"use strict";
+class TracklistPosition {
+    constructor(y = 0, line = 0, channel = 0, column = 0, sx = 0, sy = 0) {
+        this.y = y;
+        this.line = line;
+        this.channel = channel;
+        this.column = column;
+        this.start = { x: sx, y: sy };
+    }
+    set(p) {
+        if (p instanceof TracklistPosition) {
+            this.y = p.y;
+            this.line = p.line;
+            this.channel = p.channel;
+            this.column = p.column;
+            this.start.x = p.start.x;
+            this.start.y = p.start.y;
+        }
+    }
+    compare(p) {
+        if (p instanceof TracklistPosition) {
+            return (this.y === p.y &&
+                this.line === p.line &&
+                this.channel === p.channel &&
+                this.column === p.column);
+        }
+        return false;
+    }
+}
+const tracklistZoomFactor = 2;
+const fontWidth = 6;
+class Tracklist {
+    constructor($parent) {
+        this.$parent = $parent;
+        this.initialized = false;
+        this.obj = null;
+        this.ctx = null;
+        this.canvasData = {
+            columns: [0, 4, 5, 6, 7, 9, 10, 11].map(c => c * fontWidth),
+            selWidth: (12 + 1) * fontWidth,
+            chnWidth: (12 + 2) * fontWidth,
+            lineWidth: (((12 + 2) * 6) + 2) * fontWidth,
+            vpad: 0,
+            center: 0,
+            get trkOffset() { return this.center + (4 * fontWidth); },
+            offset: null
+        };
+        this.offsets = {
+            x: [new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9)],
+            y: []
+        };
+        this.selection = {
+            isDragging: false,
+            start: new TracklistPosition,
+            len: 0,
+            line: 0,
+            channel: 0
+        };
+    }
+    countTracklines() {
+        let s = $('#statusbar').offset();
+        let t = $('#tracklist').offset();
+        let h = this.$parent.settings.tracklistLineHeight;
+        return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
+    }
+    setHeight(height) {
+        const settings = this.$parent.settings;
+        if (height == null) {
+            height = settings.tracklistAutosize
+                ? this.countTracklines()
+                : settings.tracklistLines;
+        }
+        console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
+        settings.tracklistLines = height;
+        height *= settings.tracklistLineHeight;
+        $(this.obj).prop('height', height).css({ 'height': height * tracklistZoomFactor });
+        this.canvasData.offset = $(this.obj).offset();
+    }
+    moveCurrentline(delta, noWrap = false) {
+        const player = this.$parent.player;
+        let line = player.currentLine + delta;
+        let pos = player.currentPosition;
+        let pp = player.position[pos];
+        if (this.$parent.modePlay || pp == null) {
+            return;
+        }
+        if (noWrap) {
+            line = Math.min(Math.max(line, 0), pp.length - 1);
+        }
+        else if (line < 0) {
+            line += pp.length;
+        }
+        else if (line >= pp.length) {
+            line -= pp.length;
+        }
+        player.currentLine = line;
+    }
+    pointToTracklist(x, y) {
+        const lines = this.$parent.settings.tracklistLines;
+        const tx = x / tracklistZoomFactor;
+        const ty = y / tracklistZoomFactor;
+        const half = lines >> 1;
+        let i, j, chl;
+        let ln = this.$parent.player.currentLine - half;
+        for (i = 0; i < lines; i++, ln++) {
+            if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
+                for (chl = 0; chl < 6; chl++) {
+                    if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
+                        for (j = 0; j < 8; j++) {
+                            if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1]) {
+                                return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+}
+"use strict";
+class SmpOrnEditor {
+    constructor($parent) {
+        this.$parent = $parent;
+        this.initialized = false;
+        this.img = null;
+        this.amp = { obj: null, ctx: null };
+        this.noise = { obj: null, ctx: null };
+        this.range = { obj: null, ctx: null };
+        this.smpeditOffset = null;
+        this.smpeditScroll = 0;
+        this.columnWidth = 0;
+        this.halfing = 0;
+        this.centering = 0;
+        this.radix = 10;
+        this.drag = {
+            isDragging: false,
+            freqEnableState: false,
+            rangeStart: -1
+        };
+        this.chords = {
+            'maj': { sequence: [0, 4, 7], name: 'major' },
+            'min': { sequence: [0, 3, 7], name: 'minor' },
+            'maj7': { sequence: [0, 4, 7, 11], name: 'major 7th' },
+            'min7': { sequence: [0, 3, 7, 10], name: 'minor 7th' },
+            'sus2': { sequence: [0, 2, 7], name: 'suspended 2nd' },
+            'sus4': { sequence: [0, 5, 7], name: 'suspended 4th' },
+            '6': { sequence: [0, 4, 7, 9], name: 'major 6th' },
+            '7': { sequence: [0, 4, 7, 10], name: 'dominant 7th' },
+            'add9': { sequence: [0, 2, 4, 7], name: 'added 9th' },
+            'min7b5': { sequence: [0, 3, 6, 12], name: 'minor 7th with flatted 5th' },
+            'aug': { sequence: [0, 4, 10], name: 'augmented' },
+            'dim': { sequence: [0, 3, 6, 9], name: 'diminished' },
+            '12th': { sequence: [12, 0], name: '12th' }
+        };
+    }
+    init() {
+        console.log('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
+        ['amp', 'noise', 'range'].forEach((part, i) => {
+            let o = this[part];
+            let ctx = o.ctx;
+            let w = o.obj.width;
+            let h = o.obj.height;
+            let half = h >> 1;
+            ctx.miterLimit = 0;
+            ctx.fillStyle = '#fcfcfc';
+            ctx.fillRect(0, 0, 22, h);
+            ctx.fillStyle = '#ccc';
+            ctx.fillRect(22, 0, 1, h);
+            if (i === 0) {
+                this.halfing = (half -= 12);
+                this.columnWidth = ((w - 26) / 64) | 0;
+                this.centering = 26 + (w - (this.columnWidth * 64)) >> 1;
+                ctx.fillRect(22, half, w - 22, 1);
+                ctx.fillRect(22, 286, w - 22, 1);
+                ctx.save();
+                ctx.font = $('label').first().css('font');
+                ctx.translate(12, half);
+                ctx.rotate(-Math.PI / 2);
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = '#888';
+                ctx.textAlign = "right";
+                ctx.fillText(i18n.app.smpedit.right, -16, 0);
+                ctx.textAlign = "left";
+                ctx.fillText(i18n.app.smpedit.left, 16, 0);
+                ctx.restore();
+            }
+            ctx.drawImage(this.img, i * 16, 0, 16, 16, 4, half - 8, 16, 16);
+        }, this);
+        this._updateOffsets();
+        this._createPitchShiftTable();
+        this._createOrnamentEditorTable();
+        this.$parent.updateSampleEditor(true);
+        this.initialized = true;
+        console.log('Tracker.smporn', 'Sample/Ornament editors completely initialized...');
+    }
+    updateSamplePitchShift() {
+        let working = this.$parent.workingSample;
+        let sample = this.$parent.player.sample[working];
+        let noloop = (sample.end === sample.loop);
+        let radix = this.$parent.settings.hexSampleFreq ? 16 : 10;
+        $('#fxSampleShift>.cell').each((i, el) => {
+            let data = sample.data[i];
+            if (i >= sample.end && !sample.releasable) {
+                el.className = 'cell';
+            }
+            else if (!noloop && i >= sample.loop && i < sample.end) {
+                el.className = 'cell loop';
+            }
+            else {
+                el.className = 'cell on';
+            }
+            $(el).find('input').val(data.shift.toString(radix));
+        });
+        $('#fxSampleShift').parent().scrollLeft(0);
+    }
+    _updateOffsets() {
+        let amp = $(this.amp.obj).offset();
+        let noise = $(this.noise.obj).offset();
+        this.smpeditOffset = {
+            left: 0 | amp.left,
+            top: {
+                amp: 0 | amp.top,
+                noise: 0 | noise.top
+            }
+        };
+        console.log('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s', 'color:gray', JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
+    }
+    _createPitchShiftTable() {
+        let settings = this.$parent.settings;
+        let el = $('#fxSampleShift').empty();
+        let cell = $('<div class="cell"/>');
+        let spin = $('<input type="text" class="form-control">');
+        console.log('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
+        for (let i = 0; i < 256; i++) {
+            let cloned = spin.clone();
+            cell.clone().append(cloned).appendTo(el);
+            cloned.TouchSpin({
+                prefix: i.toWidth(3),
+                radix: (settings.hexSampleFreq ? 16 : 10),
+                initval: 0,
+                min: -1023,
+                max: 1023
+            })
+                .change({ index: i }, e => {
+                let working = this.$parent.workingSample;
+                let sample = this.$parent.player.sample[working];
+                let data = sample.data;
+                let el = e.target;
+                let radix = settings.hexSampleFreq ? 16 : 10;
+                data[e.data.index].shift = parseInt(el.value, radix);
+            })
+                .prop('tabindex', 9);
+        }
+    }
+    updateOrnamentEditor(update) {
+        let working = this.$parent.workingOrnament;
+        let orn = this.$parent.player.ornament[working];
+        let noloop = (orn.end === orn.loop);
+        $('#fxOrnEditor>.cell').each((i, el) => {
+            if (i >= orn.end) {
+                el.className = 'cell';
+            }
+            else if (!noloop && i >= orn.loop && i < orn.end) {
+                el.className = 'cell loop';
+            }
+            else {
+                el.className = 'cell on';
+            }
+            $(el).find('input').val(orn.data[i]);
+        });
+        if (update) {
+            $('#txOrnName').val(orn.name);
+            $('#fxOrnEditor').parent().scrollLeft(0);
+            $('#scOrnLength').val('' + orn.end);
+            $('#scOrnRepeat').val('' + (orn.end - orn.loop))
+                .trigger('touchspin.updatesettings', { min: 0, max: orn.end });
+        }
+    }
+    _createOrnamentEditorTable() {
+        let el = $('#fxOrnEditor').empty();
+        let cell = $('<div class="cell"/>');
+        let spin = $('<input type="text" class="form-control">');
+        console.log('Tracker.smporn', 'Creating elements into Ornament editor...');
+        for (let i = 0; i < 256; i++) {
+            let cloned = spin.clone();
+            cell.clone().append(cloned).appendTo(el);
+            cloned.TouchSpin({
+                prefix: i.toWidth(3),
+                initval: 0, min: -60, max: 60
+            })
+                .change({ index: i }, e => {
+                let working = this.$parent.workingOrnament;
+                let orn = this.$parent.player.ornament[working];
+                let el = e.target;
+                orn.data[e.data.index] = parseInt(el.value, 10);
+            })
+                .prop('tabindex', 31);
+        }
+    }
+}
+"use strict";
+class Manager {
+    constructor($parent) {
+        this.$parent = $parent;
+        this._clipboard = '';
+        this.copySample = function () {
+            let app = this.$parent;
+            let smp = app.player.sample[app.workingSample];
+            let obj = {
+                name: smp.name,
+                loop: smp.loop,
+                end: smp.end,
+                releasable: smp.releasable,
+                data: smp.export(false)
+            };
+            this.clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
+        };
+        this.pasteSample = function () {
+            if (this.clipboard.indexOf('STMF.smp:{') !== 0) {
+                return false;
+            }
+            let app = this.$parent;
+            let smp = app.player.sample[app.workingSample];
+            let obj;
+            try {
+                let json = this.clipboard.substr(9);
+                obj = JSON.parse(json);
+                if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
+                    return false;
+                }
+            }
+            catch (e) {
+                return false;
+            }
+            smp.parse(obj.data);
+            smp.name = obj.name;
+            smp.loop = obj.loop;
+            smp.end = obj.end;
+            smp.releasable = obj.releasable;
+            return true;
+        };
+        this.clearOrnament = function () {
+            let app = this.$parent;
+            let orn = app.player.ornament[app.workingOrnament];
+            orn.name = '';
+            orn.data.fill(0);
+            orn.loop = orn.end = 0;
+        };
+        this.copyOrnament = function () {
+            let app = this.$parent;
+            let orn = app.player.ornament[app.workingOrnament];
+            let obj = {
+                name: orn.name,
+                loop: orn.loop,
+                end: orn.end,
+                data: orn.export(false)
+            };
+            this.clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
+        };
+        this.pasteOrnament = function () {
+            if (this.clipboard.indexOf('STMF.orn:{') !== 0) {
+                return false;
+            }
+            let app = this.$parent;
+            let orn = app.player.ornament[app.workingOrnament];
+            let obj;
+            try {
+                let json = this.clipboard.substr(9);
+                obj = JSON.parse(json);
+                if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
+                    return false;
+                }
+            }
+            catch (e) {
+                return false;
+            }
+            orn.parse(obj.data);
+            orn.name = obj.name;
+            orn.loop = obj.loop;
+            orn.end = obj.end;
+            return true;
+        };
+    }
+    _getBlock() {
+        let p = this.$parent.player;
+        let sel = this.$parent.tracklist.selection;
+        let ch = sel.len ? sel.channel : this.$parent.modeEditChannel;
+        let line = sel.len ? sel.line : p.currentLine;
+        let length = sel.len ? (sel.len + 1) : undefined;
+        let pos = p.position[p.currentPosition] || p.nullPosition;
+        let chn = pos.ch[ch];
+        let patt = chn.pattern;
+        return {
+            pp: p.pattern[patt],
+            line: line,
+            len: length
+        };
+    }
+    clearFromTracklist() {
+        let o = this._getBlock();
+        o.pp.parse([], o.line, o.len || 1);
+    }
+    copyFromTracklist() {
+        let o = this._getBlock();
+        let data = o.pp.export(o.line, o.len || 1, false);
+        this._clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
+    }
+    pasteToTracklist() {
+        if (this._clipboard.indexOf('STMF.trk:[') !== 0) {
+            return false;
+        }
+        let o = this._getBlock();
+        let data;
+        try {
+            let json = this._clipboard.substr(9);
+            data = JSON.parse(json);
+            if (!(data instanceof Array && data.length > 0)) {
+                return false;
+            }
+        }
+        catch (e) {
+            return false;
+        }
+        o.pp.parse(data, o.line, o.len || data.length);
+        return true;
+    }
+    clearSample() {
+        let app = this.$parent;
+        let smp = app.player.sample[app.workingSample];
+        smp.name = '';
+        smp.loop = 0;
+        smp.end = 0;
+        smp.releasable = false;
+        smp.parse([]);
+    }
+}
 /** Tracker.core submodule */
 /* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor, Manager */
 //---------------------------------------------------------------------------------------
@@ -1286,148 +1165,6 @@ var Tracker = (function() {
 	};
 
 	return Tracker;
-})();
-//---------------------------------------------------------------------------------------
-/** Tracker.manager submodule */
-//---------------------------------------------------------------------------------------
-var Manager = (function () {
-	function Manager(app) {
-	    this.clipboard = '';
-
-//- private methods ---------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-		function getBlock () {
-			var p = app.player,
-				sel = app.tracklist.selection,
-				ch = sel.len ? sel.channel : app.modeEditChannel,
-				line = sel.len ? sel.line : p.currentLine,
-				length = sel.len ? (sel.len + 1) : void 0,
-				pos = p.position[p.currentPosition] || p.nullPosition;
-
-			return {
-				pp: p.pattern[pos.ch[ch].pattern],
-				line: line,
-				len: length
-			};
-		}
-
-// public methods -----------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-        this.clearFromTracklist = function () {
-        	var o = getBlock();
-			o.pp.parse([], o.line, o.len || 1);
-        };
-
-        this.copyFromTracklist = function () {
-			var o = getBlock(),
-				data = o.pp.export(o.line, o.len || 1, false);
-
-            this.clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
-        };
-
-        this.pasteToTracklist = function () {
-            if (this.clipboard.indexOf('STMF.trk:[') !== 0)
-                return false;
-
-            var o = getBlock(),
-				data = this.clipboard.substr(9);
-
-			try { data = JSON.parse(data) }
-			catch (e) { return false }
-
-            if (!(data instanceof Array && data.length > 0))
-                return false;
-
-            o.pp.parse(data, o.line, o.len || data.length);
-            return true;
-        };
-//---------------------------------------------------------------------------------------
-		this.clearSample = function () {
-			var smp = app.player.sample[app.workingSample];
-
-			smp.name = '';
-			smp.loop = 0;
-			smp.end = 0;
-			smp.releasable = false;
-			smp.parse([]);
-		};
-
-		this.copySample = function () {
-			var smp = app.player.sample[app.workingSample],
-				obj = {
-					name: smp.name,
-					loop: smp.loop,
-					end: smp.end,
-					releasable: smp.releasable,
-					data: smp.export(false)
-				};
-
-            this.clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
-		};
-
-		this.pasteSample = function () {
-            if (this.clipboard.indexOf('STMF.smp:{') !== 0)
-                return false;
-
-			var smp = app.player.sample[app.workingSample],
-				obj = this.clipboard.substr(9);
-
-			try { obj = JSON.parse(obj) }
-			catch (e) { return false }
-
-            if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0))
-                return false;
-
-			smp.parse(obj.data);
-			smp.name = obj.name;
-			smp.loop = obj.loop;
-			smp.end = obj.end;
-			smp.releasable = obj.releasable;
-			return true;
-		};
-//---------------------------------------------------------------------------------------
-		this.clearOrnament = function () {
-			var orn = app.player.ornament[app.workingOrnament];
-
-			orn.name = '';
-			orn.data.fill(0);
-			orn.loop = orn.end = 0;
-		};
-
-		this.copyOrnament = function () {
-			var orn = app.player.ornament[app.workingOrnament],
-				obj = {
-					name: orn.name,
-					loop: orn.loop,
-					end:  orn.end,
-					data: orn.export(false)
-				};
-
-            this.clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
-		};
-
-		this.pasteOrnament = function () {
-            if (this.clipboard.indexOf('STMF.orn:{') !== 0)
-                return false;
-
-			var orn = app.player.ornament[app.workingOrnament],
-				obj = this.clipboard.substr(9);
-
-			try { obj = JSON.parse(obj) }
-			catch (e) { return false }
-
-            if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0))
-                return false;
-
-			orn.parse(obj.data);
-			orn.name = obj.name;
-			orn.loop = obj.loop;
-			orn.end = obj.end;
-			return true;
-		};
-	}
-
-	return Manager;
 })();
 //---------------------------------------------------------------------------------------
 /** Tracker.controls submodule */
@@ -1622,12 +1359,12 @@ Tracker.prototype.onCmdFileOpen = function () {
 				if (btn !== 'yes')
 					return;
 
-				file.dialog('load');
+				file.dialog.load();
 			}
 		});
 	}
 	else
-		file.dialog('load');
+		file.dialog.load();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileSave = function (as) {
@@ -1636,7 +1373,7 @@ Tracker.prototype.onCmdFileSave = function (as) {
 
 	var file = this.file;
 	if (as || !file.yetSaved || file.modified)
-		file.dialog('save');
+		file.dialog.save();
 	else if (!as && file.yetSaved && file.fileName)
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
 };
@@ -3971,6 +3708,11 @@ Tracker.prototype.doc = {
 
 	i18n: {
 		'app.msg.unsaved': 'All unsaved changes in SAA1099Tracker will be lost.',
+		'app.smpedit.left': 'LEFT',
+		'app.smpedit.right': 'RIGHT',
+		'app.filedialog.untitled': 'Untitled',
+		'app.filedialog.title.load': 'Open file from storage',
+		'app.filedialog.title.save': 'Save file to storage',
 		'dialog.file.new.title': 'Create new file...',
 		'dialog.file.new.msg': 'Do you really want to clear all song data and lost all of your changes?',
 		'dialog.file.open.title': 'Open file...',

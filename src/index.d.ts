@@ -1,6 +1,6 @@
 /*!
- * SAA1099Tracker
- * Copyright (c) 2012-2016 Martin Borik <mborik@users.sourceforge.net>
+ * References to all required TypeScript definitions.
+ * Copyright (c) 2017 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -19,4 +19,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-!function(){var a,b,c,d=/\/[a-z]+?\.js(\?.*)?$/,e="app/",f=window.location,g=(f.search||f.hash).match(/[\?&#]dev/)?"":".min",h=document.getElementsByTagName("script")[0],i=["jquery","lz-string","bootstrap","Commons","Audio","SAASound","Player","Tracker"];for(h&&"http"===h.src.substr(0,4)&&h.src.match(d)&&(e=h.src.replace(d,e).replace(f.origin,"")),h=document.getElementsByTagName("head")[0],a=0,b=i.length;a<b;a++){d=e+i[a]+g+".js";try{document.write('<script type="text/javascript" src="'+d+'"></script>')}catch(a){c=document.createElement("script"),c.setAttribute("type","text/javascript"),c.setAttribute("src",d),h.appendChild(c)}}window.location.appPath=e,window.dev=!g}();
+//---------------------------------------------------------------------------------------
+/// <reference types="jquery" />
+/// <reference types="lz-string" />
+
+/// <reference types="bootstrap" />
+/// <reference path="bootstrap.mods/confirm/bootstrap-confirm.d.ts" />
+/// <reference path="bootstrap.mods/touchspin/bootstrap-touchspin.d.ts" />
+
+/// <reference path="Commons.d.ts" />
+/// <reference path="Audio.d.ts" />
+/// <reference path="SAASound.d.ts" />
+/// <reference path="Player.d.ts" />
+/// <reference path="Tracker.d.ts" />
+//---------------------------------------------------------------------------------------

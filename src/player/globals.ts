@@ -1,4 +1,4 @@
-/*
+/*!
  * Player: Global classes a interface definition.
  * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
  *
