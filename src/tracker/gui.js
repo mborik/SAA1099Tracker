@@ -4,14 +4,6 @@
 Tracker.prototype.populateGUI = function () {
 	var app = this;
 
-	var tplInjectionTable = {
-			'menu':        'nav.navbar',
-			'header':     '.fixed-container',
-			'trackedit':  '.fixed-container>.tab-content',
-			'smpedit':    '.fixed-container>.tab-content',
-			'ornedit':    '.fixed-container>.tab-content'
-		};
-
 	var populatedElementsTable = [
 		{
 			global:   'document',
@@ -645,41 +637,17 @@ Tracker.prototype.populateGUI = function () {
 	];
 
 //---------------------------------------------------------------------------------------
-	console.log('Tracker.gui', 'Loading HTML templates...');
+	console.log('Tracker.gui', 'Populating elements...');
 
-	$.ajax({
-		cache: true,
-		contentType: false,
-		converters: { "text html": jQuery.parseHTML },
-		dataType: 'html',
-		isLocal: true,
-		url: location.appPath + 'Tracker.tpl.html',
+	populatedElementsTable.forEach(function (o) {
+		var data = o.handler || o.data;
+		var selector = o.selector || (o.global && window[o.global]);
 
-		success: function (templates) {
-			var i, l, o, data, selector;
-
-			for (i = 0, l = templates.length; i < l; i++) {
-				o = templates[i];
-				console.log('Tracker.gui', 'Injecting "%s" template...', o.id);
-
-				selector = tplInjectionTable[o.id] || 'body';
-				$(o).contents().appendTo(selector);
-			}
-
-			console.log('Tracker.gui', 'Populating elements...');
-
-			for (i = 0, l = populatedElementsTable.length; i < l; i++) {
-				o = populatedElementsTable[i];
-				data = o.handler || o.data;
-				selector = o.selector || (o.global && window[o.global]);
-
-				if (selector && o.method) {
-					if (o.param)
-						$(selector)[o.method](o.param, data);
-					else
-						$(selector)[o.method](data);
-				}
-			}
+		if (selector && o.method) {
+			if (o.param)
+				$(selector)[o.method](o.param, data);
+			else
+				$(selector)[o.method](data);
 		}
 	});
 };

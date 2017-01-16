@@ -405,9 +405,7 @@ Tracker.prototype.onCmdAbout = function () {
 	if (!data.hasOwnProperty('bs.modal')) {
 		dialog
 			.on('show.bs.modal', function () { keys.inDialog = true })
-			.on('hidden.bs.modal', function () { keys.inDialog = false })
-			.find('.ver')
-			.text('v' + this.version);
+			.on('hidden.bs.modal', function () { keys.inDialog = false });
 	}
 
 	dialog.modal('toggle');

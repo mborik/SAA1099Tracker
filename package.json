@@ -1,6 +1,7 @@
 {
   "name": "SAA1099Tracker",
   "version": "1.2.0",
+  "homepage": "https://github.com/mborik/SAA1099Tracker",
   "author": {
     "name": "Martin Bórik",
     "email": "mborik@users.sourceforge.net"
@@ -17,9 +18,9 @@
     "grunt-contrib-concat": "~1.0.1",
     "grunt-contrib-copy": "~1.0.0",
     "grunt-contrib-cssmin": "~1.0.2",
-    "grunt-contrib-htmlmin": "~2.0.0",
     "grunt-contrib-less": "~1.4.0",
     "grunt-contrib-uglify": "~2.0.0",
+    "grunt-html-build": "^0.6.1",
     "grunt-ts": "latest",
     "less-middleware": "~2.2.0",
     "typescript": "^2.1.4"
