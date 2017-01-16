@@ -135,38 +135,30 @@ module.exports = function(grunt) {
 						'src/tracker/gui.js'
 					]
 				}
-			},
-			'templates': {
-				options: {
-					process: function (data, file) {
-						return '<tpl id="' + file.replace(/^.*\/([\w\-]+)\..+$/, '$1') + '">\n' + data + '</tpl>\n';
-					}
-				},
-				src: [
-					'templates/menu.html',
-					'templates/header.html',
-					'templates/trackedit.html',
-					'templates/smpedit.html',
-					'templates/ornedit.html',
-					'templates/dlg-file.html',
-					'templates/dlg-about.html',
-					'templates/dlg-commons.html',
-					'templates/footer.html'
-				],
-				dest: './.tmp/templates.tmp'
 			}
 		},
-		htmlmin: {
-			templates: {
+		htmlbuild: {
+			'templates': {
+				src: 'templates/index.html',
+				dest: 'build/',
 				options: {
-					process: true,
-					removeComments: true,
-					collapseWhitespace: true,
-					conservativeCollapse: false,
-					collapseBooleanAttributes: true,
-				},
-				src: './.tmp/templates.tmp',
-				dest: 'build/app/Tracker.tpl.html'
+					relative: true,
+					sections: {
+						menu: 'templates/menu.html',
+						header: 'templates/header.html',
+						footer: 'templates/footer.html',
+						editor: {
+							trk: 'templates/trackedit.html',
+							smp: 'templates/smpedit.html',
+							orn: 'templates/ornedit.html'
+						},
+						dialog: {
+							file: 'templates/dlg-file.html',
+							about: 'templates/dlg-about.html',
+							commons: 'templates/dlg-commons.html'
+						}
+					}
+				}
 			}
 		},
 		clean: {
@@ -184,10 +176,7 @@ module.exports = function(grunt) {
 					return grunt.file.exists(path.format(fileobj));
 				}
 			},
-			'temporary-dirs': [
-				'.tscache',
-				'.tmp'
-			]
+			'tmpdirs': [ '.tscache' ]
 		},
 		less: {
 			'styles': {
@@ -257,10 +246,10 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
-	grunt.loadNpmTasks('grunt-contrib-htmlmin');
+	grunt.loadNpmTasks('grunt-html-build');
 	grunt.loadNpmTasks('grunt-ts');
 
 	// Task definitions
-	grunt.registerTask('default', [ 'ts','copy','concat','htmlmin','clean','less','uglify','cssmin' ]);
+	grunt.registerTask('default', [ 'ts','copy','concat','htmlbuild','clean','less','uglify','cssmin' ]);
 	grunt.registerTask('styles', [ 'less','uglify','cssmin' ]);
 };
