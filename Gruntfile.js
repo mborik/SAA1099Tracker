@@ -53,6 +53,26 @@ module.exports = function(grunt) {
 			}
 		},
 		copy: {
+			'app-fonts': {
+				files: [{
+					expand: true,
+					cwd: 'assets/fonts/',
+					src: '**',
+					dest: 'build/fonts/',
+					flatten: false,
+					filter: 'isFile'
+				}]
+			},
+			'app-images': {
+				files: [{
+					expand: true,
+					cwd: 'assets/images/',
+					src: '**',
+					dest: 'build/img/',
+					flatten: false,
+					filter: 'isFile'
+				}]
+			},
 			'bootstrap': {
 				files: [{
 					expand: true,
