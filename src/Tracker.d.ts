@@ -49,6 +49,8 @@ declare class Tracker {
 	updateSampleEditor(update?: boolean, limitFrom?: number, limitTo?: number): void;
 	updateOrnamentEditor(update?: boolean, limitFrom?: number, limitTo?: number): void;
 	updateTracklist(update?: boolean): void;
+	handleMouseEvent(part: string, obj: any, e: JQueryEventObject): void;
+	initPixelFont(font: HTMLImageElement): void;
 
 	onCmdAbout(): void;
 	onCmdEditClear(): void;

@@ -153,29 +153,29 @@ Tracker.prototype.doc = {
 	],
 
 	// helper functions for statusbar:
-	lastStatus: void 0,
-	setStatusText: function (i) {
-		var text = this.statusbar[i];
+	lastStatus: undefined,
+	setStatusText: function(status) {
+		let text = this.statusbar[status];
 
-		if (text && i === this.lastStatus)
+		if (text && status === this.lastStatus) {
 			return;
+		}
 
-		$('#statusbar>p').html(!text ? '' :
-			(
-				text.replace(/(\[.+?\])/g, '<strong>$1</strong>')
-				    .replace(/^([\w ]+?)(\:| \-)/, '<kbd>$1</kbd>$2')
-				    .replace(/(\(.+?\))$/, '<em>$1</em>')
-			)
-		);
+		$('#statusbar>p').html(!text ? '' : (
+			text.replace(/(\[.+?\])/g, '<strong>$1</strong>')
+				.replace(/^([\w ]+?)(\:| \-)/, '<kbd>$1</kbd>$2')
+				.replace(/(\(.+?\))$/, '<em>$1</em>')
+		));
 
-		this.lastStatus = i;
+		this.lastStatus = status;
 	},
 
-	showTracklistStatus: function (col, cmd) {
-		var i = col;
+	showTracklistStatus: function(col, cmd) {
+		let i = col;
 
-		if (col === 5)
+		if (col === 5) {
 			i = cmd + 5;
+		}
 		else if (col > 5) {
 			switch (cmd) {
 				case 0x1:
@@ -218,30 +218,33 @@ Tracker.prototype.doc = {
 		this.setStatusText(i);
 	},
 
-	i18nInit: function () {
-		Object.keys(this.i18n).forEach(function (idx) {
-			var i, p, deepIn,
-				value = this[idx],
-				path = idx.split('.'),
-				len = path.length;
+	i18nInit: function() {
+		Object.keys(this.i18n).forEach(idx => {
+			let value = this.i18n[idx];
+			let path = idx.split('.');
+			let len = path.length;
 
-			i = 0;
-			deepIn = this;
+			let p, i = 0;
+			let deepIn = this.i18n;
 			while (i < len) {
 				p = path[i];
 				deepIn[p] = deepIn[p] || {};
 
-				if (++i === len)
+				if (++i === len) {
 					break;
+				}
 				deepIn = deepIn[p];
 			}
 
-			if (typeof value === 'string')
+			if (typeof value === 'string') {
 				value = value.replace('...', '\u2026').replace('\b', '<br />');
-			deepIn[p] = value;
+			}
 
-			delete this[idx];
-		}, window.i18n = this.i18n);
+			deepIn[p] = value;
+			delete this.i18n[idx];
+		}, this);
+
+		window.i18n = this.i18n;
 	}
 };
 //---------------------------------------------------------------------------------------

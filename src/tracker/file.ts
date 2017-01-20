@@ -112,8 +112,8 @@ class STMFile {
 	}
 
 	private _updateAll(): void {
-		const tracker: Tracker = this.$parent;
-		const player: Player = tracker.player;
+		let tracker: Tracker = this.$parent;
+		let player: Player = tracker.player;
 
 		let actualLine = player.currentLine;
 

@@ -1,11 +1,11 @@
 /** Tracker.core submodule */
-/* global browser, STMFile, AudioDriver, SAASound, SyncTimer, Player, Tracklist, SmpOrnEditor, Manager */
 //---------------------------------------------------------------------------------------
-var Tracker = (function() {
-	function Tracker(ver) {
+class Tracker {
+	constructor(ver) {
 		console.log('Tracker', 'Inizializing SAA1099Tracker v%s...', ver);
-
 		this.version = ver;
+
+		this.doc.i18nInit();
 
 		this.loaded = false;
 		this.activeTab = null;
@@ -50,20 +50,17 @@ var Tracker = (function() {
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
 
-
-	// constructor {
-		this.doc.i18nInit();
-
 		if (AudioDriver) {
 			this.player = new Player(new SAASound(AudioDriver.sampleRate));
 			AudioDriver.init(this.player);
 		}
-		else
-			$('#overlay>span').html(
+		else {
+			$('#overlay .loader').html(
 				browser.isIE ?
 					i18n.app.error.ie :
 					i18n.app.error.webaudio
 			);
+		}
 
 		if (this.player) {
 			this.file = new STMFile(this);
@@ -71,21 +68,19 @@ var Tracker = (function() {
 			this.populateGUI();
 			this.initializeGUI();
 		}
-	// }
 	}
 
-	Tracker.prototype.baseTimer = function() {
+	baseTimer() {
 		if (this.modePlay && this.player.changedLine) {
-			if (this.player.changedPosition)
+			if (this.player.changedPosition) {
 				this.updatePanelPosition();
+			}
 			this.updatePanelInfo();
 			this.updateTracklist();
 
 			this.player.changedPosition = false;
 			this.player.changedLine = false;
 		}
-	};
-
-	return Tracker;
-})();
+	}
+}
 //---------------------------------------------------------------------------------------

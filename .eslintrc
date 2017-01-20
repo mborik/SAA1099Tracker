@@ -1,0 +1,23 @@
+{
+	"parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "impliedStrict": true
+        }
+	},
+	"env": {
+		"node": true,
+		"browser": true,
+		"es6": true,
+		"jquery": true
+	},
+	"rules": {
+		"semi": [2, "always"],
+		"indent": [1, "tab", {"SwitchCase": 1}],
+		"brace-style": [2, "stroustrup"],
+		"no-array-constructor": [2],
+		"space-before-function-paren": [2, "never"],
+		"no-eq-null": 2
+	}
+}
