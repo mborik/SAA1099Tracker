@@ -23,7 +23,7 @@
 /// <reference path="../index.d.ts" />
 //---------------------------------------------------------------------------------------
 interface SmpOrnEditorDragStatus {
-	isDragging: boolean;
+	isDragging: boolean | number;
 
 	freqEnableState: boolean;
 	rangeStart: number;

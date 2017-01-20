@@ -24,7 +24,7 @@
 	/**
 	 * This global method is trying to find cross-browser compatible property of testing
 	 * or experimental features of the modern browsers.
-	 * @param base {string} Parent object or container which should had that property;
+	 * @param base {any} Parent object or container which should had that property;
 	 * @param prop {string} Property name to find (future/final name from specification);
 	 * @param ret {boolean} If property is constructor and we want a new object of this
 	 *               type or if we want to set value of this property, set this to true;

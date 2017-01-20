@@ -16,9 +16,16 @@ declare interface browser {
 	isChrome: boolean;
 	isIE: boolean;
 }
+declare var browser: browser;
+//---------------------------------------------------------------------------------------
 declare interface Number {
 	abs(): number;
 	toWidth(width?: number): string;
 	toHex(width?: number): string;
 	toTimeString(): string;
+}
+declare interface JQueryEventObject {
+	buttons: number;
+	delta: number;
+	target: HTMLElement;
 }

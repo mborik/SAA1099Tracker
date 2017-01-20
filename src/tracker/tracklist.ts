@@ -154,7 +154,7 @@ class Tracklist {
 	}
 
 	public setHeight(height?: number) {
-		const settings = this.$parent.settings;
+		let settings = this.$parent.settings;
 
 		if (height == null) {
 			height = settings.tracklistAutosize
@@ -172,8 +172,7 @@ class Tracklist {
 	}
 
 	public moveCurrentline(delta: number, noWrap: boolean = false) {
-		const player = this.$parent.player;
-
+		let player = this.$parent.player;
 		let line = player.currentLine + delta;
 		let pos = player.currentPosition;
 		let pp = player.position[pos];
@@ -196,19 +195,16 @@ class Tracklist {
 	}
 
 	public pointToTracklist(x: number, y: number): TracklistPosition {
-		const lines: number = this.$parent.settings.tracklistLines;
-		const tx: number = x / tracklistZoomFactor;
-		const ty: number = y / tracklistZoomFactor;
-		const half: number = lines >> 1;
+		let lines: number = this.$parent.settings.tracklistLines;
+		let tx: number = x / tracklistZoomFactor;
+		let ty: number = y / tracklistZoomFactor;
+		let ln: number = this.$parent.player.currentLine - (lines >> 1);
 
-		let i: number, j: number, chl: number;
-		let ln: number = this.$parent.player.currentLine - half;
-
-		for (i = 0; i < lines; i++, ln++) {
+ 		for (let i = 0; i < lines; i++, ln++) {
 			if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
-				for (chl = 0; chl < 6; chl++) {
+				for (let chl = 0; chl < 6; chl++) {
 					if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
-						for (j = 0; j < 8; j++) {
+						for (let j = 0; j < 8; j++) {
 							if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1]) {
 								return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
 							}
