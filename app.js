@@ -1,27 +1,79 @@
-var express = require('express'),
-	http = require('http'),
-	path = require('path'),
-	app = express();
+const fs = require('fs');
+const extend = require('util')._extend;
+const httpServer = require('http-server');
+const portfinder = require('portfinder');
+const { app, BrowserWindow } = require('electron');
 
-// all environments
-app.set('port', process.env.PORT || 80);
-app.set("view options", {layout: false});
-app.use(express.logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(express.methodOverride());
-app.use(express.static(__dirname + '/build'));
+const BASE_PORT = 8729;
+const ELECTRON_OPTIONS = {
+	show: false,
+	width: 1280,
+	height: 720,
+	center: true,
+	minWidth: 1152,
+	minHeight: 576,
+	autoHideMenuBar: true,
+	acceptFirstMouse: true,
+	icon: __dirname + '/build/img/logo.png',
+	title: 'SAA1099Tracker',
+	webPreferences: {
+		nodeIntegration: false,
+		textAreasAreResizable: false,
+		webgl: false,
+		defaultEncoding: 'UTF-8'
+	}
+};
 
-// development only
-if (app.get('env') === 'development')
-	app.use(express.errorHandler());
+const SERVER_OPTIONS = {
+	root: __dirname + '/build',
+	ext: 'html',
+	showDir: false,
+	autoIndex: false,
+	gzip: false,
+};
 
-app.use('/doc', express.static(__dirname + '/doc'));
-app.use('/src', express.static(__dirname + '/src'));
-app.get('/', function(req, res) {
-	res.render('index.html');
-});
+portfinder.basePort = BASE_PORT;
+portfinder.getPort((err, port) => {
+	if (err) {
+		throw err;
+	}
+	else {
+		let server = httpServer.createServer(extend({
+			before: [
+				(req, res) => {
+					console.log('handling url "%s"...', req.url);
 
-http.createServer(app).listen(app.get('port'), function() {
-	console.log('listening on port ' + app.get('port'));
+					if (/^\/?doc\/\w+.txt$/.test(req.url)) {
+						res.setHeader('Content-Type', 'text/plain');
+						return fs.createReadStream('./' + req.url).pipe(res);
+					}
+
+					res.emit('next');
+				}
+			]
+		}, SERVER_OPTIONS));
+
+		app.on('window-all-closed', () => {
+			console.log('server shutdown...');
+			server.close();
+
+			app.quit();
+		});
+
+		server.listen(port, '0.0.0.0', () => {
+			console.log('server running on port ' + port);
+
+			app.on('ready', () => {
+				let window = new BrowserWindow(ELECTRON_OPTIONS);
+				window.on('closed', () => {
+					window = null;
+				});
+				window.once('ready-to-show', () => {
+					window.show();
+				});
+
+				window.loadURL('http://localhost:' + port);
+			});
+		});
+	}
 });

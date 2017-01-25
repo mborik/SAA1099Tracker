@@ -243,6 +243,18 @@ class SAASound {
 	}
 
 	/**
+	 * TODO: get state of all registers and (un)muted channels
+	 * @returns {SAASoundRegData}
+	 */
+	public getAllRegs() {
+		let result = new SAASoundRegData;
+
+		this._amp.forEach((amp, i: number) => result.muted[i] = amp.mute);
+
+		return result;
+	}
+
+	/**
 	 * fill all registers and (un)mute all channels
 	 * @param data SAASoundRegData
 	 */
