@@ -89,6 +89,11 @@ declare class SAASound {
      */
     mute(chn: number, mute: boolean): void;
     /**
+     * TODO: get state of all registers and (un)muted channels
+     * @returns {SAASoundRegData}
+     */
+    getAllRegs(): SAASoundRegData;
+    /**
      * fill all registers and (un)mute all channels
      * @param data SAASoundRegData
      */

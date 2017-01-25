@@ -16,8 +16,7 @@ module.exports = function(grunt) {
 				noImplicitAny: true,
 				noImplicitReturns: true,
 				preserveConstEnums: true,
-				removeComments: false,
-				types: [ 'console' ]
+				removeComments: false
 			},
 			'SAASound': {
 				src: [
@@ -47,7 +46,7 @@ module.exports = function(grunt) {
 					declaration: false,
 					removeComments: true,
 					suppressImplicitAnyIndexErrors: true,
-					types: [ 'console', 'jquery', 'bootstrap', 'lz-string' ]
+					types: [ 'jquery', 'bootstrap', 'lz-string' ]
 				},
 				src: [ "src/tracker/*.ts" ]
 			}
@@ -196,6 +195,7 @@ module.exports = function(grunt) {
 					return grunt.file.exists(path.format(fileobj));
 				}
 			},
+			'maps': [ 'build/app/*.map' ],
 			'tmpdirs': [ '.tscache' ]
 		},
 		less: {
@@ -213,21 +213,27 @@ module.exports = function(grunt) {
 		uglify: {
 			options: {
 				compress: { drop_console: true },
-				preserveComments: /^!/,
 				ASCIIOnly: true,
 				screwIE8: true
 			},
+			'init': {
+				options: { preserveComments: /^!/ },
+				files: { 'build/init.js': 'src/init.js' }
+			},
 			'scripts': {
 				files: {
-					'build/init.js': 'src/init.js',
 					'build/app/bootstrap.min.js': 'build/app/bootstrap.js',
 					'build/app/Commons.min.js': 'build/app/Commons.js',
-					'build/app/Audio.min.js': 'build/app/Audio.js',
-/* ES6 uglify issues :(
+					'build/app/Audio.min.js': 'build/app/Audio.js'
+				}
+			}
+		},
+		babili: {
+			'scripts': {
+				files: {
 					'build/app/SAASound.min.js': 'build/app/SAASound.js',
 					'build/app/Player.min.js': 'build/app/Player.js',
 					'build/app/Tracker.min.js': 'build/app/Tracker.js'
-*/
 				}
 			}
 		},
@@ -253,6 +259,41 @@ module.exports = function(grunt) {
 					'build/css/tracker.min.css': 'build/css/tracker.css'
 				}
 			}
+		},
+		electron: {
+			options: {
+				name: 'SAA1099Tracker',
+				dir: '.',
+				asar: true,
+				prune: true,
+				out: 'dist',
+				overwrite: true,
+				ignore: [
+					'/\\.(\\w+)($|/)',
+					'/node_modules/electron($|/)',
+					'/node_modules/electron-\\w+($|/)',
+					'/node_modules/\\.bin($|/)',
+					'/node_modules/[-\\w]+?/(test|example|screenshot)s?($|/)',
+					'/bower_components($|/)',
+					'^/?(src|styles|templates|dist)($|/)',
+					'/(Gruntfile|bower)\\.js(on)?'
+				],
+				'app-copyright': 'Copyright (c) 2017 Martin Borik'
+			},
+			'win32-x64': {
+				options: {
+					icon: 'build/favicon.ico',
+					platform: 'win32',
+					arch: 'x64',
+					win32metadata: {
+						ProductName: 'SAA1099Tracker',
+						InternalName: 'SAA1099Tracker',
+						OriginalFilename: 'SAA1099Tracker.exe',
+						FileDescription: "SAA1099Tracker",
+						CompanyName: 'SAA1099Tracker'
+					}
+				}
+			}
 		}
 	});
 
@@ -266,10 +307,80 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
+	grunt.loadNpmTasks('grunt-electron');
 	grunt.loadNpmTasks('grunt-html-build');
 	grunt.loadNpmTasks('grunt-ts');
 
+	// Define own multitasks
+	grunt.registerMultiTask('babili', "Minify files with Babel's babili preset.", function() {
+		var callback = this.async();
+		var options = this.options({
+			sourceMaps: false,
+			removeConsole: true
+		});
+		var argBabel = require.resolve("babel-cli/bin/babel.js");
+		var argPreset = "--presets=" + require.resolve("babel-preset-babili");
+
+		var createdFiles = 0;
+		var fileCounter = this.files.length;
+
+		this.files.forEach(function(f) {
+			var src = f.src.filter(function(filepath) {
+				if (!grunt.file.exists(filepath)) {
+					grunt.log.warn('Source file ' + filepath + ' not found.');
+					return false;
+				}
+				return true;
+			});
+
+			if (!src.length) {
+				grunt.log.warn('Destination ' + f.dest + ' not written because src files were empty.');
+				if (!(--fileCounter)) {
+					grunt.log.ok(createdFiles + '/' + grunt.util.pluralize(createdFiles, 'file/files') + ' created.');
+					callback(true);
+				}
+			}
+
+			var args = [ argBabel ]
+				.concat(src)
+				.concat([ "-o", f.dest ]);
+			if (options.sourceMap)
+				args.push("-s");
+			args.push(argPreset);
+			if (options.removeConsole)
+				args.push("--plugins", "transform-remove-console");
+			args.push("--no-babelrc");
+
+			grunt.util.spawn({
+				cmd: process.execPath,
+				args: args,
+				opts: {
+					stdio: "inherit",
+					env: process.env,
+				}
+			}, function(error, result) {
+				if (error) {
+					grunt.log.warn('babili of source(s) "' + src + '" failed.');
+					var err = new Error('babili failed!');
+					if (result.stderr)
+						err.message += '\n' + result.stderr + '. \n';
+					callback(err);
+					return;
+				}
+
+				createdFiles++;
+				if (!(--fileCounter)) {
+					grunt.log.ok(createdFiles + ' ' + grunt.util.pluralize(createdFiles, 'file/files') + ' created.');
+					callback(true);
+				}
+			});
+		});
+	});
+
 	// Task definitions
-	grunt.registerTask('default', [ 'ts','copy','concat','htmlbuild','clean','less','uglify','cssmin' ]);
-	grunt.registerTask('styles', [ 'less','uglify','cssmin' ]);
+	grunt.registerTask('default', [
+		'ts', 'copy', 'concat', 'htmlbuild', 'clean',
+		'less','uglify','babili','cssmin'
+	]);
+	grunt.registerTask('styles', [ 'less','uglify','babili','cssmin' ]);
 };
