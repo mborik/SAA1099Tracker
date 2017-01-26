@@ -1,7 +1,7 @@
 /** Tracker.gui submodule - template loader and element populator with jQuery */
 /* global dev, getCompatible, AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
-Tracker.prototype.populateGUI = function () {
+Tracker.prototype.populateGUI = function() {
 	var app = this;
 
 	var populatedElementsTable = [
@@ -41,8 +41,19 @@ Tracker.prototype.populateGUI = function () {
 			method:   'bind',
 			param:    'beforeunload',
 			handler:  function() {
-				if (!dev)
-					return i18n.app.msg.unsaved;
+				var msg = i18n.app.msg.unsaved;
+				if (electron) {
+					var remote = electron.remote;
+					var dialog = remote.require('dialog');
+					return !dialog.showMessageBox(
+						remote.getCurrentWindow(), {
+							type: 'question',
+							buttons: ['Yes', 'No'],
+							message: msg
+						});
+				}
+				else if (!dev)
+					return msg;
 			}
 		}, {
 			global:   'window',
@@ -107,7 +118,7 @@ Tracker.prototype.populateGUI = function () {
 					getCompatible(o[name].ctx, 'imageSmoothingEnabled', true, false);
 				}
 
-				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function (e) {
+				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function(e) {
 					var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || (e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
 					if (delta) {
 						e.stopPropagation();
@@ -121,19 +132,12 @@ Tracker.prototype.populateGUI = function () {
 				});
 			}
 		}, {
-			selector: 'img.pixelfont',
-			method:   'load',
-			handler:  function(e) { app.initPixelFont(e.target) }
-		}, {
-			selector: 'img.smpedit',
-			method:   'load',
-			handler:  function(e) { app.smpornedit.img = e.target }
-		}, {
 			selector: '#main-tabpanel a[data-toggle="tab"]',
 			method:   'on',
 			param:    'shown.bs.tab',
 			handler:  function(e) {
 				app.activeTab = parseInt($(this).data().value, 10);
+				$('#statusbar')[!app.activeTab ? 'show' : 'hide']();
 				$(window).trigger('resize');
 			}
 		}, {
@@ -639,7 +643,7 @@ Tracker.prototype.populateGUI = function () {
 //---------------------------------------------------------------------------------------
 	console.log('Tracker.gui', 'Populating elements...');
 
-	populatedElementsTable.forEach(function (o) {
+	populatedElementsTable.forEach(function(o) {
 		var data = o.handler || o.data;
 		var selector = o.selector || (o.global && window[o.global]);
 
@@ -652,19 +656,25 @@ Tracker.prototype.populateGUI = function () {
 	});
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.initializeGUI = function () {
+Tracker.prototype.initializeGUI = function() {
 	var app = this, i = 0;
 
 	var initSteps = [
-		function () {
-			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab === 1)
+		function() {
+			var pixelfont = $('img.pixelfont')[0];
+			app.initPixelFont(pixelfont);
+			return true;
+		},
+		function() {
+			if (app.smpornedit.initialized || app.activeTab === 1)
 				return false;
 
 			console.log('Tracker.gui', 'Force initialization of Sample/Ornament editors...');
+			app.smpornedit.img = $('img.smpedit')[0];
 			$('#tab-smpedit').tab('show');
 			return true;
 		},
-		function () {
+		function() {
 			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab !== 1)
 				return false;
 
@@ -672,7 +682,7 @@ Tracker.prototype.initializeGUI = function () {
 			$('#tab-ornedit').tab('show');
 			return true;
 		},
-		function () {
+		function() {
 			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab === 0)
 				return false;
 
@@ -681,7 +691,7 @@ Tracker.prototype.initializeGUI = function () {
 			$(window).trigger('resize');
 			return true;
 		},
-		function () {
+		function() {
 			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab)
 				return false;
 
@@ -691,7 +701,7 @@ Tracker.prototype.initializeGUI = function () {
 			app.tracklist.initialized = true;
 			return true;
 		},
-		function () {
+		function() {
 			if (app.loaded)
 				return false;
 
@@ -700,7 +710,7 @@ Tracker.prototype.initializeGUI = function () {
 			SyncTimer.start(app.baseTimer.bind(app));
 			return true;
 		},
-		function () {
+		function() {
 			if (app.loaded)
 				return false;
 
@@ -710,15 +720,17 @@ Tracker.prototype.initializeGUI = function () {
 		}
 	];
 
-	var initFn = function () {
+	var initFn = function() {
 		var fn = initSteps[i];
 		if (!!fn) {
 			if (fn())
 				i++;
-			setTimeout(initFn, 250);
+			setTimeout(initFn, 50);
 		}
 	};
 
 	initFn();
 };
+//---------------------------------------------------------------------------------------
+$(document).ready(function() { window.Tracker = new Tracker('<%= pkg.version %>') });
 //---------------------------------------------------------------------------------------

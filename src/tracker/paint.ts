@@ -126,9 +126,6 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
 	if (update) {
 		o.center = ((w - o.lineWidth) >> 1);
 		o.vpad = Math.round((h - 5) / 2);
-
-		// (2 trackline numbers + 2 padding) * fontWidth
-		o.trkOffset = o.center + ((2 + 2) * fontWidth);
 		offs.y = [];
 	}
 

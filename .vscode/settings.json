@@ -15,7 +15,5 @@
     },
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 5000,
-	"files.trimTrailingWhitespace": true,
-
-	"typescript.check.workspaceVersion": false
+	"files.trimTrailingWhitespace": true
 }
