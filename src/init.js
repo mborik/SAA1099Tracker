@@ -21,37 +21,41 @@
  */
 //---------------------------------------------------------------------------------------
 (function() {
-	var i, l, s,
-		js = /\/[a-z]+?\.js(\?.*)?$/, path = 'app/', loc = window.location,
-		dev = (loc.search || loc.hash).match(/[\?&#]dev/) ? '' : '.min',
-		el = document.getElementsByTagName('script')[0],
-		libs = [
-			'jquery',
-			'lz-string',
-			'bootstrap',
-			'Commons',
-			'Audio',
-			'SAASound',
-			'Player',
-			'Tracker'
-		];
+	var path = 'app/';
+	var loc = window.location;
+	var dev = /[\?&#]dev/.test(loc.search || loc.hash) ? '' : '.min';
+	var el = document.getElementsByTagName('script')[0];
+	var libs = [
+		'jquery',
+		'lz-string',
+		'bootstrap',
+		'Commons',
+		'Audio',
+		'SAASound',
+		'Player',
+		'Tracker'
+	];
 
-	if (el && el.src.substr(0, 4) === 'http' && el.src.match(js))
-		path = el.src.replace(js, path).replace(loc.origin, '');
+	var pattern = /(?!\/)[a-z]+?\.js(\?.+)?$/;
+	if (el && el.src.substr(0, 4) === 'http' && pattern.test(el.src)) {
+		path = el.src.replace(pattern, path).replace(loc.origin, '');
+	}
+	if (process && process.versions && process.versions.electron !== undefined) {
+		window.electron = require('electron');
+		window.jQuery = window.$ = require('./' + path + libs.shift() + dev);
+		window.LZString = require('./' + path + libs.shift() + dev);
+		require('./' + path + libs.shift() + dev);
+	}
 
 	el = document.getElementsByTagName('head')[0];
-	for (i = 0, l = libs.length; i < l; i++) {
-		js = path + libs[i] + dev + '.js';
-
-		try {
-			document.write('<' + 'script type="text/javascript" src="' + js + '"><\/script>');
-		} catch (e) {
-			s = document.createElement('script');
-			s.setAttribute('type', 'text/javascript');
-			s.setAttribute('src', js);
-			el.appendChild(s);
-		}
-	}
+	libs.forEach(function(lib) {
+		var s = document.createElement('script');
+		s.setAttribute('type', 'text/javascript');
+		s.setAttribute('async', 'async');
+		s.setAttribute('defer', 'defer');
+		s.setAttribute('src', (path + lib + dev + '.js'));
+		el.appendChild(s);
+	});
 
 	window.location.appPath = path;
 	window.dev = !dev;

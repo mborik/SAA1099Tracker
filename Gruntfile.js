@@ -139,7 +139,7 @@ module.exports = function(grunt) {
 				},
 				files: {
 					'build/app/Tracker.js': [
-						'src/tracker/init.js',
+						'src/tracker/intro',
 						'src/tracker/file.js',
 						'src/tracker/file.dialog.js',
 						'src/tracker/tracklist.js',
@@ -383,4 +383,5 @@ module.exports = function(grunt) {
 		'less','uglify','babili','cssmin'
 	]);
 	grunt.registerTask('styles', [ 'less','uglify','babili','cssmin' ]);
+	grunt.registerTask('app', [ 'electron' ]);
 };
