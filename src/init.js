@@ -29,7 +29,6 @@
 		'jquery',
 		'lz-string',
 		'bootstrap',
-		'Audio',
 		'Commons',
 		'!SAASound',
 		'!Player',
