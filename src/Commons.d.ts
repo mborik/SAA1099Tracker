@@ -17,6 +17,7 @@ declare interface browser {
 	isIE: boolean;
 }
 declare var browser: browser;
+declare var electron: any;
 //---------------------------------------------------------------------------------------
 declare interface Number {
 	abs(): number;

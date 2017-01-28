@@ -507,9 +507,10 @@ class STMFile {
 
 	public loadDemosong(fileName: string) {
 		let file = this;
+		let path = (electron) ? ('res://demo/' + fileName) : ('demosongs/' + fileName + '.json');
 
 		console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
-		$.getJSON('demosongs/' + fileName + '.json', (data: string) => {
+		$.getJSON(path, (data: string) => {
 			file._parseJSON(data);
 			file.modified = true;
 			file.yetSaved = false;

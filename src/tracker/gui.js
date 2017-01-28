@@ -41,19 +41,12 @@ Tracker.prototype.populateGUI = function() {
 			method:   'bind',
 			param:    'beforeunload',
 			handler:  function() {
-				var msg = i18n.app.msg.unsaved;
 				if (electron) {
-					var remote = electron.remote;
-					var dialog = remote.require('dialog');
-					return !dialog.showMessageBox(
-						remote.getCurrentWindow(), {
-							type: 'question',
-							buttons: ['Yes', 'No'],
-							message: msg
-						});
+					return app.onCmdAppExit();
 				}
-				else if (!dev)
-					return msg;
+				else if (!dev) {
+					return i18n.app.msg.unsaved;
+				}
 			}
 		}, {
 			global:   'window',
