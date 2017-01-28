@@ -30,6 +30,9 @@ Tracker.prototype.doc = {
 		'dialog.sample.clear.options': [ 'All', 'Amplitude', 'Noise', 'Pitch-shift', 'Cancel' ],
 		'dialog.ornament.clear.title': 'Clear ornament...',
 		'dialog.ornament.clear.msg': 'Are you sure you want to clear a content of this ornament?',
+		'dialog.app.exit.title': 'Exit application...',
+		'dialog.app.exit.msg': 'You could lost all of your changes! Do you want to save your work or exit?',
+		'dialog.app.exit.options': [ 'Save', "Don't save",  'Cancel' ],
 		'app.error.ie': 'don\'t be evil,\bstop using IE',
 		'app.error.webaudio': 'WebAudio\bnot supported'
 	},

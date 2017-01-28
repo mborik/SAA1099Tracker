@@ -29,11 +29,11 @@
 		'jquery',
 		'lz-string',
 		'bootstrap',
-		'Commons',
 		'Audio',
-		'SAASound',
-		'Player',
-		'Tracker'
+		'Commons',
+		'!SAASound',
+		'!Player',
+		'!Tracker'
 	];
 
 	var pattern = /(?!\/)[a-z]+?\.js(\?.+)?$/;
@@ -50,9 +50,10 @@
 	el = document.getElementsByTagName('head')[0];
 	libs.forEach(function(lib) {
 		var s = document.createElement('script');
-		s.setAttribute('type', 'text/javascript');
-		s.setAttribute('async', 'async');
-		s.setAttribute('defer', 'defer');
+		if (lib[0] === '!') {
+			s.setAttribute('defer', '');
+			lib = lib.substr(1);
+		}
 		s.setAttribute('src', (path + lib + dev + '.js'));
 		el.appendChild(s);
 	});

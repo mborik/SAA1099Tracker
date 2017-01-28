@@ -179,6 +179,42 @@ Tracker.prototype.onCmdFileNew = function() {
 	});
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdAppExit = function() {
+	let file = this.file;
+	if (this.destroying || !file.modified || !electron) {
+		return;
+	}
+
+	let app = electron.remote.app;
+	let win = electron.remote.getCurrentWindow();
+	let dialog = electron.remote.dialog;
+
+	dialog.showMessageBox(win, {
+		type: 'question',
+		title: i18n.dialog.app.exit.title,
+		buttons: i18n.dialog.app.exit.options,
+		message: i18n.dialog.app.exit.msg,
+		noLink: true
+	}, (response) => {
+		if (response === 1) {
+			this.destroying = true;
+			app.quit();
+		}
+		else if (response !== 2) {
+			if (!file.yetSaved) {
+				return file.dialog.save();
+			}
+			else if (file.fileName) {
+				file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
+				this.destroying = true;
+				app.quit();
+			}
+		}
+	});
+
+	return true;
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileOpen = function() {
 	if (this.modePlay) {
 		return;
@@ -380,7 +416,7 @@ Tracker.prototype.onCmdToggleEditMode = function(newState) {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdShowDocumentation = function(name) {
-	let filename = 'doc/' + name + '.txt';
+	let filename = (electron ? ('doc://' + name) : ('doc/' + name + '.txt'));
 	let cache = this.doc.txtCache;
 	let keys = this.globalKeyState;
 	let data = cache[name];
