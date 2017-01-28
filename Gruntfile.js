@@ -40,7 +40,7 @@ module.exports = function(grunt) {
 				],
 				out: 'src/Player.js'
 			},
-			'Tracker': {
+			'app': {
 				options: {
 					sourceMap: false,
 					declaration: false,
@@ -48,7 +48,10 @@ module.exports = function(grunt) {
 					suppressImplicitAnyIndexErrors: true,
 					types: [ 'jquery', 'bootstrap', 'lz-string' ]
 				},
-				src: [ "src/tracker/*.ts" ]
+				src: [
+					"src/commons/*.ts",
+					"src/tracker/*.ts"
+				]
 			}
 		},
 		copy: {
@@ -108,9 +111,7 @@ module.exports = function(grunt) {
 					cwd: 'src/',
 					src: [
 						'Player.js*',
-						'SAASound.js*',
-						'Commons.js',
-						'Audio.js'
+						'SAASound.js*'
 					],
 					dest: 'build/app',
 					flatten: true,
@@ -132,12 +133,21 @@ module.exports = function(grunt) {
 					]
 				}
 			},
-			'Tracker': {
+			'app': {
 				options: {
 					process: true,
 					separator: ''
 				},
 				files: {
+					'build/app/Commons.js': [
+						'src/commons/intro',
+						'src/commons/compat.js',
+						'src/commons/timer.js',
+						'src/commons/browser.js',
+						'src/commons/dev.js',
+						'src/commons/audio.js',
+						'src/commons/number.proto.js'
+					],
 					'build/app/Tracker.js': [
 						'src/tracker/intro',
 						'src/tracker/file.js',
@@ -181,12 +191,16 @@ module.exports = function(grunt) {
 			}
 		},
 		clean: {
-			'app': [
+			'maps': [
 				'src/Player.js*',
-				'src/SAASound.js*'
+				'src/SAASound.js*',
+				'build/app/*.map'
 			],
 			'Tracker': {
-				src: [ 'src/tracker/*.js' ],
+				src: [
+					'src/commons/*.js',
+					'src/tracker/*.js'
+				],
 				filter: function(filepath) {
 					var path = require('path');
 					var fileobj = path.parse(filepath);
@@ -195,7 +209,6 @@ module.exports = function(grunt) {
 					return grunt.file.exists(path.format(fileobj));
 				}
 			},
-			'maps': [ 'build/app/*.map' ],
 			'tmpdirs': [ '.tscache' ]
 		},
 		less: {
@@ -220,17 +233,14 @@ module.exports = function(grunt) {
 				options: { preserveComments: /^!/ },
 				files: { 'build/init.js': 'src/init.js' }
 			},
-			'scripts': {
-				files: {
-					'build/app/bootstrap.min.js': 'build/app/bootstrap.js',
-					'build/app/Commons.min.js': 'build/app/Commons.js',
-					'build/app/Audio.min.js': 'build/app/Audio.js'
-				}
+			'bootstrap': {
+				files: { 'build/app/bootstrap.min.js': 'build/app/bootstrap.js' }
 			}
 		},
 		babili: {
 			'scripts': {
 				files: {
+					'build/app/Commons.min.js': 'build/app/Commons.js',
 					'build/app/SAASound.min.js': 'build/app/SAASound.js',
 					'build/app/Player.min.js': 'build/app/Player.js',
 					'build/app/Tracker.min.js': 'build/app/Tracker.js'
@@ -243,9 +253,7 @@ module.exports = function(grunt) {
 					sourceMap: true,
 					roundingPrecision: 1
 				},
-				files: {
-					'build/css/bootstrap.min.css': 'build/css/bootstrap.css'
-				}
+				files: { 'build/css/bootstrap.min.css': 'build/css/bootstrap.css' }
 			},
 			'styles': {
 				options: {

@@ -18,12 +18,35 @@ declare interface browser {
 }
 declare var browser: browser;
 //---------------------------------------------------------------------------------------
+declare interface SyncTimer {
+	callback: () => void;
+	interval: number;
+
+	start: (callback?: (() => void), interval?: number, startImmediately?: boolean) => boolean;
+	pause: () => void;
+	resume: () => void;
+}
+declare var SyncTimer: SyncTimer;
+//---------------------------------------------------------------------------------------
+declare interface WebAudioAPIDriver {
+	interruptFrequency: number;
+	bufferCount: number;
+	bufferSize: number;
+	sampleRate: number;
+
+	init(audioSrc: any, buffers?: number, int?: number): void;
+	play(): void;
+	stop(): void;
+}
+declare var AudioDriver: WebAudioAPIDriver;
+//---------------------------------------------------------------------------------------
 declare interface Number {
 	abs(): number;
 	toWidth(width?: number): string;
 	toHex(width?: number): string;
 	toTimeString(): string;
 }
+//---------------------------------------------------------------------------------------
 declare interface JQueryEventObject {
 	buttons: number;
 	delta: number;

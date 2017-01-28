@@ -1,6 +1,6 @@
 /*!
- * References to all required TypeScript definitions.
- * Copyright (c) 2017 Martin Borik <mborik@users.sourceforge.net>
+ * Common functions, handy helpers and WebAudio sound output driver.
+ * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -19,16 +19,4 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-//---------------------------------------------------------------------------------------
-/// <reference types="jquery" />
-/// <reference types="lz-string" />
-
-/// <reference types="bootstrap" />
-/// <reference path="bootstrap.mods/confirm/bootstrap-confirm.d.ts" />
-/// <reference path="bootstrap.mods/touchspin/bootstrap-touchspin.d.ts" />
-
-/// <reference path="Commons.d.ts" />
-/// <reference path="SAASound.d.ts" />
-/// <reference path="Player.d.ts" />
-/// <reference path="Tracker.d.ts" />
 //---------------------------------------------------------------------------------------
