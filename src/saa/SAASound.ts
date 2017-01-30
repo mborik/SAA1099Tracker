@@ -89,7 +89,7 @@ class SAASound {
 
 		// sets regs 00-31 (except 28) to 0
 		for (let i: number = 31; i >= 0; i--) {
-			if (i != 28) {
+			if (i !== 28) {
 				this.setRegData(i, 0);
 			}
 		}
@@ -109,7 +109,7 @@ class SAASound {
 		data &= 0xff;
 
 		let reg: number = this._register;
-		switch(reg) {
+		switch (reg) {
 		// Amplitude data (==> amp)
 			case 0:
 			case 1:
@@ -151,14 +151,14 @@ class SAASound {
 		// Tone mixer control (==> amp)
 			case 20:
 				this._amp.forEach((a: SAAAmp, i: number) => {
-					a.setFreqMixer(data & (0x01 << i))
+					a.setFreqMixer(data & (0x01 << i));
 				});
 				break;
 
 		// noise mixer control (==> amp)
 			case 21:
 				this._amp.forEach((a: SAAAmp, i: number) => {
-					a.setNoiseMixer(data & (0x01 << i))
+					a.setNoiseMixer(data & (0x01 << i));
 				});
 				break;
 
@@ -186,7 +186,7 @@ class SAASound {
 				this._freq.forEach(f => f.setSync(sync));
 				this._noise.forEach(n => n.setSync(sync));
 				this._amp.forEach((amp: SAAAmp, i: number) => {
-					amp.mute = (mute || this._ampMuted[i])
+					amp.mute = (mute || this._ampMuted[i]);
 				}, this);
 
 				this._enabled = !mute;

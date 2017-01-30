@@ -27,7 +27,7 @@ class Manager {
 
 	private _clipboard: string = '';
 
-	private _getBlock () {
+	private _getBlock() {
 		let p = this.$parent.player;
 		let sel: TracklistSelection = this.$parent.tracklist.selection;
 		let ch = sel.len ? sel.channel : this.$parent.modeEditChannel;
@@ -93,7 +93,7 @@ class Manager {
 		smp.parse([]);
 	}
 
-	public copySample = function () {
+	public copySample() {
 		let app = this.$parent;
 		let smp = app.player.sample[app.workingSample];
 		let obj = {
@@ -104,11 +104,11 @@ class Manager {
 			data: smp.export(false)
 		};
 
-		this.clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
+		this._clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
 	}
 
-	public pasteSample = function () {
-		if (this.clipboard.indexOf('STMF.smp:{') !== 0) {
+	public pasteSample() {
+		if (this._clipboard.indexOf('STMF.smp:{') !== 0) {
 			return false;
 		}
 
@@ -117,7 +117,7 @@ class Manager {
 		let obj: any;
 
 		try {
-			let json = this.clipboard.substr(9);
+			let json = this._clipboard.substr(9);
 			obj = JSON.parse(json);
 
 			if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
@@ -137,7 +137,7 @@ class Manager {
 	}
 
 //---------------------------------------------------------------------------------------
-	public clearOrnament = function () {
+	public clearOrnament() {
 		let app = this.$parent;
 		let orn = app.player.ornament[app.workingOrnament];
 
@@ -146,7 +146,7 @@ class Manager {
 		orn.loop = orn.end = 0;
 	}
 
-	public copyOrnament = function () {
+	public copyOrnament() {
 		let app = this.$parent;
 		let orn = app.player.ornament[app.workingOrnament];
 		let obj = {
@@ -156,11 +156,11 @@ class Manager {
 			data: orn.export(false)
 		};
 
-		this.clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
+		this._clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
 	}
 
-	public pasteOrnament = function () {
-		if (this.clipboard.indexOf('STMF.orn:{') !== 0) {
+	public pasteOrnament() {
+		if (this._clipboard.indexOf('STMF.orn:{') !== 0) {
 			return false;
 		}
 
@@ -169,7 +169,7 @@ class Manager {
 		let obj: any;
 
 		try {
-			let json = this.clipboard.substr(9);
+			let json = this._clipboard.substr(9);
 			obj = JSON.parse(json);
 
 			if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {

@@ -9,10 +9,11 @@ declare interface AudioContext {
 interface Window { AudioDriver: any; }
 window.AudioDriver = (() => {
 	function getAdjustSamples(samplerate: number, buffers: number, interrupt: number) {
-		var intms = 1000 / interrupt,
-			streammsec = intms * buffers,
-			samples = streammsec / 1000 * samplerate,
-			bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+		let intms = 1000 / interrupt;
+		let streammsec = intms * buffers;
+		let samples = streammsec / 1000 * samplerate;
+		let bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+
 		return 1 << Math.min(Math.max(bits, 8), 14);
 	}
 
@@ -118,7 +119,7 @@ window.AudioDriver = (() => {
 	try {
 		return new WebAudioAPIDriver;
 	}
-	catch(e) {
+	catch (e) {
 		throw 'Error: WebAudioAPI not found (incompatible or obsolete browser)';
 	}
 })();

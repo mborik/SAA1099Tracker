@@ -20,6 +20,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+/// <reference path='../Commons.d.ts' />
+//---------------------------------------------------------------------------------------
 class pOrnament {
 	name: string = '';
 	data: Int8Array = new Int8Array(256);
@@ -32,15 +34,14 @@ class pOrnament {
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
 	export(pack: boolean = true): string[] {
-		let arr: string[] = [],
-			i: number,
-			k: any;
+		let arr: string[] = [];
 
-		for (i = 255; i >= 0; i--) {
-			k = (0 | this.data[i]);
+		for (let i = 255; i >= 0; i--) {
+			let k = (0 | this.data[i]);
 
-			if (pack && !arr.length && !k)
+			if (pack && !arr.length && !k) {
 				continue;
+			}
 
 			arr.unshift(((k < 0) ? '-' : '+') + k.toWidth(2));
 		}
@@ -52,8 +53,9 @@ class pOrnament {
 	 * Parse ornament data from array of signed values stored in simple string.
 	 */
 	parse(arr: string[]) {
-		for (let i = 0; i < 256; i++)
+		for (let i = 0; i < 256; i++) {
 			this.data[i] = parseInt(arr[i], 10) || 0;
+		}
 	}
 }
 //---------------------------------------------------------------------------------------

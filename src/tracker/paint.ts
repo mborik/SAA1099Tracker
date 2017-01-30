@@ -68,7 +68,7 @@ Tracker.prototype.initPixelFont = function(font: HTMLImageElement): void {
 	copyctx.drawImage(font, 0, 0);
 
 	copyctx.fillStyle = '#fff';
-	copyctx.globalCompositeOperation = "source-in";
+	copyctx.globalCompositeOperation = 'source-in';
 	copyctx.fillRect(0, 0, w, 5);
 	copyctx.restore();
 
@@ -81,7 +81,7 @@ Tracker.prototype.initPixelFont = function(font: HTMLImageElement): void {
 	copyctx.drawImage(font, 0, 0);
 
 	copyctx.fillStyle = '#aaa';
-	copyctx.globalCompositeOperation = "source-in";
+	copyctx.globalCompositeOperation = 'source-in';
 	copyctx.fillRect(0, 0, w, 5);
 	copyctx.restore();
 
@@ -190,9 +190,10 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
 			let dat = pt.data[line];
 
 			for (let col = 0; col < 8; col++) {
-				let x = o.trkOffset       // center + (4 * fontWidth)
-				      + chn * o.chnWidth  // channel * ((12 columns + 2 padding) * fontWidth)
-				      + o.columns[col];   // column offset premulitplied by fontWidth
+				// x = center + (4 * fontWidth)
+				//   + channel * ((12 columns + 2 padding) * fontWidth)
+				//   + column offset premulitplied by fontWidth
+				let x = o.trkOffset + (chn * o.chnWidth) + o.columns[col];
 
 				if (update) {
 					offs.x[chn][col] = x;
@@ -315,14 +316,15 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
 
 			ctx.save();
 			ctx.fillStyle = 'rgba(255,255,255,.75)';
-			ctx.globalCompositeOperation = "xor";
+			ctx.globalCompositeOperation = 'xor';
 			ctx.fillRect(o.center - 6, ypad, o.lineWidth + 6, 5);
 			ctx.restore();
 		}
 	}
 
-	if (!this.modePlay && this.modeEdit && typeof status !== 'undefined')
+	if (!this.modePlay && this.modeEdit && typeof status !== 'undefined') {
 		this.doc.showTracklistStatus(this.modeEditColumn, status);
+	}
 
 	if (update) {
 		// expand offsets to full canvas width and height
@@ -362,7 +364,7 @@ Tracker.prototype.updateSampleEditor = function(update?: boolean,
 		if (ptr >= sample.end && !sample.releasable) {
 			color = '#888';
 		}
-		else if (sample.loop != sample.end && ptr >= sample.loop && ptr < sample.end) {
+		else if (sample.loop !== sample.end && ptr >= sample.loop && ptr < sample.end) {
 			color = '#38c';
 		}
 		range.strokeStyle = range.fillStyle = noise.fillStyle =

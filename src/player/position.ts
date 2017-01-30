@@ -20,10 +20,12 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+/// <reference path='runtime.ts' />
+//---------------------------------------------------------------------------------------
 // Position channel definition interface
 interface pChannel {
 	pattern: number;
-	pitch: number
+	pitch: number;
 }
 //---------------------------------------------------------------------------------------
 /**
@@ -44,36 +46,37 @@ class pPosition {
 		this.frames = [];
 		this.initParams = void 0;
 
-		for (let i: number = 0; i < 6; i++)
+		for (let i: number = 0; i < 6; i++) {
 			this.ch[i] = { pattern: 0, pitch: 0 };
-		for (let i: number = 0, line: number = 0; line <= Player.maxPatternLen; line++, i += speed)
+		}
+		for (let i: number = 0, line: number = 0; line <= MAX_PATTERN_LEN; line++, i += speed) {
 			this.frames[line] = i;
+		}
 	}
 
 	hasPattern(pattern: number): boolean { return this.indexOf(pattern) >= 0; }
 	indexOf(pattern: number): number {
-		let result: number = -1
-		for (let i: number = 0; result < 0 && i < 6; i++)
-			if (this.ch[i].pattern === pattern)
-				result = i;
-		return result;
+		for (let i: number = 0; i < 6; i++) {
+			if (this.ch[i].pattern === pattern) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	export(): string[] {
-		let arr: string[] = [],
-			i: number,
-			s: string,
-			k: any;
+		let arr: string[] = [];
 
-		for (i = 0; i < 6; i++) {
-			k = this.ch[i].pitch;
-			s = (<any> this.ch[i].pattern).toWidth(3);
+		this.ch.forEach(chn => {
+			let k = chn.pitch;
+			let s = chn.pattern.toWidth(3);
 
-			if (k)
+			if (k) {
 				s += ((k < 0) ? '-' : '+') + k.toHex(2);
+			}
 
 			arr.push(s);
-		}
+		});
 
 		return arr;
 	}

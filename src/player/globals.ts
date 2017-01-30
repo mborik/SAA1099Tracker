@@ -20,6 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+const MAX_PATTERN_LEN = 128;
 const pMode = {
 	PM_SONG: 1,
 	PM_POSITION: 2,
@@ -36,7 +37,7 @@ class pTone {
 	public oct: number = 0;
 	public txt: string = '---';
 
-	constructor (word: number = 0) { this.word = word }
+	constructor(word: number = 0) { this.word = word; }
 
 	get word(): number { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); }
 	set word(v: number) {

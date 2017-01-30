@@ -20,6 +20,9 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+/// <reference path='../Commons.d.ts' />
+/// <reference path='globals.ts' />
+//---------------------------------------------------------------------------------------
 // Channel-pattern line interface
 interface pPatternLine {
 	tone: number;
@@ -39,13 +42,14 @@ class pPattern {
 	constructor(end: number = 0) {
 		this.end = end;
 
-		for (let i: number = 0; i < Player.maxPatternLen; i++)
+		for (let i: number = 0; i < MAX_PATTERN_LEN; i++) {
 			this.data[i] = { // pPatternLine
 				tone: 0, release: false,
 				smp: 0, orn: 0, orn_release: false,
 				volume: new pVolume,
 				cmd: 0, cmd_data: 0
 			};
+		}
 	}
 
 	/**
@@ -53,20 +57,17 @@ class pPattern {
 	 * We going backward from the end of pattern and unshifting array because of pack
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
-	export(start: number = 0, length: number = Player.maxPatternLen, pack: boolean = true): string[] {
-		let arr: string[] = [],
-			o: pPatternLine,
-			s: string,
-			i: number,
-			k: any;
+	export(start: number = 0, length: number = MAX_PATTERN_LEN, pack: boolean = true): string[] {
+		let arr: string[] = [];
 
-		for (i = Math.min(Player.maxPatternLen, start + length); i > start;) {
-			o = this.data[--i];
-			k = o.orn_release ? 33 : o.orn; // 33 = X
-			s = o.release ? '--' : (<any> o.tone).toWidth(2);
+		for (let i = Math.min(MAX_PATTERN_LEN, start + length); i > start; ) {
+			let o = this.data[--i];
+			let k = o.orn_release ? 33 : o.orn; // 33 = X
+			let s = o.release ? '--' : o.tone.toWidth(2);
 
-			if (pack && !arr.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data)
+			if (pack && !arr.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data) {
 				continue;
+			}
 
 			arr.unshift(s.concat(
 				o.smp.toString(32),
@@ -83,19 +84,15 @@ class pPattern {
 	/**
 	 * Parse pattern data from array of strings with values like in tracklist.
 	 */
-	parse(arr: string[], start: number = 0, length: number = Player.maxPatternLen) {
-		let i: number = start,
-			j: number,
-			k: number,
-			s: string,
-			o: pPatternLine,
-			l = Math.min(Player.maxPatternLen, start + length);
+	parse(arr: string[], start: number = 0, length: number = MAX_PATTERN_LEN) {
+		let i: number = start;
+		let l = Math.min(MAX_PATTERN_LEN, start + length);
 
-		for (j = 0; i < l; i++, j++) {
-			s = arr[j] || '000000000';
-			o = this.data[i];
+		for (let j = 0; i < l; i++, j++) {
+			let s = arr[j] || '000000000';
+			let o = this.data[i];
 
-			k = parseInt(s.substr(0, 2), 10);
+			let k = parseInt(s.substr(0, 2), 10);
 			o.tone = isNaN(k) ? ((o.release = true) && 0) : k;
 
 			k = parseInt(s[3], 16);

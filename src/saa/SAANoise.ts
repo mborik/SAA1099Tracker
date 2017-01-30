@@ -47,7 +47,7 @@ class SAANoise {
 	 * then do nothing...
 	 */
 	public tick(): number {
-		if (!this._sync && (this._src != 3)) {
+		if (!this._sync && (this._src !== 3)) {
 			this._counter += this._add;
 			if (this._counter >= this._smpRate) {
 				while (this._counter >= this._smpRate) {
@@ -68,7 +68,7 @@ class SAANoise {
 	}
 
 	private _rnd() {
-		if (!!(this._rand & 0x40000004) && (this._rand & 0x40000004) != 0x40000004) {
+		if (!!(this._rand & 0x40000004) && (this._rand & 0x40000004) !== 0x40000004) {
 			this._rand = (this._rand << 1) | 1;
 		}
 		else {
