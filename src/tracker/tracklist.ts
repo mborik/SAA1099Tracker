@@ -23,8 +23,8 @@
 /// <reference path="../index.d.ts" />
 //---------------------------------------------------------------------------------------
 interface TracklistStartPoint {
-    x: number;
-    y: number;
+	x: number;
+	y: number;
 }
 class TracklistPosition {
 	public y: number;
@@ -44,7 +44,7 @@ class TracklistPosition {
 		this.start = { x: sx, y: sy };
 	}
 
-	set<TracklistPosition> (p: TracklistPosition): void {
+	set<TracklistPosition>(p: TracklistPosition): void {
 		if (p instanceof TracklistPosition) {
 			this.y = p.y;
 			this.line = p.line;
@@ -54,7 +54,7 @@ class TracklistPosition {
 			this.start.y = p.start.y;
 		}
 	}
-	compare<TracklistPosition> (p: TracklistPosition): boolean {
+	compare<TracklistPosition>(p: TracklistPosition): boolean {
 		if (p instanceof TracklistPosition) {
 			return (this.y === p.y &&
 					this.line === p.line &&
@@ -167,7 +167,7 @@ class Tracklist {
 		settings.tracklistLines = height;
 		height *= settings.tracklistLineHeight;
 
-		$(this.obj).prop('height', height).css({ 'height': height * tracklistZoomFactor });
+		$(this.obj).prop('height', height).css({ height: (height * tracklistZoomFactor) });
 		this.canvasData.offset = $(this.obj).offset();
 	}
 
@@ -200,7 +200,7 @@ class Tracklist {
 		let ty: number = y / tracklistZoomFactor;
 		let ln: number = this.$parent.player.currentLine - (lines >> 1);
 
- 		for (let i = 0; i < lines; i++, ln++) {
+		for (let i = 0; i < lines; i++, ln++) {
 			if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
 				for (let chl = 0; chl < 6; chl++) {
 					if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {

@@ -182,8 +182,8 @@ class FileDialog {
 		}
 
 		el.attr({
-			'href': url,
-			'download': fileName + '.STMF'
+			href: url,
+			download: fileName + '.STMF'
 		});
 
 		// force gc

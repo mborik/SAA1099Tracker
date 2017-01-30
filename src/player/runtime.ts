@@ -21,6 +21,9 @@
  */
 //---------------------------------------------------------------------------------------
 /// <reference path='../SAASound.d.ts' />
+/// <reference path='globals.ts' />
+/// <reference path='sample.ts' />
+/// <reference path='ornament.ts' />
 //---------------------------------------------------------------------------------------
 interface pParams {
 	tone: number;
@@ -38,6 +41,8 @@ interface pParams {
 	commandPhase: number;
 	commandValue1: number;
 	commandValue2: number;
+
+	[key: string]: any;
 }
 //---------------------------------------------------------------------------------------
 class pRuntime extends SAASoundRegData {
@@ -48,9 +53,10 @@ class pRuntime extends SAASoundRegData {
 		super();
 
 		this.params = [];
-		this.clearPlayParams = function(chn: number) {
-			if (chn < 0 || chn >= 6)
+		this.clearPlayParams = (chn: number) => {
+			if (chn < 0 || chn >= 6) {
 				return;
+			}
 
 			if (this.params[chn]) {
 				delete this.params[chn].attenuation;
@@ -74,10 +80,11 @@ class pRuntime extends SAASoundRegData {
 				commandValue1: 0,
 				commandValue2: 0
 			};
-		}
+		};
 
-		for (let chn: number = 0; chn < 6; chn++)
+		for (let chn: number = 0; chn < 6; chn++) {
 			this.clearPlayParams(chn);
+		}
 	}
 
 	public setRegData(reg: number, data: number) {
@@ -86,29 +93,21 @@ class pRuntime extends SAASoundRegData {
 	}
 
 	public replace(data: pRuntime) {
-		let i: number,
-			idx: string,
-			src: any = data.regs,
-			dst: any = this.regs;
+		Object.keys(data.regs).forEach(idx => this.regs[idx] = data.regs[idx]);
 
-		for (idx in dst)
-			if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx))
-				dst[idx] = src[idx];
+		for (let i = 0; i < 6; i++) {
+			let dst: pParams = this.params[i];
+			let src: pParams = data.params[i];
 
-		for (i = 0; i < 6; i++) {
-			dst = this.params[i];
-			src = data.params[i];
-
-			for (idx in dst) {
-				if (dst.hasOwnProperty(idx) && src.hasOwnProperty(idx)) {
-					if (dst[idx] instanceof pVolume) {
-						dst[idx].L = src[idx].L;
-						dst[idx].R = src[idx].R;
-					}
-					else
-						dst[idx] = src[idx];
+			Object.keys(src).forEach(idx => {
+				if (dst[idx] instanceof pVolume) {
+					dst[idx].L = src[idx].L;
+					dst[idx].R = src[idx].R;
 				}
-			}
+				else {
+					dst[idx] = src[idx];
+				}
+			});
 		}
 	}
 }

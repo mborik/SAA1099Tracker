@@ -162,8 +162,9 @@ class STMFile {
 					continue;
 				}
 
-				if (!(match = s.match(/^(.+)\|(\d+?)\|(\d+?)\|(\d\d:\d\d)$/)))
+				if (!(match = s.match(/^(.+)\|(\d+?)\|(\d+?)\|(\d\d:\d\d)$/))) {
 					continue;
+				}
 
 				this._storageLastId = Math.max(this._storageLastId, id);
 				this._storageMap.push(<StorageItem> {
@@ -187,7 +188,7 @@ class STMFile {
 	 * @param input {STMFileFormat|string} song data in JSON.
 	 */
 	private _parseJSON(input: STMFileFormat|string): boolean {
-		let data: STMFileFormat = undefined;
+		let data: STMFileFormat;
 		if (typeof input === 'string') {
 			try {
 				data = JSON.parse(input);
@@ -214,7 +215,7 @@ class STMFile {
 		let count = { smp: 0, orn: 0, pat: 0, pos: 0 };
 
 		// detection of old JSON format v1.1 from previous project MIF85Tracker...
-		if (!data.version || (data.version && data.version != '1.2')) {
+		if (!data.version || (data.version && data.version !== '1.2')) {
 			return false;
 		}
 
@@ -232,8 +233,9 @@ class STMFile {
 				if (!!(obj = data.samples[i - 1])) {
 					let it = player.sample[i];
 
-					if (obj.name)
+					if (obj.name) {
 						it.name = obj.name;
+					}
 					it.loop = obj.loop || 0;
 					it.end = obj.end || 0;
 					it.releasable = !!obj.rel;
@@ -250,8 +252,9 @@ class STMFile {
 				if (!!(obj = data.ornaments[i - 1])) {
 					let it = player.ornament[i];
 
-					if (obj.name)
+					if (obj.name) {
 						it.name = obj.name;
+					}
 					it.loop = obj.loop || 0;
 					it.end = obj.end || 0;
 					it.parse(obj.data);
@@ -559,7 +562,7 @@ class STMFile {
 		fileName = this._fixFileName(fileName);
 		console.log('Tracker.file', 'Storing "%s" to localStorage...', fileName);
 
-		var modify = false;
+		let modify = false;
 		let found = this._storageMap.find(obj => {
 			if (obj.id === oldId || obj.fileName === fileName) {
 				console.log('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);

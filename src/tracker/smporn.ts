@@ -94,11 +94,11 @@ class SmpOrnEditor {
 				ctx.font = $('label').first().css('font');
 				ctx.translate(12, half);
 				ctx.rotate(-Math.PI / 2);
-				ctx.textBaseline = "middle";
+				ctx.textBaseline = 'middle';
 				ctx.fillStyle = '#888';
-				ctx.textAlign = "right";
+				ctx.textAlign = 'right';
 				ctx.fillText(i18n.app.smpedit.right, -16, 0);
-				ctx.textAlign = "left";
+				ctx.textAlign = 'left';
 				ctx.fillText(i18n.app.smpedit.left, 16, 0);
 				ctx.restore();
 			}
@@ -149,7 +149,7 @@ class SmpOrnEditor {
 			left: 0 | amp.left,
 			top: {
 				amp: 0 | amp.top,
-				noise: 0| noise.top
+				noise: 0 | noise.top
 			}
 		};
 

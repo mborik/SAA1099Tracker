@@ -1,3 +1,4 @@
+/// <reference path="Commons.d.ts" />
 /// <reference path="SAASound.d.ts" />
 /*!
  * Player: Global classes a interface definition.
@@ -20,6 +21,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare const MAX_PATTERN_LEN = 128;
 declare const pMode: {
     PM_SONG: number;
     PM_POSITION: number;
@@ -111,6 +113,31 @@ declare class pPattern {
      */
     parse(arr: string[], start?: number, length?: number): void;
 }
+interface pParams {
+    tone: number;
+    playing: boolean;
+    sample: pSample;
+    ornament: pOrnament;
+    sample_cursor: number;
+    ornament_cursor: number;
+    attenuation: pVolume;
+    slideShift: number;
+    globalPitch: number;
+    released: boolean;
+    command: number;
+    commandParam: number;
+    commandPhase: number;
+    commandValue1: number;
+    commandValue2: number;
+    [key: string]: any;
+}
+declare class pRuntime extends SAASoundRegData {
+    params: pParams[];
+    clearPlayParams: (chn: number) => void;
+    constructor(player: Player);
+    setRegData(reg: number, data: number): void;
+    replace(data: pRuntime): void;
+}
 interface pChannel {
     pattern: number;
     pitch: number;
@@ -129,30 +156,6 @@ declare class pPosition {
     hasPattern(pattern: number): boolean;
     indexOf(pattern: number): number;
     export(): string[];
-}
-interface pParams {
-    tone: number;
-    playing: boolean;
-    sample: pSample;
-    ornament: pOrnament;
-    sample_cursor: number;
-    ornament_cursor: number;
-    attenuation: pVolume;
-    slideShift: number;
-    globalPitch: number;
-    released: boolean;
-    command: number;
-    commandParam: number;
-    commandPhase: number;
-    commandValue1: number;
-    commandValue2: number;
-}
-declare class pRuntime extends SAASoundRegData {
-    params: pParams[];
-    clearPlayParams: (chn: number) => void;
-    constructor(player: Player);
-    setRegData(reg: number, data: number): void;
-    replace(data: pRuntime): void;
 }
 declare class Player {
     static maxPatternLen: number;

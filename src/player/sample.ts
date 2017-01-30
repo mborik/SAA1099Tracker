@@ -20,6 +20,9 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+/// <reference path='../Commons.d.ts' />
+/// <reference path='globals.ts' />
+//---------------------------------------------------------------------------------------
 // Sample data interface
 interface pSampleData {
 	volume: pVolume;
@@ -37,14 +40,15 @@ class pSample {
 	releasable: boolean = false;
 
 	constructor() {
-		for (let i: number = 0; i < 256; i++)
+		for (let i: number = 0; i < 256; i++) {
 			this.data[i] = { // pSampleData
 				volume: new pVolume,
 				enable_freq: false,
 				enable_noise: false,
 				noise_value: 0,
 				shift: 0
-			}
+			};
+		}
 	}
 
 	/**
@@ -53,24 +57,20 @@ class pSample {
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
 	export(pack: boolean = true): string[] {
-		let arr: string[] = [],
-			o: pSampleData,
-			s: string,
-			i: number,
-			k: any;
+		let arr: string[] = [];
 
-		for (i = 255; i >= 0; i--) {
-			o = this.data[i];
-			k = 0 | (<any> o.enable_freq)
-			      | (<any> o.enable_noise << 1)
-			      | (o.noise_value << 2);
+		for (let i = 255; i >= 0; i--) {
+			let o = this.data[i];
+			let k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
 
-			if (pack && !arr.length && !k && !o.volume.byte && !o.shift)
+			if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
 				continue;
+			}
 
-			s = k.toHex(1) + (<any> o.volume.byte).toHex(2);
-			if (o.shift)
+			let s = k.toHex(1) + (<any> o.volume.byte).toHex(2);
+			if (o.shift) {
 				s += ((o.shift < 0) ? '-' : '+') + (<any> o.shift).toHex(3);
+			}
 
 			arr.unshift(s.toUpperCase());
 		}
@@ -82,16 +82,9 @@ class pSample {
 	 * Parse sample data from array of buch of hex values stored in simple string.
 	 */
 	parse(arr: string[]) {
-		let i: number,
-			s: string,
-			k: number,
-			o: pSampleData;
-
-		for (i = 0; i < 256; i++) {
-			o = this.data[i];
-
-			s = arr[i] || '';
-			k = parseInt(s[0], 16) || 0;
+		this.data.forEach((o, i) => {
+			let s = arr[i] || '';
+			let k = parseInt(s[0], 16) || 0;
 
 			o.enable_freq  = !!(k & 1);
 			o.enable_noise = !!(k & 2);
@@ -99,7 +92,7 @@ class pSample {
 			o.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
 
 			o.shift = parseInt(s.substr(3), 16) || 0;
-		}
+		});
 	}
 }
 //---------------------------------------------------------------------------------------

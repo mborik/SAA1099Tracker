@@ -15,5 +15,6 @@
     },
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 5000,
+	"files.eol": "\n",
 	"files.trimTrailingWhitespace": true
 }

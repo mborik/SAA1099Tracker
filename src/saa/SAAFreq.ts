@@ -62,7 +62,7 @@ class SAAFreq {
 			 * generator, ONLY the octave data is acted upon.
 			 * The offset data will be acted upon next time.
 			 */
-			if (this._nextOctave == this._curOctave) {
+			if (this._nextOctave === this._curOctave) {
 				this._ignoreOffset = true;
 			}
 		}
@@ -111,8 +111,7 @@ class SAAFreq {
 	 * signalling the offset data as 'new', so it will be acted upon next half-cycle.
 	 * Weird, I know. But that's how it works. Philips even documented as much...
 	 */
-	public update()
-	{
+	public update() {
 		if (!this._newdata) {
 			return;
 		}
