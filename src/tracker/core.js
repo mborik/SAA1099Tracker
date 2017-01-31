@@ -35,24 +35,14 @@ class Tracker {
 			length: 0
 		};
 
-		this.settings = {
-			tracklistAutosize: true,
-			tracklistLines: 17,
-			tracklistLineHeight: 9,
-			hexTracklines: true,
-			hexSampleFreq: false,
-			audioInterrupt: 50,
-			audioBuffers: 0
-		};
-
 		this.pixelfont  = { obj: null, ctx: null };
+		this.settings   = new Settings(this);
 		this.manager    = new Manager(this);
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
 
 		if (AudioDriver) {
 			this.player = new Player(new SAASound(AudioDriver.sampleRate));
-			AudioDriver.init(this.player);
 		}
 		else {
 			$('#overlay .loader').html(
@@ -63,6 +53,7 @@ class Tracker {
 		}
 
 		if (this.player) {
+			this.settings.init();
 			this.file = new STMFile(this);
 
 			this.populateGUI();

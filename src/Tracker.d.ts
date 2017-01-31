@@ -8,15 +8,6 @@ declare interface TrackerGlobalKeyState {
 	lastPlayMode: number;
 	length: number;
 }
-declare interface TrackerSettings {
-	tracklistAutosize: boolean;
-	tracklistLines: number;
-	tracklistLineHeight: number;
-	hexTracklines: boolean;
-	hexSampleFreq: boolean;
-	audioInterrupt: number;
-	audioBuffers: number;
-}
 declare class Tracker {
 	version: string;
 	loaded: boolean;
@@ -37,8 +28,8 @@ declare class Tracker {
 	songTitle: string;
 	songAuthor: string;
 	globalKeyState: TrackerGlobalKeyState;
-	settings: TrackerSettings;
 	pixelfont: TrackerCanvasPair;
+	settings: Settings;
 	manager: Manager;
 	tracklist: Tracklist;
 	smpornedit: SmpOrnEditor;

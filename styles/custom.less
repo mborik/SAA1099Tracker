@@ -600,6 +600,68 @@
 	}
 }
 
+#settings {
+	z-index: 1030;
+
+	.modal-body {
+		.form-group {
+			label,
+			input[type="radio"],
+			input[type="checkbox"] {
+				margin-top: 0;
+				cursor: default;
+			}
+		}
+
+		fieldset.form-group {
+			padding: @grid-gutter-width 0;
+			margin: @grid-gutter-width 0 (@grid-gutter-width * 2) 0;
+
+			> label { font-weight: bold; }
+		}
+
+		.panel {
+			border-radius: @border-radius-base;
+
+			> .panel-heading {
+				color: @text-color;
+				border-bottom: 1px solid transparent;
+				.border-top-radius((@border-radius-base - 1));
+			}
+			> .panel-footer {
+				background: #f8f8f8;
+			}
+		}
+		.panel-editor {
+			border-color: @state-info-border;
+			> .panel-heading {
+				#gradient.vertical(lighten(@brand-primary, 52%), @modal-content-bg);
+			}
+		}
+		.panel-audio {
+			border-color: @state-danger-border;
+			> .panel-heading {
+				#gradient.vertical(lighten(@brand-warning, 50%), @modal-content-bg);
+			}
+		}
+	}
+
+	.modal-footer {
+		text-align: center;
+
+		.btn {
+			font-size: 13px;
+			padding: 6px 12px;
+			width: 12%;
+			cursor: default !important;
+
+			&:focus {
+				outline-color: @blue-effect;
+			}
+		}
+	}
+}
+
 #filedialog {
 	z-index: 1031;
 

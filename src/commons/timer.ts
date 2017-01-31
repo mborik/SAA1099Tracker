@@ -37,7 +37,7 @@
 	};
 
 	this.pause = function() {
-		enabled = false
+		enabled = false;
 	};
 	this.resume = function() {
 		enabled = true;

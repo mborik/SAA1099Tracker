@@ -1,12 +1,16 @@
 /*
  * Audio driver and sound output.
  */
+//---------------------------------------------------------------------------------------
+/// <reference path="../Commons.d.ts" />
+//---------------------------------------------------------------------------------------
 declare interface AudioContext {
 	resume: () => void;
 	suspend: () => void;
 	createJavaScriptNode: (bufferSize?: number, numberOfInputChannels?: number, numberOfOutputChannels?: number) => ScriptProcessorNode;
 };
 interface Window { AudioDriver: any; }
+//---------------------------------------------------------------------------------------
 window.AudioDriver = (() => {
 	function getAdjustSamples(samplerate: number, buffers: number, interrupt: number) {
 		let intms = 1000 / interrupt;
@@ -18,68 +22,79 @@ window.AudioDriver = (() => {
 	}
 
 	class WebAudioAPIDriver {
-		private audioSource: any = null;
-		setAudioSource(audioSrc: any) { this.audioSource = audioSrc };
+		private _audioSource: any = null;
+		public setAudioSource(audioSrc: any) { this._audioSource = audioSrc; };
 
-		audioEventHandler(event: AudioProcessingEvent) {
+		private _audioEventHandler(event: AudioProcessingEvent) {
 			let buf = event.outputBuffer;
-			this.audioSource.getAudio(
+			this._audioSource.getAudio(
 				buf.getChannelData(0),
 				buf.getChannelData(1),
 				buf.length
 			);
 		}
 
-		interruptFrequency: number = 50;
-		bufferCount: number = 4;
-		bufferSize: number = 4096;
-		sampleRate: number;
-		newAPICaps: boolean;
+		private _interruptFrequency: number = 50;
+		private _bufferCount: number = 4;
+		private _bufferSize: number = 4096;
+		private _sampleRate: number;
 
-		audioContext: AudioContext;
-		scriptProcessor: ScriptProcessorNode = null;
+		private _newAPICaps: boolean;
+		private _audioContext: AudioContext;
+		private _gainNode: GainNode;
+		private _scriptProcessor: ScriptProcessorNode = null;
+
+		get sampleRate(): number { return this._sampleRate; }
+		set volume(vol: number) {
+			vol = Math.min(Math.max(0, vol), 10);
+			this._gainNode.gain.value = vol;
+		}
 
 		constructor() {
 			console.log('Audio', 'Creating new WebAudioAPIDriver...');
 
-			this.audioContext = <AudioContext> getCompatible(window, 'AudioContext', true);
-			this.newAPICaps = !!(this.audioContext.resume && this.audioContext.suspend);
+			this._audioContext = <AudioContext> getCompatible(window, 'AudioContext', true);
+			this._newAPICaps = !!(this._audioContext.resume && this._audioContext.suspend);
 
-			this.sampleRate = this.audioContext.sampleRate;
-			console.log('Audio', 'Hardware default samplerate is %dHz...', this.sampleRate);
+			this._sampleRate = this._audioContext.sampleRate;
+			console.log('Audio', 'Hardware default samplerate is %dHz...', this._sampleRate);
+
+			this._gainNode = this._audioContext.createGain();
 		}
 
 		play() {
-			if (!(this.audioSource && this.audioSource.getAudio) || this.scriptProcessor.onaudioprocess) {
+			if (!(this._audioSource && this._audioSource.getAudio) || this._scriptProcessor.onaudioprocess) {
 				return;
 			}
 
-			this.scriptProcessor.onaudioprocess = this.audioEventHandler.bind(this);
-			this.scriptProcessor.connect(this.audioContext.destination);
+			this._scriptProcessor.onaudioprocess = this._audioEventHandler.bind(this);
+			this._scriptProcessor.connect(this._gainNode);
+			this._gainNode.connect(this._audioContext.destination);
 
-			if (this.newAPICaps) {
-				this.audioContext.resume();
+			if (this._newAPICaps) {
+				this._audioContext.resume();
 			}
 		}
 
 		stop() {
-			if (this.newAPICaps) {
-				this.audioContext.suspend();
+			if (this._newAPICaps) {
+				this._audioContext.suspend();
 			}
 
-			if (this.scriptProcessor.onaudioprocess) {
-				this.scriptProcessor.disconnect(this.audioContext.destination);
+			if (this._scriptProcessor.onaudioprocess) {
+				this._gainNode.disconnect(this._audioContext.destination);
+				this._scriptProcessor.disconnect(this._gainNode);
 			}
 
-			this.scriptProcessor.onaudioprocess = null;
+			this._scriptProcessor.onaudioprocess = null;
 		}
 
 		init(audioSrc: any, buffers: number, int: number) {
-			if (this.scriptProcessor) {
+			if (this._scriptProcessor) {
 				console.log('Audio', 'Freeing script processor...');
 
 				this.stop();
-				this.scriptProcessor = null;
+				this._scriptProcessor = null;
 			}
 
 			if (audioSrc) {
@@ -88,31 +103,31 @@ window.AudioDriver = (() => {
 			}
 
 			if (buffers) {
-				this.bufferCount = buffers;
+				this._bufferCount = buffers;
 			}
 			if (int) {
-				this.interruptFrequency = int;
+				this._interruptFrequency = int;
 			}
 
-			this.bufferSize = getAdjustSamples(
-				this.sampleRate,
-				this.bufferCount,
-				this.interruptFrequency
+			this._bufferSize = getAdjustSamples(
+				this._sampleRate,
+				this._bufferCount,
+				this._interruptFrequency
 			);
 
 			console.log('Audio', 'Initializing new script processor with examined buffer size: %d...\n\t\t%c[ samplerate: %dHz, buffers: %d, interrupt frequency: %dHz ]',
-				this.bufferSize, 'color:gray', this.sampleRate, this.bufferCount, this.interruptFrequency);
+				this._bufferSize, 'color:gray', this._sampleRate, this._bufferCount, this._interruptFrequency);
 
-			if (this.audioContext.createScriptProcessor !== null) {
-				this.scriptProcessor = this.audioContext.createScriptProcessor(this.bufferSize, 0, 2);
+			if (this._audioContext.createScriptProcessor !== null) {
+				this._scriptProcessor = this._audioContext.createScriptProcessor(this._bufferSize, 0, 2);
 			}
-			else if (this.audioContext.createJavaScriptNode !== null) {
-				this.scriptProcessor = this.audioContext.createJavaScriptNode(this.bufferSize, 0, 2);
+			else if (this._audioContext.createJavaScriptNode !== null) {
+				this._scriptProcessor = this._audioContext.createJavaScriptNode(this._bufferSize, 0, 2);
 			}
-			this.scriptProcessor.onaudioprocess = null;
+			this._scriptProcessor.onaudioprocess = null;
 
-			this.bufferSize = this.scriptProcessor.bufferSize;
-			console.log('Audio', 'Successfully initialized with proper buffer size %d...', this.bufferSize);
+			this._bufferSize = this._scriptProcessor.bufferSize;
+			console.log('Audio', 'Successfully initialized with proper buffer size %d...', this._bufferSize);
 		}
 	}
 

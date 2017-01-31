@@ -478,6 +478,10 @@ Tracker.prototype.onCmdAbout = function() {
 	dialog.modal('toggle');
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPreferences = function() {
+	this.settings.show();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatCreate = function() {
 	if (this.modePlay) {
 		return;
