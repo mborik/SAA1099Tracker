@@ -30,8 +30,8 @@ class FileDialog {
 		private $parent: STMFile,
 		private $storage: StorageDialogExchange) {}
 
-	public load(): boolean { return this._openDialog('load') }
-	public save(): boolean { return this._openDialog('save') }
+	public load(): boolean { return this._openDialog('load'); }
+	public save(): boolean { return this._openDialog('save'); }
 
 	private _obj: JQuery = null;
 	private _saveFlag: boolean = false;

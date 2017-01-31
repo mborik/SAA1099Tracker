@@ -155,6 +155,7 @@ module.exports = function(grunt) {
 						'src/tracker/tracklist.js',
 						'src/tracker/smporn.js',
 						'src/tracker/manager.js',
+						'src/tracker/settings.js',
 						'src/tracker/core.js',
 						'src/tracker/controls.js',
 						'src/tracker/keyboard.js',
@@ -184,7 +185,8 @@ module.exports = function(grunt) {
 						dialog: {
 							file: 'templates/dlg-file.html',
 							about: 'templates/dlg-about.html',
-							commons: 'templates/dlg-commons.html'
+							commons: 'templates/dlg-commons.html',
+							settings: 'templates/dlg-settings.html'
 						}
 					}
 				}
