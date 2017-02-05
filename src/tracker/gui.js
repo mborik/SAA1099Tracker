@@ -1,46 +1,45 @@
 /** Tracker.gui submodule - template loader and element populator with jQuery */
-/* global dev, getCompatible, AudioDriver, SyncTimer, Player */
 //---------------------------------------------------------------------------------------
 Tracker.prototype.populateGUI = function() {
-	var app = this;
+	let app = this;
 
-	var populatedElementsTable = [
+	let populatedElementsTable = [
 		{
 			global:   'document',
-			method:   'bind',
-			param:    'contextmenu',
-			handler:  function(e) {
+			method:   'contextmenu',
+			handler:  e => {
 				e.preventDefault();
 				return false;
 			}
 		}, {
 			global:   'window',
 			method:   'resize',
-			handler:  function() {
-				var c = 0;
+			handler:  (e, force) => {
+				let c = 0;
 
 				if (app.activeTab === 0) {
 					c = app.tracklist.countTracklines();
-					if (c !== app.settings.tracklistLines) {
+					if (c !== app.settings.tracklistLines || force) {
 						app.tracklist.setHeight(c);
 						app.updateTracklist(true);
 					}
 				}
 				else if (app.activeTab === 1 && app.smpornedit.initialized) {
-					var o = app.smpornedit;
+					let o = app.smpornedit;
 
 					c = $(o.amp.obj).offset().left;
 					o.smpeditOffset.left = c;
 				}
 
-				if (!!(c = $('#statusbar').offset().top))
+				if (!!(c = $('#statusbar').offset().top)) {
 					$('#documodal .modal-body').css('height', (c * 0.9) | 0);
+				}
 			}
 		}, {
 			global:   'window',
-			method:   'bind',
+			method:   'on',
 			param:    'beforeunload',
-			handler:  function() {
+			handler:  () => {
 				if (electron) {
 					return app.onCmdAppExit();
 				}
@@ -50,57 +49,65 @@ Tracker.prototype.populateGUI = function() {
 			}
 		}, {
 			global:   'window',
-			method:   'bind',
+			method:   'on',
 			param:    'keyup keydown',
-			handler:  function(e) { return app.handleKeyEvent(e.originalEvent) }
+			handler:  e => app.handleKeyEvent(e.originalEvent)
 		}, {
 			global:   'window',
-			method:   'bind',
+			method:   'on',
 			param:    'blur',
-			handler:  function(e) {
-				var i, o = app.globalKeyState;
-				for (i in o) if ((i - 0)) {
-					delete o[i];
-					o.length--;
+			handler:  () => {
+				let o = app.globalKeyState;
+				for (let key in o) {
+					if (!!+key) {
+						delete o[key];
+						o.length--;
+					}
 				}
 			}
 		}, {
 			selector: '[data-tooltip]',
 			method:   'each',
-			handler:  function(i, el) {
-				var data = (el.dataset || $(this).data()).tooltip || '',
-					id = data.length ? data : el.id || el.htmlFor || el.name,
-					delay = /^mi/.test(id) ? 500 : 2000,
-					t = app.doc.tooltip[id];
+			handler:  (i, el) => {
+				let data = (el.dataset || $(el).data()).tooltip || '';
+				let id = data.length ? data : el.id || el.htmlFor || el.name;
+				let delay = /^mi/.test(id) ? 500 : 2000;
+				let ttTitle = app.doc.tooltip[id];
 
-				if (!t)
+				if (!ttTitle) {
 					return;
+				}
 
-				$(this).tooltip({
+				ttTitle = ttTitle
+					.replace(/\.{3}/g, '&hellip;')
+					.replace(/\n/g, '<br>')
+					.replace(/(\[.+?\])$/, '<kbd>$1</kbd>');
+
+				$(el).tooltip({
 					html: true,
 					animation: false,
 					delay: { "show": delay, "hide": 0 },
 					placement: 'auto top',
 					trigger: 'hover',
-					title: t.replace(/\.{3}/g, '&hellip;')
-					        .replace(/\n/g, '<br>')
-					        .replace(/(\[.+?\])$/, '<kbd>$1</kbd>')
+					title: ttTitle
 				});
 			}
 		}, {
 			selector: 'canvas',
 			method:   'each',
-			handler:  function(i, el) {
-				var name = el.className, o = app[name];
+			handler:  (i, el) => {
+				let name = el.className;
+				let o = app[name];
 
 				if (name === 'tracklist') {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
 					getCompatible(o.ctx, 'imageSmoothingEnabled', true, false);
 
-					$(this).bind('focus', function(e) {
-						if (app.player.position.length && !app.modeEdit)
+					$(el).on('focus', e => {
+						if (app.player.position.length && !app.modeEdit) {
 							app.onCmdToggleEditMode();
+						}
 					});
 				}
 				else if (name === 'smpornedit') {
@@ -111,8 +118,10 @@ Tracker.prototype.populateGUI = function() {
 					getCompatible(o[name].ctx, 'imageSmoothingEnabled', true, false);
 				}
 
-				$(this).bind('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', function(e) {
-					var delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY || (e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
+				$(el).on('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', e => {
+					let delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY ||
+						(e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
+
 					if (delta) {
 						e.stopPropagation();
 						e.preventDefault();
@@ -128,8 +137,9 @@ Tracker.prototype.populateGUI = function() {
 			selector: '#main-tabpanel a[data-toggle="tab"]',
 			method:   'on',
 			param:    'shown.bs.tab',
-			handler:  function(e) {
-				app.activeTab = parseInt($(this).data().value, 10);
+			handler:  e => {
+				let data = $(e.currentTarget).data();
+				app.activeTab = +data.value || 0;
 				$('#statusbar')[!app.activeTab ? 'show' : 'hide']();
 				$(window).trigger('resize');
 			}
@@ -143,7 +153,7 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scOctave',
 			method:   'change',
-			handler:  function() { app.ctrlOctave = $(this).val() - 0 }
+			handler:  e => (app.ctrlOctave = +e.currentTarget.value)
 		}, {
 			selector: '#scAutoSmp',
 			method:   'TouchSpin',
@@ -155,7 +165,7 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scAutoSmp',
 			method:   'change',
-			handler:  function() { app.ctrlSample = parseInt($(this).val(), 32) }
+			handler:  e => (app.ctrlSample = parseInt(e.currentTarget.value, 32))
 		}, {
 			selector: '#scAutoOrn',
 			method:   'TouchSpin',
@@ -167,7 +177,7 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scAutoOrn',
 			method:   'change',
-			handler:  function() { app.ctrlOrnament = parseInt($(this).val(), 16) }
+			handler:  e => (app.ctrlOrnament = parseInt(e.currentTarget.value, 16))
 		}, {
 			selector: '#scRowStep',
 			method:   'TouchSpin',
@@ -178,7 +188,7 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scRowStep',
 			method:   'change',
-			handler:  function() { app.ctrlRowStep = $(this).val() - 0 }
+			handler:  e => (app.ctrlRowStep = +e.currentTarget.value)
 		}, {
 			selector: '#scPattern,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
 			method:   'TouchSpin',
@@ -196,26 +206,30 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scPattern',
 			method:   'change',
-			handler:  function() {
-				if (app.player.pattern.length <= 1)
+			handler:  e => {
+				if (app.player.pattern.length <= 1) {
 					return false;
+				}
 
-				app.workingPattern = $(this).val() - 0;
+				app.workingPattern = +e.currentTarget.value;
 				app.updatePanelPattern();
 			}
 		}, {
 			selector: '#scPatternLen',
 			method:   'change',
-			handler:  function() {
-				var pp = app.player.pattern[app.workingPattern];
-				if (app.player.pattern.length <= 1)
+			handler:  e => {
+				let el = $(e.currentTarget);
+				let pp = app.player.pattern[app.workingPattern];
+
+				if (app.player.pattern.length <= 1) {
 					return false;
+				}
 				else if (app.modePlay) {
-					$(this).val(pp.end);
+					el.val(pp.end);
 					return false;
 				}
 
-				pp.end = $(this).val() - 0;
+				pp.end = +(el.val());
 				app.player.countPositionFrames();
 				app.updatePanelPattern();
 				app.updateTracklist();
@@ -225,15 +239,18 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scPosCurrent',
 			method:   'change',
-			handler:  function() {
-				if (!app.player.position.length)
+			handler:  e => {
+				let el = $(e.currentTarget);
+
+				if (!app.player.position.length) {
 					return false;
+				}
 				else if (app.modePlay) {
-					$(this).val(app.player.currentPosition + 1);
+					el.val(app.player.currentPosition + 1);
 					return false;
 				}
 
-				var pos = $(this).val() - 1;
+				let pos = el.val() - 1;
 
 				app.player.currentPosition = pos;
 				app.player.currentLine = 0;
@@ -247,21 +264,24 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scPosLength',
 			method:   'change',
-			handler:  function() {
-				var pp = app.player.currentPosition,
-					pos = app.player.position[pp];
+			handler:  e => {
+				let el = e.currentTarget;
+				let pp = app.player.currentPosition;
+				let pos = app.player.position[pp];
 
-				if (!app.player.position.length)
+				if (!app.player.position.length) {
 					return false;
+				}
 				else if (app.modePlay) {
-					$(this).val(pos.length);
+					el.value = pos.length;
 					return false;
 				}
 
-				pos.length = $(this).val() - 0;
+				pos.length = +el.value;
 
-				if (app.player.currentLine >= pos.length)
+				if (app.player.currentLine >= pos.length) {
 					app.player.currentLine = pos.length - 1;
+				}
 
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
@@ -278,18 +298,20 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scPosSpeed',
 			method:   'change',
-			handler:  function() {
-				var pp = app.player.currentPosition,
-					pos = app.player.position[pp];
+			handler:  e => {
+				let el = e.currentTarget;
+				let pp = app.player.currentPosition;
+				let pos = app.player.position[pp];
 
-				if (!app.player.position.length)
+				if (!app.player.position.length) {
 					return false;
+				}
 				else if (app.modePlay) {
-					$(this).val(pos.speed);
+					el.value = pos.speed;
 					return false;
 				}
 
-				pos.speed = $(this).val() - 0;
+				pos.speed = +el.value;
 
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
@@ -299,31 +321,36 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scPosRepeat',
 			method:   'change',
-			handler:  function() {
-				if (!app.player.position.length)
-					return false;
-				else if (app.modePlay) {
-					$(this).val(app.player.repeatPosition + 1);
+			handler:  e => {
+				let el = e.currentTarget;
+
+				if (!app.player.position.length) {
 					return false;
 				}
-				else
-					app.player.repeatPosition = $(this).val() - 1;
+				else if (app.modePlay) {
+					el.value = (app.player.repeatPosition + 1);
+					return false;
+				}
+				else {
+					app.player.repeatPosition = +el.value - 1;
+				}
 
 				app.file.modified = true;
 			}
 		}, {
 			selector: 'input[id^="scChnPattern"]',
 			method:   'change',
-			handler:  function(e) {
-				var el = e.target,
-					pp = app.player.currentPosition,
-					chn = el.id.substr(-1) - 1,
-					pos = app.player.position[pp] || app.player.nullPosition,
-					val = el.value - 0,
-					prev = pos.ch[chn].pattern;
+			handler:  e => {
+				let el = e.currentTarget;
+				let pp = app.player.currentPosition;
+				let chn = el.id.substr(-1) - 1;
+				let pos = app.player.position[pp] || app.player.nullPosition;
+				let val = +el.value;
+				let prev = pos.ch[chn].pattern;
 
-				if (!app.player.position.length)
+				if (!app.player.position.length) {
 					return false;
+				}
 				else if (app.modePlay) {
 					el.value = prev;
 					return false;
@@ -331,8 +358,9 @@ Tracker.prototype.populateGUI = function() {
 
 				pos.ch[chn].pattern = val;
 
-				if (app.workingPattern === val || app.workingPattern === prev)
+				if (app.workingPattern === val || app.workingPattern === prev) {
 					app.updatePanelPattern();
+				}
 
 				app.player.countPositionFrames(pp);
 				app.updateTracklist();
@@ -342,23 +370,25 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: 'input[id^="scChnTrans"]',
 			method:   'each',
-			handler:  function(i, el) {
-				$(this).TouchSpin({
+			handler:  (i, el) => {
+				$(el).TouchSpin({
 					initval: '0',
 					min: -24, max: 24
-				}).change(function(e) {
-					var el = e.target,
-						chn = el.id.substr(-1) - 1,
-						pos = app.player.position[app.player.currentPosition];
+				}).change(e => {
+					let el = e.currentTarget;
+					let chn = el.id.substr(-1) - 1;
+					let pos = app.player.position[app.player.currentPosition];
 
-					if (!app.player.position.length)
+					if (!app.player.position.length) {
 						return false;
+					}
 					else if (app.modePlay) {
 						el.value = pos.ch[chn].pitch;
 						return false;
 					}
-					else
-						pos.ch[chn].pitch = el.value - 0;
+					else {
+						pos.ch[chn].pitch = +el.value;
+					}
 
 					app.file.modified = true;
 				});
@@ -366,19 +396,28 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: 'input[id^="scChnButton"]',
 			method:   'each',
-			handler:  function(i, el) {
-				var cc = el.id.substr(-1);
-				$(this).bootstrapToggle({
+			handler:  (i, el) => {
+				let cc = el.id.substr(-1);
+				$(el).bootstrapToggle({
 					on: cc,
 					off: cc,
 					onstyle: 'default',
 					offstyle: 'default',
 					size: 'mini',
 					width: 58
-				}).change(function(e) {
-					var el = e.target;
-					app.player.rtSong.muted[el.value - 1] = !el.checked;
+				}).change(e => {
+					let el = e.currentTarget;
+					app.player.rtSong.muted[(+el.value - 1)] = !el.checked;
 				});
+			}
+		}, {
+			selector: '#sample-tabpanel a[data-toggle="tab"]',
+			method:   'on',
+			param:    'show.bs.tab',
+			handler:  e => {
+				if (e.target.id === 'tab-pitchshift' && e.relatedTarget.id === 'tab-sampledata') {
+					app.smpornedit.updateSamplePitchShift();
+				}
 			}
 		}, {
 			selector: '#scSampleNumber,#scOrnTestSample',
@@ -391,18 +430,19 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scSampleNumber',
 			method:   'change',
-			handler:  function() {
-				app.workingSample = parseInt($(this).val(), 32);
+			handler:  e => {
+				app.workingSample = parseInt(e.currentTarget.value, 32);
 				app.workingOrnTestSample = app.workingSample;
 				app.updateSampleEditor(true);
 				app.smpornedit.updateSamplePitchShift();
+
 				$('#sbSampleScroll').scrollLeft(0);
 				$('#scOrnTestSample').val(app.workingOrnTestSample.toString(32).toUpperCase());
 			}
 		}, {
 			selector: '#scOrnTestSample',
 			method:   'change',
-			handler:  function() { app.workingOrnTestSample = parseInt($(this).val(), 32) }
+			handler:  e => (app.workingOrnTestSample = parseInt(e.currentTarget.value, 32))
 		}, {
 			selector: '#scOrnNumber',
 			method:   'TouchSpin',
@@ -414,53 +454,56 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scOrnNumber',
 			method:   'change',
-			handler:  function() {
-				app.workingOrnament = parseInt($(this).val(), 16);
+			handler:  e => {
+				app.workingOrnament = parseInt(e.currentTarget.value, 16);
 				app.smpornedit.updateOrnamentEditor(true);
 			}
 		}, {
 			selector: '#txSampleName',
 			method:   'change',
-			handler:  function(e) {
-				app.player.sample[app.workingSample].name = e.target.value;
+			handler:  e => {
+				app.player.sample[app.workingSample].name = e.currentTarget.value;
 				app.file.modified = true;
 			}
 		}, {
 			selector: '#txOrnName',
 			method:   'change',
-			handler:  function(e) {
-				app.player.ornament[app.workingOrnament].name = e.target.value;
+			handler:  e => {
+				app.player.ornament[app.workingOrnament].name = e.currentTarget.value;
 				app.file.modified = true;
 			}
 		}, {
 			selector: '#scSampleTone,#scOrnTone',
 			method:   'each',
-			handler:  function(i, el) {
-				var cc = 'tx' + el.id.substr(2);
-				$(this).TouchSpin({
+			handler:  (i, el) => {
+				let cc = 'tx' + el.id.substr(2);
+				$(el).TouchSpin({
 					initval: app.workingSampleTone,
 					min: 1, max: 96
-				}).change(function(e) {
-					var el = e.target, val = el.value - 0;
+				}).change(e => {
+					let el = e.currentTarget;
+					let val = +el.value;
 					app.workingSampleTone = val;
+
 					$('#scSampleTone,#scOrnTone')
 						.val(val.toString())
 						.prev().val(app.player.tones[val].txt);
-				}).wrapAll('<div id="' + cc + '"/>')
+
+				}).wrapAll(`<div id="${cc}"/>`)
 				  .removeAttr('style')
 				  .prop('readonly', true)
 				  .clone(false)
 				  .removeAttr('id')
 				  .removeAttr('tabindex')
-				  .insertBefore(this);
+				  .insertBefore(el);
 
-				$(this).trigger('change');
+				$(el).trigger('change');
 			}
 		}, {
 			selector: '#sbSampleScroll',
 			method:   'scroll',
-			handler:  function(e) {
-				app.smpornedit.smpeditScroll = 0 | ((e.target.scrollLeft/ 1000) * 64);
+			handler:  e => {
+				app.smpornedit.smpeditScroll = ((e.target.scrollLeft / 1000) * 64).abs();
 				app.updateSampleEditor();
 			}
 		}, {
@@ -473,20 +516,21 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#chSampleRelease',
 			method:   'change',
-			handler:  function(e) {
-				var sample = app.player.sample[app.workingSample];
-				if (sample.end !== sample.loop)
-					sample.releasable = e.target.checked;
+			handler:  e => {
+				let sample = app.player.sample[app.workingSample];
+				if (sample.end !== sample.loop) {
+					sample.releasable = e.currentTarget.checked;
+				}
 				app.updateSampleEditor(true);
 				app.file.modified = true;
 			}
 		}, {
 			selector: '#scSampleLength',
 			method:   'change',
-			handler:  function(e) {
-				var sample = app.player.sample[app.workingSample],
-					offset = parseInt(e.target.value, 10) - sample.end,
-					looper = (sample.loop += offset);
+			handler:  e => {
+				let sample = app.player.sample[app.workingSample];
+				let offset = +e.currentTarget.value - sample.end;
+				let looper = (sample.loop += offset);
 
 				sample.end += offset;
 				sample.loop = ((sample.end - looper) < 0) ? 0 : looper;
@@ -497,9 +541,9 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scSampleRepeat',
 			method:   'change',
-			handler:  function(e) {
-				var sample = app.player.sample[app.workingSample],
-					value = parseInt(e.target.value, 10);
+			handler:  e => {
+				let sample = app.player.sample[app.workingSample];
+				let value = +e.currentTarget.value;
 
 				sample.loop = sample.end - value;
 				app.updateSampleEditor(true);
@@ -508,28 +552,29 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#fxOrnChords button',
 			method:   'each',
-			handler:  function() {
-				var id = $(this).text(),
-					chord = app.smpornedit.chords[id],
-					seqtxt = JSON.stringify(chord.sequence, null, 1).replace(/^\[|\]$|\s+/g, '');
+			handler:  (i, el) => {
+				let id = $(el).text();
+				let chord = app.smpornedit.chords[id];
+				let seqtxt = JSON.stringify(chord.sequence, null, 1).replace(/^\[|\]$|\s+/g, '');
 
-				$(this).tooltip({
+				$(el).tooltip({
 					html: true,
 					animation: false,
 					trigger: 'hover',
 					delay: { "show": 500, "hide": 0 },
-					title: chord.name + '<kbd>{ ' + seqtxt + ' }</kbd>'
-				}).click(function() {
-					var orn = app.player.ornament[app.workingOrnament],
-						i, l = chord.sequence.length;
+					title: chord.name + `<kbd>{ ${seqtxt} }</kbd>`
+				}).click(() => {
+					let orn = app.player.ornament[app.workingOrnament];
+					let l = chord.sequence.length;
 
 					orn.data.fill(0);
 					orn.name = chord.name;
 					orn.loop = 0;
 					orn.end  = l;
 
-					for (i = 0; i < l; i++)
+					for (let i = 0; i < l; i++) {
 						orn.data[i] = chord.sequence[i];
+					}
 
 					app.smpornedit.updateOrnamentEditor(true);
 					app.file.modified = true;
@@ -538,10 +583,10 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scOrnLength',
 			method:   'change',
-			handler:  function(e) {
-				var orn = app.player.ornament[app.workingOrnament],
-					offset = parseInt(e.target.value, 10) - orn.end,
-					looper = (orn.loop += offset);
+			handler:  e => {
+				let orn = app.player.ornament[app.workingOrnament];
+				let offset = +e.currentTarget.value - orn.end;
+				let looper = (orn.loop += offset);
 
 				orn.end += offset;
 				orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
@@ -552,83 +597,169 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#scOrnRepeat',
 			method:   'change',
-			handler:  function(e) {
-				var orn = app.player.ornament[app.workingOrnament],
-					value = parseInt(e.target.value, 10);
+			handler:  e => {
+				let orn = app.player.ornament[app.workingOrnament];
+				let value = +e.currentTarget.value;
 
 				orn.loop = orn.end - value;
 				app.smpornedit.updateOrnamentEditor(true);
 				app.file.modified = true;
 			}
 		}, {
-			selector: '#sample-tabpanel a[data-toggle="tab"]',
+			selector: '#scSetTrkLines',
+			method:   'TouchSpin',
+			data: {
+				initval: '17',
+				min: 5, max: 127, step: 2
+			}
+		}, {
+			selector: '#scSetTrkLines',
+			method:   'change',
+			handler:  e => (app.settings.tracklistLines = +e.currentTarget.value)
+		}, {
+			selector: '#scSetTrkLineHeight',
+			method:   'TouchSpin',
+			data: {
+				initval: '9',
+				min: 7, max: 15, step: 2
+			}
+		}, {
+			selector: '#scSetTrkLineHeight',
+			method:   'change',
+			handler:  e => (app.settings.tracklistLineHeight = +e.currentTarget.value)
+		}, {
+			selector: '#chSetTrkAutosize',
+			method:   'change',
+			handler:  e => {
+				let state = !!e.currentTarget.checked;
+				app.settings.tracklistAutosize = state;
+
+				$('label[for=scSetTrkLines]').toggleClass('disabled', state);
+				$('#scSetTrkLines').toggleClass('disabled', state).prop('disabled', state);
+			}
+		}, {
+			selector: '#chSetHexTracklist',
+			method:   'change',
+			handler:  e => (app.settings.hexTracklines = !!e.currentTarget.checked)
+		}, {
+			selector: '#chSetHexFreqShifts',
+			method:   'change',
+			handler:  e => (app.settings.hexSampleFreq = !!e.currentTarget.checked)
+		}, {
+			selector: '#rgSetAudioVolume',
 			method:   'on',
-			param:    'show.bs.tab',
-			handler:  function(e) {
-				if (e.target.id === 'tab-pitchshift' && e.relatedTarget.id === 'tab-sampledata')
-					app.smpornedit.updateSamplePitchShift();
+			param:    'input change',
+			handler:  e => {
+				let el = e.currentTarget;
+				app.settings.audioGain = +el.value;
+				$(el).tooltip('show');
+			}
+		}, {
+			selector: '#rgSetAudioVolume',
+			method:   'tooltip',
+			data: {
+				animation: false,
+				trigger: 'hover',
+				placement: 'right',
+				delay: { "show": 0, "hide": 500 },
+				title: function() {
+					return `${this.value}%`;
+				}
+			}
+		}, {
+			selector: '#rgSetAudioBuffers',
+			method:   'on',
+			param:    'input change',
+			handler:  e => {
+				let el = e.currentTarget;
+				app.settings.audioBuffers = +el.value;
+				app.settings.updateLatencyInfo();
+			}
+		}, {
+			selector: 'input[name=rdSetAudioInt]',
+			method:   'on',
+			param:    'input change',
+			handler:  e => {
+				let el = e.currentTarget;
+				app.settings.audioInterrupt = +el.value;
+				app.settings.updateLatencyInfo();
 			}
 		}, {
 			selector: 'a[id^="mi"]', // all menu items
 			method:   'click',
-			handler:  function() {
-				var fn,
-					name = this.id.replace(/^mi/, 'onCmd');
+			handler:  e => {
+				let el = e.currentTarget;
+				let name = el.id.replace(/^mi/, 'onCmd');
 
-				if (app[name])
+				if (app[name]) {
 					app[name]();
-				else if (name === 'onCmdFileSaveAs')
+				}
+				else if (name === 'onCmdFileSaveAs') {
 					app.onCmdFileSave(true);
-				else if (this.id.match(/^miFileImportDemo/)) {
-					fn = $(this).data().filename;
-					if (!fn || app.modePlay || app.globalKeyState.lastPlayMode)
+				}
+				else if (el.id.match(/^miFileImportDemo/)) {
+					let fn = $(el).data().filename;
+					if (!fn || app.modePlay || app.globalKeyState.lastPlayMode) {
 						return false;
+					}
 					app.file.loadDemosong(fn);
 				}
-				else if (this.id.match(/^miHelp/)) {
-					fn = $(this).data().filename;
-					if (!fn)
+				else if (el.id.match(/^miHelp/)) {
+					let fn = $(el).data().filename;
+					if (!fn) {
 						return false;
+					}
 					app.onCmdShowDocumentation(fn);
 				}
-				else
+				else {
 					return false;
+				}
 			}
 		}, {
 			selector: 'button[id^="btPattern"]',
 			method:   'click',
-			handler:  function() {
-				var name = this.id.replace(/^btPattern/, 'onCmdPat');
-				if (app[name])
+			handler:  e => {
+				let id = e.currentTarget.id;
+				let name = id.replace(/^btPattern/, 'onCmdPat');
+				if (app[name]) {
 					app[name]();
+				}
 			}
 		}, {
 			selector: 'button[id^="btPos"]',
 			method:   'click',
-			handler:  function() {
-				var name = this.id.replace(/^bt/, 'onCmd');
-				if (app[name])
+			handler:  e => {
+				let id = e.currentTarget.id;
+				let name = id.replace(/^bt/, 'onCmd');
+				if (app[name]) {
 					app[name]();
+				}
 			}
 		}, {
 			selector: 'button[id^="btSample"]',
 			method:   'click',
-			handler:  function() {
-				var name = this.id.replace('btSample', 'onCmdSmp');
-				if (name.match(/Stop$/))
+			handler:  e => {
+				let id = e.currentTarget.id;
+				let name = id.replace('btSample', 'onCmdSmp');
+				if (name.match(/Stop$/)) {
 					return app.onCmdStop();
-				if (app[name])
+				}
+				if (app[name]) {
 					app[name]();
+				}
 			}
 		}, {
 			selector: 'button[id^="btOrn"]',
 			method:   'click',
-			handler:  function() {
-				var name = this.id.replace('btOrn', 'onCmdOrn');
-				if (name.match(/Stop$/))
+			handler:  e => {
+				let id = e.currentTarget.id;
+				let name = id.replace('btOrn', 'onCmdOrn');
+				if (name.match(/Stop$/)) {
 					return app.onCmdStop();
-				if (app[name])
+				}
+				if (app[name]) {
 					app[name]();
+				}
 			}
 		}
 	];
@@ -637,8 +768,8 @@ Tracker.prototype.populateGUI = function() {
 	console.log('Tracker.gui', 'Populating elements...');
 
 	populatedElementsTable.forEach(function(o) {
-		var data = o.handler || o.data;
-		var selector = o.selector || (o.global && window[o.global]);
+		let data = o.handler || o.data;
+		let selector = o.selector || (o.global && window[o.global]);
 
 		if (selector && o.method) {
 			if (o.param)
@@ -650,11 +781,11 @@ Tracker.prototype.populateGUI = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.initializeGUI = function() {
-	var app = this, i = 0;
+	let app = this, i = 0;
 
-	var initSteps = [
+	let initSteps = [
 		function() {
-			var pixelfont = $('img.pixelfont')[0];
+			let pixelfont = $('img.pixelfont')[0];
 			app.initPixelFont(pixelfont);
 			return true;
 		},
@@ -681,7 +812,7 @@ Tracker.prototype.initializeGUI = function() {
 
 			console.log('Tracker.gui', 'Force initialization of Tracklist editor by triggering of window resize event...');
 			$('#tab-tracker').tab('show');
-			$(window).trigger('resize');
+			$(window).trigger('resize', [ true ]);
 			return true;
 		},
 		function() {
@@ -690,7 +821,7 @@ Tracker.prototype.initializeGUI = function() {
 
 			console.log('Tracker.gui', 'Redrawing all tracklist elements and canvas...');
 			app.updatePanels();
-			app.updateTracklist(true);
+			app.updateTracklist(app.settings.tracklistLines);
 			app.tracklist.initialized = true;
 			return true;
 		},
@@ -712,8 +843,8 @@ Tracker.prototype.initializeGUI = function() {
 		}
 	];
 
-	var initFn = function() {
-		var fn = initSteps[i];
+	let initFn = function() {
+		let fn = initSteps[i];
 		if (!!fn) {
 			if (fn())
 				i++;

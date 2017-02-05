@@ -12,18 +12,15 @@ declare interface AudioContext {
 interface Window { AudioDriver: any; }
 //---------------------------------------------------------------------------------------
 window.AudioDriver = (() => {
-	function getAdjustSamples(samplerate: number, buffers: number, interrupt: number) {
-		let intms = 1000 / interrupt;
-		let streammsec = intms * buffers;
-		let samples = streammsec / 1000 * samplerate;
-		let bits = Math.ceil(Math.log(samples) * Math.LOG2E);
-
-		return 1 << Math.min(Math.max(bits, 8), 14);
-	}
-
 	class WebAudioAPIDriver {
-		private _audioSource: any = null;
-		public setAudioSource(audioSrc: any) { this._audioSource = audioSrc; };
+		public getAdjustedSamples(samplerate: number, buffers: number, interrupt: number) {
+			let intms = 1000 / interrupt;
+			let streammsec = intms * buffers;
+			let samples = streammsec / 1000 * samplerate;
+			let bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+
+			return 1 << Math.min(Math.max(bits, 8), 14);
+		}
 
 		private _audioEventHandler(event: AudioProcessingEvent) {
 			let buf = event.outputBuffer;
@@ -40,10 +37,12 @@ window.AudioDriver = (() => {
 		private _sampleRate: number;
 
 		private _newAPICaps: boolean;
+		private _audioSource: any = null;
 		private _audioContext: AudioContext;
 		private _gainNode: GainNode;
 		private _scriptProcessor: ScriptProcessorNode = null;
 
+		public setAudioSource(audioSrc: any) { this._audioSource = audioSrc; };
 		get sampleRate(): number { return this._sampleRate; }
 		set volume(vol: number) {
 			vol = Math.min(Math.max(0, vol), 10);
@@ -97,7 +96,7 @@ window.AudioDriver = (() => {
 				this._scriptProcessor = null;
 			}
 
-			if (audioSrc) {
+			if (audioSrc && audioSrc !== this._audioSource) {
 				console.log('Audio', 'New audio generator source is %o...', audioSrc);
 				this.setAudioSource(audioSrc);
 			}
@@ -109,7 +108,7 @@ window.AudioDriver = (() => {
 				this._interruptFrequency = int;
 			}
 
-			this._bufferSize = getAdjustSamples(
+			this._bufferSize = this.getAdjustedSamples(
 				this._sampleRate,
 				this._bufferCount,
 				this._interruptFrequency

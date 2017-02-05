@@ -1,17 +1,17 @@
 == ABOUT SAA1099TRACKER =======================================================
 ===============================================================================
 
-~ SAA1099Tracker is offline storage HTML5/JavaScript chiptune music tracker.
-  It emulates pulse-sound generator soundchip Philips SAA 1099 produced in 80s
-  of twentieth century which was used in/with these 8bit micro-computers:
+~ SAA1099Tracker is an offline storage HTML5/JavaScript chiptune music tracker.
+  It emulates soundchip Philips SAA 1099, programmable sound generator produced
+  in 80s of 20th century and which was used in/with these 8bit micro-computers:
   - integrated in Sam Coupé
-  - sound interface MIF 85 for Tesla PMD 85
+  - in sound interface "MIF 85" for Tesla PMD 85
     (an 8-bit personal micro-computer produced in former Czechoslovakia)
-  - currently also few sound interfaces for ZX-Spectrum
+  - currently also in few sound interfaces for ZX-Spectrum
 
-~ SAA1099Tracker is channel-pattern oriented music tracker!
-  Every channel-pattern can have any length of 1 to 128 and should be assigned
-  to the any of six channels into any position which can have any length.
+~ SAA1099Tracker is a channel-pattern oriented music tracker.
+  Every channel-pattern could have any length from 1 to 128 tracklines
+  and could be assigned to any of six channel into any position of any length.
 
 ~ Sample defines amplitude of both stereo channels separately with optional
   noise generator (and its frequency) mixed into chosen amplitude for every
@@ -21,8 +21,8 @@
   releasable flag which leads to play the rest of sample data after the loop
   section if note was released in the tracklist.
 
-~ Ornaments can modulate every tick of the sample by exact number of halftones
-  up or down. It should be used for false-chords and special trill effects.
+~ Ornaments can transpose every tick of the sample by exact number of halftones
+  up or down. It could be used for false-chords and special trill effects.
 
 
 == BASIC HARDWARE SPECIFICATIONS AND LIMITATIONS FOR MUSICIANS ================
@@ -30,7 +30,7 @@
 
 ~ Philips SAA 1099 has some rules for envelope or noise control, that you need
   to set by parameters in specific channels. We have two envelope generators,
-  two noise generators and there is basic rule, that every env/noise generator
+  two noise generators and there is basic rule that every env/noise generator
   belongs for channel-triplets:
   - channel 1 / 4: noise generator frequency control    (tracker command E23)
   - channel 2 / 5: envelope generator frequency control (tracker command EXY)

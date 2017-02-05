@@ -33,7 +33,9 @@ declare interface WebAudioAPIDriver {
 	bufferCount: number;
 	bufferSize: number;
 	sampleRate: number;
+	volume: number;
 
+	getAdjustedSamples(samplerate: number, buffers: number, interrupt: number): number;
 	init(audioSrc: any, buffers?: number, int?: number): void;
 	play(): void;
 	stop(): void;
