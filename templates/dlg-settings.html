@@ -13,23 +13,23 @@
 								<div class="panel-heading"><h2 class="panel-title text-left">Editor options:</h2></div>
 								<div class="panel-body">
 									<div class="row">
-										<div class="col-sm-12"><label for="scSetTrkAutosize" class="control-label">Expand track-listing to window height:</label></div>
-										<div class="col-sm-6 text-right"><input id="scSetTrkAutosize" type="checkbox" class="form-check"></div>
+										<div class="col-sm-12"><label for="chSetTrkAutosize" class="control-label">Expand track-listing to window height:</label></div>
+										<div class="col-sm-6 text-right"><input id="chSetTrkAutosize" type="checkbox" class="form-check" tabindex="1"></div>
 									</div>
 									<hr>
 									<div class="form-group row">
 										<div class="col-sm-12"><label for="scSetTrkLines" class="control-label">Number of tracklines:</label></div>
-										<div class="col-sm-6"><input id="scSetTrkLines" type="text" class="form-control"></div>
+										<div class="col-sm-6"><input id="scSetTrkLines" type="text" class="form-control" tabindex="2"></div>
 									</div>
 									<div class="form-group row">
 										<div class="col-sm-12"><label for="scSetTrkLineHeight" class="control-label">Height of trackline <i>(px)</i>:</label></div>
-										<div class="col-sm-6"><input id="scSetTrkLineHeight" type="text" class="form-control"></div>
+										<div class="col-sm-6"><input id="scSetTrkLineHeight" type="text" class="form-control" tabindex="3"></div>
 									</div>
 								</div>
 								<div class="panel-footer">
 									<div class="form-group">
-										<div class="checkbox"><label class="control-label"><input id="chSetHexTracklist" type="checkbox" tabindex="0">Hexadecimal track-listing line numbers</label></div>
-										<div class="checkbox"><label class="control-label"><input id="chSetHexFreqShifts" type="checkbox" tabindex="0">Hexadecimal frequency shifts in samples</label></div>
+										<div class="checkbox"><label class="control-label"><input id="chSetHexTracklist" type="checkbox" tabindex="4">Hexadecimal track-listing line numbers</label></div>
+										<div class="checkbox"><label class="control-label"><input id="chSetHexFreqShifts" type="checkbox" tabindex="5">Hexadecimal frequency shifts in samples</label></div>
 									</div>
 								</div>
 							</div>
@@ -40,19 +40,19 @@
 								<div class="panel-body">
 									<fieldset class="form-group row">
 										<label>Volume gain:</label>
-										<input id="rgSetAudioVolume" type="range" min="8" max="256" step="1" value="100">
+										<input id="rgSetAudioVolume" type="range" min="0" max="200" step="1" value="100" tabindex="6">
 									</fieldset>
 									<hr>
 									<fieldset class="form-group row">
 										<label>Buffers:</label>
-										<input id="rgSetAudioBuffers" type="range" min="2" max="16" step="1" value="4">
-										<div class="form-control-static text-muted">Latency: <span>2048 samples (42 ms)</span></div>
+										<input id="rgSetAudioBuffers" type="range" min="2" max="16" step="2" value="4" tabindex="7">
+										<div class="form-control-static text-muted"></div>
 									</fieldset>
 									<hr>
 									<fieldset class="form-group row">
 										<label>Interrupt frequency:</label>
-										<div class="radio"><label class="control-label"><input id="rdSetAudioInt50" name="rdSetAudioInt" type="radio" value="50"><b>50 Hz</b> (default)</label></div>
-										<div class="radio"><label class="control-label"><input id="rdSetAudioInt32" name="rdSetAudioInt" type="radio" value="32"><b>32 Hz</b> (MIF 85 experimental)</label></div>
+										<div class="radio"><label class="control-label"><input id="rdSetAudioInt50" name="rdSetAudioInt" type="radio" value="50" tabindex="8"><b>50 Hz</b> (default)</label></div>
+										<div class="radio"><label class="control-label"><input id="rdSetAudioInt32" name="rdSetAudioInt" type="radio" value="32" tabindex="9"><b>32 Hz</b> (MIF 85 experimental)</label></div>
 									</fieldset>
 								</div>
 							</div>
@@ -61,8 +61,8 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button class="btn btn-default" type="button" data-dismiss="modal">Cancel</button>
-				<button class="btn btn-success" type="button">Apply</button>
+				<button class="btn btn-default cancel" type="button" data-dismiss="modal" tabindex="10">Cancel</button>
+				<button class="btn btn-success apply" type="button" tabindex="11">Apply</button>
 			</div>
 		</div>
 	</div>

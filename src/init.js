@@ -39,7 +39,7 @@
 	if (el && el.src.substr(0, 4) === 'http' && pattern.test(el.src)) {
 		path = el.src.replace(pattern, path).replace(loc.origin, '');
 	}
-	if (process && process.versions && process.versions.electron !== undefined) {
+	if (window.process && process.versions && process.versions.electron) {
 		window.electron = require('electron');
 		window.jQuery = window.$ = require('./' + path + libs.shift() + dev);
 		window.LZString = require('./' + path + libs.shift() + dev);

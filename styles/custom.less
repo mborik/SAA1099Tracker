@@ -629,7 +629,7 @@
 				.border-top-radius((@border-radius-base - 1));
 			}
 			> .panel-footer {
-				background: #f8f8f8;
+				background: @dlg-footer-bg;
 			}
 		}
 		.panel-editor {
@@ -648,6 +648,7 @@
 
 	.modal-footer {
 		text-align: center;
+		background: @dlg-footer-bg;
 
 		.btn {
 			font-size: 13px;
@@ -736,6 +737,8 @@
 	}
 
 	.modal-footer {
+		background: @dlg-footer-bg;
+
 		.storage-usage {
 			width: 40%;
 			float: left;
@@ -755,6 +758,7 @@
 				height: 8px;
 				margin: 0;
 				margin-top: @grid-gutter-width;
+				background: @body-bg;
 			}
 		}
 

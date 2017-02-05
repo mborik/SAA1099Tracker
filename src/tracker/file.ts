@@ -321,6 +321,7 @@ class STMFile {
 			tracker.modeEdit             = c.editMode || false;
 
 			settings.audioInterrupt      = c.interrupt || 50;
+			settings.audioInit();
 		}
 
 		console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {

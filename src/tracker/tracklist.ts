@@ -125,7 +125,7 @@ class Tracklist {
 		center   : 0,
 
 		// trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
-		get trkOffset(): number { return this.center + (4 * fontWidth) },
+		get trkOffset(): number { return this.center + (4 * fontWidth); },
 
 		// jQuery offset object
 		offset   : null
@@ -135,7 +135,7 @@ class Tracklist {
 		// 6 channels of 8 column (+1 padding) positions
 		x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
 		y: []
-	}
+	};
 
 	public selection: TracklistSelection = {
 		isDragging: false,
@@ -153,21 +153,23 @@ class Tracklist {
 		return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
 	}
 
-	public setHeight(height?: number) {
+	public setHeight(maxHeight: number) {
 		let settings = this.$parent.settings;
 
-		if (height == null) {
-			height = settings.tracklistAutosize
-				? this.countTracklines()
-				: settings.tracklistLines;
+		let height = settings.tracklistAutosize
+			? this.countTracklines()
+			: Math.min(settings.tracklistLines, maxHeight);
+
+		if (settings.tracklistLines === height) {
+			console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
+			settings.tracklistLines = height;
 		}
 
-		console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
+		let pixelHeight = height * settings.tracklistLineHeight;
+		$(this.obj).prop('height', pixelHeight).css({
+			height: (pixelHeight * tracklistZoomFactor)
+		});
 
-		settings.tracklistLines = height;
-		height *= settings.tracklistLineHeight;
-
-		$(this.obj).prop('height', height).css({ height: (height * tracklistZoomFactor) });
 		this.canvasData.offset = $(this.obj).offset();
 	}
 
