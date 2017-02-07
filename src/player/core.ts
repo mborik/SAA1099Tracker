@@ -107,8 +107,15 @@ class Player {
 	}
 
 	/** Clear or initialize song (positions, patterns, pointers and playParams). */
-	public clearSong(init?: boolean) {
+	public clearSong(reinit?: boolean) {
+		if (this.position) {
+			this.position.forEach(p => p.destroy());
+		}
 		this.position = [];
+
+		if (this.pattern) {
+			this.pattern.forEach(p => p.destroy());
+		}
 		this.pattern = [];
 		this.addNewPattern();
 
@@ -120,7 +127,20 @@ class Player {
 		this.currentLine = 0;
 		this.currentTick = 0;
 
-		if (init) {
+		if (reinit) {
+			if (this.rtSong) {
+				this.rtSong.destroy();
+				this.rtSong = null;
+			}
+			if (this.rtSample) {
+				this.rtSample.destroy();
+				this.rtSample = null;
+			}
+			if (this.nullPosition) {
+				this.nullPosition.destroy();
+				this.nullPosition = null;
+			}
+
 			this.clearSamples();
 			this.clearOrnaments();
 
@@ -145,8 +165,8 @@ class Player {
 			if (this.sample[i]) {
 				for (let c: number = 0; c < 256; c++) {
 					delete this.sample[i].data[c].volume;
+					this.sample[i].data[c] = null;
 				}
-				this.sample[i].data = null;
 				this.sample[i] = null;
 			}
 

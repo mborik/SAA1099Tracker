@@ -84,12 +84,12 @@ class STMFile {
 			return {
 				bytes: this._storageBytesUsed,
 				percent: Math.ceil(100 / ((2 * 1024 * 1024) / this._storageBytesUsed))
-			}
+			};
 		});
 
 		this.dialog = new FileDialog(this.$parent, this, {
 			data: this._storageMap,
-			get usage() { return usageHandler() }
+			get usage() { return usageHandler(); }
 		});
 	}
 
@@ -107,7 +107,7 @@ class STMFile {
 		this._storageBytesUsed = 0;
 		this._storageMap.sort((a, b) => (b.timeModified - a.timeModified));
 		this._storageMap.forEach(obj => {
-			this._storageBytesUsed += (obj.length + 40) * 2
+			this._storageBytesUsed += (obj.length + 40) * 2;
 		}, this);
 	}
 
@@ -122,7 +122,7 @@ class STMFile {
 
 		$('#scPattern').val(tracker.workingPattern.toString());
 		$('#scPosRepeat').val((player.repeatPosition + 1).toString());
-		$('#scPosCurrent').val(player.currentPosition.toString());
+		$('#scPosCurrent').val((player.currentPosition + 1).toString());
 
 		tracker.updatePanels();
 		player.currentLine = actualLine;
@@ -219,9 +219,7 @@ class STMFile {
 			return false;
 		}
 
-		player.clearSong();
-		player.clearSamples();
-		player.clearOrnaments();
+		player.clearSong(true);
 
 		//~~~ CREDITS ~~~
 		tracker.songTitle = data.title || '';
@@ -236,10 +234,14 @@ class STMFile {
 					if (obj.name) {
 						it.name = obj.name;
 					}
+
 					it.loop = obj.loop || 0;
 					it.end = obj.end || 0;
 					it.releasable = !!obj.rel;
-					it.parse(obj.data);
+
+					if (obj.data != null) {
+						it.parse(obj.data);
+					}
 
 					count.smp++;
 				}
@@ -255,9 +257,13 @@ class STMFile {
 					if (obj.name) {
 						it.name = obj.name;
 					}
+
 					it.loop = obj.loop || 0;
 					it.end = obj.end || 0;
-					it.parse(obj.data);
+
+					if (obj.data != null) {
+						it.parse(obj.data);
+					}
 
 					count.orn++;
 				}
@@ -270,7 +276,10 @@ class STMFile {
 				let newIdx = player.addNewPattern();
 				let it = player.pattern[newIdx];
 				it.end = obj.end || 0;
-				it.parse(obj.data);
+
+				if (obj.data != null) {
+					it.parse(obj.data);
+				}
 
 				count.pat++;
 			});
@@ -320,8 +329,11 @@ class STMFile {
 			tracker.activeTab            = c.activeTab || 0;
 			tracker.modeEdit             = c.editMode || false;
 
-			settings.audioInterrupt      = c.interrupt || 50;
-			settings.audioInit();
+			let int = c.interrupt || 50;
+			if (settings.audioInterrupt !== int) {
+				settings.audioInterrupt = int;
+				settings.audioInit();
+			}
 		}
 
 		console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
@@ -408,10 +420,7 @@ class STMFile {
 			}
 
 			// for optimize reasons, we are detecting empty items in arrays...
-			if (!obj.data.length) {
-				obj.data = null;
-			}
-			if (obj.data == null && !obj.loop && !obj.end && !obj.rel && !obj.name) {
+			if (!obj.data.length && !obj.loop && !obj.end && !obj.rel && !obj.name) {
 				obj = null;
 			}
 			if (!output.samples.length && obj == null) {
@@ -435,10 +444,7 @@ class STMFile {
 			}
 
 			// for optimize reasons, we are detecting empty items in arrays...
-			if (!obj.data.length) {
-				obj.data = null;
-			}
-			if (obj.data == null && !obj.loop && !obj.end && !obj.name) {
+			if (!obj.data.length && !obj.loop && !obj.end && !obj.name) {
 				obj = null;
 			}
 			if (!output.ornaments.length && obj == null) {
@@ -457,10 +463,7 @@ class STMFile {
 			};
 
 			// for optimize reasons, we are detecting empty items in arrays...
-			if (!obj.data.length) {
-				obj.data = null;
-			}
-			if (obj.data == null && !obj.end) {
+			if (!obj.data.length && !obj.end) {
 				obj = null;
 			}
 			if (!output.patterns.length && obj == null) {
@@ -486,9 +489,7 @@ class STMFile {
 		let tracker = this.$parent;
 		let player = tracker.player;
 
-		player.clearSong();
-		player.clearSamples();
-		player.clearOrnaments();
+		player.clearSong(true);
 
 		tracker.songTitle = '';
 		tracker.songAuthor = '';
@@ -601,7 +602,7 @@ class STMFile {
 				timeModified: now,
 				duration: duration,
 				length: data.length
-			}
+			};
 		}
 
 		localStorage.setItem(storageItem.storageId + '-nfo', fileName.concat(

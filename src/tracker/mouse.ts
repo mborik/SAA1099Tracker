@@ -93,10 +93,15 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
 			}
 		}
 		else if (e.type === 'dblclick' && leftButton) {
-			sel.len = 0;
-			sel.line = point.line;
-			sel.channel = point.channel;
-			sel.isDragging = false;
+			if (sel.len === 0 ||
+				sel.channel !== point.channel ||
+				(sel.line + sel.len) !== point.line) {
+
+				sel.len = 0;
+				sel.line = point.line;
+				sel.channel = point.channel;
+				sel.isDragging = false;
+			}
 
 			if (!this.modeEdit) {
 				e.target.focus();

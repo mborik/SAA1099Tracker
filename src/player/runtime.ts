@@ -60,6 +60,8 @@ class pRuntime extends SAASoundRegData {
 
 			if (this.params[chn]) {
 				delete this.params[chn].attenuation;
+				this.params[chn].sample = null;
+				this.params[chn].ornament = null;
 				this.params[chn] = null;
 			}
 
@@ -109,6 +111,18 @@ class pRuntime extends SAASoundRegData {
 				}
 			});
 		}
+	}
+
+	public destroy() {
+		delete this.regs;
+		for (let i = 0; i < 6; i++) {
+			delete this.params[i].attenuation;
+			this.params[i].sample = null;
+			this.params[i].ornament = null;
+			this.params[i] = null;
+		}
+		delete this.params;
+		delete this.muted;
 	}
 }
 //---------------------------------------------------------------------------------------
