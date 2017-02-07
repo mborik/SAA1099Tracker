@@ -161,9 +161,14 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
 			}
 
 			// prev position hints
+			let prevPos = player.position[pos - 1];
+			if (line + prevPos.length < 0) {
+				continue;
+			}
+
 			backup = { pp: pp, line: line };
-			pp = player.position[pos - 1];
-			line += pp.length;
+			line += prevPos.length;
+			pp = prevPos;
 		}
 		else if (line >= pp.length) {
 			if (!(pos < (player.position.length - 1) && pp)) {
@@ -171,9 +176,14 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
 			}
 
 			// next position hints
+			let nextPos = player.position[pos + 1];
+			if (line - pp.length >= nextPos.length) {
+				continue;
+			}
+
 			backup = { pp: pp, line: line };
 			line -= pp.length;
-			pp = player.position[pos + 1];
+			pp = nextPos;
 		}
 
 		buf = ('00' + line.toString(hexa ? 16 : 10)).substr(-3);

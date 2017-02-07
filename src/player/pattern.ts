@@ -104,5 +104,13 @@ class pPattern {
 			o.cmd_data = parseInt(s.substr(7), 16) || 0;
 		}
 	}
+
+	destroy() {
+		for (let i = 0; i < MAX_PATTERN_LEN; i++) {
+			delete this.data[i].volume;
+			this.data[i] = null;
+		}
+		delete this.data;
+	}
 }
 //---------------------------------------------------------------------------------------

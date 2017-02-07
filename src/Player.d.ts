@@ -112,6 +112,7 @@ declare class pPattern {
      * Parse pattern data from array of strings with values like in tracklist.
      */
     parse(arr: string[], start?: number, length?: number): void;
+    destroy(): void;
 }
 interface pParams {
     tone: number;
@@ -137,6 +138,7 @@ declare class pRuntime extends SAASoundRegData {
     constructor(player: Player);
     setRegData(reg: number, data: number): void;
     replace(data: pRuntime): void;
+    destroy(): void;
 }
 interface pChannel {
     pattern: number;
@@ -156,6 +158,7 @@ declare class pPosition {
     hasPattern(pattern: number): boolean;
     indexOf(pattern: number): number;
     export(): string[];
+    destroy(): void;
 }
 declare class Player {
     static maxPatternLen: number;
@@ -180,7 +183,7 @@ declare class Player {
     SAA1099: SAASound;
     constructor(SAA1099: SAASound);
     /** Clear or initialize song (positions, patterns, pointers and playParams). */
-    clearSong(init?: boolean): void;
+    clearSong(reinit?: boolean): void;
     /** Clear all samples. */
     clearSamples(): void;
     /** Clear all ornaments. */

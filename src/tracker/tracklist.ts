@@ -153,21 +153,20 @@ class Tracklist {
 		return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
 	}
 
-	public setHeight(maxHeight: number) {
+	public setHeight(height: number) {
 		let settings = this.$parent.settings;
 
-		let height = settings.tracklistAutosize
-			? this.countTracklines()
-			: Math.min(settings.tracklistLines, maxHeight);
+		height = settings.tracklistAutosize
+			? height : Math.min(settings.tracklistLines, height);
 
 		if (settings.tracklistLines === height) {
 			console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
-			settings.tracklistLines = height;
 		}
 
-		let pixelHeight = height * settings.tracklistLineHeight;
-		$(this.obj).prop('height', pixelHeight).css({
-			height: (pixelHeight * tracklistZoomFactor)
+		settings.tracklistLines = height;
+		height *= settings.tracklistLineHeight;
+		$(this.obj).prop('height', height).css({
+			height: (height * tracklistZoomFactor)
 		});
 
 		this.canvasData.offset = $(this.obj).offset();

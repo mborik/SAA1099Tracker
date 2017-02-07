@@ -44,7 +44,7 @@ class pPosition {
 		this.speed = speed;
 		this.length = length;
 		this.frames = [];
-		this.initParams = void 0;
+		this.initParams = undefined;
 
 		for (let i: number = 0; i < 6; i++) {
 			this.ch[i] = { pattern: 0, pitch: 0 };
@@ -79,6 +79,16 @@ class pPosition {
 		});
 
 		return arr;
+	}
+
+	destroy() {
+		this.initParams.destroy();
+		delete this.initParams;
+		for (let i = 0; i < 6; i++) {
+			delete this.ch[i];
+		}
+		delete this.ch;
+		delete this.frames;
 	}
 }
 //---------------------------------------------------------------------------------------

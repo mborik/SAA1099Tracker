@@ -10,8 +10,8 @@ Tracker.prototype.updatePanels = function() {
 	$('#txHeaderAuthor').val(this.songAuthor);
 
 	this.updatePanelInfo();
-	this.updatePanelPattern();
 	this.updatePanelPosition();
+	this.updatePanelPattern();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateEditorCombo = function(step) {
@@ -180,37 +180,48 @@ Tracker.prototype.onCmdFileNew = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdAppExit = function() {
+	let keys = this.globalKeyState;
 	let file = this.file;
-	if (this.destroying || !file.modified || !electron) {
+
+	if (this.destroying || !electron) {
 		return;
 	}
-
-	let app = electron.remote.app;
-	let win = electron.remote.getCurrentWindow();
-	let dialog = electron.remote.dialog;
-
-	dialog.showMessageBox(win, {
-		type: 'question',
-		title: i18n.dialog.app.exit.title,
-		buttons: i18n.dialog.app.exit.options,
-		message: i18n.dialog.app.exit.msg,
-		noLink: true
-	}, (response) => {
-		if (response === 1) {
-			this.destroying = true;
-			app.quit();
+	else if (!keys.inDialog) {
+		if (!file.modified) {
+			return;
 		}
-		else if (response !== 2) {
-			if (!file.yetSaved) {
-				return file.dialog.save();
+
+		keys.inDialog = true;
+		$('#dialoque').confirm({
+			title: i18n.dialog.app.exit.title,
+			buttons:  [
+				{ caption: i18n.dialog.app.exit.options[0], id: 'save' },
+				{ caption: i18n.dialog.app.exit.options[1], id: 'exit' },
+				{ caption: i18n.dialog.app.exit.options[2], id: 'cancel' }
+			],
+			text: i18n.dialog.app.exit.msg,
+			style: 'danger',
+			callback: (btn) => {
+				let app = electron.remote.app;
+
+				keys.inDialog = false;
+				if (btn === 'exit') {
+					this.destroying = true;
+					app.quit();
+				}
+				else if (btn === 'save') {
+					if (!file.yetSaved) {
+						return file.dialog.save();
+					}
+					else if (file.fileName) {
+						file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
+						this.destroying = true;
+						app.quit();
+					}
+				}
 			}
-			else if (file.fileName) {
-				file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
-				this.destroying = true;
-				app.quit();
-			}
-		}
-	});
+		});
+	}
 
 	return true;
 };
@@ -879,9 +890,11 @@ Tracker.prototype.onCmdSmpCopyRL = function() {
 Tracker.prototype.onCmdSmpRotL = function() {
 	let smp = this.player.sample[this.workingSample];
 	let data = smp.data;
+
+	let i = 0;
 	let backup = $.extend(true, {}, data[i]);
 
-	for (let i = 0; i < 256; i++) {
+	for (; i < 256; i++) {
 		let ref = (i < 255) ? data[i + 1] : backup;
 
 		data[i].volume.byte  = ref.volume.byte;
@@ -898,9 +911,11 @@ Tracker.prototype.onCmdSmpRotL = function() {
 Tracker.prototype.onCmdSmpRotR = function() {
 	let smp = this.player.sample[this.workingSample];
 	let data = smp.data;
+
+	let i = 255;
 	let backup = $.extend(true, {}, data[i]);
 
-	for (let i = 255; i >= 0; i--) {
+	for (; i >= 0; i--) {
 		let ref = (i > 0) ? data[i - 1] : backup;
 
 		data[i].volume.byte  = ref.volume.byte;
