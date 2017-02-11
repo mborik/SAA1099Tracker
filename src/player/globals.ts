@@ -48,13 +48,19 @@ class pTone {
 //---------------------------------------------------------------------------------------
 // Volume/Attenuation value class (byte value splitted into left/right channel)
 class pVolume {
-	public L: number = 0;
-	public R: number = 0;
+	private _l: number = 0;
+	private _r: number = 0;
 
-	get byte(): number { return ((this.L & 0x0f) | ((this.R & 0x0f) << 4)); }
+	get L(): number { return this._l; };
+	set L(v: number) { this._l = Math.max(0, Math.min(15, v)); }
+
+	get R(): number { return this._r; };
+	set R(v: number) { this._r = Math.max(0, Math.min(15, v)); }
+
+	get byte(): number { return ((this._l & 0x0f) | ((this._r & 0x0f) << 4)); }
 	set byte(v: number) {
-		this.L = (v & 0x0f);
-		this.R = (v >> 4) & 0x0f;
+		this._l = (v & 0x0f);
+		this._r = (v >> 4) & 0x0f;
 	}
 }
 //---------------------------------------------------------------------------------------

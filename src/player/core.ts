@@ -349,7 +349,7 @@ class Player {
 		}
 
 		let vol: pVolume = new pVolume;
-		let height: number, val: number = 0;
+		let height: number;
 		let oct: number = 0, noise: number, cmd: number, paramH: number, paramL: number;
 		let tone: pTone, c: number;
 		let eFreq: number = 0, eNoiz: number = 0, eChar: number = 0, ePlay: number = 0;
@@ -429,12 +429,7 @@ class Player {
 				// vibrato
 					case 0x4:
 						if (pp.commandParam) {
-							if (paramH) {
-								pp.commandPhase = (pp.commandPhase + paramH) & 0x3F;
-							}
-							else {
-								pp.commandPhase = 0;
-							}
+							pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
 							pp.slideShift = Player.vibratable[(paramL << 6) + pp.commandPhase];
 						}
 						else {
@@ -446,39 +441,8 @@ class Player {
 				// tremolo
 					case 0x5:
 						if (pp.commandParam) {
-							if (paramH) {
-								pp.commandPhase = (pp.commandPhase + paramH) & 0x3F;
-							}
-							else {
-								pp.commandPhase = 0;
-							}
-
-							val = pp.commandValue2;
+							pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
 							pp.commandValue2 = Player.vibratable[(paramL << 6) + pp.commandPhase];
-							val = -(pp.commandValue2 - val);
-
-							if (val === 0) {
-								break;
-							}
-
-							if ((pp.attenuation.L + val) < 0) {
-								pp.attenuation.L = 0;
-							}
-							else if ((pp.attenuation.L + val) > 15) {
-								pp.attenuation.L = 15;
-							}
-							else {
-								pp.attenuation.L += val;
-							}
-							if ((pp.attenuation.R + val) < 0) {
-								pp.attenuation.R = 0;
-							}
-							else if ((pp.attenuation.R + val) > 15) {
-								pp.attenuation.R = 15;
-							}
-							else {
-								pp.attenuation.R += val;
-							}
 						}
 						break;
 
@@ -526,27 +490,7 @@ class Player {
 							pp.commandPhase = paramH;
 						}
 						if (pp.commandPhase && !(--pp.commandPhase)) {
-							val = (pp.commandParam & 7)
-								* ((pp.commandParam & 8) ? -1 : 1);
-
-							if ((pp.attenuation.L + val) < 0) {
-								pp.attenuation.L = 0;
-							}
-							else if ((pp.attenuation.L + val) > 15) {
-								pp.attenuation.L = 15;
-							}
-							else {
-								pp.attenuation.L += val;
-							}
-							if ((pp.attenuation.R + val) < 0) {
-								pp.attenuation.R = 0;
-							}
-							else if ((pp.attenuation.R + val) > 15) {
-								pp.attenuation.R = 15;
-							}
-							else {
-								pp.attenuation.R += val;
-							}
+							pp.commandValue2 += (pp.commandParam & 7) * ((pp.commandParam & 8) ? 1 : -1);
 						}
 						break;
 
@@ -617,8 +561,12 @@ class Player {
 				}
 
 				// apply attenuation...
-				vol.L = Math.max(0, (vol.L - pp.attenuation.L));
-				vol.R = Math.max(0, (vol.R - pp.attenuation.R));
+				let addAttn = 0;
+				if (cmd === 0x5 || cmd === 0xA) {
+					addAttn = pp.commandValue2 = Math.max(0, Math.min(15, pp.commandValue2));
+				}
+				vol.L -= pp.attenuation.L + addAttn;
+				vol.R -= pp.attenuation.R + addAttn;
 
 				///~ SAA1099 DATA 00-05: Amplitude controller 0-5
 				rt.setRegData(chn, vol.byte);
@@ -840,6 +788,7 @@ class Player {
 				else {
 					pp.command = pl.cmd;
 					pp.commandParam = pl.cmd_data;
+
 					if (pl.cmd !== pp.command) {
 						pp.commandPhase = 0;
 					}
@@ -849,8 +798,12 @@ class Player {
 				pp.command = pp.commandParam = pp.commandPhase = 0;
 			}
 
-			if (pl.volume.byte && pp.command !== 0x5 && pp.command !== 0xA) {
+			if (pl.volume.byte) {
 				pp.attenuation.byte = ~pl.volume.byte;
+
+				if (pl.cmd === 0x5 || pl.cmd === 0xA) {
+					pp.commandValue2 = 0;
+				}
 			}
 
 			if (pl.release) {
