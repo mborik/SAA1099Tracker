@@ -39,6 +39,8 @@ declare class pTone {
     word: number;
 }
 declare class pVolume {
+    private _l;
+    private _r;
     L: number;
     R: number;
     byte: number;

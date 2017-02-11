@@ -144,6 +144,14 @@ Tracker.prototype.populateGUI = function() {
 				$(window).trigger('resize');
 			}
 		}, {
+			selector: '#txHeaderTitle',
+			method:   'change',
+			handler:  e => (app.songTitle = e.currentTarget.value.trim())
+		}, {
+			selector: '#txHeaderAuthor',
+			method:   'change',
+			handler:  e => (app.songAuthor = e.currentTarget.value.trim())
+		}, {
 			selector: '#scOctave',
 			method:   'TouchSpin',
 			data: {
