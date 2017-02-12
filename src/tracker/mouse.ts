@@ -279,6 +279,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
 
 		if (update) {
 			this.updateSampleEditor(redrawAll, limitFrom, limitTo);
+			this.file.modified = true;
 		}
 	}
 };

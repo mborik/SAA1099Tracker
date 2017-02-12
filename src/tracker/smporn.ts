@@ -33,13 +33,13 @@ interface SampleEditorOffsets {
 	top: {
 		amp: number;
 		noise: number;
-	}
+	};
 }
 interface OrnamentEditorChords {
 	[propName: string]: {
 		sequence: number[];
 		name: string;
-	}
+	};
 }
 //---------------------------------------------------------------------------------------
 class SmpOrnEditor {
@@ -52,6 +52,7 @@ class SmpOrnEditor {
 	public noise: TrackerCanvasPair = { obj: null, ctx: null };
 	public range: TrackerCanvasPair = { obj: null, ctx: null };
 
+	public smpeditShiftShown: boolean = false;
 	public smpeditOffset: SampleEditorOffsets = null;
 	public smpeditScroll: number = 0;
 	public columnWidth: number = 0;
