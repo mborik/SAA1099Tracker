@@ -155,30 +155,6 @@ Tracker.prototype.updatePanelPosition = function() {
 	pos = null;
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tracker.prototype.onCmdFileNew = function() {
-	let keys = this.globalKeyState;
-	let file = this.file;
-	if (this.modePlay || !file.yetSaved && !file.modified && !file.fileName) {
-		return;
-	}
-
-	keys.inDialog = true;
-	$('#dialoque').confirm({
-		title: i18n.dialog.file.new.title,
-		text: i18n.dialog.file.new.msg,
-		buttons: 'yesno',
-		style: 'danger',
-		callback: (btn) => {
-			keys.inDialog = false;
-			if (btn !== 'yes') {
-				return;
-			}
-
-			file.new();
-		}
-	});
-};
-//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdAppExit = function() {
 	let keys = this.globalKeyState;
 	let file = this.file;
@@ -226,6 +202,30 @@ Tracker.prototype.onCmdAppExit = function() {
 	return true;
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileNew = function() {
+	let keys = this.globalKeyState;
+	let file = this.file;
+	if (this.modePlay || !file.yetSaved && !file.modified && !file.fileName) {
+		return;
+	}
+
+	keys.inDialog = true;
+	$('#dialoque').confirm({
+		title: i18n.dialog.file.new.title,
+		text: i18n.dialog.file.new.msg,
+		buttons: 'yesno',
+		style: 'danger',
+		callback: (btn) => {
+			keys.inDialog = false;
+			if (btn !== 'yes') {
+				return;
+			}
+
+			file.new();
+		}
+	});
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileOpen = function() {
 	if (this.modePlay) {
 		return;
@@ -258,15 +258,15 @@ Tracker.prototype.onCmdFileOpen = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileSave = function(as) {
-	if (this.modePlay || !this.player.position.length) {
+	if (!this.player.position.length) {
 		return;
 	}
 
 	let file = this.file;
-	if (as || !file.yetSaved || file.modified) {
+	if ((as || !file.yetSaved) && !this.modePlay) {
 		file.dialog.save();
 	}
-	else if (!as && file.yetSaved && file.fileName) {
+	else if (!as && (file.yetSaved || file.modified) && file.fileName) {
 		file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
 	}
 };
@@ -816,7 +816,7 @@ Tracker.prototype.onCmdSmpSwap = function() {
 Tracker.prototype.onCmdSmpLVolUp = function() {
 	let smp = this.player.sample[this.workingSample];
 
-	smp.data.forEach(tick => {
+	smp.data.forEach((tick, i) => {
 		if ((i <  smp.end && tick.volume.L < 15) ||
 			(i >= smp.end && tick.volume.L > 0 && tick.volume.L < 15)) {
 
@@ -844,7 +844,7 @@ Tracker.prototype.onCmdSmpLVolDown = function() {
 Tracker.prototype.onCmdSmpRVolUp = function() {
 	let smp = this.player.sample[this.workingSample];
 
-	smp.data.forEach(tick => {
+	smp.data.forEach((tick, i) => {
 		if ((i <  smp.end && tick.volume.R < 15) ||
 			(i >= smp.end && tick.volume.R > 0 && tick.volume.R < 15)) {
 

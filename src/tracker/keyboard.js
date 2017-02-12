@@ -265,6 +265,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 					}
 
 					app.updateTracklist();
+					app.file.modified = true;
 				}
 			}[key];
 
@@ -411,6 +412,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 							pp.data[line].tone = Math.min(Math.max(pp.data[line].tone + plus, 1), 96);
 
 					app.updateTracklist();
+					app.file.modified = true;
 				}
 			}[key];
 
@@ -448,6 +450,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 						data[A].cmd = data[A].cmd_data = data[A].volume.byte = 0;
 
 						app.updateTracklist();
+						app.file.modified = true;
 					};
 
 				case 45:
@@ -473,6 +476,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 						data[B].cmd = data[B].cmd_data = data[B].volume.byte = 0;
 
 						app.updateTracklist();
+						app.file.modified = true;
 					};
 
 				case 46:
@@ -507,6 +511,7 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 						}
 
 						app.updateEditorCombo();
+						app.file.modified = true;
 					};
 
 				default:
@@ -690,7 +695,10 @@ Tracker.prototype.hotkeyMap = function (type, group, key) {
 						}
 					}[app.modeEditColumn];
 
-					return (columnHandler(key, true)) ? columnHandler : undefined;
+					if (columnHandler(key, true)) {
+						app.file.modified = true;
+						return columnHandler;
+					}
 			}
 
 		case 'smpornCtrl':

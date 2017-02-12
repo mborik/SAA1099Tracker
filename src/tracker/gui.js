@@ -16,6 +16,7 @@ Tracker.prototype.populateGUI = function() {
 			method:   'resize',
 			handler:  (e, force) => {
 				let c = 0;
+				let smpedit = app.smpornedit;
 
 				if (app.activeTab === 0) {
 					c = app.tracklist.countTracklines();
@@ -24,14 +25,15 @@ Tracker.prototype.populateGUI = function() {
 						app.updateTracklist(true);
 					}
 				}
-				else if (app.activeTab === 1 && app.smpornedit.initialized) {
-					let o = app.smpornedit;
+				else if (app.activeTab === 1 &&
+					smpedit.initialized &&
+					!smpedit.smpeditShiftShown &&
+					!!(c = $(smpedit.amp.obj).offset().left)) {
 
-					c = $(o.amp.obj).offset().left;
-					o.smpeditOffset.left = c;
+					smpedit.smpeditOffset.left = c | 0;
 				}
 
-				if (!!(c = $('#statusbar').offset().top)) {
+				if (!!(c = $(document).height())) {
 					$('#documodal .modal-body').css('height', (c * 0.9) | 0);
 				}
 			}
@@ -140,8 +142,12 @@ Tracker.prototype.populateGUI = function() {
 			handler:  e => {
 				let data = $(e.currentTarget).data();
 				app.activeTab = +data.value || 0;
-				$('#statusbar')[!app.activeTab ? 'show' : 'hide']();
 				$(window).trigger('resize');
+
+				if (app.activeTab === 0) {
+					$('#statusbar').show();
+					$('#tracklist').focus();
+				}
 			}
 		}, {
 			selector: '#txHeaderTitle',
@@ -421,10 +427,18 @@ Tracker.prototype.populateGUI = function() {
 		}, {
 			selector: '#sample-tabpanel a[data-toggle="tab"]',
 			method:   'on',
-			param:    'show.bs.tab',
+			param:    'shown.bs.tab',
 			handler:  e => {
-				if (e.target.id === 'tab-pitchshift' && e.relatedTarget.id === 'tab-sampledata') {
-					app.smpornedit.updateSamplePitchShift();
+				let c = 0;
+				let smpedit = app.smpornedit;
+				let shiftShown = (e.currentTarget.id === 'tab-pitchshift');
+
+				smpedit.smpeditShiftShown = shiftShown;
+				if (shiftShown && e.relatedTarget.id === 'tab-sampledata') {
+					smpedit.updateSamplePitchShift();
+				}
+				else if (!!(c = $(smpedit.amp.obj).offset().left)) {
+					smpedit.smpeditOffset.left = c | 0;
 				}
 			}
 		}, {
