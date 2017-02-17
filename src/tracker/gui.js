@@ -46,6 +46,7 @@ Tracker.prototype.populateGUI = function() {
 					return app.onCmdAppExit();
 				}
 				else if (!dev) {
+					app.onCmdStop();
 					return i18n.app.msg.unsaved;
 				}
 			}
@@ -789,48 +790,51 @@ Tracker.prototype.populateGUI = function() {
 //---------------------------------------------------------------------------------------
 	console.log('Tracker.gui', 'Populating elements...');
 
-	populatedElementsTable.forEach(function(o) {
+	populatedElementsTable.forEach(o => {
 		let data = o.handler || o.data;
 		let selector = o.selector || (o.global && window[o.global]);
 
 		if (selector && o.method) {
-			if (o.param)
+			if (o.param) {
 				$(selector)[o.method](o.param, data);
-			else
+			}
+			else {
 				$(selector)[o.method](data);
+			}
 		}
 	});
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.initializeGUI = function() {
-	let app = this, i = 0;
-
 	let initSteps = [
 		function() {
 			let pixelfont = $('img.pixelfont')[0];
-			app.initPixelFont(pixelfont);
+			this.initPixelFont(pixelfont);
 			return true;
 		},
 		function() {
-			if (app.smpornedit.initialized || app.activeTab === 1)
+			if (this.smpornedit.initialized || this.activeTab === 1) {
 				return false;
+			}
 
 			console.log('Tracker.gui', 'Force initialization of Sample/Ornament editors...');
-			app.smpornedit.img = $('img.smpedit')[0];
+			this.smpornedit.img = $('img.smpedit')[0];
 			$('#tab-smpedit').tab('show');
 			return true;
 		},
 		function() {
-			if (app.smpornedit.initialized || !app.smpornedit.img || app.activeTab !== 1)
+			if (this.smpornedit.initialized || !this.smpornedit.img || this.activeTab !== 1) {
 				return false;
+			}
 
-			app.smpornedit.init();
+			this.smpornedit.init();
 			$('#tab-ornedit').tab('show');
 			return true;
 		},
 		function() {
-			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab === 0)
+			if (this.tracklist.initialized || !this.pixelfont.ctx || this.activeTab === 0) {
 				return false;
+			}
 
 			console.log('Tracker.gui', 'Force initialization of Tracklist editor by triggering of window resize event...');
 			$('#tab-tracker').tab('show');
@@ -838,43 +842,54 @@ Tracker.prototype.initializeGUI = function() {
 			return true;
 		},
 		function() {
-			if (app.tracklist.initialized || !app.pixelfont.ctx || app.activeTab)
+			if (this.tracklist.initialized || !this.pixelfont.ctx || this.activeTab) {
 				return false;
+			}
 
 			console.log('Tracker.gui', 'Redrawing all tracklist elements and canvas...');
-			app.updatePanels();
-			app.updateTracklist(app.settings.tracklistLines);
-			app.tracklist.initialized = true;
+			this.updatePanels();
+			this.updateTracklist(true);
+			this.tracklist.initialized = true;
 			return true;
 		},
 		function() {
-			if (app.loaded)
-				return false;
-
-			console.log('Tracker.gui', 'Starting audio playback and initializing 50Hz refresh timer...');
-			SyncTimer.start(app.baseTimer.bind(app));
+			console.log('Tracker.gui', 'Starting audio playback and initializing screen refresh timer...');
+			SyncTimer.start(this.baseTimer.bind(this));
 			return true;
 		},
 		function() {
-			if (app.loaded)
-				return false;
-
 			console.log('Tracker.gui', 'Initialization done, everything is ready!');
 			document.body.className = '';
-			return (app.loaded = true);
+			return (this.loaded = true);
+		},
+		function() {
+			if (!(this.loaded && electron && electron.remote)) {
+				return false;
+			}
+
+			let win = electron.remote.getCurrentWindow();
+			let updater = win && win.updater;
+			if (updater) {
+				console.log('Tracker.updater', 'Checking for updates...');
+				updater.check(this.onCmdAppUpdate.bind(this));
+			}
+
+			return true;
 		}
 	];
 
-	let initFn = function() {
+	let initFn = (i => {
 		let fn = initSteps[i];
 		if (!!fn) {
-			if (fn())
+			if (fn.call(this, i)) {
 				i++;
-			setTimeout(initFn, 50);
-		}
-	};
+			}
 
-	initFn();
+			setTimeout(initFn, 50, i);
+		}
+	}).bind(this);
+
+	initFn(0);
 };
 //---------------------------------------------------------------------------------------
 $(document).ready(function() { window.Tracker = new Tracker('<%= pkg.version %>') });

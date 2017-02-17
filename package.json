@@ -12,10 +12,15 @@
   "scripts": {
     "start": "electron ."
   },
+  "config": {
+    "updateUrl": "http://saa1099tracker.borik.net/api/update"
+  },
   "dependencies": {
+    "compare-version": "^0.1.2",
     "electron-window-state": "^4.0.1",
     "meow": "^3.7.0",
-    "object-assign": "^4.1.1"
+    "object-assign": "^4.1.1",
+    "request": "^2.79.0"
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.32",

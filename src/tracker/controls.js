@@ -155,6 +155,66 @@ Tracker.prototype.updatePanelPosition = function() {
 	pos = null;
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tracker.prototype.onCmdAppUpdate = function(status, data) {
+	if (status) {
+		console.log('Tracker.updater', 'Check update status: "%s"', status);
+		return;
+	}
+
+	let keys = this.globalKeyState;
+	let description = '';
+
+	if (data.changelog instanceof Array && data.changelog.length) {
+		description = data.changelog.join('</li><li>');
+	}
+	if (data.important) {
+		description = `<b>${i18n.dialog.app.update.important}</b>` +
+			(description ? `</li><li>${description}` : '');
+	}
+	if (description) {
+		description = `<p>${i18n.dialog.app.update.changelog}</p><ul><li>${description}</li></ul>`;
+	}
+
+	keys.inDialog = true;
+	$('#dialoque').confirm({
+		title: i18n.dialog.app.update.title,
+		buttons:  [
+			{ caption: i18n.dialog.app.update.options[0], id: 'apply', style: 'btn-warning' },
+			{ caption: i18n.dialog.app.update.options[1] }
+		],
+		html: `<p><b>${data.name} v${data.version}</b> ` + i18n.dialog.app.update.msg + description,
+		style: 'warning',
+		callback: (btn) => {
+			keys.inDialog = false;
+			if (btn === 'apply') {
+				let remote = electron.remote;
+				let win = remote.getCurrentWindow();
+				let loader = $('#overlay .loader');
+				let loaderContent = loader.html();
+
+				loader.html(i18n.dialog.app.update.download);
+				document.body.className = 'loading';
+
+				win.updater.download((error => {
+					if (error) {
+						console.log('Tracker.updater', 'Failed: "%s"', error);
+
+						loader.html(i18n.app.error.failed);
+						return setTimeout(() => {
+							document.body.className = '';
+							loader.html(loaderContent);
+						}, 5e3);
+					}
+					else {
+						this.destroying = true;
+						remote.app.quit();
+					}
+				}).bind(this));
+			}
+		}
+	});
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdAppExit = function() {
 	let keys = this.globalKeyState;
 	let file = this.file;

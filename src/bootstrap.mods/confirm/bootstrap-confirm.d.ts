@@ -45,6 +45,11 @@ interface ConfirmDialogOptions {
     text?: string;
 
     /**
+     * Dialog full HTML content.
+     */
+    html?: string;
+
+    /**
      * Buttons predefined constant or array of button definition objects.
      */
     buttons?: string | ConfirmDialogButtonDefinition[];

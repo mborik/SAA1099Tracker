@@ -28,7 +28,13 @@
 				modalContent.addClass(modalStyle);
 
 			modalTitle.text(opts.title);
-			modalBody.text(opts.text);
+
+			if (opts.html) {
+				modalBody.html(opts.html);
+			}
+			else if (opts.text) {
+				modalBody.text(opts.text);
+			}
 
 			// convert buttons group identifier to predefined button group array...
 			if (typeof buttons === 'string')
@@ -109,7 +115,6 @@
 
 	$.fn.confirm.defaults = {
 		title: 'Question...',
-		text: 'Are you sure?',
 		buttons: 'yesno',
 		callback: function(){}
 	};

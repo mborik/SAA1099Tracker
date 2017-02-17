@@ -48,7 +48,7 @@ exports.createWindow = (title, devTools) => {
 		center: true,
 		autoHideMenuBar: true,
 		acceptFirstMouse: true,
-		icon: path.join(__dirname, '/../build/img/logo.png'),
+		icon: path.join(__dirname, '../assets/icons/icon.png'),
 		webPreferences: {
 			devTools: devTools,
 			defaultEncoding: 'UTF-8',

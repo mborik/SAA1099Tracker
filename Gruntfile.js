@@ -278,6 +278,16 @@ module.exports = function(grunt) {
 				prune: true,
 				out: 'dist',
 				overwrite: true,
+				afterExtract: [(buildPath, ver, platform, arch, done) => {
+					const fs = require("fs");
+					const path = require("path");
+					const ext = (platform === 'win32' ? '.cmd' : '');
+
+					fs.createReadStream(path.join(__dirname, 'app/updater.bin/asar_update' + ext))
+						.pipe(fs.createWriteStream(path.join(buildPath, 'asar_update' + ext)));
+
+					done();
+				}],
 				ignore: [
 					'/\\.(\\w+)($|/)',
 					'/node_modules/electron($|/)',
@@ -285,16 +295,18 @@ module.exports = function(grunt) {
 					'/node_modules/\\.bin($|/)',
 					'/node_modules/[-\\w]+?/(test|example|screenshot)s?($|/)',
 					'/bower_components($|/)',
+					'/app/updater\\.bin($|/)',
 					'^/?(src|styles|templates|dist)($|/)',
+					'\\-?webfont\\.(svg|eot)$',
 					'/(Gruntfile|bower)\\.js(on)?'
 				],
 				'app-copyright': 'Copyright (c) 2017 Martin Borik'
 			},
-			'win32-x64': {
+			'win32-all': {
 				options: {
-					icon: 'build/favicon.ico',
+					icon: 'assets/icons/app.ico',
 					platform: 'win32',
-					arch: 'x64',
+					arch: 'all',
 					win32metadata: {
 						ProductName: 'SAA1099Tracker',
 						InternalName: 'SAA1099Tracker',

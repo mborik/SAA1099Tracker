@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const assign = require('object-assign');
 const meow = require('meow');
 
 const cli = meow(`
@@ -19,14 +18,22 @@ const cli = meow(`
 
 const { app, dialog } = require('electron');
 const { registerResourceProtocol, createWindow } = require('./window');
+const { AutoUpdater } = require('./updater');
 
 app.on('window-all-closed', () => app.quit());
 app.on('ready', () => {
 	registerResourceProtocol();
 
 	window = createWindow(cli.pkg.name, cli.flags.dev);
-	window.loadURL('file://' + path.join(__dirname, '/../build/index.html') +
+	window.loadURL('file://' + path.join(__dirname, '../build/index.html') +
 		(cli.flags.dev ? '?dev' : ''));
+
+	try {
+		window.updater = new AutoUpdater(cli.pkg, app.getAppPath());
+	}
+	catch (e) {
+		console.warn(`AutoUpdater disabled because of ${e}`);
+	}
 
 	window.on('closed', () => (window = null));
 	window.webContents.once('did-finish-load', () => {
