@@ -720,13 +720,6 @@ Tracker.prototype.populateGUI = function() {
 				else if (name === 'onCmdFileSaveAs') {
 					app.onCmdFileSave(true);
 				}
-				else if (el.id.match(/^miFileImportDemo/)) {
-					let fn = $(el).data().filename;
-					if (!fn || app.modePlay || app.globalKeyState.lastPlayMode) {
-						return false;
-					}
-					app.file.loadDemosong(fn);
-				}
 				else if (el.id.match(/^miHelp/)) {
 					let fn = $(el).data().filename;
 					if (!fn) {
@@ -735,7 +728,30 @@ Tracker.prototype.populateGUI = function() {
 					app.onCmdShowDocumentation(fn);
 				}
 				else {
-					return false;
+					let m = el.id.match(/^miFileImport(\w+)$/);
+					if (m && m[1]) {
+						let fn;
+						let mode = m[1].substr(0, 4);
+
+						switch (mode) {
+							case 'Demo':
+								fn = $(el).data().filename;
+								if (!fn) {
+									return false;
+								}
+							case 'STMF':
+								app.onCmdFileImport(fn);
+								break;
+
+							case 'PT2':
+							case 'ETrk':
+							default:
+								return;
+						}
+					}
+					else {
+						return false;
+					}
 				}
 			}
 		}, {

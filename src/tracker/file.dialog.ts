@@ -22,8 +22,6 @@
 //---------------------------------------------------------------------------------------
 /// <reference path="../index.d.ts" />
 //---------------------------------------------------------------------------------------
-const mimeType = 'text/x-saa1099tracker';
-//---------------------------------------------------------------------------------------
 class FileDialog {
 	constructor(
 		private $app: Tracker,
@@ -135,77 +133,14 @@ class FileDialog {
 
 		return true;
 	}
-
-	private _downloadHandler(e: JQueryEventObject): boolean {
-		e.stopPropagation();
-
-		let dlg: this = (e.data && e.data.$scope);
-		let file = dlg.$parent;
-		let el = $(this);
-		let data = file.createJSON(true);
-		let fileName = dlg._obj.find('.file-name>input').val().trim() ||
-				(e.data && e.data.fileName);
-
-		console.log('Tracker.file', 'Preparing file output to Blob...');
-
-		let blob, url;
-		try {
-			blob = new Blob([ data ], {
-				type: mimeType,
-				endings: 'native'
-			});
-		}
-		catch (ex) {
-			console.log('Tracker.file', 'Blob feature missing [%o], fallback to BlobBuilder...', ex);
-
-			try {
-				let bb = getCompatible(window, 'BlobBuilder', true);
-				bb.append(data);
-				blob = bb.getBlob(mimeType);
-			}
-			catch (ex2) {
-				console.log('Tracker.file', 'BlobBuilder feature missing [%o], fallback to BASE64 output...', ex2);
-
-				blob = undefined;
-				url = 'data:' + mimeType + ';base64,' + btoa(data);
-			}
-		}
-
-		if (blob) {
-			try {
-				url = getCompatible(window, 'URL').createObjectURL(blob) + '';
-			}
-			catch (ex) {
-				console.log('Tracker.file', 'URL feature for Blob missing [%o], fallback to BASE64 output...', ex);
-				url = 'data:' + mimeType + ';base64,' + btoa(data);
-			}
-		}
-
-		el.attr({
-			href: url,
-			download: fileName + '.STMF'
-		});
-
-		// force gc
-		data = null;
-		url = null;
-
-		dlg._obj.modal('hide');
-		setTimeout(() => {
-			el.attr({ href: '', download: '' });
-		}, 50);
-
-		return true;
-	}
 //---------------------------------------------------------------------------------------
 	private _openDialog(mode: string): boolean {
 		let tracker = this.$app;
 		let file = this.$parent;
 		let storageMap = this.$storage.data;
 
-		const fn = file.fileName || tracker.songTitle || i18n.app.filedialog.untitled;
 		const titles = i18n.app.filedialog.title;
-		const handleArgs = { $scope: this, fileName: fn };
+		const handleArgs = { $scope: this };
 
 		this._saveFlag = (mode === 'save');
 		this._obj = $('#filedialog');
@@ -225,7 +160,7 @@ class FileDialog {
 				.addClass('modal-backdrop in').css('z-index', '1030'));
 
 			this._obj.find('.modal-title').text(titles[mode] + '\u2026');
-			this._obj.find('.file-name>input').val(fn);
+			this._obj.find('.file-name>input').val(file.getFixedFileName());
 			this._obj.find('.storage-usage i').text(usage.bytes + ' bytes used');
 			this._obj.find('.storage-usage .progress-bar').css('width', usage.percent + '%');
 			this._obj.find('.btn-success').on('click', handleArgs, this._defaultHandler);
@@ -252,7 +187,6 @@ class FileDialog {
 			if (this._saveFlag) {
 				this._obj.find('.file-list').on('click', handleArgs, this._itemClickHandler);
 				this._obj.find('.file-remove').on('click', handleArgs, this._removeHandler);
-				this._obj.find('.file-download').on('click', handleArgs, this._downloadHandler);
 			}
 		}, this)).on('shown.bs.modal', $.proxy(() => {
 			this._obj.find(this._saveFlag

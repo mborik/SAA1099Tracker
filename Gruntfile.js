@@ -152,6 +152,7 @@ module.exports = function(grunt) {
 						'src/tracker/intro',
 						'src/tracker/file.js',
 						'src/tracker/file.dialog.js',
+						'src/tracker/file.system.js',
 						'src/tracker/tracklist.js',
 						'src/tracker/smporn.js',
 						'src/tracker/manager.js',

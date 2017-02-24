@@ -15,6 +15,7 @@ Tracker.prototype.doc = {
 		'dialog.file.new.msg': 'Do you really want to clear all song data and lost all of your changes?',
 		'dialog.file.open.title': 'Open file...',
 		'dialog.file.open.msg': 'You could lost all of your changes! Do you really want to continue?',
+		'dialog.file.import.title': 'Import file...',
 		'dialog.file.remove.title': 'Remove file...',
 		'dialog.file.remove.msg': 'Do you really want to remove this file from storage?',
 		'dialog.pattern.delete.title': 'Delete pattern...',

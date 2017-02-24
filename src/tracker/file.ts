@@ -76,6 +76,8 @@ interface StorageDialogExchange {
 	};
 }
 //---------------------------------------------------------------------------------------
+const mimeType = 'text/x-saa1099tracker';
+//---------------------------------------------------------------------------------------
 class STMFile {
 	constructor(private $parent: Tracker) {
 		this._reloadStorage();
@@ -91,6 +93,8 @@ class STMFile {
 			data: this._storageMap,
 			get usage() { return usageHandler(); }
 		});
+
+		this.system = new FileSystem;
 	}
 
 	public yetSaved: boolean = false;
@@ -102,6 +106,7 @@ class STMFile {
 	private _storageBytesUsed: number = 0;
 
 	public dialog: FileDialog;
+	public system: FileSystem;
 
 	private _storageSortAndSum(): void {
 		this._storageBytesUsed = 0;
@@ -355,6 +360,12 @@ class STMFile {
 	}
 
 //---------------------------------------------------------------------------------------
+	public getFixedFileName(): string {
+		return this._fixFileName(
+			this.fileName || this.$parent.songTitle || i18n.app.filedialog.untitled
+		);
+	}
+
 	/**
 	 * This method creates JSON format (version 1.2) of song data from tracker,
 	 * more specifically full snapshot of tracker state.
@@ -510,19 +521,6 @@ class STMFile {
 		this._updateAll();
 	}
 
-	public loadDemosong(fileName: string) {
-		let file = this;
-		let path = (electron) ? ('res://demo/' + fileName) : ('demosongs/' + fileName + '.json');
-
-		console.log('Tracker.file', 'Loading "%s" demosong...', fileName);
-		$.getJSON(path, (data: string) => {
-			file._parseJSON(data);
-			file.modified = true;
-			file.yetSaved = false;
-			file.fileName = '';
-		});
-	}
-
 	public loadFile(fileNameOrId: string|number): boolean {
 		let name: string;
 		if (typeof fileNameOrId === 'string') {
@@ -626,5 +624,42 @@ class STMFile {
 
 		console.log('Tracker.file', 'Everything stored into localStorage...');
 		return true;
+	}
+
+	public importDemosong(songName: string, url: string) {
+		let file = this;
+
+		console.log('Tracker.file', 'Loading "%s" demosong...', songName);
+		$.getJSON(url, (data: string) => {
+			if (!file._parseJSON(data)) {
+				console.log('Tracker.file', 'JSON file parsing failed!');
+			}
+
+			file.modified = true;
+			file.yetSaved = false;
+			file.fileName = '';
+		});
+	}
+
+	public importFile() {
+		let file = this;
+
+		this.system.load(false, '.STMF,' + mimeType).then(data => {
+			console.log('Tracker.file', 'File loaded, trying to parse...');
+			if (!file._parseJSON(<string> data)) {
+				console.log('Tracker.file', 'JSON file parsing failed!');
+			}
+
+			file.modified = true;
+			file.yetSaved = false;
+			file.fileName = '';
+		});
+	}
+
+	public exportFile() {
+		let data = this.createJSON(true);
+		let fileName = this.getFixedFileName();
+
+		this.system.save(data, fileName + '.STMF', mimeType);
 	}
 }

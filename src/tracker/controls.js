@@ -331,6 +331,48 @@ Tracker.prototype.onCmdFileSave = function(as) {
 	}
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileImport = function(demosong) {
+	let keys = this.globalKeyState;
+	if (this.modePlay || keys.lastPlayMode) {
+		return;
+	}
+
+	let fnToCall;
+	if (demosong) {
+		let url = (electron) ? ('res://demo/' + demosong) : ('demosongs/' + demosong + '.json');
+		fnToCall = this.file.importDemosong.bind(this.file, demosong, url);
+	}
+	else {
+		fnToCall = this.file.importFile.bind(this.file);
+	}
+
+	if (this.file.modified) {
+		keys.inDialog = true;
+
+		$('#dialoque').confirm({
+			title: i18n.dialog.file.import.title,
+			text: i18n.dialog.file.open.msg,
+			buttons: 'yesno',
+			style: 'warning',
+			callback: (btn) => {
+				keys.inDialog = false;
+				if (btn !== 'yes') {
+					return;
+				}
+
+				fnToCall();
+			}
+		});
+	}
+	else {
+		fnToCall();
+	}
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileExport = function() {
+	this.file.exportFile();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function() {
 	if (this.activeTab === 0 && this.modeEdit) {
 		this.manager.copyFromTracklist();

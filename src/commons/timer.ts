@@ -1,7 +1,7 @@
 /**
  * Precise multimedia timer based on requestAnimationFrame.
  */
-(<any>window).SyncTimer = ((): SyncTimer => {
+(<any>window).SyncTimer = (function() {
 	const that = this;
 
 	let lastT = 0;
