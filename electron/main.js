@@ -29,7 +29,7 @@ app.on('ready', () => {
 		(cli.flags.dev ? '?dev' : ''));
 
 	try {
-		window.updater = new AutoUpdater(cli.pkg, app.getAppPath());
+		window.updater = new AutoUpdater(cli.flags.dev, cli.pkg, app.getAppPath());
 	}
 	catch (e) {
 		console.warn(`AutoUpdater disabled because of ${e}`);

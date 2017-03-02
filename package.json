@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "compare-version": "^0.1.2",
+    "digest-stream": "^1.0.1",
     "electron-window-state": "^4.0.1",
     "meow": "^3.7.0",
     "object-assign": "^4.1.1",

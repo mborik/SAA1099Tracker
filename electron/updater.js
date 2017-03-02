@@ -1,29 +1,31 @@
 const app = require('electron').app;
+const digest = require('digest-stream');
 const nfs = require('original-fs');
-const zlib = require('zlib');
 const path = require('path');
-const semver = require('compare-version');
 const request = require('request');
+const semver = require('compare-version');
+const zlib = require('zlib');
 
 exports.AutoUpdater = (function() {
 	const _verRegex = /^\d\.\d\.\d+$/;
 	const _errors = [
-		'initialization_error',
-		'cannot_connect_to_api',
-		'no_update_available',
-		'api_response_not_valid',
-		'update_file_not_found',
-		'failed_to_download_update',
-		'failed_to_apply_update'
+		'Initialization error',
+		'Cannot connect to API',
+		'No update available',
+		'Invalid API response',
+		'Failed to download update package',
+		'Invalid checksum of package',
+		'Possible failure while applying of the update'
 	];
 
+	let _dev = false;
 	let _setup = null;
 	let _updateObj = null;
 	let _userCallback = null;
 
 	let _result = (error, msg) => {
-		let e = error ? (_errors[error] || 'unknown_error') : false;
-		if (e) {
+		let e = error ? (_errors[error] || 'Unknown error') : false;
+		if (e && _dev) {
 			console.error(e, msg || '');
 		}
 
@@ -36,7 +38,7 @@ exports.AutoUpdater = (function() {
 	};
 
 	class AutoUpdater {
-		constructor(pkg, appPath, updateUrl) {
+		constructor(dev, pkg, appPath, updateUrl) {
 			if (!updateUrl && pkg && pkg.config) {
 				updateUrl = pkg.config.updateUrl;
 			}
@@ -61,11 +63,19 @@ exports.AutoUpdater = (function() {
 				'appPath': appPath,
 				'basePath': basePath
 			};
+
+			_dev = !!dev;
 		}
 
 		check(callback) {
 			if (callback) {
 				_userCallback = callback;
+			}
+
+			let dist = path.join(_setup.basePath, '/update.asar');
+			if (nfs.existsSync(dist)) {
+				nfs.unlink(dist);
+				return _result(6);
 			}
 
 			request({
@@ -87,7 +97,9 @@ exports.AutoUpdater = (function() {
 
 					// update available
 					if (semver(body.version, _setup.version) > 0) {
-						console.log(`Update available ${_setup.version} ==> ${body.version}...`);
+						if (_dev) {
+							console.log(`Update available ${_setup.version} ==> ${body.version}...`);
+						}
 
 						_updateObj = body;
 						_result();
@@ -106,23 +118,35 @@ exports.AutoUpdater = (function() {
 			if (callback) {
 				_userCallback = callback;
 			}
-			if (!(_updateObj && _updateObj.link)) {
+			if (!(_updateObj && _updateObj.link && _updateObj.checksum)) {
 				return _result(3);
 			}
 
 			let url = _updateObj.link;
 			let dist = path.join(_setup.basePath, '/update.asar');
 
-			console.log(`Downloading: ${url}...`);
+			if (_dev) {
+				console.log(`Downloading: ${url}...`);
+			}
 
 			try {
+				let checksum;
+
 				request
 					.get(url)
+					.on('error', err => _result(4, err))
 					.pipe(zlib.createGunzip())
+					.pipe(digest('sha1', 'hex', hash => (checksum = hash)))
 					.pipe(nfs.createWriteStream(dist))
-					.on('error', err => _result(5, err))
 					.on('finish', () => {
-						console.log(`Update downloaded: "${dist}"...`);
+						if (_dev) {
+							console.log(`Update downloaded: "${dist}" *${checksum}`);
+						}
+
+						if (checksum !== _updateObj.checksum) {
+							nfs.unlink(dist);
+							return _result(5);
+						}
 
 						let ext = (process.platform === 'win32' ? '.cmd' : '');
 						let exePath = app.getPath('exe');
@@ -137,7 +161,7 @@ exports.AutoUpdater = (function() {
 					});
 			}
 			catch (err) {
-				_result(5, err);
+				_result(4, err);
 			}
 		}
 	};
