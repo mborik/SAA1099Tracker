@@ -75,6 +75,9 @@ module.exports = function(grunt) {
 					filter: 'isFile'
 				}]
 			},
+			'app-favicon': {
+				files: { 'build/favicon.ico': 'assets/resources/favicon.ico' }
+			},
 			'bootstrap': {
 				files: [{
 					expand: true,
@@ -104,19 +107,6 @@ module.exports = function(grunt) {
 					flatten: true,
 					filter: 'isFile'
 				}]
-			},
-			'app': {
-				files: [{
-					expand: true,
-					cwd: 'src/',
-					src: [
-						'Player.js*',
-						'SAASound.js*'
-					],
-					dest: 'build/app',
-					flatten: true,
-					filter: 'isFile'
-				}]
 			}
 		},
 		concat: {
@@ -139,7 +129,7 @@ module.exports = function(grunt) {
 					separator: ''
 				},
 				files: {
-					'build/app/Commons.js': [
+					'build/app/commons.js': [
 						'src/commons/intro',
 						'src/commons/compat.js',
 						'src/commons/timer.js',
@@ -148,8 +138,10 @@ module.exports = function(grunt) {
 						'src/commons/audio.js',
 						'src/commons/number.proto.js'
 					],
-					'build/app/Tracker.js': [
+					'build/app/bundle.js': [
 						'src/tracker/intro',
+						'src/SAASound.js',
+						'src/Player.js',
 						'src/tracker/file.js',
 						'src/tracker/file.dialog.js',
 						'src/tracker/file.system.js',
@@ -197,7 +189,8 @@ module.exports = function(grunt) {
 			'maps': [
 				'src/Player.js*',
 				'src/SAASound.js*',
-				'build/app/*.map'
+				'build/app/*.map',
+				'build/css/*.map'
 			],
 			'Tracker': {
 				src: [
@@ -243,10 +236,8 @@ module.exports = function(grunt) {
 		babili: {
 			'scripts': {
 				files: {
-					'build/app/Commons.min.js': 'build/app/Commons.js',
-					'build/app/SAASound.min.js': 'build/app/SAASound.js',
-					'build/app/Player.min.js': 'build/app/Player.js',
-					'build/app/Tracker.min.js': 'build/app/Tracker.js'
+					'build/app/commons.min.js': 'build/app/commons.js',
+					'build/app/bundle.min.js': 'build/app/bundle.js'
 				}
 			}
 		},

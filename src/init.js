@@ -29,10 +29,8 @@
 		'jquery',
 		'lz-string',
 		'bootstrap',
-		'Commons',
-		'!SAASound',
-		'!Player',
-		'!Tracker'
+		'commons',
+		'!bundle'
 	];
 
 	var pattern = /(?!\/)[a-z]+?\.js(\?.+)?$/;
