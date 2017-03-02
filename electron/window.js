@@ -1,3 +1,4 @@
+const fs = require('fs');
 const url = require('url');
 const path = require('path');
 const { BrowserWindow, protocol } = require('electron');
@@ -5,8 +6,7 @@ const WindowState = require('electron-window-state');
 const minBounds = { w: 1152, h: 790 };
 
 exports.registerResourceProtocol = () => {
-	const docuPath = path.resolve(path.join(__dirname, '../doc/'));
-	const assetsPath = path.resolve(path.join(__dirname, '../assets/'));
+	const basePath = path.resolve(__dirname, '../');
 
 	protocol.registerFileProtocol(
 		'res',
@@ -15,10 +15,10 @@ exports.registerResourceProtocol = () => {
 			var parsed = url.parse(req.url);
 
 			if (parsed.hostname === 'doc') {
-				target = path.join(docuPath, parsed.pathname + '.txt');
+				target = path.join(basePath, 'doc', parsed.pathname + '.txt');
 			}
 			else if (parsed.hostname === 'demo') {
-				target = path.join(assetsPath, 'demosongs', parsed.pathname + '.json');
+				target = path.join(basePath, 'demosongs', parsed.pathname + '.json');
 			}
 
 			callback({ path: target });

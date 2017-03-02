@@ -270,53 +270,6 @@ module.exports = function(grunt) {
 					'build/css/tracker.min.css': 'build/css/tracker.css'
 				}
 			}
-		},
-		electron: {
-			options: {
-				name: 'SAA1099Tracker',
-				dir: '.',
-				asar: true,
-				prune: true,
-				out: 'dist',
-				overwrite: true,
-				afterExtract: [(buildPath, ver, platform, arch, done) => {
-					const fs = require("fs");
-					const path = require("path");
-					const ext = (platform === 'win32' ? '.cmd' : '');
-
-					fs.createReadStream(path.join(__dirname, 'app/updater.bin/asar_update' + ext))
-						.pipe(fs.createWriteStream(path.join(buildPath, 'asar_update' + ext)));
-
-					done();
-				}],
-				ignore: [
-					'/\\.(\\w+)($|/)',
-					'/node_modules/electron($|/)',
-					'/node_modules/electron-\\w+($|/)',
-					'/node_modules/\\.bin($|/)',
-					'/node_modules/[-\\w]+?/(test|example|screenshot)s?($|/)',
-					'/bower_components($|/)',
-					'/app/updater\\.bin($|/)',
-					'^/?(src|styles|templates|dist)($|/)',
-					'\\-?webfont\\.(svg|eot)$',
-					'/(Gruntfile|bower)\\.js(on)?'
-				],
-				'app-copyright': 'Copyright (c) 2017 Martin Borik'
-			},
-			'win32-all': {
-				options: {
-					icon: 'assets/icons/app.ico',
-					platform: 'win32',
-					arch: 'all',
-					win32metadata: {
-						ProductName: 'SAA1099Tracker',
-						InternalName: 'SAA1099Tracker',
-						OriginalFilename: 'SAA1099Tracker.exe',
-						FileDescription: "SAA1099Tracker",
-						CompanyName: 'SAA1099Tracker'
-					}
-				}
-			}
 		}
 	});
 
@@ -330,7 +283,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
-	grunt.loadNpmTasks('grunt-electron');
 	grunt.loadNpmTasks('grunt-html-build');
 	grunt.loadNpmTasks('grunt-ts');
 
@@ -406,5 +358,4 @@ module.exports = function(grunt) {
 		'less','uglify','babili','cssmin'
 	]);
 	grunt.registerTask('styles', [ 'less','uglify','babili','cssmin' ]);
-	grunt.registerTask('app', [ 'electron' ]);
 };
