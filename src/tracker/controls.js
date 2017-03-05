@@ -156,7 +156,13 @@ Tracker.prototype.updatePanelPosition = function() {
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Tracker.prototype.onCmdAppUpdate = function(status, data) {
-	if (status) {
+	const remote = electron && electron.remote;
+	const updater = remote && (remote.getCurrentWindow()).updater;
+
+	if (!(remote && updater)) {
+		return false;
+	}
+	else if (status) {
 		console.log('Tracker.updater', 'Check update status: "%s"', status);
 		return;
 	}
@@ -187,15 +193,13 @@ Tracker.prototype.onCmdAppUpdate = function(status, data) {
 		callback: (btn) => {
 			keys.inDialog = false;
 			if (btn === 'apply') {
-				let remote = electron.remote;
-				let win = remote.getCurrentWindow();
 				let loader = $('#overlay .loader');
 				let loaderContent = loader.html();
 
 				loader.html(i18n.dialog.app.update.download);
 				document.body.className = 'loading';
 
-				win.updater.download((error => {
+				updater.download((error => {
 					if (error) {
 						console.log('Tracker.updater', 'Failed: "%s"', error);
 

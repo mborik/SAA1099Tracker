@@ -884,6 +884,10 @@ Tracker.prototype.initializeGUI = function() {
 			}
 
 			let win = electron.remote.getCurrentWindow();
+			if (win && win.firstRun) {
+				this.onCmdShowDocumentation('readme');
+			}
+
 			let updater = win && win.updater;
 			if (updater) {
 				console.log('Tracker.updater', 'Checking for updates...');

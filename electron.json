@@ -50,6 +50,7 @@
   },
   "squirrelWindows": {
     "iconUrl": "https://raw.githubusercontent.com/mborik/SAA1099Tracker/master/assets/resouces/icon.ico",
+    "loadingGif": "assets/resources/loading.gif",
     "msi": true,
     "remoteReleases": false,
     "useAppIdAsId": false
