@@ -156,7 +156,7 @@ Tracker.prototype.updatePanelPosition = function() {
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Tracker.prototype.onCmdAppUpdate = function(status, data) {
-	const remote = electron && electron.remote;
+	const remote = window.electron && electron.remote;
 	const updater = remote && (remote.getCurrentWindow()).updater;
 
 	if (!(remote && updater)) {
@@ -223,7 +223,7 @@ Tracker.prototype.onCmdAppExit = function() {
 	let keys = this.globalKeyState;
 	let file = this.file;
 
-	if (this.destroying || !electron) {
+	if (this.destroying || window.electron) {
 		return;
 	}
 	else if (!keys.inDialog) {
@@ -343,7 +343,8 @@ Tracker.prototype.onCmdFileImport = function(demosong) {
 
 	let fnToCall;
 	if (demosong) {
-		let url = (electron) ? ('res://demo/' + demosong) : ('demosongs/' + demosong + '.json');
+		let url = (window.electron ?
+			('res://demo/' + demosong) : ('demosongs/' + demosong + '.json'));
 		fnToCall = this.file.importDemosong.bind(this.file, demosong, url);
 	}
 	else {
@@ -533,7 +534,7 @@ Tracker.prototype.onCmdToggleEditMode = function(newState) {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdShowDocumentation = function(name) {
-	let filename = (electron ? ('res://doc/' + name) : ('doc/' + name + '.txt'));
+	let filename = (window.electron ? ('res://doc/' + name) : ('doc/' + name + '.txt'));
 	let cache = this.doc.txtCache;
 	let keys = this.globalKeyState;
 	let data = cache[name];

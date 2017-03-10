@@ -42,7 +42,7 @@ Tracker.prototype.populateGUI = function() {
 			method:   'on',
 			param:    'beforeunload',
 			handler:  () => {
-				if (electron) {
+				if (window.electron) {
 					return app.onCmdAppExit();
 				}
 				else if (!dev) {
@@ -879,7 +879,7 @@ Tracker.prototype.initializeGUI = function() {
 			return (this.loaded = true);
 		},
 		function() {
-			if (!(this.loaded && electron && electron.remote)) {
+			if (!(this.loaded && window.electron && electron.remote)) {
 				return false;
 			}
 

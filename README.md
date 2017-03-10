@@ -5,10 +5,10 @@ SAA1099Tracker is an offline-storage HTML5/JavaScript chiptune music tracker for
   - sound interface **MIF 85** for **Tesla PMD 85** _(an 8-bit personal micro-computer produced in eighties of twentieth century in former Czechoslovakia)_
   - few sound interfaces for **ZX-Spectrum**
 
-_NOTE: for more info, please [see `doc` folder](doc)..._
+_NOTE: for more info, please [see `doc` folder](doc) or [wiki-pages](https://github.com/mborik/SAA1099Tracker/wiki)..._
 
 ### Version
-1.2.0 (public alpha)
+1.2.0 (beta)
 
 ### Browser compatibilty
   - Chrome: **45+**

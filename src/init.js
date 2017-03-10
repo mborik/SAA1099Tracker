@@ -37,7 +37,7 @@
 	if (el && el.src.substr(0, 4) === 'http' && pattern.test(el.src)) {
 		path = el.src.replace(pattern, path).replace(loc.origin, '');
 	}
-	if (window.process && process.versions && process.versions.electron) {
+	if (typeof process !== 'undefined' && process.versions && process.versions.electron) {
 		window.electron = require('electron');
 		window.jQuery = window.$ = require('./' + path + libs.shift() + dev);
 		window.LZString = require('./' + path + libs.shift() + dev);
@@ -46,13 +46,23 @@
 
 	el = document.getElementsByTagName('head')[0];
 	libs.forEach(function(lib) {
-		var s = document.createElement('script');
-		if (lib[0] === '!') {
-			s.setAttribute('defer', '');
+		var deferred;
+		if (deferred = (lib[0] === '!')) {
 			lib = lib.substr(1);
 		}
-		s.setAttribute('src', (path + lib + dev + '.js'));
-		el.appendChild(s);
+
+		var js = (path + lib + dev + '.js');
+		try {
+			document.write('<' + 'script type="text/javascript" src="' + js + '"' + (deferred ? ' defer' : '') + '><\/script>');
+		}
+		catch (e) {
+			var s = document.createElement('script');
+			s.setAttribute('src', js);
+			if (deferred) {
+				s.setAttribute('defer', '');
+			}
+			el.appendChild(s);
+		}
 	});
 
 	window.location.appPath = path;
