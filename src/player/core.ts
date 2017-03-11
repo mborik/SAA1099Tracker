@@ -563,7 +563,7 @@ class Player {
 				// apply attenuation...
 				let addAttn = 0;
 				if (cmd === 0x5 || cmd === 0xA) {
-					addAttn = pp.commandValue2 = Math.max(0, Math.min(15, pp.commandValue2));
+					addAttn = pp.commandValue2 = Math.max(-15, Math.min(15, pp.commandValue2));
 				}
 				vol.L -= pp.attenuation.L + addAttn;
 				vol.R -= pp.attenuation.R + addAttn;

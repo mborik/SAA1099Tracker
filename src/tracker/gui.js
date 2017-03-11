@@ -106,12 +106,6 @@ Tracker.prototype.populateGUI = function() {
 					o.obj = el;
 					o.ctx = el.getContext('2d');
 					getCompatible(o.ctx, 'imageSmoothingEnabled', true, false);
-
-					$(el).on('focus', e => {
-						if (app.player.position.length && !app.modeEdit) {
-							app.onCmdToggleEditMode();
-						}
-					});
 				}
 				else if (name === 'smpornedit') {
 					name = el.id.replace('smpedit_', '');
@@ -124,6 +118,14 @@ Tracker.prototype.populateGUI = function() {
 				$(el).on('mousedown mouseup mousemove dblclick mousewheel DOMMouseScroll', e => {
 					let delta = e.originalEvent.wheelDelta || -e.originalEvent.deltaY ||
 						(e.originalEvent.type === 'DOMMouseScroll' && -e.originalEvent.detail);
+
+					if (e.type === 'mousedown' && !app.modeEdit && app.player.position.length) {
+						app.onCmdToggleEditMode();
+
+						e.stopPropagation();
+						e.preventDefault();
+						return;
+					}
 
 					if (delta) {
 						e.stopPropagation();
@@ -143,12 +145,15 @@ Tracker.prototype.populateGUI = function() {
 			handler:  e => {
 				let data = $(e.currentTarget).data();
 				app.activeTab = +data.value || 0;
-				$(window).trigger('resize');
-
-				if (app.activeTab === 0) {
+				if (app.activeTab) {
+					$('#statusbar').hide();
+				}
+				else {
 					$('#statusbar').show();
 					$('#tracklist').focus();
 				}
+
+				$(window).trigger('resize');
 			}
 		}, {
 			selector: '#txHeaderTitle',
