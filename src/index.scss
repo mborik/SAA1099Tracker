@@ -1,0 +1,76 @@
+@import "~@blueprintjs/core/src/common/variables";
+@import "~@blueprintjs/core/src/components/progress-bar/progress-bar";
+
+@mixin pixelated() {
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	image-rendering: crisp-edges;
+	image-rendering: pixelated;
+	-ms-interpolation-mode: nearest-neighbor;
+}
+
+body {
+	font-family: "Lato", $pt-font-family;
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow: hidden;
+	user-select: none;
+	padding: 0;
+	margin: 0;
+
+	&.#{$ns}-dark {
+		background-color: $dark-gray1;
+	}
+
+	.#{$ns}-disabled {
+		cursor: default !important;
+	}
+
+	.#{$ns}-popover-content {
+		display: flex;
+		flex-direction: row;
+
+		> :first-child {
+			align-self: center;
+		}
+
+		> .#{$ns}-key-combo {
+			align-self: start;
+			margin-left: .75rem;
+			border-left: 1px solid $gray5;
+			padding-left: .75rem;
+		}
+	}
+}
+
+@font-face {
+	font-family: 'Lato';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: local('Lato Regular'), local('Lato-Regular'), url('/fonts/lato-regular-webfont.woff2') format('woff2');
+	src: url('/fonts/lato-regular-webfont.ttf') format('truetype');
+	unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+	font-family: 'Lato';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: local('Lato Bold'), local('Lato-Bold'), url('/fonts/lato-bold-webfont.woff2') format('woff2');
+	src: url('/fonts/lato-bold-webfont.ttf') format('truetype');
+	unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+	font-family: 'BPmono';
+	font-style: normal;
+	font-weight: normal;
+	src: url('/fonts/bpmono-webfont.eot');
+	src: url('/fonts/bpmono-webfont.eot?#iefix') format('embedded-opentype');
+	src: url('/fonts/bpmono-webfont.svg#bpmonoregular') format('svg');
+	src: url('/fonts/bpmono-webfont.woff') format('woff');
+	src: url('/fonts/bpmono-webfont.ttf') format('truetype');
+}
