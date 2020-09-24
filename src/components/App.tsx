@@ -1,10 +1,13 @@
 import { Hotkey, Hotkeys, HotkeysTarget } from "@blueprintjs/core";
 import * as React from "react";
+import Navigation from "./Navigation";
 
 @HotkeysTarget
 class App extends React.PureComponent<{}, {}> {
 	render() {
-		return <main className="bp3-fill" role="main"></main>;
+		return <main className="bp3-fill" role="main">
+			<Navigation />
+		</main>;
 	}
 
 	renderHotkeys() {
