@@ -4,28 +4,37 @@ import demosongs from '../../params/demosongs';
 
 const ImportExport: React.FunctionComponent = () => (
 	<Navbar.Group>
-		<Popover minimal={true} position="bottom-left">
+		<Popover key="miFileImport" minimal={true} position="bottom-left">
 			<Button minimal={true} icon="import" rightIcon="caret-down" text="Import" />
 			<Menu>
-				<MenuItem text={<>Import native song format <i>(STMF)</i>&hellip;</>}></MenuItem>
+				<MenuItem
+					key="miFileImportSTMF"
+					text={<>Import native song format <i>(STMF)</i>&hellip;</>}
+				/>
 				<MenuDivider />
-				<MenuItem text="ProTracker II module&hellip;" />
-				<MenuItem text="E-Tracker module&hellip;" />
+				<MenuItem key="miFileImportPT2" text="ProTracker II module&hellip;" />
+				<MenuItem key="miFileImportETrk" text="E-Tracker module&hellip;" />
 				<MenuDivider />
-				<MenuItem text="Demosong">
-					{demosongs.map(demosong => (
-						<MenuItem text={<>{demosong.title} <i>({demosong.author})</i></>} />
+				<MenuItem key="miFileImportDemosong" text="Demosong">
+					{demosongs.map((demosong, index) => (
+						<MenuItem
+							key={`miFileImportDemo${index + 1}`}
+							text={<>{demosong.title} <i>({demosong.author})</i></>}
+						/>
 					))}
 				</MenuItem>
 			</Menu>
 		</Popover>
 
-		<Popover minimal={true} position="bottom-left">
+		<Popover key="miFileExport" minimal={true} position="bottom-left">
 			<Button minimal={true} icon="export" rightIcon="caret-down" text="Export" />
 			<Menu>
-				<MenuItem text={<>Export to native song format <i>(STMF)</i>&hellip;</>}></MenuItem>
+				<MenuItem
+					key="miFileExportSTMF"
+					text={<>Export to native song format <i>(STMF)</i>&hellip;</>}
+				/>
 				<MenuDivider />
-				<MenuItem text="Binary compilation&hellip;" />
+				<MenuItem key="miFileCompile" text="Binary compilation&hellip;" />
 			</Menu>
 		</Popover>
 

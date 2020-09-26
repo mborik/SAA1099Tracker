@@ -1,17 +1,22 @@
 import React from 'react';
 import { Navbar, KeyCombo } from '@blueprintjs/core';
 
-import { TooltipedNavButton } from '../partials/TooltipedNavButton';
+import { NavButtonTooltiped } from '../partials/NavButtonTooltiped';
 
 const Tools: React.FunctionComponent = () => (
 	<Navbar.Group>
-		<TooltipedNavButton icon="comparison" disabled={true}
+		<NavButtonTooltiped
+			key="miManager"
+			icon="comparison"
+			disabled={true}
 			tooltip={<>
 				<label>Track manager</label>
 				<KeyCombo combo="F9" />
 			</>}
 		/>
-		<TooltipedNavButton icon="cog"
+		<NavButtonTooltiped
+			key="miPreferences"
+			icon="cog"
 			tooltip={<>
 				<label>Preferences</label>
 				<KeyCombo combo="F10" />

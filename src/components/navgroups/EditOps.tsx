@@ -1,42 +1,62 @@
 import React from 'react';
 import { Navbar, KeyCombo } from '@blueprintjs/core';
 
-import { TooltipedNavButton } from '../partials/TooltipedNavButton';
+import { NavButtonTooltiped } from '../partials/NavButtonTooltiped';
 
 const EditOps: React.FunctionComponent = () => (
 	<Navbar.Group>
-		<TooltipedNavButton minimal={true} icon="remove-column"
+		<NavButtonTooltiped
+			key="miEditCut"
+			icon="remove-column"
+			minimal={true}
 			tooltip={<>
 				<label>Cut</label>
 				<KeyCombo combo="mod+X" />
 			</>}
 		/>
-		<TooltipedNavButton minimal={true} icon="menu-open"
+		<NavButtonTooltiped
+			key="miEditCopy"
+			icon="menu-open"
+			minimal={true}
 			tooltip={<>
 				<label>Copy</label>
 				<KeyCombo combo="mod+C" />
 			</>}
 		/>
-		<TooltipedNavButton minimal={true} icon="th-derived"
+		<NavButtonTooltiped
+			key="miEditPaste"
+			icon="th-derived"
+			minimal={true}
 			tooltip={<>
 				<label>Paste</label>
 				<KeyCombo combo="mod+V" />
 			</>}
 		/>
-		<TooltipedNavButton minimal={true} icon="trash"
+		<NavButtonTooltiped
+			key="miEditDelete"
+			icon="trash"
+			minimal={true}
 			tooltip={<>
 				<label>Delete</label>
 				<KeyCombo combo="mod+D" />
 			</>}
 		/>
+
 		<Navbar.Divider />
-		<TooltipedNavButton minimal={true} icon="undo"
+
+		<NavButtonTooltiped
+			key="miEditUndo"
+			icon="undo"
+			minimal={true}
 			tooltip={<>
 				<label>Undo</label>
 				<KeyCombo combo="mod+Z" />
 			</>}
 		/>
-		<TooltipedNavButton minimal={true} icon="redo"
+		<NavButtonTooltiped
+			key="miEditRedo"
+			icon="redo"
+			minimal={true}
 			tooltip={<>
 				<label>Redo</label>
 				<KeyCombo combo="mod+Y" />

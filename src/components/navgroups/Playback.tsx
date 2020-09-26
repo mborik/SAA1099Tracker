@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navbar, KeyCombo } from '@blueprintjs/core';
 
-import { TooltipedNavButton } from '../partials/TooltipedNavButton';
+import { NavButtonTooltiped } from '../partials/NavButtonTooltiped';
 
 
 const Playback: React.FunctionComponent = () => {
@@ -9,45 +9,70 @@ const Playback: React.FunctionComponent = () => {
 
 	return (
 		<Navbar.Group>
-			<TooltipedNavButton minimal={true} icon="stop" intent="primary"
+			<NavButtonTooltiped
+				key="miStop"
+				icon="stop"
+				intent="primary"
+				minimal={true}
 				tooltip={<>
 					<label>Stop</label>
 					<KeyCombo combo="esc" />
 				</>}
 			/>
-			<TooltipedNavButton minimal={true} icon="play" intent="primary"
+			<NavButtonTooltiped
+				key="miSongPlay"
+				icon="play"
+				intent="primary"
+				minimal={true}
 				tooltip={<>
 					<label>Play song</label>
 					<KeyCombo combo="F5" />
 				</>}
 			/>
-			<TooltipedNavButton minimal={true} icon="fast-forward" intent="primary"
+			<NavButtonTooltiped
+				key="miSongPlayStart"
+				icon="fast-forward"
+				intent="primary"
+				minimal={true}
 				tooltip={<>
 					<label>Play song from start</label>
 					<KeyCombo combo="F6" />
 				</>}
 			/>
-			<TooltipedNavButton minimal={true} icon="step-forward" intent="primary"
+			<NavButtonTooltiped
+				key="miPosPlay"
+				icon="step-forward"
+				intent="primary"
+				minimal={true}
 				tooltip={<>
 					<label>Play position</label>
 					<KeyCombo combo="F7" />
 				</>}
 			/>
-			<TooltipedNavButton minimal={true} icon="play" intent="primary"
+			<NavButtonTooltiped
+				key="miPosPlayStart"
+				icon="play"
+				intent="primary"
+				minimal={true}
 				tooltip={<>
 					<label>Play position from start</label>
 					<KeyCombo combo="F8" />
 				</>}
 			/>
-			<TooltipedNavButton minimal={true} onClick={() => setLoop(!loop)}
+			<NavButtonTooltiped
+				key="miToggleLoop"
 				style={loop ? {} : { transform: 'scale(-1, 1)' }}
 				icon={loop ? 'refresh' : 'outdated'}
 				intent={loop ? 'success' : 'none'}
+				minimal={true}
 				tooltip={<>
 					<label>Toggle repeat</label>
 					<KeyCombo combo="F11" />
 				</>}
+
+				onClick={() => setLoop(!loop)}
 			/>
+
 			<Navbar.Divider />
 		</Navbar.Group>
 	);
