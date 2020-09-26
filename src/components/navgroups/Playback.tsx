@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Navbar, KeyCombo } from '@blueprintjs/core';
 
+import { actionToggleRepeat } from '../../actions/navbar';
+import { ReducerStoreState } from '../../reducers';
 import { NavButtonTooltiped } from '../partials/NavButtonTooltiped';
 
 
 const Playback: React.FunctionComponent = () => {
-	const [ loop, setLoop ] = useState(true);
+	const dispatch = useDispatch();
+	const repeat = useSelector<ReducerStoreState>(state => state.navbar.repeatMode) as boolean;
+
+	const toggleRepeat = useCallback(
+		() => dispatch(actionToggleRepeat()),
+		[ dispatch ]
+	);
 
 	return (
 		<Navbar.Group>
@@ -61,16 +70,16 @@ const Playback: React.FunctionComponent = () => {
 			/>
 			<NavButtonTooltiped
 				key="miToggleLoop"
-				style={loop ? {} : { transform: 'scale(-1, 1)' }}
-				icon={loop ? 'refresh' : 'outdated'}
-				intent={loop ? 'success' : 'none'}
+				style={repeat ? {} : { transform: 'scale(-1, 1)' }}
+				icon={repeat ? 'refresh' : 'outdated'}
+				intent={repeat ? 'success' : 'none'}
 				minimal={true}
 				tooltip={<>
 					<label>Toggle repeat</label>
 					<KeyCombo combo="F11" />
 				</>}
 
-				onClick={() => setLoop(!loop)}
+				onClick={toggleRepeat}
 			/>
 
 			<Navbar.Divider />
