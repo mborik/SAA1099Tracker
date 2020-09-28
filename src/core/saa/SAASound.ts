@@ -21,13 +21,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+//---------------------------------------------------------------------------------------
 
 import { SAAAmp } from "./SAAAmp";
 import { SAAEnv } from "./SAAEnv";
 import { SAAFreq } from "./SAAFreq";
 import { SAANoise } from "./SAANoise";
 
-//---------------------------------------------------------------------------------------
+/** Current state of all SAA1099 registers */
 export class SAASoundRegisters {
 	R00 = 0; R01 = 0; R02 = 0; R03 = 0; R04 = 0; R05 = 0;
 	R08 = 0; R09 = 0; R0A = 0; R0B = 0; R0C = 0; R0D = 0;
@@ -38,11 +39,16 @@ export class SAASoundRegisters {
 
 	[key: string]: number;
 };
+
+/** Wrapper class to hold register state and mute state of each channel */
 export class SAASoundRegData {
 	public regs: SAASoundRegisters = new SAASoundRegisters();
 	public muted: boolean[] = [ false, false, false, false, false, false ];
 };
-//---------------------------------------------------------------------------------------
+
+/**
+ * SAASound: Phillips SAA 1099 sound chip emulator core class.
+ */
 export class SAASound {
 	public static sampleRate: number;
 
@@ -290,8 +296,6 @@ export class SAASound {
 			this._noise[1].tick();
 
 			val[0] = val[1] = 0;
-
-			// eslint-disable-next-line no-loop-func
 			this._amp.forEach(amp => amp.output(val));
 
 			leftBuf[ptr]  = val[0];
@@ -299,4 +303,3 @@ export class SAASound {
 		}
 	}
 }
-//---------------------------------------------------------------------------------------

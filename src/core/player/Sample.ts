@@ -1,4 +1,4 @@
-/*
+/*!
  * Player: Samples class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
@@ -24,7 +24,7 @@
 import { toHex } from "../../utils/number";
 import { Volume } from "./globals";
 
-// Sample data interface
+/** Sample data interface */
 interface SampleData {
 	volume: Volume;
 	enable_freq: boolean;
@@ -32,7 +32,8 @@ interface SampleData {
 	noise_value: number;
 	shift: number;
 }
-//---------------------------------------------------------------------------------------
+
+/** Single sample definition */
 export default class Sample {
 	name: string = '';
 	data: SampleData[];
@@ -94,4 +95,3 @@ export default class Sample {
 		});
 	}
 }
-//---------------------------------------------------------------------------------------

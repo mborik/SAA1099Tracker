@@ -1,5 +1,5 @@
 /*!
- * Player: Core of player routine.
+ * Player core: data-effecient channel-pattern tracker format for SAA1099 soundchip.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -19,6 +19,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+//---------------------------------------------------------------------------------------
 
 import { SAASound } from "../saa/SAASound";
 import { MAX_PATTERN_LEN, Mixer, PlayerMode, Tone, Volume } from "./globals";
@@ -28,7 +29,9 @@ import Position from "./Position";
 import PlayerRuntime from "./PlayerRuntime";
 import Sample from "./Sample";
 
-//---------------------------------------------------------------------------------------
+/**
+ * Core of data-effecient channel-pattern tracker format player for SAA1099 soundchip.
+ */
 export default class Player {
 	public tones: Tone[];
 	public sample: Sample[] = [];

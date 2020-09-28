@@ -1,4 +1,4 @@
-/*
+/*!
  * Player: Positions class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
@@ -25,20 +25,21 @@ import { toHex, toWidth } from "../../utils/number";
 import { MAX_PATTERN_LEN } from "./globals";
 import PlayerRuntime from "./PlayerRuntime";
 
-// Position channel definition interface
+/** Position channel definition interface */
 interface Channel {
 	pattern: number;
 	pitch: number;
 }
 
-//---------------------------------------------------------------------------------------
 /**
  * Position class declaration with 6 channels definition, length and default speed.
- * @property frames Number of interupts which takes every line in tracklist;
  */
 export default class Position {
+	/** Describers for every channel [0..5] */
 	ch: Channel[];
+	/** Number of interupts which takes every line in tracklist */
 	frames: number[] = [];
+	/** Initial runtime parameters when player entering into this position */
 	initParams: PlayerRuntime | null = null;
 
 	constructor(public length: number, public speed: number = 6) {
@@ -79,4 +80,3 @@ export default class Position {
 		return arr;
 	}
 }
-//---------------------------------------------------------------------------------------

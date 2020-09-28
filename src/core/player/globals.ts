@@ -1,5 +1,5 @@
 /*!
- * Player: Global classes a interface definition.
+ * Player: Global helper classes definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 export const MAX_PATTERN_LEN = 128;
 
-// Player mode
+/** Player playback mode */
 export const PlayerMode = {
 	PM_SONG: 1,
 	PM_POSITION: 2,
@@ -32,8 +32,8 @@ export const PlayerMode = {
 	PM_SAMP_OR_LINE: 12,
 	PM_SIMULATION: 129
 };
-//---------------------------------------------------------------------------------------
-// Tone parameters class
+
+/** Tone parameters class */
 export class Tone {
 	cent: number = 0;
 	oct: number = 0;
@@ -47,8 +47,8 @@ export class Tone {
 		this.oct = (v & 0x700) >> 8;
 	}
 }
-//---------------------------------------------------------------------------------------
-// Volume/Attenuation value class (byte value splitted into left/right channel)
+
+/** Volume/Attenuation value class (byte value splitted into left/right channel) */
 export class Volume {
 	private _l: number = 0;
 	private _r: number = 0;
@@ -65,9 +65,9 @@ export class Volume {
 		this._r = (v >> 4) & 0x0f;
 	}
 }
-//---------------------------------------------------------------------------------------
+
+/** Channel mixer */
 export class Mixer {
 	index: number = 0;
 	length: number = 0;
 }
-//---------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/*
+/*!
  * Player: Runtime playback parameters class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
@@ -28,7 +28,7 @@ import Player from "./Player";
 import Sample from "./Sample";
 import Ornament from "./Ornament";
 
-
+/** Player runtime parameters interface */
 interface PlayerParams {
 	tone: number;
 	playing: boolean;
@@ -48,7 +48,8 @@ interface PlayerParams {
 
 	[key: string]: any;
 }
-//---------------------------------------------------------------------------------------
+
+/** Player runtime parameters processor */
 export default class PlayerRuntime extends SAASoundRegData {
 	params: PlayerParams[] = [];
 
@@ -108,4 +109,3 @@ export default class PlayerRuntime extends SAASoundRegData {
 		}
 	}
 }
-//---------------------------------------------------------------------------------------

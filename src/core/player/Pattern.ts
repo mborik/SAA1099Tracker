@@ -1,4 +1,4 @@
-/*
+/*!
  * Player: Patterns class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
@@ -24,7 +24,7 @@
 import { toHex, toWidth } from "../../utils/number";
 import { MAX_PATTERN_LEN, Volume } from "./globals";
 
-// Channel-pattern line interface
+/** Channel-pattern line interface */
 interface PatternLine {
 	tone: number;
 	release: boolean;
@@ -35,7 +35,8 @@ interface PatternLine {
 	cmd: number;
 	cmd_data: number;
 }
-//---------------------------------------------------------------------------------------
+
+/** Definition of channel-pattern containing its pattern-lines */
 export default class Pattern {
 	data: PatternLine[];
 
@@ -105,4 +106,3 @@ export default class Pattern {
 		}
 	}
 }
-//---------------------------------------------------------------------------------------

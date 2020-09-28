@@ -1,4 +1,4 @@
-/*
+/*!
  * Player: Ornaments class definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
@@ -23,7 +23,7 @@
 
 import { toWidth } from "../../utils/number";
 
-
+/** Single ornament defintion */
 export default class Ornament {
 	name: string = '';
 	data: Int8Array = new Int8Array(256);
