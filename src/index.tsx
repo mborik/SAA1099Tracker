@@ -15,7 +15,7 @@ import './index.scss';
 
 const store = createStore(
 	reducers,
-	isDev() ?
+	isDev ?
 		applyMiddleware(thunkMiddleware, logger) :
 		applyMiddleware(thunkMiddleware)
 );

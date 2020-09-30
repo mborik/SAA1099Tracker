@@ -26,14 +26,14 @@ import { TracklistSelection } from "./Tracklist";
 
 
 export default class Manager {
-	constructor(private $parent: Tracker) {}
+	constructor(private _parent: Tracker) {}
 
 	private _clipboard: string = '';
 
 	private _getBlock() {
-		let p = this.$parent.player;
-		let sel: TracklistSelection = this.$parent.tracklist.selection;
-		let ch = sel.len ? sel.channel : this.$parent.modeEditChannel;
+		let p = this._parent.player;
+		let sel: TracklistSelection = this._parent.tracklist.selection;
+		let ch = sel.len ? sel.channel : this._parent.modeEditChannel;
 		let line = sel.len ? sel.line : p.currentLine;
 		let length = sel.len ? (sel.len + 1) : undefined;
 		let pos = p.position[p.currentPosition] || p.nullPosition;
@@ -86,7 +86,7 @@ export default class Manager {
 
 //---------------------------------------------------------------------------------------
 	public clearSample() {
-		let app = this.$parent;
+		let app = this._parent;
 		let smp = app.player.sample[app.workingSample];
 
 		smp.name = '';
@@ -97,7 +97,7 @@ export default class Manager {
 	}
 
 	public copySample() {
-		let app = this.$parent;
+		let app = this._parent;
 		let smp = app.player.sample[app.workingSample];
 		let obj = {
 			name: smp.name,
@@ -115,7 +115,7 @@ export default class Manager {
 			return false;
 		}
 
-		let app = this.$parent;
+		let app = this._parent;
 		let smp = app.player.sample[app.workingSample];
 		let obj: any;
 
@@ -141,7 +141,7 @@ export default class Manager {
 
 //---------------------------------------------------------------------------------------
 	public clearOrnament() {
-		let app = this.$parent;
+		let app = this._parent;
 		let orn = app.player.ornament[app.workingOrnament];
 
 		orn.name = '';
@@ -150,7 +150,7 @@ export default class Manager {
 	}
 
 	public copyOrnament() {
-		let app = this.$parent;
+		let app = this._parent;
 		let orn = app.player.ornament[app.workingOrnament];
 		let obj = {
 			name: orn.name,
@@ -167,7 +167,7 @@ export default class Manager {
 			return false;
 		}
 
-		let app = this.$parent;
+		let app = this._parent;
 		let orn = app.player.ornament[app.workingOrnament];
 		let obj: any;
 

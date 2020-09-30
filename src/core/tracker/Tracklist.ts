@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import Tracker from "./Tracker";
 
 interface TracklistStartPoint {
@@ -100,7 +101,7 @@ const tracklistZoomFactor: number = 2;
 const fontWidth: number = 6;
 
 export default class Tracklist {
-	constructor(private $parent: Tracker) {}
+	constructor(private _parent: Tracker) {}
 
 	initialized: boolean = false;
 
@@ -160,18 +161,18 @@ export default class Tracklist {
 
 		const s = statusEl.getBoundingClientRect();
 		const t = tracklistEl.getBoundingClientRect();
-		const h = this.$parent.settings.tracklistLineHeight;
+		const h = this._parent.settings.tracklistLineHeight;
 
 		return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
 	}
 
 	setHeight(height: number) {
-		let settings = this.$parent.settings;
+		let settings = this._parent.settings;
 
 		let newHeight = settings.tracklistAutosize ? height : Math.min(settings.tracklistLines, height);
 
 		if (settings.tracklistLines === newHeight) {
-			console.log('Tracker.tracklist', 'Computed %d tracklines...', newHeight);
+			devLog('Tracker.tracklist', 'Computed %d tracklines...', newHeight);
 		}
 
 		settings.tracklistLines = newHeight;
@@ -186,12 +187,12 @@ export default class Tracklist {
 	}
 
 	moveCurrentline(delta: number, noWrap: boolean = false) {
-		let player = this.$parent.player;
+		let player = this._parent.player;
 		let line = player.currentLine + delta;
 		let pos = player.currentPosition;
 		let pp = player.position[pos];
 
-		if (this.$parent.modePlay || pp == null) {
+		if (this._parent.modePlay || pp == null) {
 			return;
 		}
 
@@ -209,10 +210,10 @@ export default class Tracklist {
 	}
 
 	pointToTracklist(x: number, y: number): TracklistPosition | null {
-		let lines: number = this.$parent.settings.tracklistLines;
+		let lines: number = this._parent.settings.tracklistLines;
 		let tx: number = x / tracklistZoomFactor;
 		let ty: number = y / tracklistZoomFactor;
-		let ln: number = this.$parent.player.currentLine - (lines >> 1);
+		let ln: number = this._parent.player.currentLine - (lines >> 1);
 
 		for (let i = 0; i < lines; i++, ln++) {
 			if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {

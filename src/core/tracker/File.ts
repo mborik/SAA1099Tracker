@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import Tracker from "./Tracker";
 
 
@@ -80,11 +81,9 @@ interface StorageDialogExchange {
 	};
 }
 
-const mimeType = 'text/x-saa1099tracker';
-
 //---------------------------------------------------------------------------------------
 export class STMFile {
-	constructor(private $parent: Tracker) {
+	constructor(private _parent: Tracker) {
 	}
 
 	yetSaved: boolean = false;
@@ -93,7 +92,7 @@ export class STMFile {
 
 	private _updateAll(): void {
 /*
-		let tracker: Tracker = this.$parent;
+		let tracker: Tracker = this._parent;
 		let player: Player = tracker.player;
 
 		let actualLine = player.currentLine;
@@ -148,7 +147,7 @@ export class STMFile {
 			return false;
 		}
 
-		let tracker = this.$parent;
+		let tracker = this._parent;
 		let settings = tracker.settings;
 		let player = tracker.player;
 
@@ -272,11 +271,11 @@ export class STMFile {
 			let int = c.interrupt || 50;
 			if (settings.audioInterrupt !== int) {
 				settings.audioInterrupt = int;
-				settings.audioInit();
+				// settings.audioInit();
 			}
 		}
 
-		console.log('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
+		devLog('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
 			title: data.title,
 			author: data.author,
 			samples: count.smp,
@@ -298,7 +297,7 @@ export class STMFile {
 	 * @param pretty {boolean} set if you want pretty-formatted JSON output.
 	 */
 	public createJSON(pretty?: boolean): string {
-		let tracker = this.$parent;
+		let tracker = this._parent;
 		let settings = tracker.settings;
 		let player = tracker.player;
 
@@ -423,7 +422,7 @@ export class STMFile {
 	}
 
 	public new(): void {
-		let tracker = this.$parent;
+		let tracker = this._parent;
 		let player = tracker.player;
 
 		player.clearSong(true);
@@ -460,21 +459,21 @@ export class STMFile {
 		));
 
 		if (!found) {
-			console.log('Tracker.file', 'File "' + fileNameOrId + '" not found!');
+			devLog('Tracker.file', 'File "' + fileNameOrId + '" not found!');
 			return false;
 		}
 		else if (!name) {
 			name = found.fileName;
 		}
 
-		console.log('Tracker.file', 'Loading "%s" from localStorage...', name);
+		devLog('Tracker.file', 'Loading "%s" from localStorage...', name);
 		let data = localStorage.getItem(found.storageId + '-dat');
-		console.log('Tracker.file', 'Compressed JSON file format loaded, size: ' + (data.length << 1));
+		devLog('Tracker.file', 'Compressed JSON file format loaded, size: ' + (data.length << 1));
 		data = LZString.decompressFromUTF16(data);
-		console.log('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
+		devLog('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
 
 		if (!this._parseJSON(data)) {
-			console.log('Tracker.file', 'JSON file parsing failed!');
+			devLog('Tracker.file', 'JSON file parsing failed!');
 			return false;
 		}
 
@@ -489,26 +488,26 @@ export class STMFile {
 	public saveFile(fileName: string, duration: string, oldId?: number) {
 /*
 		fileName = this._fixFileName(fileName);
-		console.log('Tracker.file', 'Storing "%s" to localStorage...', fileName);
+		devLog('Tracker.file', 'Storing "%s" to localStorage...', fileName);
 
 		let modify = false;
 		let found = this._storageMap.find(obj => {
 			if (obj.id === oldId || obj.fileName === fileName) {
-				console.log('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
+				devLog('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
 				return (modify = true);
 			}
 			return false;
 		});
 
 		if (typeof oldId === 'number' && !modify) {
-			console.log('Tracker.file', 'Cannot find given storageId: %d!', oldId);
+			devLog('Tracker.file', 'Cannot find given storageId: %d!', oldId);
 			return false;
 		}
 
 		let data = this.createJSON();
-		console.log('Tracker.file', 'JSON file format built, original size: ' + data.length);
+		devLog('Tracker.file', 'JSON file format built, original size: ' + data.length);
 		data = LZString.compressToUTF16(data);
-		console.log('Tracker.file', 'Compressed with LZW to ' + (data.length << 1));
+		devLog('Tracker.file', 'Compressed with LZW to ' + (data.length << 1));
 
 		let now: number = (Date.now() / 1000).abs();
 		let storageItem: StorageItem;
@@ -550,7 +549,7 @@ export class STMFile {
 		this.modified = false;
 		this.fileName = storageItem.fileName;
 
-		console.log('Tracker.file', 'Everything stored into localStorage...');
+		devLog('Tracker.file', 'Everything stored into localStorage...');
 */
 		return true;
 	}
@@ -559,10 +558,10 @@ export class STMFile {
 /*
 		let file = this;
 
-		console.log('Tracker.file', 'Loading "%s" demosong...', songName);
+		devLog('Tracker.file', 'Loading "%s" demosong...', songName);
 		$.getJSON(url, (data: string) => {
 			if (!file._parseJSON(data)) {
-				console.log('Tracker.file', 'JSON file parsing failed!');
+				devLog('Tracker.file', 'JSON file parsing failed!');
 			}
 
 			file.modified = true;
@@ -577,9 +576,9 @@ export class STMFile {
 		let file = this;
 
 		this.system.load(false, '.STMF,' + mimeType).then(data => {
-			console.log('Tracker.file', 'File loaded, trying to parse...');
+			devLog('Tracker.file', 'File loaded, trying to parse...');
 			if (!file._parseJSON(<string> data)) {
-				console.log('Tracker.file', 'JSON file parsing failed!');
+				devLog('Tracker.file', 'JSON file parsing failed!');
 			}
 
 			file.modified = true;

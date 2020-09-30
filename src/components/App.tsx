@@ -3,14 +3,16 @@ import * as React from "react";
 
 import { ReducerStoreProps } from "../reducers";
 import Navigation from "./Navigation";
+import Main from "./Main";
 
 
 @HotkeysTarget
 class App extends React.PureComponent<ReducerStoreProps, {}> {
 	render() {
-		return <main className="bp3-fill" role="main">
+		return <>
 			<Navigation />
-		</main>;
+			<Main />
+		</>;
 	}
 
 	renderHotkeys() {

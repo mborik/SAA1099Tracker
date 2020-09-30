@@ -23,6 +23,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import { SAAEnv } from "./SAAEnv";
 import { SAANoise } from "./SAANoise";
 import { SAASound } from "./SAASound";
@@ -57,7 +58,7 @@ export class SAAFreq {
 
 		// pregenerate frequency lookup table...
 		if (!SAAFreq.freqs) {
-			console.log('SAASound', 'Pregenerating lookup table with all frequencies...');
+			devLog('SAASound', 'Pregenerating lookup table with all frequencies...');
 
 			let freqs: number[][] = [];
 			for (let o: number = 0, i: number; o < 8; o++) {

@@ -46,7 +46,7 @@ export default class Settings implements SettingsOptions {
 	audioBuffers: number = 4;
 
 
-	constructor(private $app: Tracker) {}
+	constructor(private _app: Tracker) {}
 
 	get audioGain(): number { return this._audioGain; }
 	set audioGain(value) {

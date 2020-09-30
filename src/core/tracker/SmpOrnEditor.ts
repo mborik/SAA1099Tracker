@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import Tracker, { TrackerCanvasPair } from "./Tracker";
 
 
@@ -47,7 +48,7 @@ interface OrnamentEditorChords {
 }
 
 export default class SmpOrnEditor {
-	constructor(private $parent: Tracker) {}
+	constructor(private _parent: Tracker) {}
 
 	initialized: boolean = false;
 
@@ -71,7 +72,7 @@ export default class SmpOrnEditor {
 	};
 
 	init(): void {
-		console.log('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
+		devLog('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
 /*
 		[ 'amp', 'noise', 'range' ].forEach((part: string, i: number) => {
 			let o: TrackerCanvasPair = this[part];
@@ -115,19 +116,19 @@ export default class SmpOrnEditor {
 		this._createPitchShiftTable();
 		this._createOrnamentEditorTable();
 
-		this.$parent.updateSampleEditor(true);
+		this._parent.updateSampleEditor(true);
 		this.initialized = true;
 
-		console.log('Tracker.smporn', 'Sample/Ornament editors completely initialized...');
+		devLog('Tracker.smporn', 'Sample/Ornament editors completely initialized...');
 */
 	}
 
 	public updateSamplePitchShift(): void {
 /*
-		let working = this.$parent.workingSample;
-		let sample = this.$parent.player.sample[working];
+		let working = this._parent.workingSample;
+		let sample = this._parent.player.sample[working];
 		let noloop = (sample.end === sample.loop);
-		let radix = this.$parent.settings.hexSampleFreq ? 16 : 10;
+		let radix = this._parent.settings.hexSampleFreq ? 16 : 10;
 
 		$('#fxSampleShift>.cell').each((i: number, el: Element) => {
 			let data = sample.data[i];
@@ -162,19 +163,19 @@ export default class SmpOrnEditor {
 			}
 		};
 
-		console.log('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s',
+		devLog('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s',
 			'color:gray', JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
 */
 	}
 
 	private _createPitchShiftTable(): void {
 /*
-		let settings = this.$parent.settings;
+		let settings = this._parent.settings;
 		let el: JQuery = $('#fxSampleShift').empty();
 		let cell: JQuery = $('<div class="cell"/>');
 		let spin: JQuery = $('<input type="text" class="form-control">');
 
-		console.log('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
+		devLog('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
 		for (let i = 0; i < 256; i++) {
 			let cloned = spin.clone();
 			cell.clone().append(cloned).appendTo(el);
@@ -187,8 +188,8 @@ export default class SmpOrnEditor {
 				max: 1023
 			})
 			.change({ index: i }, e => {
-				let working = this.$parent.workingSample;
-				let sample = this.$parent.player.sample[working];
+				let working = this._parent.workingSample;
+				let sample = this._parent.player.sample[working];
 				let data = sample.data;
 				let el = <HTMLInputElement> e.target;
 				let radix = settings.hexSampleFreq ? 16 : 10;
@@ -219,8 +220,8 @@ export default class SmpOrnEditor {
 
 	public updateOrnamentEditor(update?: boolean): void {
 /*
-		let working = this.$parent.workingOrnament;
-		let orn = this.$parent.player.ornament[working];
+		let working = this._parent.workingOrnament;
+		let orn = this._parent.player.ornament[working];
 		let noloop = (orn.end === orn.loop);
 
 		$('#fxOrnEditor>.cell').each((i: number, el: HTMLElement) => {
@@ -254,7 +255,7 @@ export default class SmpOrnEditor {
 		let cell: JQuery = $('<div class="cell"/>');
 		let spin: JQuery = $('<input type="text" class="form-control">');
 
-		console.log('Tracker.smporn', 'Creating elements into Ornament editor...');
+		devLog('Tracker.smporn', 'Creating elements into Ornament editor...');
 		for (let i = 0; i < 256; i++) {
 			let cloned = spin.clone();
 			cell.clone().append(cloned).appendTo(el);
@@ -264,8 +265,8 @@ export default class SmpOrnEditor {
 				initval: 0, min: -60, max: 60
 			})
 			.change({ index: i }, e => {
-				let working = this.$parent.workingOrnament;
-				let orn = this.$parent.player.ornament[working];
+				let working = this._parent.workingOrnament;
+				let orn = this._parent.player.ornament[working];
 				let el = <HTMLInputElement> e.target;
 
 				orn.data[e.data.index] = parseInt(el.value, 10);

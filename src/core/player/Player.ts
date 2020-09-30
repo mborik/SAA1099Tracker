@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import { SAASound } from "../saa/SAASound";
 import { MAX_PATTERN_LEN, Mixer, PlayerMode, Tone, Volume } from "./globals";
 import Ornament from "./Ornament";
@@ -57,7 +58,7 @@ export default class Player {
 
 
 	constructor(public SAA1099: SAASound) {
-		console.log('Player', 'Initializing module player connected to %o...', SAA1099);
+		devLog('Player', 'Initializing module player connected to %o...', SAA1099);
 
 		const tab_tones: any[] = [
 			{ freq: 0x05, prefix: 'B-' },
@@ -96,7 +97,7 @@ export default class Player {
 		this.clearSong(true);
 		this.stopChannel();
 
-		console.log('Player', 'Initialization done...');
+		devLog('Player', 'Initialization done...');
 	}
 
 	/** Clear or initialize song (positions, patterns, pointers and playParams). */
@@ -125,14 +126,14 @@ export default class Player {
 			this.rtSample = new PlayerRuntime(this);
 			this.nullPosition = this.addNewPosition(64, 6, false);
 
-			console.log('Player', 'Song objects and parameters initialized...');
+			devLog('Player', 'Song objects and parameters initialized...');
 		}
 		else if (this.rtSong) {
 			for (let chn: number = 0; chn < 6; chn++) {
 				this.rtSong.clearPlayParams(chn);
 			}
 
-			console.log('Player', 'Song cleared...');
+			devLog('Player', 'Song cleared...');
 		}
 	}
 
@@ -142,7 +143,7 @@ export default class Player {
 			this.sample[i] = new Sample();
 		}
 
-		console.log('Player', 'Samples cleared...');
+		devLog('Player', 'Samples cleared...');
 	}
 
 	/** Clear all ornaments. */
@@ -151,7 +152,7 @@ export default class Player {
 			this.ornament[i] = new Ornament();
 		}
 
-		console.log('Player', 'Ornaments cleared...');
+		devLog('Player', 'Ornaments cleared...');
 	}
 
 	/**

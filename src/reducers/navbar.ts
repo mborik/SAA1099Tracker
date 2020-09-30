@@ -1,4 +1,4 @@
-import { NavbarAction } from "../actions/navbar";
+import { NavbarAction, NavbarReducerAction } from "../actions/navbar";
 
 export interface NavbarReducerState {
 	darkTheme: boolean;
@@ -10,7 +10,7 @@ const defaultState: NavbarReducerState = {
 	repeatMode: true
 };
 
-export default (state = defaultState, action: any): NavbarReducerState => {
+export default (state = defaultState, action: NavbarReducerAction): NavbarReducerState => {
 	switch (action.type) {
 		case NavbarAction.ToggleTheme: {
 			state.darkTheme = !state.darkTheme;

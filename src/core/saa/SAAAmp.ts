@@ -23,6 +23,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import { SAAEnv } from "./SAAEnv";
 import { SAAFreq } from "./SAAFreq";
 import { SAANoise } from "./SAANoise";
@@ -60,7 +61,7 @@ export class SAAAmp {
 
 		// generate precalculated volume levels to Float32 for fast mix calculations...
 		if (!SAAAmp.levels) {
-			console.log('SAASound', 'Pregenerating lookup table with float 32bit volume levels...');
+			devLog('SAASound', 'Pregenerating lookup table with float 32bit volume levels...');
 
 			let levels = new Float32Array(512);
 			for (let i: number = 0; i < 512; i++) {

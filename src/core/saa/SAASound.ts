@@ -23,6 +23,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import { SAAAmp } from "./SAAAmp";
 import { SAAEnv } from "./SAAEnv";
 import { SAAFreq } from "./SAAFreq";
@@ -63,7 +64,7 @@ export class SAASound {
 	private _amp: SAAAmp[];
 
 	constructor(sampleRate: number) {
-		console.log('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
+		devLog('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
 		SAASound.sampleRate = sampleRate;
 
 		this._env = [ new SAAEnv(), new SAAEnv() ];
@@ -92,7 +93,7 @@ export class SAASound {
 		];
 
 		this.reset();
-		console.log('SAASound', 'Chip emulation initialized...');
+		devLog('SAASound', 'Chip emulation initialized...');
 	}
 
 	public reset() {

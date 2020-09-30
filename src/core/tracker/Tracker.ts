@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { devLog } from "../../utils/dev";
 import Player from "../player/Player";
 import Manager from "./Manager";
 import Settings from "./Settings";
@@ -94,7 +95,7 @@ export default class Tracker implements TrackerImpl {
 	file: STMFile;
 
 	constructor(public version: string) {
-		console.log('Tracker', 'Inizializing SAA1099Tracker v%s...', version);
+		devLog('Tracker', 'Inizializing SAA1099Tracker v%s...', version);
 
 		this.pixelfont  = { obj: null, ctx: null } as any;
 		this.settings   = new Settings(this);
