@@ -126,7 +126,7 @@ export class STMFile {
 	 * in current SAA1099Tracker format specification.
 	 * @param input {STMFileFormat|string} song data in JSON.
 	 */
-	private _parseJSON(input: STMFileFormat|string): boolean {
+	private _parseJSON(input: STMFileFormat | string): boolean {
 		let data: STMFileFormat;
 		if (typeof input === 'string') {
 			try {
@@ -555,20 +555,17 @@ export class STMFile {
 	}
 
 	public importDemosong(songName: string, url: string) {
-/*
-		let file = this;
-
 		devLog('Tracker.file', 'Loading "%s" demosong...', songName);
-		$.getJSON(url, (data: string) => {
-			if (!file._parseJSON(data)) {
+
+		fetch(url).then(response => response.json()).then(data => {
+			if (!this._parseJSON(data)) {
 				devLog('Tracker.file', 'JSON file parsing failed!');
 			}
 
-			file.modified = true;
-			file.yetSaved = false;
-			file.fileName = '';
+			this.modified = true;
+			this.yetSaved = false;
+			this.fileName = '';
 		});
-*/
 	}
 
 	public importFile() {
