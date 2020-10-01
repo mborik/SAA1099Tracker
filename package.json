@@ -21,6 +21,7 @@
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.1",
     "react-scripts": "3.4.3",
+    "react-styled-flexboxgrid": "^3.2.1",
     "redux": "^4.0.5",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
@@ -38,7 +39,8 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      "supports audio-api",
+      "supports es6-module",
       "not dead",
       "not op_mini all"
     ],

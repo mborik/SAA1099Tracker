@@ -1,7 +1,8 @@
 import { Navbar } from '@blueprintjs/core';
 import styled from 'styled-components';
 
-export const NavbarExt = styled(Navbar).attrs(() => ({ fixedToTop: true }))`
+export const NavbarExt = styled(Navbar)`
+	flex: 0 0 auto;
 	display: flex;
 	flex-flow: row wrap;
 	padding-left: 8rem;

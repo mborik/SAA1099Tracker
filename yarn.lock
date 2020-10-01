@@ -6842,6 +6842,11 @@ lodash.flow@^3.5.0:
   resolved "https://registry.yarnpkg.com/lodash.flow/-/lodash.flow-3.5.0.tgz#87bf40292b8cf83e4e8ce1a3ae4209e20071675a"
   integrity sha1-h79AKSuM+D5OjOGjrkIJ4gBxZ1o=
 
+lodash.isinteger@^4.0.4:
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/lodash.isinteger/-/lodash.isinteger-4.0.4.tgz#619c0af3d03f8b04c31f5882840b77b11cd68343"
+  integrity sha1-YZwK89A/iwTDH1iChAt3sRzWg0M=
+
 lodash.memoize@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/lodash.memoize/-/lodash.memoize-4.1.2.tgz#bcc6c49a42a2840ed997f323eada5ecd182e0bfe"
@@ -9130,6 +9135,13 @@ react-scripts@3.4.3:
     workbox-webpack-plugin "4.3.1"
   optionalDependencies:
     fsevents "2.1.2"
+
+react-styled-flexboxgrid@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/react-styled-flexboxgrid/-/react-styled-flexboxgrid-3.2.1.tgz#78b87c9dcf6e4f146e4a305668e894be8fa4f679"
+  integrity sha512-4dRs4CiVHjnyOQssm2Ge7ERCmbWi2rI/rsQtp3A8A5sli9EAKlVErQ6XujMM5Z9uxXN4O30zb2YDL3ufmD5Hiw==
+  dependencies:
+    lodash.isinteger "^4.0.4"
 
 react-transition-group@^2.9.0:
   version "2.9.0"

@@ -296,7 +296,7 @@ export class STMFile {
 	 * more specifically full snapshot of tracker state.
 	 * @param pretty {boolean} set if you want pretty-formatted JSON output.
 	 */
-	public createJSON(pretty?: boolean): string {
+	createJSON(pretty?: boolean): string {
 		let tracker = this._parent;
 		let settings = tracker.settings;
 		let player = tracker.player;
@@ -421,7 +421,7 @@ export class STMFile {
 			JSON.stringify(output);
 	}
 
-	public new(): void {
+	new(): void {
 		let tracker = this._parent;
 		let player = tracker.player;
 
@@ -446,7 +446,7 @@ export class STMFile {
 		this._updateAll();
 	}
 
-	public loadFile(fileNameOrId: string|number): boolean {
+	loadFile(fileNameOrId: string|number): boolean {
 /*
 		let name: string;
 		if (typeof fileNameOrId === 'string') {
@@ -485,7 +485,7 @@ export class STMFile {
 		return true;
 	}
 
-	public saveFile(fileName: string, duration: string, oldId?: number) {
+	saveFile(fileName: string, duration: string, oldId?: number) {
 /*
 		fileName = this._fixFileName(fileName);
 		devLog('Tracker.file', 'Storing "%s" to localStorage...', fileName);
@@ -554,10 +554,10 @@ export class STMFile {
 		return true;
 	}
 
-	public importDemosong(songName: string, url: string) {
+	importDemosong(songName: string, url: string) {
 		devLog('Tracker.file', 'Loading "%s" demosong...', songName);
 
-		fetch(url).then(response => response.json()).then(data => {
+		return fetch(url).then(response => response.json()).then(data => {
 			if (!this._parseJSON(data)) {
 				devLog('Tracker.file', 'JSON file parsing failed!');
 			}
@@ -565,10 +565,12 @@ export class STMFile {
 			this.modified = true;
 			this.yetSaved = false;
 			this.fileName = '';
+
+			return true;
 		});
 	}
 
-	public importFile() {
+	importFile() {
 /*
 		let file = this;
 
@@ -585,7 +587,7 @@ export class STMFile {
 */
 	}
 
-	public exportFile() {
+	exportFile() {
 /*
 		let data = this.createJSON(true);
 		let fileName = this.getFixedFileName();

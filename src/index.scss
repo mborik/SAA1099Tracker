@@ -10,6 +10,10 @@
 	-ms-interpolation-mode: nearest-neighbor;
 }
 
+html, body {
+	height: 100%;
+}
+
 body {
 	font-family: "Lato", $pt-font-family;
 	font-variant-numeric: tabular-nums;
@@ -43,6 +47,13 @@ body {
 			padding-left: .75rem;
 		}
 	}
+}
+
+#root {
+	display: flex;
+	flex-flow: column nowrap;
+	width: 100%;
+	min-height: 100vh;
 }
 
 @font-face {
