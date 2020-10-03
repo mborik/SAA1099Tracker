@@ -1,4 +1,5 @@
 import { NavbarAction, NavbarReducerAction } from "../actions/navbar";
+import { showToast } from "../actions/toast";
 
 export interface NavbarReducerState {
 	darkTheme: boolean;
@@ -23,6 +24,9 @@ export default (state = defaultState, action: NavbarReducerAction): NavbarReduce
 			break;
 		}
 
+		case NavbarAction.Toast: {
+			showToast(action.payload);
+		}
 	}
 
 	return state;

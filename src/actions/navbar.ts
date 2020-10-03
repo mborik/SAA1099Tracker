@@ -1,4 +1,5 @@
 export const enum NavbarAction {
+	Toast = 'navbar/toast',
 	ToggleTheme = 'navbar/toggleTheme',
 	ToggleRepeat = 'navbar/toggleRepeat'
 };

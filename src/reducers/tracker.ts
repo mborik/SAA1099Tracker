@@ -13,9 +13,13 @@ export default (tracker: TrackerReducerState | null = null, action: TrackerReduc
 
 	if (tracker) {
 		switch (action.type) {
-			case TrackerAction.LoadDemosong: {
-				const { songName, url } = action.payload;
-				tracker.file.importDemosong(songName, url).then(); // TODO
+			case TrackerAction.IoDemosongLoaded: {
+				const file = tracker.file;
+
+				file.modified = true;
+				file.yetSaved = false;
+				file.fileName = '';
+
 				break;
 			}
 		}
