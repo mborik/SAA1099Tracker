@@ -271,7 +271,7 @@ export class STMFile {
 			let int = c.interrupt || 50;
 			if (settings.audioInterrupt !== int) {
 				settings.audioInterrupt = int;
-				// settings.audioInit();
+				settings.audioInit();
 			}
 		}
 

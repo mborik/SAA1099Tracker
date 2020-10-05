@@ -28,6 +28,7 @@ import Settings from "./Settings";
 import SmpOrnEditor from "./SmpOrnEditor";
 import Tracklist from "./Tracklist";
 import { STMFile } from "./File";
+import * as AudioDriver from "../AudioDriver";
 import { SAASound } from "../saa/SAASound";
 
 
@@ -103,7 +104,11 @@ export default class Tracker implements TrackerImpl {
 		this.tracklist  = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
 
-		this.player = new Player(new SAASound(48000));
+		const audioDriver = AudioDriver.getInstance();
+
+		this.player = new Player(new SAASound(audioDriver.sampleRate));
+		this.settings.init();
+
 		this.file = new STMFile(this);
 	}
 }

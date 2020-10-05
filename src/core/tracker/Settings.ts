@@ -1,6 +1,6 @@
 /*
  * Tracker file dialog sub-class.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+ * Copyright (c) 2015-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import * as AudioDriver from "../AudioDriver";
 import Tracker from "./Tracker";
 
 interface SettingsOptions {
@@ -54,4 +55,23 @@ export default class Settings implements SettingsOptions {
 		this._audioGain = volume;
 	}
 
+	audioInit() {
+		const tracker = this._app;
+		if (tracker.modePlay) {
+			// tracker.onCmdStop();
+		}
+
+		let interrupt = this.audioInterrupt;
+		tracker.player.setInterrupt(interrupt);
+
+		AudioDriver.getInstance().play({
+			audioSource: tracker.player,
+			buffers: this.audioBuffers,
+			interrupt
+		});
+	}
+
+	init() {
+		this.audioInit();
+	}
 }

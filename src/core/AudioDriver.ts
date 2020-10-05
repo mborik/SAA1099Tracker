@@ -1,0 +1,149 @@
+/*
+ * Audio driver and sound output.
+ * Copyright (c) 2015-2020 Martin Borik <mborik@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom
+ * the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
+ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+//---------------------------------------------------------------------------------------
+
+import { devLog } from "../utils/dev";
+
+
+interface AudioDriverSource {
+	getAudio: (leftBuf: Float32Array, rightBuf: Float32Array, length: number) => void
+}
+
+interface AudioDriverConfig {
+	audioSource: AudioDriverSource;
+	buffers?: number;
+	interrupt?: number;
+}
+
+/*
+ * Audio driver and sound output.
+ */
+export default class AudioDriver {
+	private _bufferCount: number = 4;
+	private _bufferSize: number = 4096;
+	private _interruptFrequency: number = 50;
+	private _sampleRate: number;
+
+	private _audioSource: AudioDriverSource | null = null;
+	private _audioContext: AudioContext;
+	private _gainNode: GainNode;
+	private _scriptProcessor: ScriptProcessorNode | null = null;
+
+
+	get sampleRate(): number { return this._sampleRate; }
+	set volume(vol: number) {
+		vol = Math.min(Math.max(0, vol), 10);
+		this._gainNode.gain.value = vol;
+	}
+
+	constructor() {
+		devLog('Audio', 'Creating new AudioDriver...');
+
+		const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+
+		this._audioContext = new AudioContext();
+		this._sampleRate = this._audioContext.sampleRate;
+		this._gainNode = this._audioContext.createGain();
+
+		devLog('Audio', `Hardware default samplerate is ${this._sampleRate}Hz...`);
+	}
+
+	getAdjustedSamples(samplerate: number, buffers: number, interrupt: number) {
+		let intms = 1000 / interrupt;
+		let streammsec = intms * buffers;
+		let samples = streammsec / 1000 * samplerate;
+		let bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+
+		return 1 << Math.min(Math.max(bits, 8), 14);
+	}
+
+	play(config?: AudioDriverConfig) {
+		if (config) {
+			if (this._scriptProcessor) {
+				devLog('Audio', 'Freeing script processor...');
+				this.stop();
+			}
+
+			if (config.audioSource && config.audioSource !== this._audioSource) {
+				devLog('Audio', 'New audio generator source is %o...', config.audioSource);
+				this._audioSource = config.audioSource;
+			}
+
+			if (config.buffers) {
+				this._bufferCount = config.buffers;
+			}
+			if (config.interrupt) {
+				this._interruptFrequency = config.interrupt;
+			}
+		}
+
+		this._bufferSize = this.getAdjustedSamples(
+			this._sampleRate,
+			this._bufferCount,
+			this._interruptFrequency
+		);
+
+		devLog('Audio', 'Initializing new script processor with examined buffer size: %d...\n\t\t%c[ samplerate: %dHz, buffers: %d, interrupt frequency: %dHz ]',
+			this._bufferSize, 'color:gray', this._sampleRate, this._bufferCount, this._interruptFrequency);
+
+		this._scriptProcessor = this._audioContext.createScriptProcessor(this._bufferSize, 0, 2);
+
+		devLog('Audio', `Successfully initialized with driver's hardware buffer size ${this._scriptProcessor.bufferSize || '???'}...`);
+
+		this._scriptProcessor.onaudioprocess = this._audioEventHandler.bind(this);
+		this._scriptProcessor.connect(this._gainNode);
+		this._gainNode.connect(this._audioContext.destination);
+
+		this._audioContext.resume();
+	}
+
+	stop() {
+		this._audioContext.suspend();
+
+		if (this._scriptProcessor?.onaudioprocess) {
+			this._gainNode.disconnect(this._audioContext.destination);
+			this._scriptProcessor.disconnect(this._gainNode);
+			this._scriptProcessor.onaudioprocess = null;
+		}
+
+		this._scriptProcessor = null;
+	}
+
+
+	private _audioEventHandler(event: AudioProcessingEvent) {
+		let buf = event.outputBuffer;
+
+		this._audioSource?.getAudio(
+			buf.getChannelData(0),
+			buf.getChannelData(1),
+			buf.length
+		);
+	}
+}
+
+export var instance: AudioDriver;
+
+/**
+ * @return {AudioDriver} singleton instance
+ */
+export const getInstance = (): AudioDriver =>
+	(instance instanceof AudioDriver) ? instance : (instance = new AudioDriver());
