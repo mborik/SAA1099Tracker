@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { Grid, Col, Row } from 'react-styled-flexboxgrid';
-import { InputGroup } from '@blueprintjs/core';
+import { Grid } from 'react-styled-flexboxgrid';
+
+import SongHeader from './partials/SongHeader';
+import TabPanel from './partials/TabPanel';
 
 import { actionTrackerInit } from '../actions/tracker';
-import { ReducerStoreState } from '../reducers';
 
 
 const MainWrapper = styled.main.attrs(() => ({
@@ -20,22 +21,6 @@ const MainWrapper = styled.main.attrs(() => ({
 const Main: React.FunctionComponent = () => {
 	const dispatch = useDispatch();
 
-	const { songTitle, songAuthor } = useSelector<ReducerStoreState, { [key: string]: string }>(state => {
-		const tracker = state.tracker;
-
-		if (tracker == null) {
-			return {
-				songTitle: '',
-				songAuthor: ''
-			};
-		} else {
-			return {
-				songTitle: tracker.songTitle,
-				songAuthor: tracker.songAuthor
-			};
-		}
-	});
-
 	useEffect(() => {
 		dispatch(actionTrackerInit());
 	}, [ dispatch ]);
@@ -44,24 +29,8 @@ const Main: React.FunctionComponent = () => {
 	return (
 		<MainWrapper>
 			<Grid>
-				<Row>
-					<Col xs={16} sm={8}>
-						<InputGroup
-							fill={true}
-							leftIcon="tag"
-							placeholder="Song title"
-							value={songTitle}
-						/>
-					</Col>
-					<Col xs={16} sm={8}>
-						<InputGroup
-							fill={true}
-							leftIcon="user"
-							placeholder="Author"
-							value={songAuthor}
-						/>
-					</Col>
-				</Row>
+				<SongHeader />
+				<TabPanel />
 			</Grid>
 		</MainWrapper>
 	);

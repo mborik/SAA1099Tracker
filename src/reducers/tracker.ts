@@ -13,6 +13,10 @@ export default (tracker: TrackerReducerState | null = null, action: TrackerReduc
 
 	if (tracker) {
 		switch (action.type) {
+			case TrackerAction.ActiveTabChanged:
+				tracker.activeTab = action?.payload?.activeTab || 0;
+				break;
+
 			case TrackerAction.IoDemosongLoaded: {
 				const file = tracker.file;
 

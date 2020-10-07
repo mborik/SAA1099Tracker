@@ -5,23 +5,23 @@ export default {
 		...Colors
 	},
 	tracker: {
-		maxWidth: '1118px'
+		maxWidth: '70rem'
 	},
 	flexboxgrid: {
 		gridSize: 16,
-		gutterWidth: 1,
+		gutterWidth: .4,
 		outerMargin: 0,
 		mediaQuery: 'only screen',
 		container: {
-			sm: 46, // rem
-			md: 61, // rem
-			lg: 76  // rem
+			sm: 42, // rem
+			md: 56, // rem
+			lg: 70  // rem
 		},
 		breakpoints: {
 			xs: 0,  // em
 			sm: 48, // em
 			md: 64, // em
-			lg: 75  // em
+			lg: 80  // em
 		}
 	}
 }

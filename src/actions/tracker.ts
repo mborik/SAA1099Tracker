@@ -5,6 +5,7 @@ import { devLog } from "../utils/dev";
 
 export const enum TrackerAction {
 	Init = 'tracker/init',
+	ActiveTabChanged = 'navbar/activeTabChanged',
 	IoDemosongLoaded = 'tracker/io/demosongLoaded',
 };
 
@@ -17,6 +18,11 @@ export interface TrackerReducerAction {
 
 export const actionTrackerInit = (): TrackerReducerAction => ({
 	type: TrackerAction.Init
+});
+
+export const actionChangeActiveTab = (activeTab: number): TrackerReducerAction => ({
+	type: TrackerAction.ActiveTabChanged,
+	payload: { activeTab }
 });
 
 export const actionTrackerLoadDemosong = (songName: string, url: string) =>

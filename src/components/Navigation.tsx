@@ -10,11 +10,10 @@ const Navigation: React.FunctionComponent = () => (
 		<NavGroup.ImportExport />
 		<NavGroup.EditOps />
 
-		<NavGroup.SideMenu />
-
 		<NavbarSecondRow>
 			<NavGroup.Playback />
 			<NavGroup.Tools />
+			<NavGroup.SideMenu />
 		</NavbarSecondRow>
 	</NavbarExt>
 );
