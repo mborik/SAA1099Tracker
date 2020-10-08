@@ -32,17 +32,17 @@ const StatusBar = styled.p.attrs(() => ({
 
 	> kbd {
 		font-size: 100%;
-		color: ${({ theme }) => theme.blueprint.GREEN5};
+		color: ${({ theme }) => theme.color.green};
 		border-radius: 3px;
 		padding: 2px 4px;
 	}
 	> strong {
-		color: ${({ theme }) => theme.blueprint.BLUE5};
+		color: ${({ theme }) => theme.color.blue};
 	}
 	> em {
 		font-weight: normal;
 		font-style: normal;
-		color: ${({ theme }) => theme.blueprint.GRAY3};
+		color: ${({ theme }) => theme.color.gray};
 	}
 `;
 

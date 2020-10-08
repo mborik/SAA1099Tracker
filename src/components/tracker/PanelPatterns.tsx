@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Callout } from '@blueprintjs/core';
+import PanelBase from '../partials/PanelBase';
 
 const PanelPatterns: React.FunctionComponent = () => {
-	return <Callout title="Patterns">
-	</Callout>;
+	return <PanelBase title="Patterns:">
+	</PanelBase>;
 };
 
 export default PanelPatterns;

@@ -10,11 +10,27 @@ import { actionChangeActiveTab } from '../../actions/tracker';
 import TrackerContainer from '../tracker/TrackerContainer';
 
 
-export const Tabbar = styled(Navbar)`
-	height: 40px;
+const TabPanelWrapper = styled(Row)`
+	flex: 1 0 auto;
+`;
 
-	.bp3-tab { outline: none !important }
-	.bp3-tab-panel { margin: 0 -1rem; }
+const Tabbar = styled(Navbar)`
+	height: 100%;
+
+	.bp3-tab {
+		outline: none !important;
+		font-weight: 600;
+	}
+	.bp3-tabs {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	.bp3-tab-panel {
+		flex: 1 0 auto;
+		margin: 0 -1rem;
+		border-top: 1px solid ${({ theme }) => theme.color.border};
+	}
 `;
 
 const TabPanel: React.FunctionComponent = () => {
@@ -29,7 +45,7 @@ const TabPanel: React.FunctionComponent = () => {
 	[ dispatch ]);
 
 	return (
-		<Row>
+		<TabPanelWrapper>
 			<Col xs={true}>
 				<Tabbar>
 					<Tabs
@@ -47,7 +63,7 @@ const TabPanel: React.FunctionComponent = () => {
 					</Tabs>
 				</Tabbar>
 			</Col>
-		</Row>
+		</TabPanelWrapper>
 	);
 }
 

@@ -9,13 +9,15 @@ import TabPanel from './partials/TabPanel';
 import { actionTrackerInit } from '../actions/tracker';
 
 
-const MainWrapper = styled.main.attrs(() => ({
+const MainWrapper = styled(Grid).attrs(() => ({
+	tagName: 'main',
 	role: 'main',
 	className: 'bp3-fill'
 }))`
+	display: flex;
+	flex-flow: column nowrap;
 	flex: 1 0 auto;
-	padding: 1rem;
-	width: 100%;
+	margin: 1rem auto;
 `;
 
 const Main: React.FunctionComponent = () => {
@@ -28,10 +30,8 @@ const Main: React.FunctionComponent = () => {
 
 	return (
 		<MainWrapper>
-			<Grid>
-				<SongHeader />
-				<TabPanel />
-			</Grid>
+			<SongHeader />
+			<TabPanel />
 		</MainWrapper>
 	);
 }

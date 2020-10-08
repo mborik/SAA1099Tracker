@@ -1,22 +1,21 @@
 import * as React from "react";
-import { ThemeProvider } from "styled-components"
 import { Hotkey, Hotkeys, HotkeysTarget } from "@blueprintjs/core";
 
-import defaultTheme from "../params/defaultTheme";
 import { ReducerStoreProps } from "../reducers";
+import DynamicThemeProvider from "./partials/DynamicThemeProvider";
 import Navigation from "./Navigation";
 import Main from "./Main";
 import Footer from "./Footer";
 
 
 @HotkeysTarget
-class App extends React.PureComponent<ReducerStoreProps, {}> {
+class App extends React.Component<ReducerStoreProps, {}> {
 	render() {
-		return <ThemeProvider theme={defaultTheme}>
+		return <DynamicThemeProvider>
 			<Navigation />
 			<Main />
 			<Footer />
-		</ThemeProvider>;
+		</DynamicThemeProvider>;
 	}
 
 	renderHotkeys() {
