@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { Grid } from 'react-styled-flexboxgrid';
 
-import SongHeader from './partials/SongHeader';
+import SongHeader from './tracker/SongHeader';
 import TabPanel from './partials/TabPanel';
 
 import { actionTrackerInit } from '../actions/tracker';

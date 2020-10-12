@@ -3,9 +3,13 @@ import { actionToast } from "./toast";
 import { ReducerStoreState } from "../reducers/index";
 import { devLog } from "../utils/dev";
 
+import { TrackerControlState } from "../core/tracker/Tracker";
+
+
 export const enum TrackerAction {
 	Init = 'tracker/init',
-	ActiveTabChanged = 'navbar/activeTabChanged',
+	ActiveTabChanged = 'tracker/activeTabChanged',
+	EditorControlChanged = 'tracker/editorControlChanged',
 	IoDemosongLoaded = 'tracker/io/demosongLoaded',
 };
 
@@ -23,6 +27,11 @@ export const actionTrackerInit = (): TrackerReducerAction => ({
 export const actionChangeActiveTab = (activeTab: number): TrackerReducerAction => ({
 	type: TrackerAction.ActiveTabChanged,
 	payload: { activeTab }
+});
+
+export const actionChangeEditorControl = (data: { key: keyof TrackerControlState, value: number }): TrackerReducerAction => ({
+	type: TrackerAction.EditorControlChanged,
+	payload: data
 });
 
 export const actionTrackerLoadDemosong = (songName: string, url: string) =>

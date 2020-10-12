@@ -32,17 +32,7 @@ import * as AudioDriver from "../AudioDriver";
 import { SAASound } from "../saa/SAASound";
 
 
-export interface TrackerCanvasPair {
-	obj: HTMLCanvasElement;
-	ctx: CanvasRenderingContext2D;
-}
-
-export interface TrackerImpl {
-	version: string;
-	loaded: boolean;
-	activeTab: number;
-	modePlay: boolean;
-	modeEdit: boolean;
+export interface TrackerControlState {
 	modeEditChannel: number;
 	modeEditColumn: number;
 	workingPattern: number;
@@ -54,6 +44,19 @@ export interface TrackerImpl {
 	ctrlSample: number;
 	ctrlOrnament: number;
 	ctrlRowStep: number;
+}
+
+export interface TrackerCanvasPair {
+	obj: HTMLCanvasElement;
+	ctx: CanvasRenderingContext2D;
+}
+
+export interface TrackerImpl extends TrackerControlState {
+	version: string;
+	loaded: boolean;
+	activeTab: number;
+	modePlay: boolean;
+	modeEdit: boolean;
 	songTitle: string;
 	songAuthor: string;
 
