@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Col } from 'react-styled-flexboxgrid';
-import { NumericInput } from '@blueprintjs/core';
 
 import PanelBase from '../partials/PanelBase';
 import PanelCtrlRow from '../partials/PanelCtrlRow';
+import RadixIntegerInput from '../partials/RadixIntegerInput';
 
 
 const PanelEditor: React.FunctionComponent = () => {
@@ -14,7 +14,7 @@ const PanelEditor: React.FunctionComponent = () => {
 					<label htmlFor="ctrlOctave">Octave:</label>
 				</Col>
 				<Col xs={8}>
-					<NumericInput fill={true} id="ctrlOctave" min={1} max={8}></NumericInput>
+					<RadixIntegerInput fill={true} id="ctrlOctave" min={1} max={8}></RadixIntegerInput>
 				</Col>
 			</PanelCtrlRow>
 			<PanelCtrlRow>
@@ -22,7 +22,7 @@ const PanelEditor: React.FunctionComponent = () => {
 					<label htmlFor="ctrlSample">AutoSmp:</label>
 				</Col>
 				<Col xs={8}>
-					<NumericInput fill={true} id="ctrlSample" min={0} max={31}></NumericInput>
+					<RadixIntegerInput fill={true} id="ctrlSample" radix={32} min={0} max={31}></RadixIntegerInput>
 				</Col>
 			</PanelCtrlRow>
 			<PanelCtrlRow>
@@ -30,7 +30,7 @@ const PanelEditor: React.FunctionComponent = () => {
 					<label htmlFor="ctrlOrnament">AutoOrn:</label>
 				</Col>
 				<Col xs={8}>
-					<NumericInput fill={true} id="ctrlOrnament" min={0} max={15}></NumericInput>
+					<RadixIntegerInput fill={true} id="ctrlOrnament" radix={16} min={0} max={15}></RadixIntegerInput>
 				</Col>
 			</PanelCtrlRow>
 			<PanelCtrlRow splitAbove={true}>
@@ -38,7 +38,7 @@ const PanelEditor: React.FunctionComponent = () => {
 					<label htmlFor="ctrlRowStep">RowStep:</label>
 				</Col>
 				<Col xs={8}>
-					<NumericInput fill={true} id="ctrlRowStep" min={0} max={8}></NumericInput>
+					<RadixIntegerInput fill={true} id="ctrlRowStep" min={0} max={8}></RadixIntegerInput>
 				</Col>
 			</PanelCtrlRow>
 		</PanelBase>
