@@ -1,5 +1,5 @@
 /*!
- * Clipboard and tracklist manager class and dependent interfaces.
+ * SAA1099Tracker: Clipboard and tracklist manager class and dependent interfaces.
  * Copyright (c) 2015-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import Tracker from "./Tracker";
-import { TracklistSelection } from "./Tracklist";
+import Tracker from './Tracker';
+import { TracklistSelection } from './Tracklist';
 
 
 export default class Manager {
@@ -31,14 +31,14 @@ export default class Manager {
 	private _clipboard: string = '';
 
 	private _getBlock() {
-		let p = this._parent.player;
-		let sel: TracklistSelection = this._parent.tracklist.selection;
-		let ch = sel.len ? sel.channel : this._parent.modeEditChannel;
-		let line = sel.len ? sel.line : p.currentLine;
-		let length = sel.len ? (sel.len + 1) : undefined;
-		let pos = p.position[p.currentPosition] || p.nullPosition;
-		let chn = pos.ch[ch];
-		let patt = chn.pattern;
+		const p = this._parent.player;
+		const sel: TracklistSelection = this._parent.tracklist.selection;
+		const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
+		const line = sel.len ? sel.line : p.currentLine;
+		const length = sel.len ? (sel.len + 1) : undefined;
+		const pos = p.position[p.currentPosition] || p.nullPosition;
+		const chn = pos.ch[ch];
+		const patt = chn.pattern;
 
 		return {
 			pp: p.pattern[patt],
@@ -49,13 +49,13 @@ export default class Manager {
 
 //---------------------------------------------------------------------------------------
 	public clearFromTracklist() {
-		let o = this._getBlock();
+		const o = this._getBlock();
 		o.pp.parse([], o.line, o.len || 1);
 	}
 
 	public copyFromTracklist() {
-		let o = this._getBlock();
-		let data = o.pp.export(o.line, o.len || 1, false);
+		const o = this._getBlock();
+		const data = o.pp.export(o.line, o.len || 1, false);
 
 		this._clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
 	}
@@ -65,18 +65,17 @@ export default class Manager {
 			return false;
 		}
 
-		let o = this._getBlock();
+		const o = this._getBlock();
 		let data: string[];
 
 		try {
-			let json = this._clipboard.substr(9);
+			const json = this._clipboard.substr(9);
 			data = JSON.parse(json);
 
 			if (!(data instanceof Array && data.length > 0)) {
 				return false;
 			}
-		}
-		catch (e) {
+		} catch (e) {
 			return false;
 		}
 
@@ -86,8 +85,8 @@ export default class Manager {
 
 //---------------------------------------------------------------------------------------
 	public clearSample() {
-		let app = this._parent;
-		let smp = app.player.sample[app.workingSample];
+		const app = this._parent;
+		const smp = app.player.sample[app.workingSample];
 
 		smp.name = '';
 		smp.loop = 0;
@@ -97,9 +96,9 @@ export default class Manager {
 	}
 
 	public copySample() {
-		let app = this._parent;
-		let smp = app.player.sample[app.workingSample];
-		let obj = {
+		const app = this._parent;
+		const smp = app.player.sample[app.workingSample];
+		const obj = {
 			name: smp.name,
 			loop: smp.loop,
 			end: smp.end,
@@ -115,19 +114,18 @@ export default class Manager {
 			return false;
 		}
 
-		let app = this._parent;
-		let smp = app.player.sample[app.workingSample];
+		const app = this._parent;
+		const smp = app.player.sample[app.workingSample];
 		let obj: any;
 
 		try {
-			let json = this._clipboard.substr(9);
+			const json = this._clipboard.substr(9);
 			obj = JSON.parse(json);
 
 			if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
 				return false;
 			}
-		}
-		catch (e) {
+		} catch (e) {
 			return false;
 		}
 
@@ -141,8 +139,8 @@ export default class Manager {
 
 //---------------------------------------------------------------------------------------
 	public clearOrnament() {
-		let app = this._parent;
-		let orn = app.player.ornament[app.workingOrnament];
+		const app = this._parent;
+		const orn = app.player.ornament[app.workingOrnament];
 
 		orn.name = '';
 		orn.data.fill(0);
@@ -150,12 +148,12 @@ export default class Manager {
 	}
 
 	public copyOrnament() {
-		let app = this._parent;
-		let orn = app.player.ornament[app.workingOrnament];
-		let obj = {
+		const app = this._parent;
+		const orn = app.player.ornament[app.workingOrnament];
+		const obj = {
 			name: orn.name,
 			loop: orn.loop,
-			end:  orn.end,
+			end: orn.end,
 			data: orn.export(false)
 		};
 
@@ -167,19 +165,18 @@ export default class Manager {
 			return false;
 		}
 
-		let app = this._parent;
-		let orn = app.player.ornament[app.workingOrnament];
+		const app = this._parent;
+		const orn = app.player.ornament[app.workingOrnament];
 		let obj: any;
 
 		try {
-			let json = this._clipboard.substr(9);
+			const json = this._clipboard.substr(9);
 			obj = JSON.parse(json);
 
 			if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
 				return false;
 			}
-		}
-		catch (e) {
+		} catch (e) {
 			return false;
 		}
 

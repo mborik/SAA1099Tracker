@@ -1,5 +1,5 @@
 /*!
- * SAA1099Tracker
+ * SAA1099Tracker: Entry point
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,15 +21,15 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import Player from "../player/Player";
-import Manager from "./Manager";
-import Settings from "./Settings";
-import SmpOrnEditor from "./SmpOrnEditor";
-import Tracklist from "./Tracklist";
-import { STMFile } from "./File";
-import * as AudioDriver from "../AudioDriver";
-import { SAASound } from "../saa/SAASound";
+import { devLog } from '../../utils/dev';
+import Player from '../player/Player';
+import Manager from './Manager';
+import Settings from './Settings';
+import SmpOrnEditor from './SmpOrnEditor';
+import Tracklist from './Tracklist';
+import { STMFile } from './File';
+import * as AudioDriver from '../AudioDriver';
+import { SAASound } from '../saa/SAASound';
 
 
 export interface TrackerControlState {
@@ -101,10 +101,10 @@ export default class Tracker implements TrackerImpl {
 	constructor(public version: string) {
 		devLog('Tracker', 'Inizializing SAA1099Tracker v%s...', version);
 
-		this.pixelfont  = { obj: null, ctx: null } as any;
-		this.settings   = new Settings(this);
-		this.manager    = new Manager(this);
-		this.tracklist  = new Tracklist(this);
+		this.pixelfont = { obj: null, ctx: null } as any;
+		this.settings = new Settings(this);
+		this.manager = new Manager(this);
+		this.tracklist = new Tracklist(this);
 		this.smpornedit = new SmpOrnEditor(this);
 
 		const audioDriver = AudioDriver.getInstance();

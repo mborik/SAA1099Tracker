@@ -1,5 +1,5 @@
 /*!
- * Player: Global helper classes definition.
+ * SAA1099Tracker Player: Global helper classes definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -39,9 +39,9 @@ export class Tone {
 	oct: number = 0;
 	txt: string = '---';
 
-	constructor(word: number = 0) { this.word = word; }
+	constructor(word: number = 0) { this.word = word }
 
-	get word(): number { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)); }
+	get word(): number { return ((this.cent & 0xff) | ((this.oct & 0x07) << 8)) }
 	set word(v: number) {
 		this.cent = (v & 0xff);
 		this.oct = (v & 0x700) >> 8;
@@ -53,13 +53,13 @@ export class Volume {
 	private _l: number = 0;
 	private _r: number = 0;
 
-	get L(): number { return this._l; };
-	set L(v: number) { this._l = Math.max(0, Math.min(15, v)); }
+	get L(): number { return this._l }
+	set L(v: number) { this._l = Math.max(0, Math.min(15, v)) }
 
-	get R(): number { return this._r; };
-	set R(v: number) { this._r = Math.max(0, Math.min(15, v)); }
+	get R(): number { return this._r }
+	set R(v: number) { this._r = Math.max(0, Math.min(15, v)) }
 
-	get byte(): number { return ((this._l & 0x0f) | ((this._r & 0x0f) << 4)); }
+	get byte(): number { return ((this._l & 0x0f) | ((this._r & 0x0f) << 4)) }
 	set byte(v: number) {
 		this._l = (v & 0x0f);
 		this._r = (v >> 4) & 0x0f;

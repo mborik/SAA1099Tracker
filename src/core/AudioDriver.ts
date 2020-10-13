@@ -1,5 +1,5 @@
-/*
- * Audio driver and sound output.
+/*!
+ * SAA1099Tracker - Audio driver and sound output.
  * Copyright (c) 2015-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,7 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../utils/dev";
+import { devLog } from '../utils/dev';
 
 
 interface AudioDriverSource {
@@ -49,7 +49,7 @@ export default class AudioDriver {
 	private _scriptProcessor: ScriptProcessorNode | null = null;
 
 
-	get sampleRate(): number { return this._sampleRate; }
+	get sampleRate(): number { return this._sampleRate }
 	set volume(vol: number) {
 		vol = Math.min(Math.max(0, vol), 10);
 		this._gainNode.gain.value = vol;
@@ -68,10 +68,10 @@ export default class AudioDriver {
 	}
 
 	getAdjustedSamples(samplerate: number, buffers: number, interrupt: number) {
-		let intms = 1000 / interrupt;
-		let streammsec = intms * buffers;
-		let samples = streammsec / 1000 * samplerate;
-		let bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+		const intms = 1000 / interrupt;
+		const streammsec = intms * buffers;
+		const samples = streammsec / 1000 * samplerate;
+		const bits = Math.ceil(Math.log(samples) * Math.LOG2E);
 
 		return 1 << Math.min(Math.max(bits, 8), 14);
 	}
@@ -130,7 +130,7 @@ export default class AudioDriver {
 
 
 	private _audioEventHandler(event: AudioProcessingEvent) {
-		let buf = event.outputBuffer;
+		const buf = event.outputBuffer;
 
 		this._audioSource?.getAudio(
 			buf.getChannelData(0),
@@ -140,7 +140,7 @@ export default class AudioDriver {
 	}
 }
 
-export var instance: AudioDriver;
+export let instance: AudioDriver;
 
 /**
  * @return {AudioDriver} singleton instance

@@ -1,5 +1,5 @@
 /*!
- * Tracker native JSON file format handler class and dependent interfaces.
+ * SAA1099Tracker native JSON file format handler class and dependent interfaces.
  * Copyright (c) 2015-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -20,9 +20,10 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+/* eslint-disable no-multi-spaces */
 
-import { devLog } from "../../utils/dev";
-import Tracker from "./Tracker";
+import { devLog } from '../../utils/dev';
+import Tracker from './Tracker';
 
 
 interface StorageItem {
@@ -70,15 +71,6 @@ interface STMFileFormat {
 	};
 
 	version: string;
-}
-
-interface StorageDialogExchange {
-	data: StorageItem[];
-
-	readonly usage: {
-		bytes: number;
-		percent: number;
-	};
 }
 
 //---------------------------------------------------------------------------------------
@@ -135,23 +127,20 @@ export class STMFile {
 				if (typeof data !== 'object') {
 					return false;
 				}
-			}
-			catch (e) {
+			} catch (e) {
 				return false;
 			}
-		}
-		else if (typeof input === 'object') {
+		} else if (typeof input === 'object') {
 			data = input;
-		}
-		else {
+		} else {
 			return false;
 		}
 
-		let tracker = this._parent;
-		let settings = tracker.settings;
-		let player = tracker.player;
+		const tracker = this._parent;
+		const settings = tracker.settings;
+		const player = tracker.player;
 
-		let count = { smp: 0, orn: 0, pat: 0, pos: 0 };
+		const count = { smp: 0, orn: 0, pat: 0, pos: 0 };
 
 		// detection of old JSON format v1.1 from previous project MIF85Tracker...
 		if (!data.version || (data.version && data.version !== '1.2')) {
@@ -167,8 +156,8 @@ export class STMFile {
 		//~~~ SAMPLES ~~~
 		if (data.samples && data.samples.length) {
 			for (let i: number = 1, obj: any; i < 32; i++) {
-				if (!!(obj = data.samples[i - 1])) {
-					let it = player.sample[i];
+				if ((obj = data.samples[i - 1])) {
+					const it = player.sample[i];
 
 					if (obj.name) {
 						it.name = obj.name;
@@ -190,8 +179,8 @@ export class STMFile {
 		//~~~ ORNAMENTS ~~~
 		if (data.ornaments && data.ornaments.length) {
 			for (let i: number = 1, obj: any; i < 16; i++) {
-				if (!!(obj = data.ornaments[i - 1])) {
-					let it = player.ornament[i];
+				if ((obj = data.ornaments[i - 1])) {
+					const it = player.ornament[i];
 
 					if (obj.name) {
 						it.name = obj.name;
@@ -212,8 +201,8 @@ export class STMFile {
 		//~~~ PATTERNS ~~~
 		if (data.patterns) {
 			data.patterns.forEach(obj => {
-				let newIdx = player.addNewPattern();
-				let it = player.pattern[newIdx];
+				const newIdx = player.addNewPattern();
+				const it = player.pattern[newIdx];
 				it.end = obj.end || 0;
 
 				if (obj.data != null) {
@@ -227,10 +216,10 @@ export class STMFile {
 		//~~~ POSITIONS ~~~
 		if (data.positions) {
 			data.positions.forEach((obj, i) => {
-				let it = player.addNewPosition(obj.length, obj.speed);
+				const it = player.addNewPosition(obj.length, obj.speed);
 
 				for (let k: number = 0; k < 6; k++) {
-					let s: string = obj.ch[k];
+					const s: string = obj.ch[k];
 					it.ch[k].pattern = parseInt(s.substr(0, 3), 10) || 0;
 					it.ch[k].pitch = parseInt(s.substr(3), 10) || 0;
 				}
@@ -243,7 +232,7 @@ export class STMFile {
 
 		//~~~ CURRENT STATE ~~~
 		if (typeof data.current === 'object') {
-			let o: any = data.current;
+			const o: any = data.current;
 
 			player.repeatPosition        = data.repeatPos || 0;
 			player.currentPosition       = o.position || 0;
@@ -257,7 +246,7 @@ export class STMFile {
 			tracker.modeEditChannel      = o.channel || 0;
 			tracker.modeEditColumn       = o.column || 0;
 
-			let c: any = Object.assign({}, data.ctrl, data.config);
+			const c: any = Object.assign({}, data.ctrl, data.config);
 
 			player.loopMode              = c.loopMode || true;
 
@@ -268,7 +257,7 @@ export class STMFile {
 			tracker.activeTab            = c.activeTab || 0;
 			tracker.modeEdit             = c.editMode || false;
 
-			let int = c.interrupt || 50;
+			const int = c.interrupt || 50;
 			if (settings.audioInterrupt !== int) {
 				settings.audioInterrupt = int;
 				settings.audioInit();
@@ -297,43 +286,43 @@ export class STMFile {
 	 * @param pretty {boolean} set if you want pretty-formatted JSON output.
 	 */
 	createJSON(pretty?: boolean): string {
-		let tracker = this._parent;
-		let settings = tracker.settings;
-		let player = tracker.player;
+		const tracker = this._parent;
+		const settings = tracker.settings;
+		const player = tracker.player;
 
-		let output: STMFileFormat = {
-			title:     tracker.songTitle,
-			author:    tracker.songAuthor,
-			samples:   [],
+		const output: STMFileFormat = {
+			title: tracker.songTitle,
+			author: tracker.songAuthor,
+			samples: [],
 			ornaments: [],
-			patterns:  [],
+			patterns: [],
 			positions: [],
 			repeatPos: player.repeatPosition,
 
 			current: {
-				sample:     tracker.workingSample,
-				ornament:   tracker.workingOrnament,
-				ornSample:  tracker.workingOrnTestSample,
+				sample: tracker.workingSample,
+				ornament: tracker.workingOrnament,
+				ornSample: tracker.workingOrnTestSample,
 				smpornTone: tracker.workingSampleTone,
 
-				position:   player.currentPosition,
-				pattern:    tracker.workingPattern,
+				position: player.currentPosition,
+				pattern: tracker.workingPattern,
 
-				line:       player.currentLine,
-				channel:    tracker.modeEditChannel,
-				column:     tracker.modeEditColumn
+				line: player.currentLine,
+				channel: tracker.modeEditChannel,
+				column: tracker.modeEditColumn
 			},
 			ctrl: {
-				octave:   tracker.ctrlOctave,
-				sample:   tracker.ctrlSample,
+				octave: tracker.ctrlOctave,
+				sample: tracker.ctrlSample,
 				ornament: tracker.ctrlOrnament,
-				rowStep:  tracker.ctrlRowStep
+				rowStep: tracker.ctrlRowStep
 			},
 			config: {
 				interrupt: settings.audioInterrupt,
 				activeTab: tracker.activeTab,
-				editMode:  tracker.modeEdit,
-				loopMode:  player.loopMode
+				editMode: tracker.modeEdit,
+				loopMode: player.loopMode
 			},
 
 			version: '1.2'
@@ -341,10 +330,10 @@ export class STMFile {
 
 		// storing samples going backward and unshifting array...
 		for (let i: number = 31; i > 0; i--) {
-			let it = player.sample[i];
+			const it = player.sample[i];
 			let obj: any = {
 				loop: it.loop,
-				end:  it.end,
+				end: it.end,
 				data: it.export()
 			};
 
@@ -368,10 +357,10 @@ export class STMFile {
 
 		// storing ornaments going backward and unshifting array...
 		for (let i: number = 15; i > 0; i--) {
-			let it = player.ornament[i];
+			const it = player.ornament[i];
 			let obj: any = {
 				loop: it.loop,
-				end:  it.end,
+				end: it.end,
 				data: it.export()
 			};
 
@@ -392,9 +381,9 @@ export class STMFile {
 
 		// storing patterns...
 		for (let i: number = 1, l = player.pattern.length; i < l; i++) {
-			let it = player.pattern[i];
+			const it = player.pattern[i];
 			let obj: any = {
-				end:  it.end,
+				end: it.end,
 				data: it.export()
 			};
 
@@ -412,8 +401,8 @@ export class STMFile {
 		// storing positions, no optimizations needed...
 		output.positions = player.position.map(it => ({
 			length: it.length,
-			speed:  it.speed,
-			ch:     it.export()
+			speed: it.speed,
+			ch: it.export()
 		}));
 
 		return pretty ?
@@ -422,8 +411,8 @@ export class STMFile {
 	}
 
 	new(): void {
-		let tracker = this._parent;
-		let player = tracker.player;
+		const tracker = this._parent;
+		const player = tracker.player;
 
 		player.clearSong(true);
 
@@ -446,8 +435,8 @@ export class STMFile {
 		this._updateAll();
 	}
 
-	loadFile(fileNameOrId: string|number): boolean {
 /*
+	loadFile(fileNameOrId: string|number): boolean {
 		let name: string;
 		if (typeof fileNameOrId === 'string') {
 			name = this._fixFileName(fileNameOrId);
@@ -481,12 +470,10 @@ export class STMFile {
 		this.modified = false;
 		this.yetSaved = true;
 		this.fileName = name;
-*/
 		return true;
 	}
 
 	saveFile(fileName: string, duration: string, oldId?: number) {
-/*
 		fileName = this._fixFileName(fileName);
 		devLog('Tracker.file', 'Storing "%s" to localStorage...', fileName);
 
@@ -550,12 +537,10 @@ export class STMFile {
 		this.fileName = storageItem.fileName;
 
 		devLog('Tracker.file', 'Everything stored into localStorage...');
-*/
 		return true;
 	}
 
 	importFile() {
-/*
 		let file = this;
 
 		this.system.load(false, '.STMF,' + mimeType).then(data => {
@@ -568,15 +553,13 @@ export class STMFile {
 			file.yetSaved = false;
 			file.fileName = '';
 		});
-*/
 	}
 
 	exportFile() {
-/*
 		let data = this.createJSON(true);
 		let fileName = this.getFixedFileName();
 
 		this.system.save(data, fileName + '.STMF', mimeType);
-*/
 	}
+*/
 }

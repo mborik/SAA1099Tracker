@@ -23,11 +23,11 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import { SAAAmp } from "./SAAAmp";
-import { SAAEnv } from "./SAAEnv";
-import { SAAFreq } from "./SAAFreq";
-import { SAANoise } from "./SAANoise";
+import { devLog } from '../../utils/dev';
+import { SAAAmp } from './SAAAmp';
+import { SAAEnv } from './SAAEnv';
+import { SAAFreq } from './SAAFreq';
+import { SAANoise } from './SAANoise';
 
 /** Current state of all SAA1099 registers */
 export class SAASoundRegisters {
@@ -39,13 +39,13 @@ export class SAASoundRegisters {
 	R1C = 0;
 
 	[key: string]: number;
-};
+}
 
 /** Wrapper class to hold register state and mute state of each channel */
 export class SAASoundRegData {
 	public regs: SAASoundRegisters = new SAASoundRegisters();
 	public muted: boolean[] = [ false, false, false, false, false, false ];
-};
+}
 
 /**
  * SAASound: Phillips SAA 1099 sound chip emulator core class.
@@ -121,7 +121,7 @@ export class SAASound {
 	public setData(data: number) {
 		data &= 0xff;
 
-		let reg: number = this._register;
+		const reg: number = this._register;
 		switch (reg) {
 		// Amplitude data (==> amp)
 			case 0:
@@ -193,8 +193,8 @@ export class SAASound {
 
 		// sync/unsync all devices and reset them all to a known state
 			case 28: {
-				let mute: boolean = !(data & 0x01);
-				let sync: boolean = !!(data & 0x02);
+				const mute: boolean = !(data & 0x01);
+				const sync: boolean = !!(data & 0x02);
 
 				this._freq.forEach(f => f.setSync(sync));
 				this._noise.forEach(n => n.setSync(sync));
@@ -216,7 +216,7 @@ export class SAASound {
 	 * get current register
 	 * @returns {number} BYTE in range 0-31
 	 */
-	public getReg(): number { return this._register; }
+	public getReg(): number { return this._register }
 
 	/**
 	 * set current register
@@ -227,8 +227,7 @@ export class SAASound {
 
 		if (reg === 24) {
 			this._env[0].tickExt();
-		}
-		else if (reg === 25) {
+		} else if (reg === 25) {
 			this._env[1].tickExt();
 		}
 	}
@@ -260,9 +259,9 @@ export class SAASound {
 	 * @returns {SAASoundRegData}
 	 */
 	public getAllRegs() {
-		let result = new SAASoundRegData();
+		const result = new SAASoundRegData();
 
-		this._amp.forEach((amp, i: number) => result.muted[i] = amp.mute);
+		this._amp.forEach((amp, i: number) => { result.muted[i] = amp.mute });
 
 		return result;
 	}
@@ -274,8 +273,8 @@ export class SAASound {
 	public setAllRegs(data: SAASoundRegData) {
 		if (data.regs) {
 			Object.keys(data.regs).forEach(key => {
-				let reg: number = parseInt(key.substr(1), 16);
-				let dat: number = data.regs[key];
+				const reg: number = parseInt(key.substr(1), 16);
+				const dat: number = data.regs[key];
 
 				this.setRegData(reg, dat);
 			}, this);
@@ -289,8 +288,8 @@ export class SAASound {
 //---------------------------------------------------------------------------------------
 	public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset: number = 0) {
 		let ptr: number = offset;
-		let len: number = length + ptr;
-		let val: Float32Array = new Float32Array([0, 0]);
+		const len: number = length + ptr;
+		const val: Float32Array = new Float32Array([0, 0]);
 
 		for (; ptr < len; ptr++) {
 			this._noise[0].tick();
@@ -299,7 +298,7 @@ export class SAASound {
 			val[0] = val[1] = 0;
 			this._amp.forEach(amp => amp.output(val));
 
-			leftBuf[ptr]  = val[0];
+			leftBuf[ptr] = val[0];
 			rightBuf[ptr] = val[1];
 		}
 	}

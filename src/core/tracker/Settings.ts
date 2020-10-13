@@ -1,5 +1,5 @@
 /*
- * Tracker file dialog sub-class.
+ * SAA1099Tracker file dialog sub-class.
  * Copyright (c) 2015-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import * as AudioDriver from "../AudioDriver";
-import Tracker from "./Tracker";
+import * as AudioDriver from '../AudioDriver';
+import Tracker from './Tracker';
 
 interface SettingsOptions {
 	tracklistAutosize: boolean;
@@ -49,9 +49,9 @@ export default class Settings implements SettingsOptions {
 
 	constructor(private _app: Tracker) {}
 
-	get audioGain(): number { return this._audioGain; }
+	get audioGain(): number { return this._audioGain }
 	set audioGain(value) {
-		let volume = Math.min(Math.max(0, value / 100), 2);
+		const volume = Math.min(Math.max(0, value / 100), 2);
 		this._audioGain = volume;
 	}
 
@@ -61,7 +61,7 @@ export default class Settings implements SettingsOptions {
 			// tracker.onCmdStop();
 		}
 
-		let interrupt = this.audioInterrupt;
+		const interrupt = this.audioInterrupt;
 		tracker.player.setInterrupt(interrupt);
 
 		AudioDriver.getInstance().play({

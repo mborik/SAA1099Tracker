@@ -1,5 +1,5 @@
 /*!
- * Player: Ornaments class definition.
+ * SAA1099Tracker Player: Ornaments class definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,7 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toWidth } from "../../utils/number";
+import { toWidth } from '../../utils/number';
 
 /** Single ornament defintion */
 export default class Ornament {
@@ -36,10 +36,10 @@ export default class Ornament {
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
 	export(pack: boolean = true): string[] {
-		let arr: string[] = [];
+		const arr: string[] = [];
 
 		for (let i = 255; i >= 0; i--) {
-			let k = (0 | this.data[i]);
+			const k = (0 | this.data[i]);
 
 			if (pack && !arr.length && !k) {
 				continue;

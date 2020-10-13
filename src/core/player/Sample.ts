@@ -1,5 +1,5 @@
 /*!
- * Player: Samples class a interface definition.
+ * SAA1099Tracker Player: Samples class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toHex } from "../../utils/number";
-import { Volume } from "./globals";
+import { toHex } from '../../utils/number';
+import { Volume } from './globals';
 
 /** Sample data interface */
 interface SampleData {
@@ -60,8 +60,8 @@ export default class Sample {
 		const arr: string[] = [];
 
 		for (let i = 255; i >= 0; i--) {
-			let o = this.data[i];
-			let k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
+			const o = this.data[i];
+			const k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
 
 			if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
 				continue;
@@ -83,13 +83,13 @@ export default class Sample {
 	 */
 	parse(arr: string[]) {
 		this.data.forEach((o, i) => {
-			let s = arr[i] || '';
-			let k = parseInt(s[0], 16) || 0;
+			const s = arr[i] || '';
+			const k = parseInt(s[0], 16) || 0;
 
-			o.enable_freq  = !!(k & 1);
+			o.enable_freq = !!(k & 1);
 			o.enable_noise = !!(k & 2);
-			o.noise_value  =  (k >> 2);
-			o.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
+			o.noise_value = (k >> 2);
+			o.volume.byte = parseInt(s.substr(1, 2), 16) || 0;
 
 			o.shift = parseInt(s.substr(3), 16) || 0;
 		});

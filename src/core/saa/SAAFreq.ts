@@ -23,10 +23,10 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import { SAAEnv } from "./SAAEnv";
-import { SAANoise } from "./SAANoise";
-import { SAASound } from "./SAASound";
+import { devLog } from '../../utils/dev';
+import { SAAEnv } from './SAAEnv';
+import { SAANoise } from './SAANoise';
+import { SAASound } from './SAASound';
 
 /**
  * SAAFreq: Frequency oscillator, 7-bit fractional accuracy
@@ -60,7 +60,7 @@ export class SAAFreq {
 		if (!SAAFreq.freqs) {
 			devLog('SAASound', 'Pregenerating lookup table with all frequencies...');
 
-			let freqs: number[][] = [];
+			const freqs: number[][] = [];
 			for (let o: number = 0, i: number; o < 8; o++) {
 				freqs[o] = [];
 				for (i = 0; i < 256; i++) {
@@ -92,8 +92,7 @@ export class SAAFreq {
 			if (this._nextOctave === this._curOctave) {
 				this._ignoreOffset = true;
 			}
-		}
-		else {
+		} else {
 			// updates straightaway if this.sync
 			this._newdata = false;
 			this._curOffset = offset;
@@ -110,8 +109,7 @@ export class SAAFreq {
 			this._nextOctave = octave;
 			this._newdata = true;
 			this._ignoreOffset = false;
-		}
-		else {
+		} else {
 			// updates straightaway if this.sync
 			this._newdata = false;
 			this._curOctave = octave;
@@ -172,8 +170,7 @@ export class SAAFreq {
 					// trigger any connected devices
 					if (this._envGen) {
 						this._envGen.tickInt();
-					}
-					else if (this._noiseGen) {
+					} else if (this._noiseGen) {
 						this._noiseGen.trigger();
 					}
 				}

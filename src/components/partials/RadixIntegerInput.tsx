@@ -18,8 +18,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import classNames from "classnames";
-import * as React from "react";
+import classNames from 'classnames';
+import * as React from 'react';
 import {
 	AbstractPureComponent2,
 	Button,
@@ -37,16 +37,16 @@ import {
 	MaybeElement,
 	Position,
 	removeNonHTMLProps
-} from "@blueprintjs/core";
-import * as Errors from "@blueprintjs/core/src/common/errors";
+} from '@blueprintjs/core';
+import * as Errors from '@blueprintjs/core/src/common/errors';
 
-import { debounce } from "typescript-debounce-decorator";
-import { clamp } from "lodash";
+import { debounce } from 'typescript-debounce-decorator';
+import { clamp } from 'lodash';
 
 
 export interface IRadixIntegerInputProps extends IIntentProps, IProps {
 	/** The position of the buttons with respect to the input field. */
-	buttonPosition?: typeof Position.LEFT | typeof Position.RIGHT | "none";
+	buttonPosition?: typeof Position.LEFT | typeof Position.RIGHT | 'none';
 
 	/**Sets the default value of the input. */
 	defaultValue?: number;
@@ -110,17 +110,17 @@ enum IncrementDirection {
 }
 
 const NON_HTML_PROPS: Array<keyof IRadixIntegerInputProps> = [
-	"buttonPosition",
-	"className",
-	"defaultValue",
-	"majorStepSize",
-	"onValueChange",
-	"radix",
-	"stepSize",
-	"uppercase"
+	'buttonPosition',
+	'className',
+	'defaultValue',
+	'majorStepSize',
+	'onValueChange',
+	'radix',
+	'stepSize',
+	'uppercase'
 ];
 
-type ButtonEventHandlers = Required<Pick<React.HTMLAttributes<Element>, "onKeyDown" | "onMouseDown">>;
+type ButtonEventHandlers = Required<Pick<React.HTMLAttributes<Element>, 'onKeyDown' | 'onMouseDown'>>;
 
 export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputProps & IRadixIntegerInputProps, IRadixIntegerInputState> {
 	public static displayName = `${DISPLAYNAME_PREFIX}.RadixIntegerInput`;
@@ -240,7 +240,7 @@ export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputP
 			throw new Error(Errors.NUMERIC_INPUT_STEP_SIZE_NON_POSITIVE);
 		}
 		if (radix && (radix < 1 || radix > 36)) {
-			throw new Error(`<RadixIntegerInput> requires radix to be in range 2..36.`);
+			throw new Error('<RadixIntegerInput> requires radix to be in range 2..36.');
 		}
 		if (majorStepSize && majorStepSize <= 0) {
 			throw new Error(Errors.NUMERIC_INPUT_MAJOR_STEP_SIZE_NON_POSITIVE);
@@ -266,8 +266,8 @@ export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputP
 		const { intent, max, min, radix } = this.props;
 		const { value } = this.state;
 		const disabled = this.props.disabled || this.props.readOnly;
-		const isIncrementDisabled = max !== undefined && value !== "" && parseInt(value, radix || 10) >= max;
-		const isDecrementDisabled = min !== undefined && value !== "" && parseInt(value, radix || 10) <= min;
+		const isIncrementDisabled = max !== undefined && value !== '' && parseInt(value, radix || 10) >= max;
+		const isDecrementDisabled = min !== undefined && value !== '' && parseInt(value, radix || 10) <= min;
 
 		return (
 			<ButtonGroup className={Classes.FIXED} key="button-group" vertical={true}>
@@ -347,7 +347,7 @@ export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputP
 		// The button's onMouseUp event handler doesn't fire if the user
 		// releases outside of the button, so we need to watch all the way
 		// from the top.
-		document.addEventListener("mouseup", this.stopContinuousChange);
+		document.addEventListener('mouseup', this.stopContinuousChange);
 
 		// Initial delay is slightly longer to prevent the user from
 		// accidentally triggering the continuous increment/decrement.
@@ -360,17 +360,17 @@ export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputP
 		this.delta = 0;
 		this.clearTimeouts();
 		clearInterval(this.intervalId);
-		document.removeEventListener("mouseup", this.stopContinuousChange);
+		document.removeEventListener('mouseup', this.stopContinuousChange);
 	};
 
 	private handleContinuousChange = () => {
-		let { min, max, radix } = this.props;
+		let { min, max } = this.props;
 
 		if (min !== undefined || max !== undefined) {
 			min = min ?? -Infinity;
 			max = max ?? Infinity;
 
-			const num = parseInt(this.state.value, radix || 10);
+			const num = parseInt(this.state.value, this.props.radix || 10);
 
 			if (num <= min || num >= max) {
 				this.stopContinuousChange();
@@ -498,7 +498,7 @@ export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputP
 		return nextValue;
 	}
 
-	private getIncrementDelta(direction: IncrementDirection, isShiftKeyPressed: boolean, isAltKeyPressed?: boolean) {
+	private getIncrementDelta(direction: IncrementDirection, isShiftKeyPressed: boolean) {
 		const { majorStepSize, radix, stepSize } = this.props;
 
 		if (isShiftKeyPressed) {

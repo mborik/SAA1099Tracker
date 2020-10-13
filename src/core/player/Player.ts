@@ -1,5 +1,5 @@
 /*!
- * Player core: data-effecient channel-pattern tracker format for SAA1099 soundchip.
+ * SAA1099Tracker Player core: data-effecient channel-pattern tracker format.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,14 +21,14 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import { SAASound } from "../saa/SAASound";
-import { MAX_PATTERN_LEN, Mixer, PlayerMode, Tone, Volume } from "./globals";
-import Ornament from "./Ornament";
-import Pattern from "./Pattern";
-import Position from "./Position";
-import PlayerRuntime from "./PlayerRuntime";
-import Sample from "./Sample";
+import { devLog } from '../../utils/dev';
+import { SAASound } from '../saa/SAASound';
+import { MAX_PATTERN_LEN, Mixer, PlayerMode, Tone, Volume } from './globals';
+import Ornament from './Ornament';
+import Pattern from './Pattern';
+import Position from './Position';
+import PlayerRuntime from './PlayerRuntime';
+import Sample from './Sample';
 
 /**
  * Core of data-effecient channel-pattern tracker format player for SAA1099 soundchip.
@@ -127,8 +127,7 @@ export default class Player {
 			this.nullPosition = this.addNewPosition(64, 6, false);
 
 			devLog('Player', 'Song objects and parameters initialized...');
-		}
-		else if (this.rtSong) {
+		} else if (this.rtSong) {
 			for (let chn: number = 0; chn < 6; chn++) {
 				this.rtSong.clearPlayParams(chn);
 			}
@@ -237,19 +236,19 @@ export default class Player {
 			return false;
 		}
 
-		let backup, lastMode;
+		let backup;
 		const ps = this.position[pos];
 
 		if (!ps || !rt) {
 			return false;
 		}
 
-		lastMode = this.mode;
+		const lastMode = this.mode;
 		if (this.currentPosition !== pos) {
 			backup = {
-				pos:   this.currentPosition,
-				line:  this.currentLine,
-				tick:  this.currentTick,
+				pos: this.currentPosition,
+				line: this.currentLine,
+				tick: this.currentTick,
 				speed: this.currentSpeed
 			};
 
@@ -287,8 +286,7 @@ export default class Player {
 			this.currentTick = backup.tick;
 			this.currentSpeed = backup.speed;
 			this.currentPosition = backup.pos;
-		}
-		else {
+		} else {
 			this.currentTick++;
 		}
 
@@ -299,11 +297,9 @@ export default class Player {
 	private get runtimeByMode(): PlayerRuntime {
 		if (this.mode === PlayerMode.PM_SAMPLE && this.rtSample) {
 			return this.rtSample;
-		}
-		else if (this.rtSong) {
+		} else if (this.rtSong) {
 			return this.rtSong;
-		}
-		else {
+		} else {
 			throw new Error('PlayerRuntime missing!');
 		}
 	}
@@ -331,7 +327,7 @@ export default class Player {
 			// pick playParams for channel...
 			const pp = rt.params[chn];
 
-			const eMask  = (1 << chn);      // bit mask of channel
+			const eMask = (1 << chn);      // bit mask of channel
 			const chn2nd = (chn >> 1);      // calculate pair of channels
 			const chn3rd = +(chn >= 3);     // calculate triple of channels
 
@@ -342,8 +338,7 @@ export default class Player {
 				// set channel bit if it's enabled or sample is still playing...
 				if (!pp.sample.releasable && pp.sample_cursor >= pp.sample.end) {
 					samp = this.sample[0].data[0];
-				}
-				else {
+				} else {
 					ePlay |= eMask;
 				}
 
@@ -353,8 +348,8 @@ export default class Player {
 
 				// get command on trackline and calculate nibbles of command parameter...
 				let cmd = pp.command;
-				let paramH = (pp.commandParam & 0xf0) >> 4;
-				let paramL = (pp.commandParam & 0x0f);
+				const paramH = (pp.commandParam & 0xf0) >> 4;
+				const paramL = (pp.commandParam & 0x0f);
 
 				switch (cmd) {
 				// portamento up/down
@@ -381,8 +376,7 @@ export default class Player {
 									pp.slideShift = pp.commandValue1 = pp.commandValue2 = 0;
 									cmd = -1;
 								}
-							}
-							else {
+							} else {
 								pp.slideShift -= paramL;
 								if (pp.slideShift <= pp.commandValue2) {
 									pp.tone = pp.commandValue1;
@@ -398,8 +392,7 @@ export default class Player {
 						if (pp.commandParam) {
 							pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
 							pp.slideShift = Player.vibratable[(paramL << 6) + pp.commandPhase];
-						}
-						else {
+						} else {
 							pp.slideShift = 0;
 						}
 
@@ -422,8 +415,7 @@ export default class Player {
 						if (pp.commandPhase) {
 							height = 0;
 							pp.commandPhase--;
-						}
-						else {
+						} else {
 							pp.ornament_cursor = 0;
 							height = pp.ornament.data[pp.ornament_cursor];
 							cmd = -1;
@@ -470,8 +462,7 @@ export default class Player {
 					case 0xC:
 						if (!pp.commandParam) {
 							pp.commandPhase = 0;
-						}
-						else if (paramH < 0xF) {
+						} else if (paramH < 0xF) {
 							switch (pp.commandPhase) {
 								default:
 									pp.commandPhase = 2;
@@ -485,8 +476,7 @@ export default class Player {
 									pp.commandPhase--;
 									break;
 							}
-						}
-						else if (!!(paramL & 1)) {
+						} else if (paramL & 1) {
 							pp.commandPhase = vol.R;
 							vol.R = vol.L;
 							vol.L = pp.commandPhase;
@@ -499,14 +489,13 @@ export default class Player {
 						if (paramH === 0x2) {
 							pp.commandParam &= 7;
 							noise = pp.commandParam ^ 4;
-						}
-						else {
+						} else {
 							// mute base tone volume if bit3=0
 							if (!(pp.commandParam & 0x10)) {
 								pp.attenuation.byte = 0xFF;
 							}
 
-							pp.commandParam = ((pp.commandParam & 0x0E) << 1) |  (pp.commandParam & 0x81);
+							pp.commandParam = ((pp.commandParam & 0x0E) << 1) | (pp.commandParam & 0x81);
 							pp.commandParam ^= 0x82;
 
 							///~ SAA1099 DATA 18/19: Envelope generator 0/1
@@ -546,8 +535,7 @@ export default class Player {
 					rt.setRegData(8 + chn, tone.cent);
 
 					oct = (chn & 1) ? (tone.oct << 4) : (oct | tone.oct);
-				}
-				else if (!!(chn & 1)) {
+				} else if (chn & 1) {
 					oct = 0;
 				}
 
@@ -559,7 +547,7 @@ export default class Player {
 					eFreq |= eMask;
 				}
 				// set proper noise enable bit and value...
-				if (!!(noise & 4)) {
+				if (noise & 4) {
 					const c = (chn3rd << 2);
 
 					eNoiz |= eMask;
@@ -572,47 +560,45 @@ export default class Player {
 					if (pp.sample.releasable && pp.released) {
 						if (pp.sample_cursor < 255) {
 							pp.sample_cursor++;
-						}
-						else {
+
+						} else {
 							pp.playing = false;
 							ePlay &= ~eMask;
 							eFreq &= ~eMask;
 						}
-					}
+
 					// it had to be stopped at the end?
-					else if (pp.sample.loop === pp.sample.end) {
+					} else if (pp.sample.loop === pp.sample.end) {
 						if (!(this.mode & PlayerMode.PM_SAMP_OR_LINE)) {
 							pp.sample_cursor = pp.sample.end;
 						}
+
 						pp.playing = false;
 						ePlay &= ~eMask;
 						eFreq &= ~eMask;
-					}
-					else if (this.mode === PlayerMode.PM_LINE) {
+
+					} else if (this.mode === PlayerMode.PM_LINE) {
 						pp.playing = false;
 						ePlay &= ~eMask;
 						eFreq &= ~eMask;
-					}
+
 					// it had to be repeated?
-					else {
+					} else {
 						pp.sample_cursor = pp.sample.loop;
 					}
-				}
-				else {
+				} else {
 					pp.sample_cursor++;
 				}
 
 				// current ornament cursor position handler...
 				if (pp.ornament_cursor + 1 >= pp.ornament.end) {
 					pp.ornament_cursor = pp.ornament.loop;
-				}
-				else {
+				} else {
 					pp.ornament_cursor++;
 				}
-			}
-			else {
+			} else {
 				// playback in channel was disabled, reset proper params and registers...
-				if (!!(chn & 1)) {
+				if (chn & 1) {
 					oct = 0;
 				}
 
@@ -643,16 +629,14 @@ export default class Player {
 			///~ SAA1099 DATA 1C: Master reset and sync
 			rt.setRegData(0x1C, 2);
 			this.mode = 0;
-		}
-		else {
+		} else {
 			///~ SAA1099 DATA 1C: Enable output
 			rt.setRegData(0x1C, 1);
 
 			// is there time to next trackline?
 			if (!!(this.mode & PlayerMode.PM_LINE) && this.currentTick > 0) {
 				this.currentTick--;
-			}
-			else if (!!(this.mode & PlayerMode.PM_SONG_OR_POS)) {
+			} else if (this.mode & PlayerMode.PM_SONG_OR_POS) {
 				this.prepareLine(true, rt);
 			}
 		}
@@ -684,13 +668,12 @@ export default class Player {
 		let p: Position = this.position[this.currentPosition];
 
 		if (this.currentLine >= p.length) {
-			if (!!(this.mode & PlayerMode.PM_SONG)) {
+			if (this.mode & PlayerMode.PM_SONG) {
 				this.currentPosition++;
 				if (this.currentPosition >= this.position.length) {
 					if (this.loopMode) {
 						this.currentPosition = this.repeatPosition;
-					}
-					else {
+					} else {
 						this.currentLine--;
 						this.stopChannel();
 						return false;
@@ -700,11 +683,9 @@ export default class Player {
 				this.currentLine = 0;
 				this.changedPosition = true;
 				p = this.position[this.currentPosition];
-			}
-			else if (this.loopMode) {
+			} else if (this.loopMode) {
 				this.currentLine = 0;
-			}
-			else {
+			} else {
 				this.currentLine--;
 				this.stopChannel();
 				return false;
@@ -736,21 +717,19 @@ export default class Player {
 					this.currentSpeed = pl.cmd_data;
 					if (this.currentSpeed >= 0x20) {
 						const sH: number = (this.currentSpeed & 0xF0) >> 4;
-						const sL: number =  this.currentSpeed & 0x0F;
+						const sL: number = this.currentSpeed & 0x0F;
 
 						if (sL < 2 || sH === sL) {
 							// invalid swing speed
 							this.currentSpeed = sH;
-						}
-						else if (!!(this.currentLine & 1)) {
+						} else if (this.currentLine & 1) {
 							// odd line swaps swing values
 							this.currentSpeed = sH | (sL << 4);
 						}
 					}
 
 					pp.command = pp.commandParam = pp.commandPhase = 0;
-				}
-				else {
+				} else {
 					pp.command = pl.cmd;
 					pp.commandParam = pl.cmd_data;
 
@@ -758,8 +737,7 @@ export default class Player {
 						pp.commandPhase = 0;
 					}
 				}
-			}
-			else if (pl.tone || pl.smp) {
+			} else if (pl.tone || pl.smp) {
 				pp.command = pp.commandParam = pp.commandPhase = 0;
 			}
 
@@ -774,35 +752,31 @@ export default class Player {
 			if (pl.release) {
 				if (pp.sample.releasable && !pp.released) {
 					pp.released = true;
-				}
-				else {
+				} else {
 					rt.clearPlayParams(chn);
 				}
 
 				continue;
-			}
-			else if (pl.tone && pl.cmd === 0x3 && pl.cmd_data) {
+			} else if (pl.tone && pl.cmd === 0x3 && pl.cmd_data) {
 				if (pp.commandValue1) {
 					pp.tone = pp.commandValue1;
 					pp.slideShift -= pp.commandValue2;
 				}
 
-				const base: Tone    = this.calculateTone(pp.tone, 0, 0, pp.slideShift);
-				const target: Tone  = this.calculateTone(pl.tone, 0, 0, 0);
+				const base: Tone = this.calculateTone(pp.tone, 0, 0, pp.slideShift);
+				const target: Tone = this.calculateTone(pl.tone, 0, 0, 0);
 				const delta: number = target.word - base.word;
 
 				if (delta === 0) {
 					pp.tone = pl.tone;
 					pp.commandValue1 = pp.commandValue2 = 0;
 					pp.command = pp.commandParam = pp.commandPhase = 0;
-				}
-				else {
+				} else {
 					pp.commandValue1 = pl.tone;
 					pp.commandValue2 = delta + pp.slideShift;
 					pp.commandPhase = (pp.commandParam & 0xF0) >> 4;
 				}
-			}
-			else if (pl.tone) {
+			} else if (pl.tone) {
 				pp.tone = pl.tone;
 				pp.sample_cursor = 0;
 				pp.ornament_cursor = 0;
@@ -818,8 +792,7 @@ export default class Player {
 			if (pl.orn) {
 				pp.ornament = this.ornament[pl.orn];
 				pp.ornament_cursor = 0;
-			}
-			else if (pl.orn_release) {
+			} else if (pl.orn_release) {
 				pp.ornament = this.ornament[0];
 				pp.ornament_cursor = 0;
 
@@ -831,8 +804,7 @@ export default class Player {
 
 		if (this.currentSpeed > 0x20) {
 			this.currentTick = (this.currentLine & 1) ? (this.currentSpeed & 0x0F) : ((this.currentSpeed & 0xF0) >> 4);
-		}
-		else {
+		} else {
 			this.currentTick = this.currentSpeed;
 		}
 
@@ -882,8 +854,7 @@ export default class Player {
 		const pos = this.position[this.currentPosition];
 		if (this.currentLine > 0) {
 			this.simulation(this.currentLine);
-		}
-		else {
+		} else {
 			this.currentTick = 0;
 
 			if (this.rtSong && pos.initParams) {
@@ -949,11 +920,9 @@ export default class Player {
 
 				chn = chnToStop;
 			}
-		}
-		else if (--chn > 5) {
+		} else if (--chn > 5) {
 			return 0;
-		}
-		else if (rt.params[chn].playing) {
+		} else if (rt.params[chn].playing) {
 			return 0;
 		}
 
@@ -978,8 +947,7 @@ export default class Player {
 
 		if (chn < 0 || chn > 6) {
 			return;
-		}
-		else if (chn === 0) {
+		} else if (chn === 0) {
 			for (; chn < 6; chn++) {
 				rt.clearPlayParams(chn);
 			}
@@ -1073,17 +1041,16 @@ export default class Player {
 			for (let i = 0; i < l; i++) {
 				this.countPositionFrames(i);
 			}
-		}
 
 		// is position number in range?
-		else if (pos < l) {
+		} else if (pos < l) {
 			let speed = this.position[pos].speed;
 			let i = 0, line = 0;
 
 			// proceed through all tracklines and all channel-patterns
 			for (; line < MAX_PATTERN_LEN; line++) {
 				for (let chn = 0; chn < 6; chn++) {
-					let ptr = this.pattern[this.position[pos].ch[chn].pattern].data[line];
+					const ptr = this.pattern[this.position[pos].ch[chn].pattern].data[line];
 
 					// in every channel-pattern we are looking for speed changes
 					if (ptr.cmd === 0xF && ptr.cmd_data > 0) {
@@ -1091,14 +1058,14 @@ export default class Player {
 
 						// is it swing tempo change? we need to check validity...
 						if (speed >= 0x20) {
-							let sH: number = (speed & 0xf0) >> 4,
+							const sH: number = (speed & 0xf0) >> 4,
 								sL: number = (speed & 0x0f);
 
 							if (sL < 2 || sH === sL) {
 								// invalid swing speed!
 								speed = sH;
-							}
-							else if (!!(line & 1)) {
+
+							} else if (line & 1) {
 								// odd line swaps swing values
 								speed = sH | (sL << 4);
 							}
@@ -1113,8 +1080,7 @@ export default class Player {
 				// swing speed handled with nibble value of speed for even/odd trackline
 				if (speed > 0x20) {
 					i += (line & 1) ? (speed & 0x0f) : ((speed & 0xf0) >> 4);
-				}
-				else {
+				} else {
 					i += speed;
 				}
 			}
@@ -1139,8 +1105,7 @@ export default class Player {
 
 		if (current && current.initParams && prev.initParams) {
 			current.initParams.replace(prev.initParams);
-		}
-		else {
+		} else {
 			return false;
 		}
 
@@ -1148,6 +1113,7 @@ export default class Player {
 	}
 
 //---------------------------------------------------------------------------------------
+	/* eslint-disable object-curly-spacing, no-multi-spaces, no-mixed-spaces-and-tabs */
 	private static vibratable: number[] = [
 		  0,   0,   0,   0,   0,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
 		 -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   0,   0,   0,   0,   0,

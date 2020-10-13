@@ -23,7 +23,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { SAASound } from "./SAASound";
+import { SAASound } from './SAASound';
 
 /**
  * SAANoise: Noise generator
@@ -99,8 +99,7 @@ export class SAANoise {
 	private _rnd() {
 		if (!!(this._rand & 0x40000004) && (this._rand & 0x40000004) !== 0x40000004) {
 			this._rand = (this._rand << 1) | 1;
-		}
-		else {
+		} else {
 			this._rand <<= 1;
 		}
 

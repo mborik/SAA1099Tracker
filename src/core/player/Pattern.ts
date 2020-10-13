@@ -1,5 +1,5 @@
 /*!
- * Player: Patterns class a interface definition.
+ * SAA1099Tracker Player: Patterns class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toHex, toWidth } from "../../utils/number";
-import { MAX_PATTERN_LEN, Volume } from "./globals";
+import { toHex, toWidth } from '../../utils/number';
+import { MAX_PATTERN_LEN, Volume } from './globals';
 
 /** Channel-pattern line interface */
 interface PatternLine {
@@ -59,12 +59,12 @@ export default class Pattern {
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
 	export(start: number = 0, length: number = MAX_PATTERN_LEN, pack: boolean = true): string[] {
-		let arr: string[] = [];
+		const arr: string[] = [];
 
 		for (let i = Math.min(MAX_PATTERN_LEN, start + length); i > start; ) {
-			let o = this.data[--i];
-			let k = o.orn_release ? 33 : o.orn; // 33 = X
-			let s = o.release ? '--' : toWidth(o.tone, 2);
+			const o = this.data[--i];
+			const k = o.orn_release ? 33 : o.orn; // 33 = X
+			const s = o.release ? '--' : toWidth(o.tone, 2);
 
 			if (pack && !arr.length && s === '00' && !o.smp && !k && !o.volume.byte && !o.cmd && !o.cmd_data) {
 				continue;
@@ -87,11 +87,11 @@ export default class Pattern {
 	 */
 	parse(arr: string[], start: number = 0, length: number = MAX_PATTERN_LEN) {
 		let i: number = start;
-		let l = Math.min(MAX_PATTERN_LEN, start + length);
+		const l = Math.min(MAX_PATTERN_LEN, start + length);
 
 		for (let j = 0; i < l; i++, j++) {
-			let s = arr[j] || '000000000';
-			let o = this.data[i];
+			const s = arr[j] || '000000000';
+			const o = this.data[i];
 
 			let k = parseInt(s.substr(0, 2), 10);
 			o.tone = isNaN(k) ? ((o.release = true) && 0) : k;

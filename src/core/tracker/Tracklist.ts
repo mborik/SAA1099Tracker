@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import Tracker from "./Tracker";
+import { devLog } from '../../utils/dev';
+import Tracker from './Tracker';
 
 interface TracklistStartPoint {
 	x: number;
@@ -30,20 +30,16 @@ interface TracklistStartPoint {
 }
 
 class TracklistPosition {
-	y: number;
-	line: number;
-	channel: number;
-	column: number;
 	start: TracklistStartPoint;
 
-	constructor(y: number = 0, line: number = 0,
-				channel: number = 0, column: number = 0,
-				sx: number = 0, sy: number = 0) {
+	constructor(
+		public y: number = 0,
+		public line: number = 0,
+		public channel: number = 0,
+		public column: number = 0,
+		sx: number = 0,
+		sy: number = 0) {
 
-		this.y = y;
-		this.line = line;
-		this.channel = channel;
-		this.column = column;
 		this.start = { x: sx, y: sy };
 	}
 
@@ -71,24 +67,24 @@ class TracklistPosition {
 
 export interface TracklistSelection {
 	isDragging: boolean;
-	start:      TracklistPosition;
+	start: TracklistPosition;
 
-	len:        number;
-	line:       number;
-	channel:    number;
+	len: number;
+	line: number;
+	channel: number;
 }
 
 export interface TracklistCanvasData {
-	columns:   number[];
+	columns: number[];
 
-	selWidth:  number;
-	chnWidth:  number;
+	selWidth: number;
+	chnWidth: number;
 	lineWidth: number;
-	vpad:      number;
-	center:    number;
+	vpad: number;
+	center: number;
 	trkOffset: number;
 
-	offset:    DOMRect | null;
+	offset: DOMRect | null;
 }
 
 interface TracklistOffsets {
@@ -115,26 +111,26 @@ export default class Tracklist {
 		columns: [ 0, 4, 5, 6, 7, 9, 10, 11 ].map(c => c * fontWidth),
 
 		// selection width: (12 columns + 1 padding) * fontWidth
-		selWidth : (12 + 1) * fontWidth,
+		selWidth: (12 + 1) * fontWidth,
 
 		// channel width: (12 columns + 2 padding) * fontWidth
-		chnWidth : (12 + 2) * fontWidth,
+		chnWidth: (12 + 2) * fontWidth,
 
 		// trackline width:
 		// (((12 columns + 2 padding) * 6 channels) + 2 tracknum.columns) * fontWidth
 		lineWidth: (((12 + 2) * 6) + 2) * fontWidth,
 
 		// vertical padding of pixelfont in trackline height
-		vpad     : 0,
+		vpad: 0,
 
 		// horizontal centering of trackline to canvas width
-		center   : 0,
+		center: 0,
 
 		// trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
-		get trkOffset(): number { return this.center + (4 * fontWidth); },
+		get trkOffset(): number { return this.center + (4 * fontWidth) },
 
 		// jQuery offset object
-		offset   : null
+		offset: null
 	};
 
 	offsets: TracklistOffsets = {
@@ -167,7 +163,7 @@ export default class Tracklist {
 	}
 
 	setHeight(height: number) {
-		let settings = this._parent.settings;
+		const settings = this._parent.settings;
 
 		let newHeight = settings.tracklistAutosize ? height : Math.min(settings.tracklistLines, height);
 
@@ -187,10 +183,10 @@ export default class Tracklist {
 	}
 
 	moveCurrentline(delta: number, noWrap: boolean = false) {
-		let player = this._parent.player;
+		const player = this._parent.player;
 		let line = player.currentLine + delta;
-		let pos = player.currentPosition;
-		let pp = player.position[pos];
+		const pos = player.currentPosition;
+		const pp = player.position[pos];
 
 		if (this._parent.modePlay || pp == null) {
 			return;
@@ -198,11 +194,9 @@ export default class Tracklist {
 
 		if (noWrap) {
 			line = Math.min(Math.max(line, 0), pp.length - 1);
-		}
-		else if (line < 0) {
+		} else if (line < 0) {
 			line += pp.length;
-		}
-		else if (line >= pp.length) {
+		} else if (line >= pp.length) {
 			line -= pp.length;
 		}
 
@@ -210,9 +204,9 @@ export default class Tracklist {
 	}
 
 	pointToTracklist(x: number, y: number): TracklistPosition | null {
-		let lines: number = this._parent.settings.tracklistLines;
-		let tx: number = x / tracklistZoomFactor;
-		let ty: number = y / tracklistZoomFactor;
+		const lines: number = this._parent.settings.tracklistLines;
+		const tx: number = x / tracklistZoomFactor;
+		const ty: number = y / tracklistZoomFactor;
 		let ln: number = this._parent.player.currentLine - (lines >> 1);
 
 		for (let i = 0; i < lines; i++, ln++) {

@@ -23,10 +23,10 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import { SAAEnv } from "./SAAEnv";
-import { SAAFreq } from "./SAAFreq";
-import { SAANoise } from "./SAANoise";
+import { devLog } from '../../utils/dev';
+import { SAAEnv } from './SAAEnv';
+import { SAAFreq } from './SAAFreq';
+import { SAANoise } from './SAANoise';
 
 /**
  * SAAAmp: Tone/Noise mixing, Envelope application and amplification
@@ -63,7 +63,7 @@ export class SAAAmp {
 		if (!SAAAmp.levels) {
 			devLog('SAASound', 'Pregenerating lookup table with float 32bit volume levels...');
 
-			let levels = new Float32Array(512);
+			const levels = new Float32Array(512);
 			for (let i: number = 0; i < 512; i++) {
 				levels[i] = i / 2880; // 15 max.volume * 32 multiplier * 6 channel
 			}
@@ -93,7 +93,7 @@ export class SAAAmp {
 		}
 	}
 
-	public setFreqMixer (enable: number) { this._mix = enable ? (this._mix | 1) : (this._mix & 2) }
+	public setFreqMixer(enable: number) { this._mix = enable ? (this._mix | 1) : (this._mix & 2) }
 	public setNoiseMixer(enable: number) { this._mix = enable ? (this._mix | 2) : (this._mix & 1) }
 
 	public tick() {
@@ -145,8 +145,7 @@ export class SAAAmp {
 				if (this._envGen != null && this._envGen.enabled) {
 					last[0] += levels[this._envGen.left * this._lefta0E];
 					last[1] += levels[this._envGen.right * this._righta0E];
-				}
-				else {
+				} else {
 					last[0] += levels[this._leftx16];
 					last[1] += levels[this._rightx16];
 				}

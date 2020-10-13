@@ -1,5 +1,5 @@
 /*!
- * Sample and Ornament editor class and dependent interfaces.
+ * SAA1099Tracker: Sample and Ornament editor class and dependent interfaces.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from "../../utils/dev";
-import Tracker, { TrackerCanvasPair } from "./Tracker";
+import { devLog } from '../../utils/dev';
+import Tracker, { TrackerCanvasPair } from './Tracker';
 
 
 interface SmpOrnEditorDragStatus {
@@ -202,6 +202,7 @@ export default class SmpOrnEditor {
 	}
 
 //---------------------------------------------------------------------------------------
+	/* eslint-disable no-multi-spaces, key-spacing */
 	public chords: OrnamentEditorChords = {
 		'maj':    { sequence: [ 0, 4, 7 ],     name: 'major' },
 		'min':    { sequence: [ 0, 3, 7 ],     name: 'minor' },
@@ -237,16 +238,17 @@ export default class SmpOrnEditor {
 
 			$(el).find('input').val(orn.data[i]);
 		});
-
+*/
 		if (update) {
+/*
 			$('#txOrnName').val(orn.name);
 			$('#fxOrnEditor').parent().scrollLeft(0);
 
 			$('#scOrnLength').val('' + orn.end);
 			$('#scOrnRepeat').val('' + (orn.end - orn.loop))
 				.trigger('touchspin.updatesettings', { min: 0, max: orn.end });
-		}
 */
+		}
 	}
 
 	private _createOrnamentEditorTable(): void {

@@ -1,5 +1,5 @@
 /*!
- * Player: Positions class a interface definition.
+ * SAA1099Tracker Player: Positions class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,9 +21,9 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toHex, toWidth } from "../../utils/number";
-import { MAX_PATTERN_LEN } from "./globals";
-import PlayerRuntime from "./PlayerRuntime";
+import { toHex, toWidth } from '../../utils/number';
+import { MAX_PATTERN_LEN } from './globals';
+import PlayerRuntime from './PlayerRuntime';
 
 /** Position channel definition interface */
 interface Channel {
@@ -64,10 +64,10 @@ export default class Position {
 	}
 
 	export(): string[] {
-		let arr: string[] = [];
+		const arr: string[] = [];
 
 		this.ch.forEach(chn => {
-			let k = chn.pitch;
+			const k = chn.pitch;
 			let s = toWidth(chn.pattern, 3);
 
 			if (k) {

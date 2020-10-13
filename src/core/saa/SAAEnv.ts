@@ -50,6 +50,7 @@ export class SAAEnv {
 	private _processData: boolean = false;
 	private _extclock: boolean = false;
 
+	/* eslint-disable object-curly-spacing, no-multi-spaces, indent */
 	private _envtable: ENVDATA[] = [
 		{ plen: 1, loop: false, data: [
 			[[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0  ],
@@ -143,8 +144,7 @@ export class SAAEnv {
 			this._loadData(data);
 			this._newData = false;
 			this._processData = false;
-		}
-		else {
+		} else {
 			// since the 'next resolution' changes arrive unbuffered, we
 			// may need to change the current level because of this:
 			this._setLevels();
@@ -163,8 +163,7 @@ export class SAAEnv {
 			this._position = 0;
 			this._processData = true;
 			return;
-		}
-		else if (this._ended) {
+		} else if (this._ended) {
 			// do nothing
 			// (specifically, don't change the values of ended,
 			//  phase and position, as these will still be needed
@@ -203,15 +202,13 @@ export class SAAEnv {
 					this._phase = this._phaseLen - 1;
 					this._position = 15;
 					this._processData = true;
-				}
-				else {
+				} else {
 					// position (4) only
 					this._ended = false;
 					// set phase pointer to start of envelope for loop
 					this._phase = 0;
 				}
-			}
-			else {
+			} else {
 				// not at position (3) or (4) ...
 				// (i.e., we're in the middle of an envelope with
 				//  more than one phase. Specifically, we're in
@@ -222,8 +219,7 @@ export class SAAEnv {
 				// will be buffered. Set the flag to indicate this.
 				this._processData = false;
 			}
-		}
-		else {
+		} else {
 			// still within the same phase;
 			// but, importantly, we are no longer at the start of the phase ...
 			// so new data cannot be acted on immediately, and must
@@ -242,8 +238,7 @@ export class SAAEnv {
 			// if we do, then we can't overwrite env data just prior to
 			// a new envelope starting - but what's correct? Who knows?
 			this._loadData(this._nextData);
-		}
-		else {
+		} else {
 			// ok, we didn't have any new buffered date to act on,
 			// so we just call SetLevels() to calculate the output level
 			// for whatever the current envelope is
@@ -259,12 +254,11 @@ export class SAAEnv {
 	 *     false: 4-bit resolution;
 	 */
 	private _setLevels() {
-		let res: number = +this._res;
+		const res: number = +this._res;
 		this.left = this._envdata.data[res][this._phase][this._position];
 		if (this._stereo) {
 			this.right = (15 - res) - this.left;
-		}
-		else {
+		} else {
 			this.right = this.left;
 		}
 	}
@@ -286,8 +280,7 @@ export class SAAEnv {
 
 		if (this.enabled) {
 			this._ended = false;
-		}
-		else {
+		} else {
 		// DISABLED - so set stuff accordingly
 			this._ended = true;
 			this._phase = 0;

@@ -1,5 +1,5 @@
 /*!
- * Player: Runtime playback parameters class a interface definition.
+ * SAA1099Tracker Player: Runtime playback parameters class a interface definition.
  * Copyright (c) 2012-2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,12 +21,12 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toHex } from "../../utils/number";
-import { SAASoundRegData } from "../saa/SAASound";
-import { Volume } from "./globals";
-import Player from "./Player";
-import Sample from "./Sample";
-import Ornament from "./Ornament";
+import { toHex } from '../../utils/number';
+import { SAASoundRegData } from '../saa/SAASound';
+import { Volume } from './globals';
+import Player from './Player';
+import Sample from './Sample';
+import Ornament from './Ornament';
 
 /** Player runtime parameters interface */
 interface PlayerParams {
@@ -83,26 +83,25 @@ export default class PlayerRuntime extends SAASoundRegData {
 			commandValue1: 0,
 			commandValue2: 0
 		};
-	};
+	}
 
 	public setRegData(reg: number, data: number) {
-		let index = 'R' + toHex(reg, 2).toUpperCase();
+		const index = 'R' + toHex(reg, 2).toUpperCase();
 		this.regs[index] = data;
 	}
 
 	public replace(data: PlayerRuntime) {
-		Object.keys(data.regs).forEach(idx => this.regs[idx] = data.regs[idx]);
+		Object.keys(data.regs).forEach(idx => { this.regs[idx] = data.regs[idx] });
 
 		for (let i = 0; i < 6; i++) {
-			let dst: PlayerParams = this.params[i];
-			let src: PlayerParams = data.params[i];
+			const dst: PlayerParams = this.params[i];
+			const src: PlayerParams = data.params[i];
 
 			Object.keys(src).forEach(idx => {
 				if (dst[idx] instanceof Volume) {
 					dst[idx].L = src[idx].L;
 					dst[idx].R = src[idx].R;
-				}
-				else {
+				} else {
 					dst[idx] = src[idx];
 				}
 			});
