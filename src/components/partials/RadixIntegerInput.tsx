@@ -462,6 +462,10 @@ export default class RadixIntegerInput extends AbstractPureComponent2<HTMLInputP
 
 	@debounce(16, { leading: true })
 	private handleWheelChange = (e: React.WheelEvent) => {
+		if (this.props.disabled || this.props.readOnly) {
+			return;
+		}
+
 		let delta = 0;
 		if (e.deltaY > 0) {
 			delta = -1;

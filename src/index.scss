@@ -28,7 +28,8 @@ body {
 		background-color: $dark-gray1;
 	}
 
-	.#{$ns}-disabled {
+	.#{$ns}-disabled,
+	input.#{$ns}-input:disabled {
 		cursor: default !important;
 	}
 

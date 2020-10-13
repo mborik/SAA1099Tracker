@@ -32,9 +32,9 @@ import defaultTheme from '../../params/defaultTheme';
 
 
 const DynamicThemeProvider = ({ children }: any) => {
-	const theme = useSelector<ReducerStoreState>(state =>
+	const theme = useSelector<ReducerStoreState, any>(state =>
 		defaultTheme(state?.general?.darkTheme)
-	) as any;
+	);
 
 	return (
 		<ThemeProvider theme={theme}>

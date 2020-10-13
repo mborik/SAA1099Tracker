@@ -43,12 +43,8 @@ interface EditorCtrlState {
 const PanelEditor: React.FunctionComponent = () => {
 	const dispatch = useDispatch();
 
-	const editorCtrlState = useSelector<ReducerStoreState, EditorCtrlState>(state => {
-		const tracker = state.tracker;
-
-		if (tracker == null) {
-			return {} as any;
-		} else {
+	const state = useSelector<ReducerStoreState, EditorCtrlState | undefined>(({ tracker }) => {
+		if (tracker != null) {
 			return {
 				ctrlOctave: tracker.ctrlOctave,
 				ctrlSample: tracker.ctrlSample,
@@ -62,7 +58,7 @@ const PanelEditor: React.FunctionComponent = () => {
 		dispatch(actionChangeEditorControl({ key, value })),
 	[ dispatch ]);
 
-	return (
+	return state ? (
 		<PanelBase title="Editor:">
 			<PanelCtrlRow>
 				<Col xs={8}>
@@ -72,12 +68,13 @@ const PanelEditor: React.FunctionComponent = () => {
 					<RadixIntegerInput
 						fill={true}
 						id="ctrlOctave"
-						value={editorCtrlState.ctrlOctave}
+						value={state.ctrlOctave}
 						onValueChange={value => handleValueChange('ctrlOctave', value)}
 						min={1} max={8}
 					/>
 				</Col>
 			</PanelCtrlRow>
+
 			<PanelCtrlRow>
 				<Col xs={8}>
 					<label htmlFor="ctrlSample">AutoSmp:</label>
@@ -86,13 +83,14 @@ const PanelEditor: React.FunctionComponent = () => {
 					<RadixIntegerInput
 						fill={true}
 						id="ctrlSample"
-						value={editorCtrlState.ctrlSample}
+						value={state.ctrlSample}
 						onValueChange={value => handleValueChange('ctrlSample', value)}
 						radix={32}
 						min={0} max={31}
 					/>
 				</Col>
 			</PanelCtrlRow>
+
 			<PanelCtrlRow>
 				<Col xs={8}>
 					<label htmlFor="ctrlOrnament">AutoOrn:</label>
@@ -101,13 +99,14 @@ const PanelEditor: React.FunctionComponent = () => {
 					<RadixIntegerInput
 						fill={true}
 						id="ctrlOrnament"
-						value={editorCtrlState.ctrlOrnament}
+						value={state.ctrlOrnament}
 						onValueChange={value => handleValueChange('ctrlOrnament', value)}
 						radix={16}
 						min={0} max={15}
 					/>
 				</Col>
 			</PanelCtrlRow>
+
 			<PanelCtrlRow splitAbove={true}>
 				<Col xs={8}>
 					<label htmlFor="ctrlRowStep">RowStep:</label>
@@ -116,14 +115,14 @@ const PanelEditor: React.FunctionComponent = () => {
 					<RadixIntegerInput
 						fill={true}
 						id="ctrlRowStep"
-						value={editorCtrlState.ctrlRowStep}
+						value={state.ctrlRowStep}
 						onValueChange={value => handleValueChange('ctrlRowStep', value)}
 						min={0} max={8}
 					/>
 				</Col>
 			</PanelCtrlRow>
 		</PanelBase>
-	);
+	) : null;
 };
 
 export default PanelEditor;
