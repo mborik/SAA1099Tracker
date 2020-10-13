@@ -25,19 +25,18 @@ import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navbar, KeyCombo } from '@blueprintjs/core';
 
-import { actionToggleRepeat } from '../../actions/navbar';
+import { actionToggleRepeat } from '../../actions/tracker';
 import { ReducerStoreState } from '../../reducers';
 import { NavButtonTooltiped } from '../partials/NavButtonTooltiped';
 
 
 const Playback: React.FunctionComponent = () => {
 	const dispatch = useDispatch();
-	const repeat = useSelector<ReducerStoreState>(state => state.navbar.repeatMode) as boolean;
+	const repeat = useSelector<ReducerStoreState>(state => state?.tracker?.player.loopMode) as boolean;
 
-	const toggleRepeat = useCallback(
-		() => dispatch(actionToggleRepeat()),
-		[ dispatch ]
-	);
+	const toggleRepeat = useCallback(() =>
+		dispatch(actionToggleRepeat()),
+	[ dispatch ]);
 
 	return (
 		<Navbar.Group>

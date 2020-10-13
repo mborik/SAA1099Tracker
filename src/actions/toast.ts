@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { IToastProps, Position, Toaster } from '@blueprintjs/core';
-import { NavbarAction, NavbarReducerAction } from './navbar';
+import { GeneralAction, GeneralReducerAction } from './general';
 
 
 const toast = Toaster.create({
@@ -35,8 +35,8 @@ export const showToast = (opt: IToastProps) => {
 	toast.show(opt);
 };
 
-export const actionToast = (toastParams: IToastProps): NavbarReducerAction => ({
-	type: NavbarAction.Toast,
+export const actionToast = (toastParams: IToastProps): GeneralReducerAction => ({
+	type: GeneralAction.Toast,
 	payload: {
 		intent: 'warning',
 		icon: 'warning-sign',

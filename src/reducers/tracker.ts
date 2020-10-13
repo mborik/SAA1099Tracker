@@ -22,9 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { TrackerAction, TrackerReducerAction } from '../actions/tracker';
-import Tracker, { TrackerImpl } from '../core/tracker/Tracker';
-
-import { TrackerControlState } from '../core/tracker/Tracker';
+import Tracker, { TrackerImpl, TrackerControlState } from '../core/tracker/Tracker';
 
 
 export interface TrackerReducerState extends TrackerImpl {
@@ -41,6 +39,10 @@ export default (tracker: TrackerReducerState | null = null, action: TrackerReduc
 		switch (action.type) {
 			case TrackerAction.ActiveTabChanged:
 				tracker.activeTab = action?.payload?.activeTab || 0;
+				break;
+
+			case TrackerAction.ToggleRepeat:
+				tracker.player.loopMode = !tracker.player.loopMode;
 				break;
 
 			case TrackerAction.EditorControlChanged: {

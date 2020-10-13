@@ -1,5 +1,5 @@
 /*!
- * SAA1099Tracker - General reducer
+ * SAA1099Tracker - General reducer actions
  * Copyright (c) 2020 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,36 +21,18 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { NavbarAction, NavbarReducerAction } from '../actions/navbar';
-import { showToast } from '../actions/toast';
-
-export interface NavbarReducerState {
-	darkTheme: boolean;
-	repeatMode: boolean;
+export const enum GeneralAction {
+	Toast = 'general/toast',
+	ToggleTheme = 'navbar/toggleTheme'
 }
 
-const defaultState: NavbarReducerState = {
-	darkTheme: false,
-	repeatMode: true
-};
+export interface GeneralReducerAction {
+	type: GeneralAction;
+	payload?: any;
+}
 
-export default (state = defaultState, action: NavbarReducerAction): NavbarReducerState => {
-	switch (action.type) {
-		case NavbarAction.ToggleTheme: {
-			state.darkTheme = !state.darkTheme;
-			document.body.className = state.darkTheme ? 'bp3-dark' : '';
-			break;
-		}
+//---------------------------------------------------------------------------------------
 
-		case NavbarAction.ToggleRepeat: {
-			state.repeatMode = !state.repeatMode;
-			break;
-		}
-
-		case NavbarAction.Toast: {
-			showToast(action.payload);
-		}
-	}
-
-	return state;
-};
+export const actionToggleTheme = (): GeneralReducerAction => ({
+	type: GeneralAction.ToggleTheme
+});

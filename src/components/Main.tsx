@@ -46,9 +46,9 @@ const MainWrapper = styled(Grid).attrs(() => ({
 const Main: React.FunctionComponent = () => {
 	const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(actionTrackerInit());
-	}, [ dispatch ]);
+	useEffect(() =>
+		dispatch(actionTrackerInit()) as any,
+	[ dispatch ]);
 
 
 	return (

@@ -24,12 +24,12 @@
 import { Dispatch } from 'redux';
 import { combineReducers } from 'redux';
 
-import navbar, { NavbarReducerState } from './navbar';
+import general, { GeneralReducerState } from './general';
 import tracker, { TrackerReducerState } from './tracker';
 
 
 export interface ReducerStoreState {
-	navbar: NavbarReducerState;
+	general: GeneralReducerState;
 	tracker: TrackerReducerState;
 }
 
@@ -39,6 +39,6 @@ export interface ReducerStoreProps {
 }
 
 export default combineReducers({
-	navbar,
+	general,
 	tracker
 });

@@ -31,6 +31,7 @@ import { TrackerControlState } from '../core/tracker/Tracker';
 
 export const enum TrackerAction {
 	Init = 'tracker/init',
+	ToggleRepeat = 'tracker/repeatToggled',
 	ActiveTabChanged = 'tracker/activeTabChanged',
 	EditorControlChanged = 'tracker/editorControlChanged',
 	IoDemosongLoaded = 'tracker/io/demosongLoaded',
@@ -45,6 +46,10 @@ export interface TrackerReducerAction {
 
 export const actionTrackerInit = (): TrackerReducerAction => ({
 	type: TrackerAction.Init
+});
+
+export const actionToggleRepeat = (): TrackerReducerAction => ({
+	type: TrackerAction.ToggleRepeat
 });
 
 export const actionChangeActiveTab = (activeTab: number): TrackerReducerAction => ({

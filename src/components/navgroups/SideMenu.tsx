@@ -26,7 +26,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { Button, Menu, MenuDivider, MenuItem, Navbar, Popover } from '@blueprintjs/core';
 
-import { actionToggleTheme } from '../../actions/navbar';
+import { actionToggleTheme } from '../../actions/general';
 import { ReducerStoreState } from '../../reducers';
 
 const NavbarGroupRight = styled(Navbar.Group)`
@@ -36,12 +36,11 @@ const NavbarGroupRight = styled(Navbar.Group)`
 
 const SideMenu: React.FunctionComponent = () => {
 	const dispatch = useDispatch();
-	const darkTheme = useSelector<ReducerStoreState>(state => state.navbar.darkTheme) as boolean;
+	const darkTheme = useSelector<ReducerStoreState>(state => state.general.darkTheme) as boolean;
 
-	const toggleTheme = useCallback(
-		() => dispatch(actionToggleTheme()),
-		[ dispatch ]
-	);
+	const toggleTheme = useCallback(() =>
+		dispatch(actionToggleTheme()),
+	[ dispatch ]);
 
 	return (
 		<NavbarGroupRight>

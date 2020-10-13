@@ -33,7 +33,7 @@ import defaultTheme from '../../params/defaultTheme';
 
 const DynamicThemeProvider = ({ children }: any) => {
 	const theme = useSelector<ReducerStoreState>(state =>
-		defaultTheme(state?.navbar?.darkTheme)
+		defaultTheme(state?.general?.darkTheme)
 	) as any;
 
 	return (
