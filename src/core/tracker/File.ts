@@ -75,15 +75,15 @@ interface STMFileFormat {
 
 //---------------------------------------------------------------------------------------
 export class STMFile {
-	constructor(private _parent: Tracker) {
-	}
+  constructor(private _parent: Tracker) {
+  }
 
-	yetSaved: boolean = false;
-	modified: boolean = false;
-	fileName: string = '';
+  yetSaved: boolean = false;
+  modified: boolean = false;
+  fileName: string = '';
 
-	private _updateAll(): void {
-/*
+  private _updateAll(): void {
+    /*
 		let tracker: Tracker = this._parent;
 		let player: Player = tracker.player;
 
@@ -111,329 +111,332 @@ export class STMFile {
 
 		$('#main-tabpanel a').eq(tracker.activeTab).tab('show');
 */
-	}
+  }
 
-	/**
+  /**
 	 * This method can parse input JSON with song data
 	 * in current SAA1099Tracker format specification.
 	 * @param input {STMFileFormat|string} song data in JSON.
 	 */
-	parseJSON(input: STMFileFormat | string): boolean {
-		let data: STMFileFormat;
-		if (typeof input === 'string') {
-			try {
-				data = JSON.parse(input);
+  parseJSON(input: STMFileFormat | string): boolean {
+    let data: STMFileFormat;
+    if (typeof input === 'string') {
+      try {
+        data = JSON.parse(input);
 
-				if (typeof data !== 'object') {
-					return false;
-				}
-			} catch (e) {
-				return false;
-			}
-		} else if (typeof input === 'object') {
-			data = input;
-		} else {
-			return false;
-		}
+        if (typeof data !== 'object') {
+          return false;
+        }
+      }
+      catch (e) {
+        return false;
+      }
+    }
+    else if (typeof input === 'object') {
+      data = input;
+    }
+    else {
+      return false;
+    }
 
-		const tracker = this._parent;
-		const settings = tracker.settings;
-		const player = tracker.player;
+    const tracker = this._parent;
+    const settings = tracker.settings;
+    const player = tracker.player;
 
-		const count = { smp: 0, orn: 0, pat: 0, pos: 0 };
+    const count = { smp: 0, orn: 0, pat: 0, pos: 0 };
 
-		// detection of old JSON format v1.1 from previous project MIF85Tracker...
-		if (!data.version || (data.version && data.version !== '1.2')) {
-			return false;
-		}
+    // detection of old JSON format v1.1 from previous project MIF85Tracker...
+    if (!data.version || (data.version && data.version !== '1.2')) {
+      return false;
+    }
 
-		player.clearSong(true);
+    player.clearSong(true);
 
-		//~~~ CREDITS ~~~
-		tracker.songTitle = data.title || '';
-		tracker.songAuthor = data.author || '';
+    //~~~ CREDITS ~~~
+    tracker.songTitle = data.title || '';
+    tracker.songAuthor = data.author || '';
 
-		//~~~ SAMPLES ~~~
-		if (data.samples && data.samples.length) {
-			for (let i: number = 1, obj: any; i < 32; i++) {
-				if ((obj = data.samples[i - 1])) {
-					const it = player.sample[i];
+    //~~~ SAMPLES ~~~
+    if (data.samples && data.samples.length) {
+      for (let i: number = 1, obj: any; i < 32; i++) {
+        if ((obj = data.samples[i - 1])) {
+          const it = player.sample[i];
 
-					if (obj.name) {
-						it.name = obj.name;
-					}
+          if (obj.name) {
+            it.name = obj.name;
+          }
 
-					it.loop = obj.loop || 0;
-					it.end = obj.end || 0;
-					it.releasable = !!obj.rel;
+          it.loop = obj.loop || 0;
+          it.end = obj.end || 0;
+          it.releasable = !!obj.rel;
 
-					if (obj.data != null) {
-						it.parse(obj.data);
-					}
+          if (obj.data != null) {
+            it.parse(obj.data);
+          }
 
-					count.smp++;
-				}
-			}
-		}
+          count.smp++;
+        }
+      }
+    }
 
-		//~~~ ORNAMENTS ~~~
-		if (data.ornaments && data.ornaments.length) {
-			for (let i: number = 1, obj: any; i < 16; i++) {
-				if ((obj = data.ornaments[i - 1])) {
-					const it = player.ornament[i];
+    //~~~ ORNAMENTS ~~~
+    if (data.ornaments && data.ornaments.length) {
+      for (let i: number = 1, obj: any; i < 16; i++) {
+        if ((obj = data.ornaments[i - 1])) {
+          const it = player.ornament[i];
 
-					if (obj.name) {
-						it.name = obj.name;
-					}
+          if (obj.name) {
+            it.name = obj.name;
+          }
 
-					it.loop = obj.loop || 0;
-					it.end = obj.end || 0;
+          it.loop = obj.loop || 0;
+          it.end = obj.end || 0;
 
-					if (obj.data != null) {
-						it.parse(obj.data);
-					}
+          if (obj.data != null) {
+            it.parse(obj.data);
+          }
 
-					count.orn++;
-				}
-			}
-		}
+          count.orn++;
+        }
+      }
+    }
 
-		//~~~ PATTERNS ~~~
-		if (data.patterns) {
-			data.patterns.forEach(obj => {
-				const newIdx = player.addNewPattern();
-				const it = player.pattern[newIdx];
-				it.end = obj.end || 0;
+    //~~~ PATTERNS ~~~
+    if (data.patterns) {
+      data.patterns.forEach(obj => {
+        const newIdx = player.addNewPattern();
+        const it = player.pattern[newIdx];
+        it.end = obj.end || 0;
 
-				if (obj.data != null) {
-					it.parse(obj.data);
-				}
+        if (obj.data != null) {
+          it.parse(obj.data);
+        }
 
-				count.pat++;
-			});
-		}
+        count.pat++;
+      });
+    }
 
-		//~~~ POSITIONS ~~~
-		if (data.positions) {
-			data.positions.forEach((obj, i) => {
-				const it = player.addNewPosition(obj.length, obj.speed);
+    //~~~ POSITIONS ~~~
+    if (data.positions) {
+      data.positions.forEach((obj, i) => {
+        const it = player.addNewPosition(obj.length, obj.speed);
 
-				for (let k: number = 0; k < 6; k++) {
-					const s: string = obj.ch[k];
-					it.ch[k].pattern = parseInt(s.substr(0, 3), 10) || 0;
-					it.ch[k].pitch = parseInt(s.substr(3), 10) || 0;
-				}
+        for (let k: number = 0; k < 6; k++) {
+          const s: string = obj.ch[k];
+          it.ch[k].pattern = parseInt(s.substr(0, 3), 10) || 0;
+          it.ch[k].pitch = parseInt(s.substr(3), 10) || 0;
+        }
 
-				player.countPositionFrames(i);
-				player.storePositionRuntime(i);
-				count.pos++;
-			});
-		}
+        player.countPositionFrames(i);
+        player.storePositionRuntime(i);
+        count.pos++;
+      });
+    }
 
-		//~~~ CURRENT STATE ~~~
-		if (typeof data.current === 'object') {
-			const o: any = data.current;
+    //~~~ CURRENT STATE ~~~
+    if (typeof data.current === 'object') {
+      const o: any = data.current;
 
-			player.repeatPosition        = data.repeatPos || 0;
-			player.currentPosition       = o.position || 0;
-			player.currentLine           = o.line || 0;
+      player.repeatPosition        = data.repeatPos || 0;
+      player.currentPosition       = o.position || 0;
+      player.currentLine           = o.line || 0;
 
-			tracker.workingPattern       = o.pattern || 0;
-			tracker.workingSample        = o.sample || 1;
-			tracker.workingOrnament      = o.ornament || 1;
-			tracker.workingOrnTestSample = o.ornSample || 1;
-			tracker.workingSampleTone    = o.smpornTone || 37;
-			tracker.modeEditChannel      = o.channel || 0;
-			tracker.modeEditColumn       = o.column || 0;
+      tracker.workingPattern       = o.pattern || 0;
+      tracker.workingSample        = o.sample || 1;
+      tracker.workingOrnament      = o.ornament || 1;
+      tracker.workingOrnTestSample = o.ornSample || 1;
+      tracker.workingSampleTone    = o.smpornTone || 37;
+      tracker.modeEditChannel      = o.channel || 0;
+      tracker.modeEditColumn       = o.column || 0;
 
-			const c: any = Object.assign({}, data.ctrl, data.config);
+      const c: any = Object.assign({}, data.ctrl, data.config);
 
-			player.loopMode              = c.loopMode || true;
+      player.loopMode              = c.loopMode || true;
 
-			tracker.ctrlOctave           = c.octave || 2;
-			tracker.ctrlSample           = c.sample || 0;
-			tracker.ctrlOrnament         = c.ornament || 0;
-			tracker.ctrlRowStep          = c.rowStep || 0;
-			tracker.activeTab            = c.activeTab || 0;
-			tracker.modeEdit             = c.editMode || false;
+      tracker.ctrlOctave           = c.octave || 2;
+      tracker.ctrlSample           = c.sample || 0;
+      tracker.ctrlOrnament         = c.ornament || 0;
+      tracker.ctrlRowStep          = c.rowStep || 0;
+      tracker.activeTab            = c.activeTab || 0;
+      tracker.modeEdit             = c.editMode || false;
 
-			const int = c.interrupt || 50;
-			if (settings.audioInterrupt !== int) {
-				settings.audioInterrupt = int;
-				settings.audioInit();
-			}
-		}
+      const int = c.interrupt || 50;
+      if (settings.audioInterrupt !== int) {
+        settings.audioInterrupt = int;
+        settings.audioInit();
+      }
+    }
 
-		devLog('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
-			title: data.title,
-			author: data.author,
-			samples: count.smp,
-			ornaments: count.orn,
-			patterns: count.pat,
-			positions: count.pos,
-			version: data.version
-		});
+    devLog('Tracker.file', 'JSON file successfully parsed and loaded... %o', {
+      title: data.title,
+      author: data.author,
+      samples: count.smp,
+      ornaments: count.orn,
+      patterns: count.pat,
+      positions: count.pos,
+      version: data.version
+    });
 
-		this._updateAll();
-		return true;
-	}
+    this._updateAll();
+    return true;
+  }
 
-//---------------------------------------------------------------------------------------
+  //---------------------------------------------------------------------------------------
 
-	/**
+  /**
 	 * This method creates JSON format (version 1.2) of song data from tracker,
 	 * more specifically full snapshot of tracker state.
 	 * @param pretty {boolean} set if you want pretty-formatted JSON output.
 	 */
-	createJSON(pretty?: boolean): string {
-		const tracker = this._parent;
-		const settings = tracker.settings;
-		const player = tracker.player;
+  createJSON(pretty?: boolean): string {
+    const tracker = this._parent;
+    const settings = tracker.settings;
+    const player = tracker.player;
 
-		const output: STMFileFormat = {
-			title: tracker.songTitle,
-			author: tracker.songAuthor,
-			samples: [],
-			ornaments: [],
-			patterns: [],
-			positions: [],
-			repeatPos: player.repeatPosition,
+    const output: STMFileFormat = {
+      title: tracker.songTitle,
+      author: tracker.songAuthor,
+      samples: [],
+      ornaments: [],
+      patterns: [],
+      positions: [],
+      repeatPos: player.repeatPosition,
 
-			current: {
-				sample: tracker.workingSample,
-				ornament: tracker.workingOrnament,
-				ornSample: tracker.workingOrnTestSample,
-				smpornTone: tracker.workingSampleTone,
+      current: {
+        sample: tracker.workingSample,
+        ornament: tracker.workingOrnament,
+        ornSample: tracker.workingOrnTestSample,
+        smpornTone: tracker.workingSampleTone,
 
-				position: player.currentPosition,
-				pattern: tracker.workingPattern,
+        position: player.currentPosition,
+        pattern: tracker.workingPattern,
 
-				line: player.currentLine,
-				channel: tracker.modeEditChannel,
-				column: tracker.modeEditColumn
-			},
-			ctrl: {
-				octave: tracker.ctrlOctave,
-				sample: tracker.ctrlSample,
-				ornament: tracker.ctrlOrnament,
-				rowStep: tracker.ctrlRowStep
-			},
-			config: {
-				interrupt: settings.audioInterrupt,
-				activeTab: tracker.activeTab,
-				editMode: tracker.modeEdit,
-				loopMode: player.loopMode
-			},
+        line: player.currentLine,
+        channel: tracker.modeEditChannel,
+        column: tracker.modeEditColumn
+      },
+      ctrl: {
+        octave: tracker.ctrlOctave,
+        sample: tracker.ctrlSample,
+        ornament: tracker.ctrlOrnament,
+        rowStep: tracker.ctrlRowStep
+      },
+      config: {
+        interrupt: settings.audioInterrupt,
+        activeTab: tracker.activeTab,
+        editMode: tracker.modeEdit,
+        loopMode: player.loopMode
+      },
 
-			version: '1.2'
-		};
+      version: '1.2'
+    };
 
-		// storing samples going backward and unshifting array...
-		for (let i: number = 31; i > 0; i--) {
-			const it = player.sample[i];
-			let obj: any = {
-				loop: it.loop,
-				end: it.end,
-				data: it.export()
-			};
+    // storing samples going backward and unshifting array...
+    for (let i: number = 31; i > 0; i--) {
+      const it = player.sample[i];
+      let obj: any = {
+        loop: it.loop,
+        end: it.end,
+        data: it.export()
+      };
 
-			if (it.name) {
-				obj.name = it.name;
-			}
-			if (it.releasable) {
-				obj.rel = it.releasable;
-			}
+      if (it.name) {
+        obj.name = it.name;
+      }
+      if (it.releasable) {
+        obj.rel = it.releasable;
+      }
 
-			// for optimize reasons, we are detecting empty items in arrays...
-			if (!obj.data.length && !obj.loop && !obj.end && !obj.rel && !obj.name) {
-				obj = null;
-			}
-			if (!output.samples.length && obj == null) {
-				continue;
-			}
+      // for optimize reasons, we are detecting empty items in arrays...
+      if (!obj.data.length && !obj.loop && !obj.end && !obj.rel && !obj.name) {
+        obj = null;
+      }
+      if (!output.samples.length && obj == null) {
+        continue;
+      }
 
-			output.samples.unshift(obj);
-		}
+      output.samples.unshift(obj);
+    }
 
-		// storing ornaments going backward and unshifting array...
-		for (let i: number = 15; i > 0; i--) {
-			const it = player.ornament[i];
-			let obj: any = {
-				loop: it.loop,
-				end: it.end,
-				data: it.export()
-			};
+    // storing ornaments going backward and unshifting array...
+    for (let i: number = 15; i > 0; i--) {
+      const it = player.ornament[i];
+      let obj: any = {
+        loop: it.loop,
+        end: it.end,
+        data: it.export()
+      };
 
-			if (it.name) {
-				obj.name = it.name;
-			}
+      if (it.name) {
+        obj.name = it.name;
+      }
 
-			// for optimize reasons, we are detecting empty items in arrays...
-			if (!obj.data.length && !obj.loop && !obj.end && !obj.name) {
-				obj = null;
-			}
-			if (!output.ornaments.length && obj == null) {
-				continue;
-			}
+      // for optimize reasons, we are detecting empty items in arrays...
+      if (!obj.data.length && !obj.loop && !obj.end && !obj.name) {
+        obj = null;
+      }
+      if (!output.ornaments.length && obj == null) {
+        continue;
+      }
 
-			output.ornaments.unshift(obj);
-		}
+      output.ornaments.unshift(obj);
+    }
 
-		// storing patterns...
-		for (let i: number = 1, l = player.pattern.length; i < l; i++) {
-			const it = player.pattern[i];
-			let obj: any = {
-				end: it.end,
-				data: it.export()
-			};
+    // storing patterns...
+    for (let i: number = 1, l = player.pattern.length; i < l; i++) {
+      const it = player.pattern[i];
+      let obj: any = {
+        end: it.end,
+        data: it.export()
+      };
 
-			// for optimize reasons, we are detecting empty items in arrays...
-			if (!obj.data.length && !obj.end) {
-				obj = null;
-			}
-			if (!output.patterns.length && obj == null) {
-				continue;
-			}
+      // for optimize reasons, we are detecting empty items in arrays...
+      if (!obj.data.length && !obj.end) {
+        obj = null;
+      }
+      if (!output.patterns.length && obj == null) {
+        continue;
+      }
 
-			output.patterns.push(obj);
-		}
+      output.patterns.push(obj);
+    }
 
-		// storing positions, no optimizations needed...
-		output.positions = player.position.map(it => ({
-			length: it.length,
-			speed: it.speed,
-			ch: it.export()
-		}));
+    // storing positions, no optimizations needed...
+    output.positions = player.position.map(it => ({
+      length: it.length,
+      speed: it.speed,
+      ch: it.export()
+    }));
 
-		return pretty ?
-			JSON.stringify(output, null, '\t').replace(/\},\n\t+?\{/g, '}, {') :
-			JSON.stringify(output);
-	}
+    return pretty ?
+      JSON.stringify(output, null, '\t').replace(/\},\n\t+?\{/g, '}, {') :
+      JSON.stringify(output);
+  }
 
-	new(): void {
-		const tracker = this._parent;
-		const player = tracker.player;
+  new(): void {
+    const tracker = this._parent;
+    const player = tracker.player;
 
-		player.clearSong(true);
+    player.clearSong(true);
 
-		tracker.songTitle = '';
-		tracker.songAuthor = '';
+    tracker.songTitle = '';
+    tracker.songAuthor = '';
 
-		player.currentPosition = 0;
-		player.repeatPosition = 0;
-		player.currentLine = 0;
+    player.currentPosition = 0;
+    player.repeatPosition = 0;
+    player.currentLine = 0;
 
-		tracker.modeEdit = false;
-		tracker.modeEditChannel = 0;
-		tracker.modeEditColumn = 0;
-		tracker.workingPattern = 0;
+    tracker.modeEdit = false;
+    tracker.modeEditChannel = 0;
+    tracker.modeEditColumn = 0;
+    tracker.workingPattern = 0;
 
-		this.modified = false;
-		this.yetSaved = false;
-		this.fileName = '';
+    this.modified = false;
+    this.yetSaved = false;
+    this.fileName = '';
 
-		this._updateAll();
-	}
+    this._updateAll();
+  }
 
 /*
 	loadFile(fileNameOrId: string|number): boolean {

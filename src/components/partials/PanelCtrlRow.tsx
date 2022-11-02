@@ -21,8 +21,8 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { Col, ReactStyledFlexboxgrid, Row } from 'react-styled-flexboxgrid';
 import styled, { StyledProps } from 'styled-components';
-import { ReactStyledFlexboxgrid, Row, Col } from 'react-styled-flexboxgrid';
 
 type ICustomRowProps = StyledProps<ReactStyledFlexboxgrid.IRowProps> & {
 	gutter?: number;
@@ -30,9 +30,9 @@ type ICustomRowProps = StyledProps<ReactStyledFlexboxgrid.IRowProps> & {
 };
 
 const PanelCtrlRow = styled(Row).attrs((props: ICustomRowProps) => ({
-	middle: 'xs',
-	gutter: `${(props.gutter || props.theme.flexboxgrid.gutterWidth || 0)}rem`,
-	cssSplitterAbove: props.splitAbove && `
+  middle: 'xs',
+  gutter: `${(props.gutter || props.theme.flexboxgrid.gutterWidth || 0)}rem`,
+  cssSplitterAbove: props.splitAbove && `
 		border-top: 1px solid ${props.theme.color.border};
 		padding-top: ${(props.gutter || props.theme.flexboxgrid.gutterWidth || 0)}rem;
 	`

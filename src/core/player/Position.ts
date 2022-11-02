@@ -35,48 +35,48 @@ interface Channel {
  * Position class declaration with 6 channels definition, length and default speed.
  */
 export default class Position {
-	/** Describers for every channel [0..5] */
-	ch: Channel[];
-	/** Number of interupts which takes every line in tracklist */
-	frames: number[] = [];
-	/** Initial runtime parameters when player entering into this position */
-	initParams: PlayerRuntime | null = null;
+  /** Describers for every channel [0..5] */
+  ch: Channel[];
+  /** Number of interupts which takes every line in tracklist */
+  frames: number[] = [];
+  /** Initial runtime parameters when player entering into this position */
+  initParams: PlayerRuntime | null = null;
 
-	constructor(public length: number, public speed: number = 6) {
-		this.ch = [...Array(6)].map(() => ({
-			pattern: 0,
-			pitch: 0
-		} as Channel));
+  constructor(public length: number, public speed: number = 6) {
+    this.ch = [...Array(6)].map(() => ({
+      pattern: 0,
+      pitch: 0
+    } as Channel));
 
-		for (let i: number = 0, line: number = 0; line <= MAX_PATTERN_LEN; line++, i += speed) {
-			this.frames[line] = i;
-		}
-	}
+    for (let i: number = 0, line: number = 0; line <= MAX_PATTERN_LEN; line++, i += speed) {
+      this.frames[line] = i;
+    }
+  }
 
-	hasPattern = (pattern: number): boolean => this.indexOf(pattern) >= 0;
-	indexOf(pattern: number): number {
-		for (let i: number = 0; i < 6; i++) {
-			if (this.ch[i].pattern === pattern) {
-				return i;
-			}
-		}
-		return -1;
-	}
+  hasPattern = (pattern: number): boolean => this.indexOf(pattern) >= 0;
+  indexOf(pattern: number): number {
+    for (let i: number = 0; i < 6; i++) {
+      if (this.ch[i].pattern === pattern) {
+        return i;
+      }
+    }
+    return -1;
+  }
 
-	export(): string[] {
-		const arr: string[] = [];
+  export(): string[] {
+    const arr: string[] = [];
 
-		this.ch.forEach(chn => {
-			const k = chn.pitch;
-			let s = toWidth(chn.pattern, 3);
+    this.ch.forEach(chn => {
+      const k = chn.pitch;
+      let s = toWidth(chn.pattern, 3);
 
-			if (k) {
-				s += ((k < 0) ? '-' : '+') + toHex(k, 2);
-			}
+      if (k) {
+        s += ((k < 0) ? '-' : '+') + toHex(k, 2);
+      }
 
-			arr.push(s);
-		});
+      arr.push(s);
+    });
 
-		return arr;
-	}
+    return arr;
+  }
 }

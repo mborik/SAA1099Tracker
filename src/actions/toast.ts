@@ -26,21 +26,21 @@ import { GeneralAction, GeneralReducerAction } from './general';
 
 
 const toast = Toaster.create({
-	canEscapeKeyClear: false,
-	position: Position.BOTTOM,
+  canEscapeKeyClear: false,
+  position: Position.BOTTOM,
 });
 
 export const showToast = (opt: IToastProps) => {
-	toast.clear();
-	toast.show(opt);
+  toast.clear();
+  toast.show(opt);
 };
 
 export const actionToast = (toastParams: IToastProps): GeneralReducerAction => ({
-	type: GeneralAction.Toast,
-	payload: {
-		intent: 'warning',
-		icon: 'warning-sign',
-		message: 'something happen!?',
-		...toastParams
-	}
+  type: GeneralAction.Toast,
+  payload: {
+    intent: 'warning',
+    icon: 'warning-sign',
+    message: 'something happen!?',
+    ...toastParams
+  }
 });

@@ -24,23 +24,23 @@
 //---------------------------------------------------------------------------------------
 
 import React from 'react';
-import { ThemeProvider } from 'styled-components';
 import { useSelector } from 'react-redux';
+import { ThemeProvider } from 'styled-components';
 
-import { ReducerStoreState } from '../../reducers';
 import defaultTheme from '../../params/defaultTheme';
+import { ReducerStoreState } from '../../reducers';
 
 
 const DynamicThemeProvider = ({ children }: any) => {
-	const theme = useSelector<ReducerStoreState, any>(state =>
-		defaultTheme(state?.general?.darkTheme)
-	);
+  const theme = useSelector<ReducerStoreState, any>(state =>
+    defaultTheme(state?.general?.darkTheme)
+  );
 
-	return (
-		<ThemeProvider theme={theme}>
-			{children}
-		</ThemeProvider>
-	);
+  return (
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
+  );
 };
 
 export default DynamicThemeProvider;

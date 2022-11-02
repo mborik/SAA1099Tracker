@@ -48,32 +48,32 @@ interface OrnamentEditorChords {
 }
 
 export default class SmpOrnEditor {
-	constructor(private _parent: Tracker) {}
+  constructor(private _parent: Tracker) {}
 
-	initialized: boolean = false;
+  initialized: boolean = false;
 
-	img: HTMLImageElement | null = null;
-	amp: TrackerCanvasPair = { obj: null, ctx: null } as any;
-	noise: TrackerCanvasPair = { obj: null, ctx: null } as any;
-	range: TrackerCanvasPair = { obj: null, ctx: null } as any;
+  img: HTMLImageElement | null = null;
+  amp: TrackerCanvasPair = { obj: null, ctx: null } as any;
+  noise: TrackerCanvasPair = { obj: null, ctx: null } as any;
+  range: TrackerCanvasPair = { obj: null, ctx: null } as any;
 
-	smpeditShiftShown: boolean = false;
-	smpeditOffset: SampleEditorOffsets | null = null;
-	smpeditScroll: number = 0;
-	columnWidth: number = 0;
-	halfing: number = 0;
-	centering: number = 0;
-	radix: number = 10;
+  smpeditShiftShown: boolean = false;
+  smpeditOffset: SampleEditorOffsets | null = null;
+  smpeditScroll: number = 0;
+  columnWidth: number = 0;
+  halfing: number = 0;
+  centering: number = 0;
+  radix: number = 10;
 
-	drag: SmpOrnEditorDragStatus = {
-		isDragging: false,
-		freqEnableState: false,
-		rangeStart: -1
-	};
+  drag: SmpOrnEditorDragStatus = {
+    isDragging: false,
+    freqEnableState: false,
+    rangeStart: -1
+  };
 
-	init(): void {
-		devLog('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
-/*
+  init(): void {
+    devLog('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
+    /*
 		[ 'amp', 'noise', 'range' ].forEach((part: string, i: number) => {
 			let o: TrackerCanvasPair = this[part];
 
@@ -121,10 +121,10 @@ export default class SmpOrnEditor {
 
 		devLog('Tracker.smporn', 'Sample/Ornament editors completely initialized...');
 */
-	}
+  }
 
-	public updateSamplePitchShift(): void {
-/*
+  public updateSamplePitchShift(): void {
+    /*
 		let working = this._parent.workingSample;
 		let sample = this._parent.player.sample[working];
 		let noloop = (sample.end === sample.loop);
@@ -148,10 +148,10 @@ export default class SmpOrnEditor {
 
 		$('#fxSampleShift').parent().scrollLeft(0);
 */
-	}
+  }
 
-	private _updateOffsets(): void {
-/*
+  private _updateOffsets(): void {
+    /*
 		let amp = $(this.amp.obj).offset();
 		let noise = $(this.noise.obj).offset();
 
@@ -166,10 +166,10 @@ export default class SmpOrnEditor {
 		devLog('Tracker.smporn', 'Sample editor canvas offsets observed...\n\t\t%c%s',
 			'color:gray', JSON.stringify(this.smpeditOffset, null, 1).replace(/\s+/g, ' '));
 */
-	}
+  }
 
-	private _createPitchShiftTable(): void {
-/*
+  private _createPitchShiftTable(): void {
+    /*
 		let settings = this._parent.settings;
 		let el: JQuery = $('#fxSampleShift').empty();
 		let cell: JQuery = $('<div class="cell"/>');
@@ -199,28 +199,28 @@ export default class SmpOrnEditor {
 			.prop('tabindex', 9);
 		}
 */
-	}
+  }
 
-//---------------------------------------------------------------------------------------
-	/* eslint-disable no-multi-spaces, key-spacing */
-	public chords: OrnamentEditorChords = {
-		'maj':    { sequence: [ 0, 4, 7 ],     name: 'major' },
-		'min':    { sequence: [ 0, 3, 7 ],     name: 'minor' },
-		'maj7':   { sequence: [ 0, 4, 7, 11 ], name: 'major 7th' },
-		'min7':   { sequence: [ 0, 3, 7, 10 ], name: 'minor 7th' },
-		'sus2':   { sequence: [ 0, 2, 7 ],     name: 'suspended 2nd' },
-		'sus4':   { sequence: [ 0, 5, 7 ],     name: 'suspended 4th' },
-		'6':      { sequence: [ 0, 4, 7, 9 ],  name: 'major 6th' },
-		'7':      { sequence: [ 0, 4, 7, 10 ], name: 'dominant 7th' },
-		'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
-		'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
-		'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
-		'dim':    { sequence: [ 0, 3, 6, 9 ],  name: 'diminished' },
-		'12th':   { sequence: [ 12, 0 ],       name: '12th' }
-	};
+  //---------------------------------------------------------------------------------------
+  /* eslint-disable no-multi-spaces, key-spacing */
+  public chords: OrnamentEditorChords = {
+    'maj':    { sequence: [ 0, 4, 7 ],     name: 'major' },
+    'min':    { sequence: [ 0, 3, 7 ],     name: 'minor' },
+    'maj7':   { sequence: [ 0, 4, 7, 11 ], name: 'major 7th' },
+    'min7':   { sequence: [ 0, 3, 7, 10 ], name: 'minor 7th' },
+    'sus2':   { sequence: [ 0, 2, 7 ],     name: 'suspended 2nd' },
+    'sus4':   { sequence: [ 0, 5, 7 ],     name: 'suspended 4th' },
+    '6':      { sequence: [ 0, 4, 7, 9 ],  name: 'major 6th' },
+    '7':      { sequence: [ 0, 4, 7, 10 ], name: 'dominant 7th' },
+    'add9':   { sequence: [ 0, 2, 4, 7 ],  name: 'added 9th' },
+    'min7b5': { sequence: [ 0, 3, 6, 12 ], name: 'minor 7th with flatted 5th' },
+    'aug':    { sequence: [ 0, 4, 10 ],    name: 'augmented' },
+    'dim':    { sequence: [ 0, 3, 6, 9 ],  name: 'diminished' },
+    '12th':   { sequence: [ 12, 0 ],       name: '12th' }
+  };
 
-	public updateOrnamentEditor(update?: boolean): void {
-/*
+  public updateOrnamentEditor(update?: boolean): void {
+    /*
 		let working = this._parent.workingOrnament;
 		let orn = this._parent.player.ornament[working];
 		let noloop = (orn.end === orn.loop);
@@ -239,8 +239,8 @@ export default class SmpOrnEditor {
 			$(el).find('input').val(orn.data[i]);
 		});
 */
-		if (update) {
-/*
+    if (update) {
+      /*
 			$('#txOrnName').val(orn.name);
 			$('#fxOrnEditor').parent().scrollLeft(0);
 
@@ -248,11 +248,11 @@ export default class SmpOrnEditor {
 			$('#scOrnRepeat').val('' + (orn.end - orn.loop))
 				.trigger('touchspin.updatesettings', { min: 0, max: orn.end });
 */
-		}
-	}
+    }
+  }
 
-	private _createOrnamentEditorTable(): void {
-/*
+  private _createOrnamentEditorTable(): void {
+    /*
 		let el: JQuery = $('#fxOrnEditor').empty();
 		let cell: JQuery = $('<div class="cell"/>');
 		let spin: JQuery = $('<input type="text" class="form-control">');
@@ -276,6 +276,6 @@ export default class SmpOrnEditor {
 			.prop('tabindex', 31);
 		}
 */
-	}
+  }
 }
 //---------------------------------------------------------------------------------------

@@ -29,21 +29,21 @@ export interface GeneralReducerState {
 }
 
 const defaultState: GeneralReducerState = {
-	darkTheme: false
+  darkTheme: false
 };
 
 export default (state = defaultState, action: GeneralReducerAction): GeneralReducerState => {
-	switch (action.type) {
-		case GeneralAction.ToggleTheme: {
-			state.darkTheme = !state.darkTheme;
-			document.body.className = state.darkTheme ? 'bp3-dark' : '';
-			break;
-		}
+  switch (action.type) {
+    case GeneralAction.ToggleTheme: {
+      state.darkTheme = !state.darkTheme;
+      document.body.className = state.darkTheme ? 'bp3-dark' : '';
+      break;
+    }
 
-		case GeneralAction.Toast: {
-			showToast(action.payload);
-		}
-	}
+    case GeneralAction.Toast: {
+      showToast(action.payload);
+    }
+  }
 
-	return state;
+  return state;
 };

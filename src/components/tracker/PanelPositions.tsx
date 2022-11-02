@@ -47,139 +47,139 @@ interface PositionsState {
 }
 
 const PanelPositions: React.FunctionComponent = () => {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	const state = useSelector<ReducerStoreState, PositionsState | undefined>(({ tracker }) => {
-		if (tracker?.player?.position) {
-			const totalPositions = tracker.player.position.length || 0;
-			const hasPositions = (totalPositions > 0);
-			const position = hasPositions ? (tracker.player.currentPosition || 0) + 1 : 0;
-			const repeatPosition = hasPositions ? (tracker.player.repeatPosition || 0) + 1 : 0;
-			const positionData = hasPositions ? tracker.player.position[tracker.player.currentPosition] : tracker.player.nullPosition;
-			const positionLength = positionData?.length || 0;
-			const positionSpeed = positionData?.speed || 0;
+  const state = useSelector<ReducerStoreState, PositionsState | undefined>(({ tracker }) => {
+    if (tracker?.player?.position) {
+      const totalPositions = tracker.player.position.length || 0;
+      const hasPositions = (totalPositions > 0);
+      const position = hasPositions ? (tracker.player.currentPosition || 0) + 1 : 0;
+      const repeatPosition = hasPositions ? (tracker.player.repeatPosition || 0) + 1 : 0;
+      const positionData = hasPositions ? tracker.player.position[tracker.player.currentPosition] : tracker.player.nullPosition;
+      const positionLength = positionData?.length || 0;
+      const positionSpeed = positionData?.speed || 0;
 
-			return {
-				noPositions: !hasPositions,
-				position,
-				positionLength,
-				positionSpeed,
-				totalPositions: hasPositions ? totalPositions : 0,
-				repeatPosition: hasPositions ? repeatPosition : 0,
-				minPositionValue: hasPositions ? 1 : 0,
-				minPositionLength: position ? 1 : 0,
-			};
-		}
-	});
+      return {
+        noPositions: !hasPositions,
+        position,
+        positionLength,
+        positionSpeed,
+        totalPositions: hasPositions ? totalPositions : 0,
+        repeatPosition: hasPositions ? repeatPosition : 0,
+        minPositionValue: hasPositions ? 1 : 0,
+        minPositionLength: position ? 1 : 0,
+      };
+    }
+  });
 
-	return state ? (
-		<PanelBase title="Positions:">
-			<Row>
-				<Col xs={6}>
-					<PanelCtrlRow>
-						<Col xs={6} className="split">
-							<Button text="Create" fill={true} />
-						</Col>
-						<Col xs={4}>
-							<label htmlFor="position">Current:</label>
-						</Col>
-						<Col xs={6}>
-							<RadixIntegerInput
-								fill={true}
-								id="position"
-								disabled={state.noPositions}
-								min={state.minPositionValue}
-								max={state.totalPositions}
-								value={state.position}
-								onValueChange={() => null}
-							/>
-						</Col>
-					</PanelCtrlRow>
+  return state ? (
+    <PanelBase title="Positions:">
+      <Row>
+        <Col xs={6}>
+          <PanelCtrlRow>
+            <Col xs={6} className="split">
+              <Button text="Create" fill={true} />
+            </Col>
+            <Col xs={4}>
+              <label htmlFor="position">Current:</label>
+            </Col>
+            <Col xs={6}>
+              <RadixIntegerInput
+                fill={true}
+                id="position"
+                disabled={state.noPositions}
+                min={state.minPositionValue}
+                max={state.totalPositions}
+                value={state.position}
+                onValueChange={() => null}
+              />
+            </Col>
+          </PanelCtrlRow>
 
-					<PanelCtrlRow>
-						<Col xs={6} className="split">
-							<Button
-								text="Insert"
-								fill={true}
-								disabled={state.noPositions}
-							/>
-						</Col>
-						<Col xs={4}>
-							<label htmlFor="positionLength">Length:</label>
-						</Col>
-						<Col xs={6}>
-							<RadixIntegerInput
-								fill={true}
-								id="positionLength"
-								disabled={state.noPositions}
-								min={state.minPositionLength}
-								max={MAX_PATTERN_LEN}
-								value={state.positionLength}
-								onValueChange={() => null}
-							/>
-						</Col>
-					</PanelCtrlRow>
+          <PanelCtrlRow>
+            <Col xs={6} className="split">
+              <Button
+                text="Insert"
+                fill={true}
+                disabled={state.noPositions}
+              />
+            </Col>
+            <Col xs={4}>
+              <label htmlFor="positionLength">Length:</label>
+            </Col>
+            <Col xs={6}>
+              <RadixIntegerInput
+                fill={true}
+                id="positionLength"
+                disabled={state.noPositions}
+                min={state.minPositionLength}
+                max={MAX_PATTERN_LEN}
+                value={state.positionLength}
+                onValueChange={() => null}
+              />
+            </Col>
+          </PanelCtrlRow>
 
-					<PanelCtrlRow>
-						<Col xs={6} className="split">
-							<Button
-								text="Delete"
-								fill={true}
-								disabled={state.noPositions}
-							/>
-						</Col>
-						<Col xs={4}>
-							<label htmlFor="positionSpeed">Speed:</label>
-						</Col>
-						<Col xs={6}>
-							<RadixIntegerInput
-								fill={true}
-								id="positionSpeed"
-								disabled={state.noPositions}
-								min={1} max={31}
-								value={state.positionSpeed}
-								onValueChange={() => null}
-							/>
-						</Col>
-					</PanelCtrlRow>
+          <PanelCtrlRow>
+            <Col xs={6} className="split">
+              <Button
+                text="Delete"
+                fill={true}
+                disabled={state.noPositions}
+              />
+            </Col>
+            <Col xs={4}>
+              <label htmlFor="positionSpeed">Speed:</label>
+            </Col>
+            <Col xs={6}>
+              <RadixIntegerInput
+                fill={true}
+                id="positionSpeed"
+                disabled={state.noPositions}
+                min={1} max={31}
+                value={state.positionSpeed}
+                onValueChange={() => null}
+              />
+            </Col>
+          </PanelCtrlRow>
 
-					<PanelCtrlRow splitAbove={true}>
-						<Col xs={6} className="split">
-							<ButtonGroup
-								fill={true}
-							>
-								<Button
-									icon="caret-up"
-									disabled={state.noPositions}
-								/>
-								<Button
-									icon="caret-down"
-									disabled={state.noPositions}
-								/>
-							</ButtonGroup>
-						</Col>
-						<Col xs={4}>
-							<label htmlFor="repeatPosition">Repeat:</label>
-						</Col>
-						<Col xs={6}>
-							<RadixIntegerInput
-								fill={true}
-								id="repeatPosition"
-								disabled={state.noPositions}
-								min={state.minPositionValue}
-								max={state.totalPositions}
-								value={state.positionSpeed}
-								onValueChange={() => null}
-							/>
-						</Col>
-					</PanelCtrlRow>
-				</Col>
-				<Col xs={10}>
+          <PanelCtrlRow splitAbove={true}>
+            <Col xs={6} className="split">
+              <ButtonGroup
+                fill={true}
+              >
+                <Button
+                  icon="caret-up"
+                  disabled={state.noPositions}
+                />
+                <Button
+                  icon="caret-down"
+                  disabled={state.noPositions}
+                />
+              </ButtonGroup>
+            </Col>
+            <Col xs={4}>
+              <label htmlFor="repeatPosition">Repeat:</label>
+            </Col>
+            <Col xs={6}>
+              <RadixIntegerInput
+                fill={true}
+                id="repeatPosition"
+                disabled={state.noPositions}
+                min={state.minPositionValue}
+                max={state.totalPositions}
+                value={state.positionSpeed}
+                onValueChange={() => null}
+              />
+            </Col>
+          </PanelCtrlRow>
+        </Col>
+        <Col xs={10}>
 
-				</Col>
-			</Row>
-		</PanelBase>
-	) : null;
+        </Col>
+      </Row>
+    </PanelBase>
+  ) : null;
 };
 
 export default PanelPositions;

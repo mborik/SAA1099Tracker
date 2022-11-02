@@ -22,14 +22,14 @@
 //---------------------------------------------------------------------------------------
 
 import { devLog } from '../../utils/dev';
+import * as AudioDriver from '../AudioDriver';
 import Player from '../player/Player';
+import { SAASound } from '../saa/SAASound';
+import { STMFile } from './File';
 import Manager from './Manager';
 import Settings from './Settings';
 import SmpOrnEditor from './SmpOrnEditor';
 import Tracklist from './Tracklist';
-import { STMFile } from './File';
-import * as AudioDriver from '../AudioDriver';
-import { SAASound } from '../saa/SAASound';
 
 
 export interface TrackerControlState {
@@ -71,47 +71,47 @@ export interface TrackerImpl extends TrackerControlState {
 }
 
 export default class Tracker implements TrackerImpl {
-	loaded: boolean = false;
-	activeTab: number = 0;
-	modePlay: boolean = false;
-	modeEdit: boolean = false;
-	modeEditChannel: number = 0;
-	modeEditColumn: number = 0;
-	workingPattern: number = 0;
-	workingSample: number = 1;
-	workingSampleTone: number = 37;
-	workingOrnament: number = 1;
-	workingOrnTestSample: number = 1;
-	ctrlOctave: number = 2;
-	ctrlSample: number = 0;
-	ctrlOrnament: number = 0;
-	ctrlRowStep: number = 0;
-	songTitle: string = '';
-	songAuthor: string = '';
+  loaded: boolean = false;
+  activeTab: number = 0;
+  modePlay: boolean = false;
+  modeEdit: boolean = false;
+  modeEditChannel: number = 0;
+  modeEditColumn: number = 0;
+  workingPattern: number = 0;
+  workingSample: number = 1;
+  workingSampleTone: number = 37;
+  workingOrnament: number = 1;
+  workingOrnTestSample: number = 1;
+  ctrlOctave: number = 2;
+  ctrlSample: number = 0;
+  ctrlOrnament: number = 0;
+  ctrlRowStep: number = 0;
+  songTitle: string = '';
+  songAuthor: string = '';
 
-	pixelfont: TrackerCanvasPair;
-	settings: Settings;
-	manager: Manager;
-	tracklist: Tracklist;
-	smpornedit: SmpOrnEditor;
+  pixelfont: TrackerCanvasPair;
+  settings: Settings;
+  manager: Manager;
+  tracklist: Tracklist;
+  smpornedit: SmpOrnEditor;
 
-	player: Player;
-	file: STMFile;
+  player: Player;
+  file: STMFile;
 
-	constructor(public version: string) {
-		devLog('Tracker', 'Inizializing SAA1099Tracker v%s...', version);
+  constructor(public version: string) {
+    devLog('Tracker', 'Inizializing SAA1099Tracker v%s...', version);
 
-		this.pixelfont = { obj: null, ctx: null } as any;
-		this.settings = new Settings(this);
-		this.manager = new Manager(this);
-		this.tracklist = new Tracklist(this);
-		this.smpornedit = new SmpOrnEditor(this);
+    this.pixelfont = { obj: null, ctx: null } as any;
+    this.settings = new Settings(this);
+    this.manager = new Manager(this);
+    this.tracklist = new Tracklist(this);
+    this.smpornedit = new SmpOrnEditor(this);
 
-		const audioDriver = AudioDriver.getInstance();
+    const audioDriver = AudioDriver.getInstance();
 
-		this.player = new Player(new SAASound(audioDriver.sampleRate));
-		this.settings.init();
+    this.player = new Player(new SAASound(audioDriver.sampleRate));
+    this.settings.init();
 
-		this.file = new STMFile(this);
-	}
+    this.file = new STMFile(this);
+  }
 }

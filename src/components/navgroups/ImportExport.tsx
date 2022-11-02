@@ -29,53 +29,53 @@ import { actionTrackerLoadDemosong } from '../../actions/tracker';
 import demosongs from '../../params/demosongs';
 
 const ImportExport: React.FunctionComponent = () => {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	const handleClickLoadDemosong = useCallback(demosong =>
-		dispatch(actionTrackerLoadDemosong(demosong.title, demosong.url)),
-	[ dispatch ]);
+  const handleClickLoadDemosong = useCallback(demosong =>
+    dispatch(actionTrackerLoadDemosong(demosong.title, demosong.url)),
+  [ dispatch ]);
 
 
-	return (
-		<Navbar.Group>
-			<Popover key="miFileImport" minimal={true} position="bottom-left">
-				<Button minimal={true} icon="import" rightIcon="caret-down" text="Import" />
-				<Menu>
-					<MenuItem
-						key="miFileImportSTMF"
-						text={<>Import native song format <i>(STMF)</i>&hellip;</>}
-					/>
-					<MenuDivider />
-					<MenuItem key="miFileImportPT2" text="ProTracker II module&hellip;" />
-					<MenuItem key="miFileImportETrk" text="E-Tracker module&hellip;" />
-					<MenuDivider />
-					<MenuItem key="miFileImportDemosong" text="Demosong">
-						{demosongs.map((demosong, index) => (
-							<MenuItem
-								key={`miFileImportDemo${index + 1}`}
-								text={<>{demosong.title} <i>({demosong.author})</i></>}
-								onClick={() => handleClickLoadDemosong(demosong)}
-							/>
-						))}
-					</MenuItem>
-				</Menu>
-			</Popover>
+  return (
+    <Navbar.Group>
+      <Popover key="miFileImport" minimal={true} position="bottom-left">
+        <Button minimal={true} icon="import" rightIcon="caret-down" text="Import" />
+        <Menu>
+          <MenuItem
+            key="miFileImportSTMF"
+            text={<>Import native song format <i>(STMF)</i>&hellip;</>}
+          />
+          <MenuDivider />
+          <MenuItem key="miFileImportPT2" text="ProTracker II module&hellip;" />
+          <MenuItem key="miFileImportETrk" text="E-Tracker module&hellip;" />
+          <MenuDivider />
+          <MenuItem key="miFileImportDemosong" text="Demosong">
+            {demosongs.map((demosong, index) => (
+              <MenuItem
+                key={`miFileImportDemo${index + 1}`}
+                text={<>{demosong.title} <i>({demosong.author})</i></>}
+                onClick={() => handleClickLoadDemosong(demosong)}
+              />
+            ))}
+          </MenuItem>
+        </Menu>
+      </Popover>
 
-			<Popover key="miFileExport" minimal={true} position="bottom-left">
-				<Button minimal={true} icon="export" rightIcon="caret-down" text="Export" />
-				<Menu>
-					<MenuItem
-						key="miFileExportSTMF"
-						text={<>Export to native song format <i>(STMF)</i>&hellip;</>}
-					/>
-					<MenuDivider />
-					<MenuItem key="miFileCompile" text="Binary compilation&hellip;" />
-				</Menu>
-			</Popover>
+      <Popover key="miFileExport" minimal={true} position="bottom-left">
+        <Button minimal={true} icon="export" rightIcon="caret-down" text="Export" />
+        <Menu>
+          <MenuItem
+            key="miFileExportSTMF"
+            text={<>Export to native song format <i>(STMF)</i>&hellip;</>}
+          />
+          <MenuDivider />
+          <MenuItem key="miFileCompile" text="Binary compilation&hellip;" />
+        </Menu>
+      </Popover>
 
-			<Navbar.Divider />
-		</Navbar.Group>
-	);
+      <Navbar.Divider />
+    </Navbar.Group>
+  );
 };
 
 export default ImportExport;

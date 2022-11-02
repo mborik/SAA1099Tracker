@@ -22,11 +22,11 @@
 //---------------------------------------------------------------------------------------
 
 import { Dispatch } from 'redux';
-import { actionToast } from './toast';
+import { TrackerControlState } from '../core/tracker/Tracker';
 import { ReducerStoreState } from '../reducers/index';
 import { devLog } from '../utils/dev';
+import { actionToast } from './toast';
 
-import { TrackerControlState } from '../core/tracker/Tracker';
 
 
 export const enum TrackerAction {
@@ -45,48 +45,48 @@ export interface TrackerReducerAction {
 //---------------------------------------------------------------------------------------
 
 export const actionTrackerInit = (): TrackerReducerAction => ({
-	type: TrackerAction.Init
+  type: TrackerAction.Init
 });
 
 export const actionToggleRepeat = (): TrackerReducerAction => ({
-	type: TrackerAction.ToggleRepeat
+  type: TrackerAction.ToggleRepeat
 });
 
 export const actionChangeActiveTab = (activeTab: number): TrackerReducerAction => ({
-	type: TrackerAction.ActiveTabChanged,
-	payload: { activeTab }
+  type: TrackerAction.ActiveTabChanged,
+  payload: { activeTab }
 });
 
 export const actionChangeEditorControl = (data: { key: keyof TrackerControlState, value: number }): TrackerReducerAction => ({
-	type: TrackerAction.EditorControlChanged,
-	payload: data
+  type: TrackerAction.EditorControlChanged,
+  payload: data
 });
 
 export const actionTrackerLoadDemosong = (songName: string, url: string) =>
-	(dispatch: Dispatch, getState: () => ReducerStoreState) => {
-		const { tracker } = getState();
+  (dispatch: Dispatch, getState: () => ReducerStoreState) => {
+    const { tracker } = getState();
 
-		devLog(`Loading demosong: "${songName}"...`);
+    devLog(`Loading demosong: "${songName}"...`);
 
-		return fetch(url)
-			.then(response => response.json())
-			.then(data => {
-				if (!tracker.file.parseJSON(data)) {
-					throw new Error('Demosong parse error or invalid data format!');
-				}
+    return fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (!tracker.file.parseJSON(data)) {
+          throw new Error('Demosong parse error or invalid data format!');
+        }
 
-				dispatch({ type: TrackerAction.IoDemosongLoaded });
-				dispatch(actionToast({
-					icon: 'endorsed',
-					intent: 'success',
-					message: `Demosong "${songName}" successfully loaded!`
-				}));
-			})
-			.catch(({ message }) => {
-				dispatch(actionToast({
-					intent: 'danger',
-					message
-				}));
-			});
-	};
+        dispatch({ type: TrackerAction.IoDemosongLoaded });
+        dispatch(actionToast({
+          icon: 'endorsed',
+          intent: 'success',
+          message: `Demosong "${songName}" successfully loaded!`
+        }));
+      })
+      .catch(({ message }) => {
+        dispatch(actionToast({
+          intent: 'danger',
+          message
+        }));
+      });
+  };
 

@@ -28,8 +28,8 @@ import { ReducerStoreState } from '../reducers';
 
 
 const FooterWrapper = styled.footer.attrs(() => ({
-	role: 'footer',
-	className: 'bp3-navbar'
+  role: 'footer',
+  className: 'bp3-navbar'
 }))`
 	flex: 0 0 25px;
 	width: 100%;
@@ -39,7 +39,7 @@ const FooterWrapper = styled.footer.attrs(() => ({
 `;
 
 const StatusBar = styled.p.attrs(() => ({
-	className: 'bp3-text-small'
+  className: 'bp3-text-small'
 }))`
 	letter-spacing: 1px;
 	font-family: 'BPmono', monospace;
@@ -70,20 +70,20 @@ const StatusBar = styled.p.attrs(() => ({
 `;
 
 const Footer: React.FunctionComponent = () => {
-	const statusText = useSelector<ReducerStoreState>(state => state?.tracker?.statusText) as string;
+  const statusText = useSelector<ReducerStoreState>(state => state?.tracker?.statusText) as string;
 
-	const statusMarkup = () => ({
-		__html: !statusText ? '' : statusText
-			.replace(/(\[.+?\])/g, '<strong>$1</strong>')
-			.replace(/^([\w ]+?)(:| -)/, '<kbd>$1</kbd>$2')
-			.replace(/(\(.+?\))$/, '<em>$1</em>')
-	});
+  const statusMarkup = () => ({
+    __html: !statusText ? '' : statusText
+      .replace(/(\[.+?\])/g, '<strong>$1</strong>')
+      .replace(/^([\w ]+?)(:| -)/, '<kbd>$1</kbd>$2')
+      .replace(/(\(.+?\))$/, '<em>$1</em>')
+  });
 
-	return (
-		<FooterWrapper>
-			<StatusBar dangerouslySetInnerHTML={statusMarkup()}></StatusBar>
-		</FooterWrapper>
-	);
+  return (
+    <FooterWrapper>
+      <StatusBar dangerouslySetInnerHTML={statusMarkup()}></StatusBar>
+    </FooterWrapper>
+  );
 };
 
 export default Footer;

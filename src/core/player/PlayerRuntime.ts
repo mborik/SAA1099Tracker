@@ -24,9 +24,9 @@
 import { toHex } from '../../utils/number';
 import { SAASoundRegData } from '../saa/SAASound';
 import { Volume } from './globals';
+import Ornament from './Ornament';
 import Player from './Player';
 import Sample from './Sample';
-import Ornament from './Ornament';
 
 /** Player runtime parameters interface */
 interface PlayerParams {
@@ -51,60 +51,63 @@ interface PlayerParams {
 
 /** Player runtime parameters processor */
 export default class PlayerRuntime extends SAASoundRegData {
-	params: PlayerParams[] = [];
+  params: PlayerParams[] = [];
 
-	constructor(private player: Player) {
-		super();
+  constructor(private player: Player) {
+    super();
 
-		for (let chn: number = 0; chn < 6; chn++) {
-			this.clearPlayParams(chn);
-		}
-	}
+    for (let chn: number = 0; chn < 6; chn++) {
+      this.clearPlayParams(chn);
+    }
+  }
 
-	clearPlayParams(chn: number) {
-		if (chn < 0 || chn >= 6) {
-			return;
-		}
+  clearPlayParams(chn: number) {
+    if (chn < 0 || chn >= 6) {
+      return;
+    }
 
-		this.params[chn] = {
-			tone: 0,
-			playing: false,
-			sample: this.player.sample[0],
-			ornament: this.player.ornament[0],
-			sample_cursor: 0,
-			ornament_cursor: 0,
-			attenuation: new Volume(),
-			slideShift: 0,
-			globalPitch: 0,
-			released: false,
-			command: 0,
-			commandParam: 0,
-			commandPhase: 0,
-			commandValue1: 0,
-			commandValue2: 0
-		};
-	}
+    this.params[chn] = {
+      tone: 0,
+      playing: false,
+      sample: this.player.sample[0],
+      ornament: this.player.ornament[0],
+      sample_cursor: 0,
+      ornament_cursor: 0,
+      attenuation: new Volume(),
+      slideShift: 0,
+      globalPitch: 0,
+      released: false,
+      command: 0,
+      commandParam: 0,
+      commandPhase: 0,
+      commandValue1: 0,
+      commandValue2: 0
+    };
+  }
 
-	public setRegData(reg: number, data: number) {
-		const index = 'R' + toHex(reg, 2).toUpperCase();
-		this.regs[index] = data;
-	}
+  public setRegData(reg: number, data: number) {
+    const index = 'R' + toHex(reg, 2).toUpperCase();
+    this.regs[index] = data;
+  }
 
-	public replace(data: PlayerRuntime) {
-		Object.keys(data.regs).forEach(idx => { this.regs[idx] = data.regs[idx] });
+  public replace(data: PlayerRuntime) {
+    Object.keys(data.regs).forEach(idx => {
+      this.regs[idx] = data.regs[idx];
+    });
 
-		for (let i = 0; i < 6; i++) {
-			const dst: PlayerParams = this.params[i];
-			const src: PlayerParams = data.params[i];
+    for (let i = 0; i < 6; i++) {
+      const dst: PlayerParams = this.params[i];
+      const src: PlayerParams = data.params[i];
 
-			Object.keys(src).forEach(idx => {
-				if (dst[idx] instanceof Volume) {
-					dst[idx].L = src[idx].L;
-					dst[idx].R = src[idx].R;
-				} else {
-					dst[idx] = src[idx];
-				}
-			});
-		}
-	}
+      Object.keys(src).forEach(idx => {
+        if (dst[idx] instanceof Volume) {
+          dst[idx].L = src[idx].L;
+          dst[idx].R = src[idx].R;
+        }
+        else {
+          dst[idx] = src[idx];
+        }
+      });
+    }
+  }
 }

@@ -38,106 +38,108 @@ interface AudioDriverConfig {
  * Audio driver and sound output.
  */
 export default class AudioDriver {
-	private _bufferCount: number = 4;
-	private _bufferSize: number = 4096;
-	private _interruptFrequency: number = 50;
-	private _sampleRate: number;
+  private _bufferCount: number = 4;
+  private _bufferSize: number = 4096;
+  private _interruptFrequency: number = 50;
+  private _sampleRate: number;
 
-	private _audioSource: AudioDriverSource | null = null;
-	private _audioContext: AudioContext;
-	private _gainNode: GainNode;
-	private _scriptProcessor: ScriptProcessorNode | null = null;
-
-
-	get sampleRate(): number { return this._sampleRate }
-	set volume(vol: number) {
-		vol = Math.min(Math.max(0, vol), 10);
-		this._gainNode.gain.value = vol;
-	}
-
-	constructor() {
-		devLog('Audio', 'Creating new AudioDriver...');
-
-		const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-
-		this._audioContext = new AudioContext();
-		this._sampleRate = this._audioContext.sampleRate;
-		this._gainNode = this._audioContext.createGain();
-
-		devLog('Audio', `Hardware default samplerate is ${this._sampleRate}Hz...`);
-	}
-
-	getAdjustedSamples(samplerate: number, buffers: number, interrupt: number) {
-		const intms = 1000 / interrupt;
-		const streammsec = intms * buffers;
-		const samples = streammsec / 1000 * samplerate;
-		const bits = Math.ceil(Math.log(samples) * Math.LOG2E);
-
-		return 1 << Math.min(Math.max(bits, 8), 14);
-	}
-
-	play(config?: AudioDriverConfig) {
-		if (config) {
-			if (this._scriptProcessor) {
-				devLog('Audio', 'Freeing script processor...');
-				this.stop();
-			}
-
-			if (config.audioSource && config.audioSource !== this._audioSource) {
-				devLog('Audio', 'New audio generator source is %o...', config.audioSource);
-				this._audioSource = config.audioSource;
-			}
-
-			if (config.buffers) {
-				this._bufferCount = config.buffers;
-			}
-			if (config.interrupt) {
-				this._interruptFrequency = config.interrupt;
-			}
-		}
-
-		this._bufferSize = this.getAdjustedSamples(
-			this._sampleRate,
-			this._bufferCount,
-			this._interruptFrequency
-		);
-
-		devLog('Audio', 'Initializing new script processor with examined buffer size: %d...\n\t\t%c[ samplerate: %dHz, buffers: %d, interrupt frequency: %dHz ]',
-			this._bufferSize, 'color:gray', this._sampleRate, this._bufferCount, this._interruptFrequency);
-
-		this._scriptProcessor = this._audioContext.createScriptProcessor(this._bufferSize, 0, 2);
-
-		devLog('Audio', `Successfully initialized with driver's hardware buffer size ${this._scriptProcessor.bufferSize || '???'}...`);
-
-		this._scriptProcessor.onaudioprocess = this._audioEventHandler.bind(this);
-		this._scriptProcessor.connect(this._gainNode);
-		this._gainNode.connect(this._audioContext.destination);
-
-		this._audioContext.resume();
-	}
-
-	stop() {
-		this._audioContext.suspend();
-
-		if (this._scriptProcessor?.onaudioprocess) {
-			this._gainNode.disconnect(this._audioContext.destination);
-			this._scriptProcessor.disconnect(this._gainNode);
-			this._scriptProcessor.onaudioprocess = null;
-		}
-
-		this._scriptProcessor = null;
-	}
+  private _audioSource: AudioDriverSource | null = null;
+  private _audioContext: AudioContext;
+  private _gainNode: GainNode;
+  private _scriptProcessor: ScriptProcessorNode | null = null;
 
 
-	private _audioEventHandler(event: AudioProcessingEvent) {
-		const buf = event.outputBuffer;
+  get sampleRate(): number {
+    return this._sampleRate;
+  }
+  set volume(vol: number) {
+    vol = Math.min(Math.max(0, vol), 10);
+    this._gainNode.gain.value = vol;
+  }
 
-		this._audioSource?.getAudio(
-			buf.getChannelData(0),
-			buf.getChannelData(1),
-			buf.length
-		);
-	}
+  constructor() {
+    devLog('Audio', 'Creating new AudioDriver...');
+
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+
+    this._audioContext = new AudioContext();
+    this._sampleRate = this._audioContext.sampleRate;
+    this._gainNode = this._audioContext.createGain();
+
+    devLog('Audio', `Hardware default samplerate is ${this._sampleRate}Hz...`);
+  }
+
+  getAdjustedSamples(samplerate: number, buffers: number, interrupt: number) {
+    const intms = 1000 / interrupt;
+    const streammsec = intms * buffers;
+    const samples = streammsec / 1000 * samplerate;
+    const bits = Math.ceil(Math.log(samples) * Math.LOG2E);
+
+    return 1 << Math.min(Math.max(bits, 8), 14);
+  }
+
+  play(config?: AudioDriverConfig) {
+    if (config) {
+      if (this._scriptProcessor) {
+        devLog('Audio', 'Freeing script processor...');
+        this.stop();
+      }
+
+      if (config.audioSource && config.audioSource !== this._audioSource) {
+        devLog('Audio', 'New audio generator source is %o...', config.audioSource);
+        this._audioSource = config.audioSource;
+      }
+
+      if (config.buffers) {
+        this._bufferCount = config.buffers;
+      }
+      if (config.interrupt) {
+        this._interruptFrequency = config.interrupt;
+      }
+    }
+
+    this._bufferSize = this.getAdjustedSamples(
+      this._sampleRate,
+      this._bufferCount,
+      this._interruptFrequency
+    );
+
+    devLog('Audio', 'Initializing new script processor with examined buffer size: %d...\n\t\t%c[ samplerate: %dHz, buffers: %d, interrupt frequency: %dHz ]',
+      this._bufferSize, 'color:gray', this._sampleRate, this._bufferCount, this._interruptFrequency);
+
+    this._scriptProcessor = this._audioContext.createScriptProcessor(this._bufferSize, 0, 2);
+
+    devLog('Audio', `Successfully initialized with driver's hardware buffer size ${this._scriptProcessor.bufferSize || '???'}...`);
+
+    this._scriptProcessor.onaudioprocess = this._audioEventHandler.bind(this);
+    this._scriptProcessor.connect(this._gainNode);
+    this._gainNode.connect(this._audioContext.destination);
+
+    this._audioContext.resume();
+  }
+
+  stop() {
+    this._audioContext.suspend();
+
+    if (this._scriptProcessor?.onaudioprocess) {
+      this._gainNode.disconnect(this._audioContext.destination);
+      this._scriptProcessor.disconnect(this._gainNode);
+      this._scriptProcessor.onaudioprocess = null;
+    }
+
+    this._scriptProcessor = null;
+  }
+
+
+  private _audioEventHandler(event: AudioProcessingEvent) {
+    const buf = event.outputBuffer;
+
+    this._audioSource?.getAudio(
+      buf.getChannelData(0),
+      buf.getChannelData(1),
+      buf.length
+    );
+  }
 }
 
 export let instance: AudioDriver;
@@ -146,4 +148,4 @@ export let instance: AudioDriver;
  * @return {AudioDriver} singleton instance
  */
 export const getInstance = (): AudioDriver =>
-	(instance instanceof AudioDriver) ? instance : (instance = new AudioDriver());
+  (instance instanceof AudioDriver) ? instance : (instance = new AudioDriver());

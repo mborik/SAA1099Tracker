@@ -23,19 +23,19 @@
 
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
 import { Grid } from 'react-styled-flexboxgrid';
-
-import SongHeader from './tracker/SongHeader';
-import TabPanel from './partials/TabPanel';
+import styled from 'styled-components';
 
 import { actionTrackerInit } from '../actions/tracker';
+import TabPanel from './partials/TabPanel';
+import SongHeader from './tracker/SongHeader';
+
 
 
 const MainWrapper = styled(Grid).attrs(() => ({
-	tagName: 'main',
-	role: 'main',
-	className: 'bp3-fill'
+  tagName: 'main',
+  role: 'main',
+  className: 'bp3-fill'
 }))`
 	display: flex;
 	flex-flow: column nowrap;
@@ -44,16 +44,18 @@ const MainWrapper = styled(Grid).attrs(() => ({
 `;
 
 const Main: React.FunctionComponent = () => {
-	const dispatch = useDispatch();
-	useEffect(() => { dispatch(actionTrackerInit()) }, [ dispatch ]);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(actionTrackerInit());
+  }, [ dispatch ]);
 
 
-	return (
-		<MainWrapper>
-			<SongHeader />
-			<TabPanel />
-		</MainWrapper>
-	);
+  return (
+    <MainWrapper>
+      <SongHeader />
+      <TabPanel />
+    </MainWrapper>
+  );
 };
 
 export default Main;

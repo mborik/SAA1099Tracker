@@ -25,34 +25,34 @@ import * as React from 'react';
 import { Hotkey, Hotkeys, HotkeysTarget } from '@blueprintjs/core';
 
 import { ReducerStoreProps } from '../reducers';
-import DynamicThemeProvider from './partials/DynamicThemeProvider';
-import Navigation from './Navigation';
-import Main from './Main';
 import Footer from './Footer';
+import Main from './Main';
+import Navigation from './Navigation';
+import DynamicThemeProvider from './partials/DynamicThemeProvider';
 
 
 @HotkeysTarget
 class App extends React.Component<ReducerStoreProps> {
-	render() {
-		return <DynamicThemeProvider>
-			<Navigation />
-			<Main />
-			<Footer />
-		</DynamicThemeProvider>;
-	}
+  render() {
+    return <DynamicThemeProvider>
+      <Navigation />
+      <Main />
+      <Footer />
+    </DynamicThemeProvider>;
+  }
 
-	renderHotkeys() {
-		return (
-			<Hotkeys>
-				<Hotkey
-					global={true}
-					combo="esc"
-					label="Stop"
-					onKeyDown={() => {}}
-				/>
-			</Hotkeys>
-		);
-	}
+  renderHotkeys() {
+    return (
+      <Hotkeys>
+        <Hotkey
+          global={true}
+          combo="esc"
+          label="Stop"
+          onKeyDown={() => {}}
+        />
+      </Hotkeys>
+    );
+  }
 }
 
 /*

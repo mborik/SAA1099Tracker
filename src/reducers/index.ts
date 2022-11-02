@@ -39,6 +39,6 @@ export interface ReducerStoreProps {
 }
 
 export default combineReducers({
-	general,
-	tracker
+  general,
+  tracker
 });

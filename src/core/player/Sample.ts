@@ -35,63 +35,63 @@ interface SampleData {
 
 /** Single sample definition */
 export default class Sample {
-	name: string = '';
-	data: SampleData[];
-	loop: number = 0;
-	end: number = 0;
-	releasable: boolean = false;
+  name: string = '';
+  data: SampleData[];
+  loop: number = 0;
+  end: number = 0;
+  releasable: boolean = false;
 
-	constructor() {
-		this.data = [...Array(256)].map(() => ({
-			volume: new Volume(),
-			enable_freq: false,
-			enable_noise: false,
-			noise_value: 0,
-			shift: 0
-		} as SampleData));
-	}
+  constructor() {
+    this.data = [...Array(256)].map(() => ({
+      volume: new Volume(),
+      enable_freq: false,
+      enable_noise: false,
+      noise_value: 0,
+      shift: 0
+    } as SampleData));
+  }
 
-	/**
+  /**
 	 * Export sample data to array of readable strings.
 	 * We going backward from the end of sample and unshifting array because of pack
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
-	export(pack: boolean = true): string[] {
-		const arr: string[] = [];
+  export(pack: boolean = true): string[] {
+    const arr: string[] = [];
 
-		for (let i = 255; i >= 0; i--) {
-			const o = this.data[i];
-			const k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
+    for (let i = 255; i >= 0; i--) {
+      const o = this.data[i];
+      const k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
 
-			if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
-				continue;
-			}
+      if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
+        continue;
+      }
 
-			let s = toHex(k, 1) + toHex(o.volume.byte, 2);
-			if (o.shift) {
-				s += ((o.shift < 0) ? '-' : '+') + toHex(o.shift, 3);
-			}
+      let s = toHex(k, 1) + toHex(o.volume.byte, 2);
+      if (o.shift) {
+        s += ((o.shift < 0) ? '-' : '+') + toHex(o.shift, 3);
+      }
 
-			arr.unshift(s.toUpperCase());
-		}
+      arr.unshift(s.toUpperCase());
+    }
 
-		return arr;
-	}
+    return arr;
+  }
 
-	/**
+  /**
 	 * Parse sample data from array of buch of hex values stored in simple string.
 	 */
-	parse(arr: string[]) {
-		this.data.forEach((o, i) => {
-			const s = arr[i] || '';
-			const k = parseInt(s[0], 16) || 0;
+  parse(arr: string[]) {
+    this.data.forEach((o, i) => {
+      const s = arr[i] || '';
+      const k = parseInt(s[0], 16) || 0;
 
-			o.enable_freq = !!(k & 1);
-			o.enable_noise = !!(k & 2);
-			o.noise_value = (k >> 2);
-			o.volume.byte = parseInt(s.substr(1, 2), 16) || 0;
+      o.enable_freq = !!(k & 1);
+      o.enable_noise = !!(k & 2);
+      o.noise_value = (k >> 2);
+      o.volume.byte = parseInt(s.substr(1, 2), 16) || 0;
 
-			o.shift = parseInt(s.substr(3), 16) || 0;
-		});
-	}
+      o.shift = parseInt(s.substr(3), 16) || 0;
+    });
+  }
 }

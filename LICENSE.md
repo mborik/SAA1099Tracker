@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2012-2020 Martin Bórik <mborik@users.sourceforge.net>
+Copyright (c) 2012-2022 Martin Bórik <martin@borik.net>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -29,12 +29,12 @@ import SideMenu from './SideMenu';
 import Tools from './Tools';
 
 const NavGroup = {
-	EditOps,
-	FileOps,
-	ImportExport,
-	Playback,
-	SideMenu,
-	Tools
+  EditOps,
+  FileOps,
+  ImportExport,
+  Playback,
+  SideMenu,
+  Tools
 };
 
 export default NavGroup;

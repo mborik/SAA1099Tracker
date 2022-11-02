@@ -22,9 +22,9 @@
 //---------------------------------------------------------------------------------------
 
 import * as React from 'react';
+import { Callout, Card, ICalloutProps } from '@blueprintjs/core';
 import { omit } from 'lodash';
 import styled from 'styled-components';
-import { Callout, Card, ICalloutProps } from '@blueprintjs/core';
 
 
 const CardExt = styled(Card)`
@@ -48,14 +48,14 @@ const CardExt = styled(Card)`
 `;
 
 export class PanelBase extends React.Component<ICalloutProps> {
-	render() {
-		return (
-			<CardExt>
-				<Callout {...omit(this.props, ['children'])} />
-				{this.props.children}
-			</CardExt>
-		);
-	}
+  render() {
+    return (
+      <CardExt>
+        <Callout {...omit(this.props, ['children'])} />
+        {this.props.children}
+      </CardExt>
+    );
+  }
 }
 
 export default PanelBase;

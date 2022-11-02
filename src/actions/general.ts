@@ -34,5 +34,5 @@ export interface GeneralReducerAction {
 //---------------------------------------------------------------------------------------
 
 export const actionToggleTheme = (): GeneralReducerAction => ({
-	type: GeneralAction.ToggleTheme
+  type: GeneralAction.ToggleTheme
 });

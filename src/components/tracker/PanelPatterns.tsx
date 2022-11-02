@@ -46,124 +46,124 @@ interface PatternsState {
 }
 
 const PanelPatterns: React.FunctionComponent = () => {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	const state = useSelector<ReducerStoreState, PatternsState | undefined>(({ tracker }) => {
-		if (tracker?.player?.pattern) {
-			const totalPatterns = tracker.player.pattern.length || 0;
-			const hasPatterns = (totalPatterns > 1);
-			const pattern = hasPatterns ? (tracker.workingPattern || 1) : 0;
-			const patternLength = tracker.player.pattern[pattern]?.end || 0;
-			const patternUsage = pattern && tracker.player.countPatternUsage(pattern);
+  const state = useSelector<ReducerStoreState, PatternsState | undefined>(({ tracker }) => {
+    if (tracker?.player?.pattern) {
+      const totalPatterns = tracker.player.pattern.length || 0;
+      const hasPatterns = (totalPatterns > 1);
+      const pattern = hasPatterns ? (tracker.workingPattern || 1) : 0;
+      const patternLength = tracker.player.pattern[pattern]?.end || 0;
+      const patternUsage = pattern && tracker.player.countPatternUsage(pattern);
 
-			return {
-				noPatterns: !hasPatterns,
-				pattern,
-				patternLength,
-				patternUsage,
-				totalPatterns: hasPatterns ? (totalPatterns - 1) : 0,
-				minPatternValue: hasPatterns ? 1 : 0,
-				minPatternLength: pattern ? 1 : 0,
-			};
-		}
-	});
+      return {
+        noPatterns: !hasPatterns,
+        pattern,
+        patternLength,
+        patternUsage,
+        totalPatterns: hasPatterns ? (totalPatterns - 1) : 0,
+        minPatternValue: hasPatterns ? 1 : 0,
+        minPatternLength: pattern ? 1 : 0,
+      };
+    }
+  });
 
-	const handleWorkingPatternChange = useCallback((value: number) =>
-		dispatch(actionChangeEditorControl({ key: 'workingPattern', value })),
-	[ dispatch ]);
+  const handleWorkingPatternChange = useCallback((value: number) =>
+    dispatch(actionChangeEditorControl({ key: 'workingPattern', value })),
+  [ dispatch ]);
 
-	return state ? (
-		<PanelBase title="Patterns:">
-			<PanelCtrlRow>
-				<Col xs={6} className="split">
-					<Button text="Create" fill={true} />
-				</Col>
-				<Col xs={4}>
-					<label htmlFor="pattern">Pattern:</label>
-				</Col>
-				<Col xs={6}>
-					<RadixIntegerInput
-						fill={true}
-						id="pattern"
-						disabled={state.noPatterns}
-						min={state.minPatternValue}
-						max={state.totalPatterns}
-						value={state.pattern}
-						onValueChange={value => handleWorkingPatternChange(value)}
-					/>
-				</Col>
-			</PanelCtrlRow>
+  return state ? (
+    <PanelBase title="Patterns:">
+      <PanelCtrlRow>
+        <Col xs={6} className="split">
+          <Button text="Create" fill={true} />
+        </Col>
+        <Col xs={4}>
+          <label htmlFor="pattern">Pattern:</label>
+        </Col>
+        <Col xs={6}>
+          <RadixIntegerInput
+            fill={true}
+            id="pattern"
+            disabled={state.noPatterns}
+            min={state.minPatternValue}
+            max={state.totalPatterns}
+            value={state.pattern}
+            onValueChange={value => handleWorkingPatternChange(value)}
+          />
+        </Col>
+      </PanelCtrlRow>
 
-			<PanelCtrlRow>
-				<Col xs={6} className="split">
-					<Button
-						text="Delete"
-						fill={true}
-						disabled={state.noPatterns}
-					/>
-				</Col>
-				<Col xs={4}>
-					<label htmlFor="patternLength">Length:</label>
-				</Col>
-				<Col xs={6}>
-					<RadixIntegerInput
-						fill={true}
-						id="patternLength"
-						disabled={state.noPatterns}
-						min={state.minPatternLength}
-						max={MAX_PATTERN_LEN}
-						value={state.patternLength}
-						onValueChange={() => null}
-					/>
-				</Col>
-			</PanelCtrlRow>
+      <PanelCtrlRow>
+        <Col xs={6} className="split">
+          <Button
+            text="Delete"
+            fill={true}
+            disabled={state.noPatterns}
+          />
+        </Col>
+        <Col xs={4}>
+          <label htmlFor="patternLength">Length:</label>
+        </Col>
+        <Col xs={6}>
+          <RadixIntegerInput
+            fill={true}
+            id="patternLength"
+            disabled={state.noPatterns}
+            min={state.minPatternLength}
+            max={MAX_PATTERN_LEN}
+            value={state.patternLength}
+            onValueChange={() => null}
+          />
+        </Col>
+      </PanelCtrlRow>
 
-			<PanelCtrlRow>
-				<Col xs={6} className="split">
-					<Button
-						text="Clean"
-						fill={true}
-						disabled={state.noPatterns}
-					/>
-				</Col>
-				<Col xs={4}>
-					<label>Used:</label>
-				</Col>
-				<Col xs={6}>
-					<input
-						className="bp3-input bp3-fill"
-						type="text"
-						readOnly={true}
-						disabled={state.noPatterns}
-						value={state.patternUsage}
-					/>
-				</Col>
-			</PanelCtrlRow>
+      <PanelCtrlRow>
+        <Col xs={6} className="split">
+          <Button
+            text="Clean"
+            fill={true}
+            disabled={state.noPatterns}
+          />
+        </Col>
+        <Col xs={4}>
+          <label>Used:</label>
+        </Col>
+        <Col xs={6}>
+          <input
+            className="bp3-input bp3-fill"
+            type="text"
+            readOnly={true}
+            disabled={state.noPatterns}
+            value={state.patternUsage}
+          />
+        </Col>
+      </PanelCtrlRow>
 
-			<PanelCtrlRow splitAbove={true}>
-				<Col xs={6} className="split">
-					<Button
-						icon="function"
-						rightIcon="caret-down"
-						fill={true}
-						disabled={true}
-					/>
-				</Col>
-				<Col xs={4}>
-					<label>Total:</label>
-				</Col>
-				<Col xs={6}>
-					<input
-						className="bp3-input bp3-fill"
-						type="text"
-						readOnly={true}
-						disabled={state.noPatterns}
-						value={state.totalPatterns}
-					/>
-				</Col>
-			</PanelCtrlRow>
-		</PanelBase>
-	) : null;
+      <PanelCtrlRow splitAbove={true}>
+        <Col xs={6} className="split">
+          <Button
+            icon="function"
+            rightIcon="caret-down"
+            fill={true}
+            disabled={true}
+          />
+        </Col>
+        <Col xs={4}>
+          <label>Total:</label>
+        </Col>
+        <Col xs={6}>
+          <input
+            className="bp3-input bp3-fill"
+            type="text"
+            readOnly={true}
+            disabled={state.noPatterns}
+            value={state.totalPatterns}
+          />
+        </Col>
+      </PanelCtrlRow>
+    </PanelBase>
+  ) : null;
 };
 
 export default PanelPatterns;

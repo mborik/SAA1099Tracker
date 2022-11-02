@@ -36,42 +36,44 @@ interface SettingsOptions {
 }
 
 export default class Settings implements SettingsOptions {
-	private _audioGain: number = 1.0;
+  private _audioGain: number = 1.0;
 
-	tracklistAutosize: boolean = true;
-	tracklistLines: number = 17;
-	tracklistLineHeight: number = 9;
-	hexTracklines: boolean = true;
-	hexSampleFreq: boolean = false;
-	audioInterrupt: number = 50;
-	audioBuffers: number = 4;
+  tracklistAutosize: boolean = true;
+  tracklistLines: number = 17;
+  tracklistLineHeight: number = 9;
+  hexTracklines: boolean = true;
+  hexSampleFreq: boolean = false;
+  audioInterrupt: number = 50;
+  audioBuffers: number = 4;
 
 
-	constructor(private _app: Tracker) {}
+  constructor(private _app: Tracker) {}
 
-	get audioGain(): number { return this._audioGain }
-	set audioGain(value) {
-		const volume = Math.min(Math.max(0, value / 100), 2);
-		this._audioGain = volume;
-	}
+  get audioGain(): number {
+    return this._audioGain;
+  }
+  set audioGain(value) {
+    const volume = Math.min(Math.max(0, value / 100), 2);
+    this._audioGain = volume;
+  }
 
-	audioInit() {
-		const tracker = this._app;
-		if (tracker.modePlay) {
-			// tracker.onCmdStop();
-		}
+  audioInit() {
+    const tracker = this._app;
+    if (tracker.modePlay) {
+      // tracker.onCmdStop();
+    }
 
-		const interrupt = this.audioInterrupt;
-		tracker.player.setInterrupt(interrupt);
+    const interrupt = this.audioInterrupt;
+    tracker.player.setInterrupt(interrupt);
 
-		AudioDriver.getInstance().play({
-			audioSource: tracker.player,
-			buffers: this.audioBuffers,
-			interrupt
-		});
-	}
+    AudioDriver.getInstance().play({
+      audioSource: tracker.player,
+      buffers: this.audioBuffers,
+      interrupt
+    });
+  }
 
-	init() {
-		this.audioInit();
-	}
+  init() {
+    this.audioInit();
+  }
 }
