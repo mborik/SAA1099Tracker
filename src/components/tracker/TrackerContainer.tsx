@@ -32,13 +32,13 @@ import PanelPositions from './PanelPositions';
 const TrackerContainer: React.FunctionComponent = () => {
 	return (
 		<Row>
-			<Col xs={6} sm={6} md={3}>
+			<Col xs={6} sm={6} md={6} lg={2}>
 				<PanelEditor />
 			</Col>
-			<Col xs={10} sm={10} md={4}>
+			<Col xs={10} sm={10} md={10} lg={4}>
 				<PanelPatterns />
 			</Col>
-			<Col xs={16} sm={16} md={9}>
+			<Col xs={16} sm={16} md={16} lg={10}>
 				<PanelPositions />
 			</Col>
 		</Row>

@@ -27,19 +27,19 @@ import { Col } from 'react-styled-flexboxgrid';
 import { Button } from '@blueprintjs/core';
 
 import { actionChangeEditorControl } from '../../actions/tracker';
+import { MAX_PATTERN_LEN } from '../../core/player/globals';
 import { ReducerStoreState } from '../../reducers';
 
 import PanelBase from '../partials/PanelBase';
 import PanelCtrlRow from '../partials/PanelCtrlRow';
 import RadixIntegerInput from '../partials/RadixIntegerInput';
-import { MAX_PATTERN_LEN } from '../../core/player/globals';
 
 
 interface PatternsState {
 	noPatterns: boolean;
-	workingPattern: number;
-	workingPatternLen: number;
-	workingPatternUsage: number;
+	pattern: number;
+	patternLength: number;
+	patternUsage: number;
 	totalPatterns: number;
 	minPatternValue: number;
 	minPatternLength: number;
@@ -52,18 +52,18 @@ const PanelPatterns: React.FunctionComponent = () => {
 		if (tracker?.player?.pattern) {
 			const totalPatterns = tracker.player.pattern.length || 0;
 			const hasPatterns = (totalPatterns > 1);
-			const workingPattern = hasPatterns ? (tracker.workingPattern || 1) : 0;
-			const workingPatternLen = tracker.player.pattern[workingPattern]?.end || 0;
-			const workingPatternUsage = workingPattern && tracker.player.countPatternUsage(workingPattern);
+			const pattern = hasPatterns ? (tracker.workingPattern || 1) : 0;
+			const patternLength = tracker.player.pattern[pattern]?.end || 0;
+			const patternUsage = pattern && tracker.player.countPatternUsage(pattern);
 
 			return {
 				noPatterns: !hasPatterns,
-				workingPattern,
-				workingPatternLen,
-				workingPatternUsage,
+				pattern,
+				patternLength,
+				patternUsage,
 				totalPatterns: hasPatterns ? (totalPatterns - 1) : 0,
 				minPatternValue: hasPatterns ? 1 : 0,
-				minPatternLength: workingPattern ? 1 : 0,
+				minPatternLength: pattern ? 1 : 0,
 			};
 		}
 	});
@@ -79,16 +79,16 @@ const PanelPatterns: React.FunctionComponent = () => {
 					<Button text="Create" fill={true} />
 				</Col>
 				<Col xs={4}>
-					<label htmlFor="workingPattern">Pattern:</label>
+					<label htmlFor="pattern">Pattern:</label>
 				</Col>
 				<Col xs={6}>
 					<RadixIntegerInput
 						fill={true}
-						id="workingPattern"
+						id="pattern"
 						disabled={state.noPatterns}
 						min={state.minPatternValue}
 						max={state.totalPatterns}
-						value={state.workingPattern}
+						value={state.pattern}
 						onValueChange={value => handleWorkingPatternChange(value)}
 					/>
 				</Col>
@@ -103,16 +103,16 @@ const PanelPatterns: React.FunctionComponent = () => {
 					/>
 				</Col>
 				<Col xs={4}>
-					<label htmlFor="workingPatternLen">Length:</label>
+					<label htmlFor="patternLength">Length:</label>
 				</Col>
 				<Col xs={6}>
 					<RadixIntegerInput
 						fill={true}
-						id="workingPatternLen"
+						id="patternLength"
 						disabled={state.noPatterns}
 						min={state.minPatternLength}
 						max={MAX_PATTERN_LEN}
-						value={state.workingPatternLen}
+						value={state.patternLength}
 						onValueChange={() => null}
 					/>
 				</Col>
@@ -127,7 +127,7 @@ const PanelPatterns: React.FunctionComponent = () => {
 					/>
 				</Col>
 				<Col xs={4}>
-					<label htmlFor="workingPatternUsage">Used:</label>
+					<label>Used:</label>
 				</Col>
 				<Col xs={6}>
 					<input
@@ -135,7 +135,7 @@ const PanelPatterns: React.FunctionComponent = () => {
 						type="text"
 						readOnly={true}
 						disabled={state.noPatterns}
-						value={state.workingPatternUsage}
+						value={state.patternUsage}
 					/>
 				</Col>
 			</PanelCtrlRow>
@@ -146,11 +146,11 @@ const PanelPatterns: React.FunctionComponent = () => {
 						icon="function"
 						rightIcon="caret-down"
 						fill={true}
-						disabled={state.noPatterns}
+						disabled={true}
 					/>
 				</Col>
 				<Col xs={4}>
-					<label htmlFor="workingPatternUsage">Total:</label>
+					<label>Total:</label>
 				</Col>
 				<Col xs={6}>
 					<input

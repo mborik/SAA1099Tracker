@@ -32,7 +32,7 @@ const defaultTheme = (darkTheme?: boolean) => ({
 		gray: Colors.GRAY3
 	},
 	tracker: {
-		maxWidth: '70rem'
+		maxWidth: '77rem'
 	},
 	flexboxgrid: {
 		gridSize: 16,
@@ -42,13 +42,13 @@ const defaultTheme = (darkTheme?: boolean) => ({
 		container: {
 			sm: 42, // rem
 			md: 56, // rem
-			lg: 70 // rem
+			lg: 77 // rem
 		},
 		breakpoints: {
 			xs: 0, // em
 			sm: 48, // em
 			md: 64, // em
-			lg: 80 // em
+			lg: 88 // em
 		}
 	}
 });
