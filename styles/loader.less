@@ -20,7 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-@import (reference) "variables.less";
+@import (reference) "bootstrap/less/variables.less";
 @import (reference) "mixins.less";
 //---------------------------------------------------------------------------------------
 body {
@@ -79,37 +79,37 @@ body {
 
 @font-face {
 	font-family: 'Droid Sans';
-	src: url('@{icon-font-path}droidsans-regular-webfont.eot');
-	src: url('@{icon-font-path}droidsans-regular-webfont.eot?#iefix') format('embedded-opentype');
-	src: url('@{icon-font-path}droidsans-regular-webfont.svg#droid_sansregular') format('svg');
-	src: url('@{icon-font-path}droidsans-regular-webfont.woff') format('woff');
-	src: url('@{icon-font-path}droidsans-regular-webfont.ttf') format('truetype');
+	src: url('../assets/fonts/droidsans-regular-webfont.eot');
+	src: url('../assets/fonts/droidsans-regular-webfont.eot?#iefix') format('embedded-opentype');
+	src: url('../assets/fonts/droidsans-regular-webfont.svg#droid_sansregular') format('svg');
+	src: url('../assets/fonts/droidsans-regular-webfont.woff') format('woff');
+	src: url('../assets/fonts/droidsans-regular-webfont.ttf') format('truetype');
 	font-weight: normal;
 	font-style: normal;
 }
 @font-face {
 	font-family: 'Droid Sans';
-	src: url('@{icon-font-path}droidsans-bold-webfont.eot');
-	src: url('@{icon-font-path}droidsans-bold-webfont.eot?#iefix') format('embedded-opentype');
-	src: url('@{icon-font-path}droidsans-bold-webfont.svg#droid_sansbold') format('svg');
-	src: url('@{icon-font-path}droidsans-bold-webfont.woff') format('woff');
-	src: url('@{icon-font-path}droidsans-bold-webfont.ttf') format('truetype');
+	src: url('../assets/fonts/droidsans-bold-webfont.eot');
+	src: url('../assets/fonts/droidsans-bold-webfont.eot?#iefix') format('embedded-opentype');
+	src: url('../assets/fonts/droidsans-bold-webfont.svg#droid_sansbold') format('svg');
+	src: url('../assets/fonts/droidsans-bold-webfont.woff') format('woff');
+	src: url('../assets/fonts/droidsans-bold-webfont.ttf') format('truetype');
 	font-weight: bold;
 	font-style: normal;
 }
 @font-face {
 	font-family: 'BPmono';
-	src: url('@{icon-font-path}bpmono-webfont.eot');
-	src: url('@{icon-font-path}bpmono-webfont.eot?#iefix') format('embedded-opentype');
-	src: url('@{icon-font-path}bpmono-webfont.svg#droid_sansbold') format('svg');
-	src: url('@{icon-font-path}bpmono-webfont.woff') format('woff');
-	src: url('@{icon-font-path}bpmono-webfont.ttf') format('truetype');
+	src: url('../assets/fonts/bpmono-webfont.eot');
+	src: url('../assets/fonts/bpmono-webfont.eot?#iefix') format('embedded-opentype');
+	src: url('../assets/fonts/bpmono-webfont.svg#droid_sansbold') format('svg');
+	src: url('../assets/fonts/bpmono-webfont.woff') format('woff');
+	src: url('../assets/fonts/bpmono-webfont.ttf') format('truetype');
 	font-weight: normal;
 	font-style: normal;
 }
 
 @keyframes spin { 100% { transform:rotate(360deg); } }
 //---------------------------------------------------------------------------------------
-@import (css) "bootstrap.min.css";
-@import (css) "tracker.min.css";
+@import "bootstrap.less";
+@import "custom.less";
 //---------------------------------------------------------------------------------------

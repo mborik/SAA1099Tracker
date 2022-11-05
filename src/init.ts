@@ -1,6 +1,6 @@
 /*!
- * Common functions, handy helpers and WebAudio sound output driver.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+ * SAA1099Tracker
+ * Copyright (c) 2012-2022 Martin Borik <mborik@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,3 +20,5 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+
+import '../styles/loader.less';

@@ -9,27 +9,25 @@
 	<meta property="og:url" content="http://saa1099tracker.borik.net/">
 	<meta property="og:description" content="SAA1099Tracker is a offline-storage HTML5/JavaScript chiptune music tracker for Philips SAA 1099 soundchip">
 	<meta property="og:image" content="http://saa1099tracker.borik.net/img/logo.png">
-	<link rel="icon" href="favicon.ico">
-	<link rel="stylesheet" href="css/styles.min.css">
-	<script type="text/javascript" src="init.js"></script>
+	<link rel="icon" href="../assets/resources/favicon.ico">
 </head>
 <body class="loading">
 <div hidden id="overlay"><div class="wrapper"><span class="loader">loading</span></div></div>
 <nav class="navbar navbar-default">
-<!-- build:section menu --><!-- /build -->
+@require('menu.html')
 </nav>
 <div class="fixed-container">
-<!-- build:section header --><!-- /build -->
+@require('header.html')
 <div class="tab-content">
-<!-- build:section editor.trk --><!-- /build -->
-<!-- build:section editor.smp --><!-- /build -->
-<!-- build:section editor.orn --><!-- /build -->
+@require('trackedit.html')
+@require('smpedit.html')
+@require('ornedit.html')
 </div>
 </div>
-<!-- build:section dialog.file --><!-- /build -->
-<!-- build:section dialog.settings --><!-- /build -->
-<!-- build:section recursive dialog.about --><!-- /build -->
-<!-- build:section dialog.commons --><!-- /build -->
-<!-- build:section footer --><!-- /build -->
+@require('dlg-file.html')
+@require('dlg-settings.html')
+@require('dlg-about.html')
+@require('dlg-commons.html')
+@require('footer.html')
 </body>
 </html>

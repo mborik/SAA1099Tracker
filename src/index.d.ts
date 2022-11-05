@@ -21,8 +21,6 @@
  */
 //---------------------------------------------------------------------------------------
 /// <reference types="jquery" />
-/// <reference types="lz-string" />
-
 /// <reference types="bootstrap" />
 /// <reference path="bootstrap.mods/confirm/bootstrap-confirm.d.ts" />
 /// <reference path="bootstrap.mods/touchspin/bootstrap-touchspin.d.ts" />
