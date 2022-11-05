@@ -1,6 +1,6 @@
-/*
- * Tracker file dialog sub-class.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Tracker file dialog sub-class.
+ * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,171 +20,172 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path="../index.d.ts" />
-//---------------------------------------------------------------------------------------
+
+import { pick } from 'lodash';
+import * as AudioDriver from '../commons/audio';
+import { devLog } from '../commons/dev';
+import { abs } from '../commons/number';
+import Tracker from '.';
+
 interface SettingsOptions {
-	tracklistAutosize: boolean;
-	tracklistLines: number;
-	tracklistLineHeight: number;
-	hexTracklines: boolean;
-	hexSampleFreq: boolean;
-	audioInterrupt: number;
-	audioBuffers: number;
-	audioGain: number;
+  tracklistAutosize: boolean;
+  tracklistLines: number;
+  tracklistLineHeight: number;
+  hexTracklines: boolean;
+  hexSampleFreq: boolean;
+  audioInterrupt: number;
+  audioBuffers: number;
+  audioGain: number;
 }
-//---------------------------------------------------------------------------------------
-class Settings {
-	constructor(private $app: Tracker) {}
 
-	private _obj: JQuery = null;
-	private _options: SettingsOptions = {
-		tracklistAutosize: true,
-		tracklistLines: 17,
-		tracklistLineHeight: 9,
-		hexTracklines: true,
-		hexSampleFreq: false,
-		audioInterrupt: 50,
-		audioBuffers: 4,
-		audioGain: 1.0
-	};
 
-	get tracklistAutosize(): boolean { return this._options.tracklistAutosize; }
-	get tracklistLines(): number { return this._options.tracklistLines; }
-	get tracklistLineHeight(): number { return this._options.tracklistLineHeight; }
-	get hexTracklines(): boolean { return this._options.hexTracklines; }
-	get hexSampleFreq(): boolean { return this._options.hexSampleFreq; }
-	get audioInterrupt(): number { return this._options.audioInterrupt; }
-	get audioBuffers(): number { return this._options.audioBuffers; }
-	get audioGain(): number { return this._options.audioGain; }
+export default class Settings implements SettingsOptions {
+  private _obj: JQuery = null;
+  private _audio: AudioDriver.default = AudioDriver.getInstance();
 
-	set tracklistAutosize(state) { this._options.tracklistAutosize = state; }
-	set tracklistLines(lines) { this._options.tracklistLines = lines; }
-	set tracklistLineHeight(h) { this._options.tracklistLineHeight = h; }
-	set hexTracklines(state) { this._options.hexTracklines = state; }
-	set hexSampleFreq(state) { this._options.hexSampleFreq = state; }
-	set audioInterrupt(int) { this._options.audioInterrupt = int; }
-	set audioBuffers(count) { this._options.audioBuffers = count; }
-	set audioGain(value) {
-		let volume = Math.min(Math.max(0, value / 100), 2);
-		this._options.audioGain = volume;
-		AudioDriver.volume = volume;
-	}
+  tracklistAutosize = true;
+  tracklistLines = 17;
+  tracklistLineHeight = 9;
+  hexTracklines = true;
+  hexSampleFreq = false;
+  audioInterrupt = 50;
+  audioBuffers = 4;
+  audioGain = 1.0;
 
-	private _populateElements() {
-		$('#chSetTrkAutosize').prop('checked', this._options.tracklistAutosize);
-		$('#scSetTrkLines').val(this._options.tracklistLines);
-		$('#scSetTrkLineHeight').val(this._options.tracklistLineHeight);
-		$('#chSetHexTracklist').prop('checked', this._options.hexTracklines);
-		$('#chSetHexFreqShifts').prop('checked', this._options.hexSampleFreq);
-		$('#rgSetAudioVolume').val(this._options.audioGain * 100);
-		$('#rgSetAudioBuffers').val(this._options.audioBuffers);
-		$('#rdSetAudioInt' + this._options.audioInterrupt).prop('checked', true);
+  constructor(private _parent: Tracker) {}
 
-		this.updateLatencyInfo();
-	}
+  setAudioGain(value: number) {
+    const volume = Math.min(Math.max(0, value / 100), 2);
+    this._audio.volume = this.audioGain = volume;
+  }
 
-	private _applyChanges(backup: SettingsOptions) {
-		localStorage.setItem('settings', JSON.stringify(this._options));
+  private _populateElements() {
+    $('#chSetTrkAutosize').prop('checked', this.tracklistAutosize);
+    $('#scSetTrkLines').val(this.tracklistLines);
+    $('#scSetTrkLineHeight').val(this.tracklistLineHeight);
+    $('#chSetHexTracklist').prop('checked', this.hexTracklines);
+    $('#chSetHexFreqShifts').prop('checked', this.hexSampleFreq);
+    $('#rgSetAudioVolume').val(this.audioGain * 100);
+    $('#rgSetAudioBuffers').val(this.audioBuffers);
+    $('#rdSetAudioInt' + this.audioInterrupt).prop('checked', true);
 
-		if (backup.audioBuffers !== this._options.audioBuffers ||
-			backup.audioInterrupt !== this._options.audioInterrupt) {
+    this.updateLatencyInfo();
+  }
 
-			this.audioInit();
-		}
-		if (backup.tracklistAutosize !== this._options.tracklistAutosize ||
-			backup.tracklistLineHeight !== this._options.tracklistLineHeight ||
-			backup.tracklistLines !== this._options.tracklistLines ||
-			backup.hexTracklines !== this._options.hexTracklines) {
+  private _applyChanges(backup: SettingsOptions) {
+    localStorage.setItem('settings', JSON.stringify(this));
 
-			$(window).trigger('resize', [ true ]);
-		}
-		if (backup.hexSampleFreq !== this._options.hexSampleFreq ||
-			this.$app.activeTab === 1) {
+    if (backup.audioBuffers !== this.audioBuffers ||
+      backup.audioInterrupt !== this.audioInterrupt) {
 
-			this.$app.smpornedit.updateSamplePitchShift();
-		}
-	}
+      this.audioInit();
+    }
+    if (backup.tracklistAutosize !== this.tracklistAutosize ||
+      backup.tracklistLineHeight !== this.tracklistLineHeight ||
+      backup.tracklistLines !== this.tracklistLines ||
+      backup.hexTracklines !== this.hexTracklines) {
 
-	public audioInit() {
-		let tracker = this.$app;
-		if (tracker.modePlay) {
-			tracker.onCmdStop();
-		}
+      $(window).trigger('resize', [ true ]);
+    }
+    if (backup.hexSampleFreq !== this.hexSampleFreq ||
+      this._parent.activeTab === 1) {
 
-		let int = this._options.audioInterrupt;
-		tracker.player.setInterrupt(int);
-		$('#rdSetAudioInt' + int).prop('checked', true);
+      this._parent.smpornedit.updateSamplePitchShift();
+    }
+  }
 
-		AudioDriver.init(tracker.player, this._options.audioBuffers, int);
-		AudioDriver.play();
-	}
+  audioInit() {
+    const tracker = this._parent;
+    if (tracker.modePlay) {
+      tracker.onCmdStop();
+    }
 
-	public updateLatencyInfo() {
-		let smpRate = AudioDriver.sampleRate;
-		let samples = AudioDriver.getAdjustedSamples(smpRate,
-			this._options.audioBuffers,
-			this._options.audioInterrupt
-		);
+    const int = this.audioInterrupt;
+    tracker.player.setInterrupt(int);
+    $('#rdSetAudioInt' + int).prop('checked', true);
 
-		let milisec = ((samples / smpRate) * 1000).abs();
-		$('#rgSetAudioBuffers').next().html(`<b>Latency:</b> ${samples} samples <i>(${milisec} ms)</i>`);
-	}
+    this._audio.play({
+      audioSource: tracker.player,
+      buffers: this.audioBuffers,
+      interrupt: int
+    });
+  }
 
-	public init() {
-		this._obj = $('#settings');
+  updateLatencyInfo() {
+    const smpRate = this._audio.sampleRate;
+    const samples = this._audio.getAdjustedSamples(smpRate,
+      this.audioBuffers,
+      this.audioInterrupt
+    );
 
-		try {
-			let input = localStorage.getItem('settings') || '{}';
-			let userOptions = JSON.parse(input);
-			Object.assign(this._options, userOptions);
-		}
-		catch (e) {}
+    const milisec = abs((samples / smpRate) * 1000);
+    $('#rgSetAudioBuffers').next().html(`<b>Latency:</b> ${samples} samples <i>(${milisec} ms)</i>`);
+  }
 
-		console.log('Settings', 'User options fetched from localStorage %o...', this._options);
+  init() {
+    this._obj = $('#settings');
 
-		this._populateElements();
-		this.audioInit();
-	}
+    try {
+      const input = localStorage.getItem('settings') || '{}';
+      const userOptions = JSON.parse(input);
+      Object.assign(this, userOptions);
+    }
+    catch (e) {}
 
-	public show() {
-		let currentOptionsBackup: SettingsOptions = Object.assign({}, this._options);
+    devLog('Settings', 'User options fetched from localStorage %o...', this);
 
-		let wasApplied = false;
-		let fnApply = this._applyChanges.bind(this);
+    this._populateElements();
+    this.audioInit();
+  }
 
-		let tracker = this.$app;
-		tracker.globalKeyState.inDialog = true;
-		this._obj.on('show.bs.modal', $.proxy(() => {
-			this._obj
-				.before($('<div/>')
-				.addClass('modal-backdrop in').css('z-index', '1030'));
+  show() {
+    const currentOptionsBackup: SettingsOptions = pick(this, [
+      'tracklistAutosize',
+      'tracklistLines',
+      'tracklistLineHeight',
+      'hexTracklines',
+      'hexSampleFreq',
+      'audioInterrupt',
+      'audioBuffers',
+      'audioGain',
+    ]);
 
-			$('#chSetTrkAutosize').trigger('change');
-			this._obj.find('.apply').click((() => {
-				wasApplied = true;
-				setTimeout(fnApply, 0, currentOptionsBackup);
+    let wasApplied = false;
+    const fnApply = this._applyChanges.bind(this);
 
-				this._obj.modal('hide');
-				return true;
-			}).bind(this));
+    const tracker = this._parent;
+    tracker.globalKeyState.inDialog = true;
+    this._obj.on('show.bs.modal', $.proxy(() => {
+      this._obj
+        .before($('<div/>')
+          .addClass('modal-backdrop in').css('z-index', '1030'));
 
-		}, this)).on('hide.bs.modal', $.proxy(() => {
-			this._obj.prev('.modal-backdrop').remove();
-			this._obj.find('.modal-footer>.btn').off();
-			this._obj.off();
+      $('#chSetTrkAutosize').trigger('change');
+      this._obj.find('.apply').click((() => {
+        wasApplied = true;
+        setTimeout(fnApply, 0, currentOptionsBackup);
 
-			if (!wasApplied) {
-				// restore previous options
-				Object.assign(this._options, currentOptionsBackup);
-				this._populateElements();
-			}
+        this._obj.modal('hide');
+        return true;
+      }).bind(this));
 
-			AudioDriver.volume = this._options.audioGain;
-			tracker.globalKeyState.inDialog = false;
+    }, this)).on('hide.bs.modal', $.proxy(() => {
+      this._obj.prev('.modal-backdrop').remove();
+      this._obj.find('.modal-footer>.btn').off();
+      this._obj.off();
 
-		}, this)).modal({
-			show: true,
-			backdrop: false
-		});
-	}
+      if (!wasApplied) {
+        // restore previous options
+        Object.assign(this, currentOptionsBackup);
+        this._populateElements();
+      }
+
+      this._audio.volume = this.audioGain;
+      tracker.globalKeyState.inDialog = false;
+
+    }, this)).modal({
+      show: true,
+      backdrop: false
+    });
+  }
 }

@@ -1,6 +1,6 @@
-/*
- * Clipboard and tracklist manager class and dependent interfaces.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Clipboard and tracklist manager class and dependent interfaces.
+ * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,170 +20,173 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path="../index.d.ts" />
-//---------------------------------------------------------------------------------------
-class Manager {
-	constructor(private $parent: Tracker) {}
 
-	private _clipboard: string = '';
+import { TracklistSelection } from './tracklist';
+import Tracker from '.';
 
-	private _getBlock() {
-		let p = this.$parent.player;
-		let sel: TracklistSelection = this.$parent.tracklist.selection;
-		let ch = sel.len ? sel.channel : this.$parent.modeEditChannel;
-		let line = sel.len ? sel.line : p.currentLine;
-		let length = sel.len ? (sel.len + 1) : undefined;
-		let pos = p.position[p.currentPosition] || p.nullPosition;
-		let chn = pos.ch[ch];
-		let patt = chn.pattern;
 
-		return {
-			pp: p.pattern[patt],
-			line: line,
-			len: length
-		};
-	}
+export default class Manager {
+  constructor(private _parent: Tracker) {}
 
-//---------------------------------------------------------------------------------------
-	public clearFromTracklist() {
-		let o = this._getBlock();
-		o.pp.parse([], o.line, o.len || 1);
-	}
+  private _clipboard: string = '';
 
-	public copyFromTracklist() {
-		let o = this._getBlock();
-		let data = o.pp.export(o.line, o.len || 1, false);
+  private _getBlock() {
+    const p = this._parent.player;
+    const sel: TracklistSelection = this._parent.tracklist.selection;
+    const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
+    const line = sel.len ? sel.line : p.currentLine;
+    const length = sel.len ? (sel.len + 1) : undefined;
+    const pos = p.position[p.currentPosition] || p.nullPosition;
+    const chn = pos.ch[ch];
+    const patt = chn.pattern;
 
-		this._clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
-	}
+    return {
+      pp: p.pattern[patt],
+      line: line,
+      len: length
+    };
+  }
 
-	public pasteToTracklist(): boolean {
-		if (this._clipboard.indexOf('STMF.trk:[') !== 0) {
-			return false;
-		}
+  //---------------------------------------------------------------------------------------
+  public clearFromTracklist() {
+    const o = this._getBlock();
+    o.pp.parse([], o.line, o.len || 1);
+  }
 
-		let o = this._getBlock();
-		let data: string[];
+  public copyFromTracklist() {
+    const o = this._getBlock();
+    const data = o.pp.export(o.line, o.len || 1, false);
 
-		try {
-			let json = this._clipboard.substr(9);
-			data = JSON.parse(json);
+    this._clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
+  }
 
-			if (!(data instanceof Array && data.length > 0)) {
-				return false;
-			}
-		}
-		catch (e) {
-			return false;
-		}
+  public pasteToTracklist(): boolean {
+    if (this._clipboard.indexOf('STMF.trk:[') !== 0) {
+      return false;
+    }
 
-		o.pp.parse(data, o.line, o.len || data.length);
-		return true;
-	}
+    const o = this._getBlock();
+    let data: string[];
 
-//---------------------------------------------------------------------------------------
-	public clearSample() {
-		let app = this.$parent;
-		let smp = app.player.sample[app.workingSample];
+    try {
+      const json = this._clipboard.substr(9);
+      data = JSON.parse(json);
 
-		smp.name = '';
-		smp.loop = 0;
-		smp.end = 0;
-		smp.releasable = false;
-		smp.parse([]);
-	}
+      if (!(data instanceof Array && data.length > 0)) {
+        return false;
+      }
+    }
+    catch (e) {
+      return false;
+    }
 
-	public copySample() {
-		let app = this.$parent;
-		let smp = app.player.sample[app.workingSample];
-		let obj = {
-			name: smp.name,
-			loop: smp.loop,
-			end: smp.end,
-			releasable: smp.releasable,
-			data: smp.export(false)
-		};
+    o.pp.parse(data, o.line, o.len || data.length);
+    return true;
+  }
 
-		this._clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
-	}
+  //---------------------------------------------------------------------------------------
+  public clearSample() {
+    const app = this._parent;
+    const smp = app.player.sample[app.workingSample];
 
-	public pasteSample() {
-		if (this._clipboard.indexOf('STMF.smp:{') !== 0) {
-			return false;
-		}
+    smp.name = '';
+    smp.loop = 0;
+    smp.end = 0;
+    smp.releasable = false;
+    smp.parse([]);
+  }
 
-		let app = this.$parent;
-		let smp = app.player.sample[app.workingSample];
-		let obj: any;
+  public copySample() {
+    const app = this._parent;
+    const smp = app.player.sample[app.workingSample];
+    const obj = {
+      name: smp.name,
+      loop: smp.loop,
+      end: smp.end,
+      releasable: smp.releasable,
+      data: smp.export(false)
+    };
 
-		try {
-			let json = this._clipboard.substr(9);
-			obj = JSON.parse(json);
+    this._clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
+  }
 
-			if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
-				return false;
-			}
-		}
-		catch (e) {
-			return false;
-		}
+  public pasteSample() {
+    if (this._clipboard.indexOf('STMF.smp:{') !== 0) {
+      return false;
+    }
 
-		smp.parse(obj.data);
-		smp.name = obj.name;
-		smp.loop = obj.loop;
-		smp.end = obj.end;
-		smp.releasable = obj.releasable;
-		return true;
-	}
+    const app = this._parent;
+    const smp = app.player.sample[app.workingSample];
+    let obj: any;
 
-//---------------------------------------------------------------------------------------
-	public clearOrnament() {
-		let app = this.$parent;
-		let orn = app.player.ornament[app.workingOrnament];
+    try {
+      const json = this._clipboard.substr(9);
+      obj = JSON.parse(json);
 
-		orn.name = '';
-		orn.data.fill(0);
-		orn.loop = orn.end = 0;
-	}
+      if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
+        return false;
+      }
+    }
+    catch (e) {
+      return false;
+    }
 
-	public copyOrnament() {
-		let app = this.$parent;
-		let orn = app.player.ornament[app.workingOrnament];
-		let obj = {
-			name: orn.name,
-			loop: orn.loop,
-			end:  orn.end,
-			data: orn.export(false)
-		};
+    smp.parse(obj.data);
+    smp.name = obj.name;
+    smp.loop = obj.loop;
+    smp.end = obj.end;
+    smp.releasable = obj.releasable;
+    return true;
+  }
 
-		this._clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
-	}
+  //---------------------------------------------------------------------------------------
+  public clearOrnament() {
+    const app = this._parent;
+    const orn = app.player.ornament[app.workingOrnament];
 
-	public pasteOrnament() {
-		if (this._clipboard.indexOf('STMF.orn:{') !== 0) {
-			return false;
-		}
+    orn.name = '';
+    orn.data.fill(0);
+    orn.loop = orn.end = 0;
+  }
 
-		let app = this.$parent;
-		let orn = app.player.ornament[app.workingOrnament];
-		let obj: any;
+  public copyOrnament() {
+    const app = this._parent;
+    const orn = app.player.ornament[app.workingOrnament];
+    const obj = {
+      name: orn.name,
+      loop: orn.loop,
+      end: orn.end,
+      data: orn.export(false)
+    };
 
-		try {
-			let json = this._clipboard.substr(9);
-			obj = JSON.parse(json);
+    this._clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
+  }
 
-			if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
-				return false;
-			}
-		}
-		catch (e) {
-			return false;
-		}
+  public pasteOrnament() {
+    if (this._clipboard.indexOf('STMF.orn:{') !== 0) {
+      return false;
+    }
 
-		orn.parse(obj.data);
-		orn.name = obj.name;
-		orn.loop = obj.loop;
-		orn.end = obj.end;
-		return true;
-	}
+    const app = this._parent;
+    const orn = app.player.ornament[app.workingOrnament];
+    let obj: any;
+
+    try {
+      const json = this._clipboard.substr(9);
+      obj = JSON.parse(json);
+
+      if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
+        return false;
+      }
+    }
+    catch (e) {
+      return false;
+    }
+
+    orn.parse(obj.data);
+    orn.name = obj.name;
+    orn.loop = obj.loop;
+    orn.end = obj.end;
+    return true;
+  }
 }

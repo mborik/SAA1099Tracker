@@ -8,7 +8,7 @@
   "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
   "author": {
     "name": "Martin Borik",
-    "email": "mborik@users.sourceforge.net"
+    "email": "martin@borik.net"
   },
   "repository": {
     "type": "git",
@@ -48,7 +48,9 @@
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@types/bootstrap": "^3.3.32",
+    "@types/bootstrap-toggle": "^2.2.3",
     "@types/jquery": "^2.0.39",
+    "@types/lodash": "^4.14.188",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
     "@typescript-eslint/parser": "^5.39.0",
     "autoprefixer": "^10.4.12",

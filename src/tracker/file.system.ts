@@ -1,6 +1,6 @@
-/*
- * File API helper functions for manupulation with native files form user's disk.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: File API helper functions for manupulation with native files form user's disk.
+ * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,134 +20,125 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path="../index.d.ts" />
-//---------------------------------------------------------------------------------------
+
+import { devLog } from '../commons/dev';
+
+
 declare type multitype = string | Uint8Array | Uint8ClampedArray | ArrayBuffer;
-//---------------------------------------------------------------------------------------
-class FileSystem {
-	private _input: JQuery;
-	private _link: JQuery;
 
-	constructor() {
-		this._input = $('#fsFileLoad');
-		this._link = $('#fsFileSave');
-	}
+export class FileSystem {
+  private _input: JQuery<HTMLInputElement>;
+  private _link: JQuery;
 
-	public load(binary: boolean, fileExt: string): JQueryDeferred<multitype> {
-		let dfd = $.Deferred<multitype>();
+  constructor() {
+    this._input = $('#fsFileLoad');
+    this._link = $('#fsFileSave');
+  }
 
-		console.log('FileSystem', 'Querying user to select %s file of type "%s"...',
-			(binary ? 'binary' : 'text'), fileExt);
+  public load(binary: boolean, fileExt: string): JQueryDeferred<multitype> {
+    const dfd = $.Deferred<multitype>();
 
-		let obj = this._input;
-		obj.attr({ accept: fileExt }).on('change', (e: JQueryInputEventObject) => {
-			e.stopPropagation();
-			obj.off();
+    devLog('FileSystem', 'Querying user to select %s file of type "%s"...',
+      (binary ? 'binary' : 'text'), fileExt);
 
-			let input = <HTMLInputElement> e.target;
-			let reader = getCompatible(window, 'FileReader', true);
-			let file = input.files[0];
+    const obj = this._input;
+    obj.attr({ accept: fileExt }).on('change', (e: JQueryInputEventObject) => {
+      e.stopPropagation();
+      obj.off();
 
-			if (file && reader) {
-				try {
-					console.log('FileSystem', 'FileReader loading %o...', file);
+      const input = <HTMLInputElement> e.target;
+      const reader = new FileReader;
+      const file = input.files[0];
 
-					reader.onload = (evt: any) => {
-						let res = evt.target.result;
-						dfd.resolve(binary ? (new Uint8Array(res)) : res);
-					};
+      if (file && reader) {
+        try {
+          devLog('FileSystem', 'FileReader loading %o...', file);
 
-					if (binary) {
-						reader.readAsArrayBuffer(file);
-					}
-					else {
-						reader.readAsText(file);
-					}
-				}
-				catch (ex) {
-					console.log('FileSystem', 'FileReader load error: %o', ex);
-				}
-				finally {
-					input.value = '';
-				}
-			}
-		});
+          reader.onload = (evt: any) => {
+            const res = evt.target.result;
+            dfd.resolve(binary ? (new Uint8Array(res)) : res);
+          };
 
-		obj[0].click();
+          if (binary) {
+            reader.readAsArrayBuffer(file);
+          }
+          else {
+            reader.readAsText(file);
+          }
+        }
+        catch (ex) {
+          devLog('FileSystem', 'FileReader load error: %o', ex);
+        }
+        finally {
+          input.value = '';
+        }
+      }
+    });
 
-		return dfd;
-	}
+    obj.first().click();
+    return dfd;
+  }
 
-	public save(data: multitype, fileName: string, mimeType?: string) {
-		let blob: Blob;
-		let url: string;
+  public save(data: multitype, fileName: string, mimeType?: string) {
+    let blob: Blob;
+    let url: string;
 
-		try {
-			console.log('FileSystem', 'Preparing file output to Blob...');
+    try {
+      devLog('FileSystem', 'Preparing file output to Blob...');
 
-			if (typeof data === 'string') {
-				blob = new Blob([ data ], {
-					type: mimeType || 'text/plain',
-					endings: 'native'
-				});
-			}
-			else {
-				blob = new Blob(<any> data, {
-					type: mimeType || 'application/octet-stream'
-				});
-			}
-		}
-		catch (ex) {
-			console.log('FileSystem', 'Blob feature missing [%o], fallback to BlobBuilder...', ex);
+      if (typeof data === 'string') {
+        blob = new Blob([ data ], {
+          type: mimeType || 'text/plain',
+          endings: 'native'
+        });
+      }
+      else {
+        blob = new Blob(<any> data, {
+          type: mimeType || 'application/octet-stream'
+        });
+      }
+    }
+    catch (ex) {
+      devLog('FileSystem', 'Blob feature missing [%o]...', ex);
+    }
 
-			try {
-				let bb: MSBlobBuilder = getCompatible(window, 'BlobBuilder', true);
-				bb.append(data);
-				blob = bb.getBlob(mimeType);
-			}
-			catch (ex2) {
-				console.log('FileSystem', 'BlobBuilder feature missing [%o]', ex2);
-				blob = undefined;
-			}
-		}
+    if (blob) {
+      try {
+        devLog('FileSystem', 'Conversion of Blob to URL Object...');
+        url = URL.createObjectURL(blob) + '';
+      }
+      catch (ex) {
+        devLog('FileSystem', 'URL feature for Blob missing [%o]', ex);
+        url = undefined;
+      }
+    }
 
-		if (blob) {
-			try {
-				console.log('FileSystem', 'Conversion of Blob to URL Object...');
-				url = getCompatible(window, 'URL').createObjectURL(blob) + '';
-			}
-			catch (ex) {
-				console.log('FileSystem', 'URL feature for Blob missing [%o]', ex);
-				url = undefined;
-			}
-		}
+    if (!url) {
+      if (typeof data === 'string') {
+        devLog('FileSystem', 'Invalid URL, fallback to BASE64 output...');
+        url = 'data:' + mimeType + ';base64,' + btoa(data);
+      }
+      else {
+        devLog('FileSystem', 'Invalid URL, no fallback available...');
+        return;
+      }
+    }
 
-		if (!url) {
-			if (typeof data === 'string') {
-				console.log('FileSystem', 'Invalid URL, fallback to BASE64 output...');
-				url = 'data:' + mimeType + ';base64,' + btoa(data);
-			}
-			else {
-				console.log('FileSystem', 'Invalid URL, no fallback available...');
-				return;
-			}
-		}
+    const obj = this._link;
+    obj.attr({
+      href: url,
+      target: '_blank',
+      download: fileName
+    });
 
-		let obj = this._link;
-		obj.attr({
-			href: url,
-			target: '_blank',
-			download: fileName
-		});
+    devLog('FileSystem', 'Querying user to download file "%s" from url %o...',
+      fileName, url);
 
-		console.log('FileSystem', 'Querying user to download file "%s" from url %o...',
-			fileName, url);
+    obj.first().click();
 
-		obj[0].click();
-
-		setTimeout(() => {
-			obj.attr({ href: null, target: null, download: null });
-		}, 128);
-	}
+    setTimeout(() => {
+      obj.attr({ href: null, target: null, download: null });
+    }, 128);
+  }
 }
 //---------------------------------------------------------------------------------------

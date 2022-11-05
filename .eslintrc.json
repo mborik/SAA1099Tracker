@@ -86,7 +86,7 @@
     ],
     "max-classes-per-file": "off",
     "no-alert": "error",
-    "no-fallthrough": "error",
+    "no-fallthrough": "off",
     "no-floating-decimal": "off",
     "no-labels": "error",
     "no-lone-blocks": "error",
@@ -195,7 +195,7 @@
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/no-this-alias": "error",
+    "@typescript-eslint/no-this-alias": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       { "argsIgnorePattern": "^_" }
@@ -204,6 +204,7 @@
       "warn",
       { "allowShortCircuit": true }
     ],
+    "@typescript-eslint/no-useless-return": "off",
     "@typescript-eslint/no-useless-constructor": "error",
     "@typescript-eslint/prefer-namespace-keyword": "error",
     "@typescript-eslint/triple-slash-reference": "off",

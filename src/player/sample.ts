@@ -1,6 +1,6 @@
-/*
- * Player: Samples class a interface definition.
- * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker Player: Samples class a interface definition.
+ * Copyright (c) 2012-2020 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,79 +20,78 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path='../Commons.d.ts' />
-/// <reference path='globals.ts' />
-//---------------------------------------------------------------------------------------
-// Sample data interface
-interface pSampleData {
-	volume: pVolume;
+
+import { toHex } from '../commons/number';
+import { Volume } from './globals';
+
+/** Sample data interface */
+interface SampleData {
+	volume: Volume;
 	enable_freq: boolean;
 	enable_noise: boolean;
 	noise_value: number;
 	shift: number;
 }
-//---------------------------------------------------------------------------------------
-class pSample {
-	name: string = '';
-	data: pSampleData[] = [];
-	loop: number = 0;
-	end: number = 0;
-	releasable: boolean = false;
 
-	constructor() {
-		for (let i: number = 0; i < 256; i++) {
-			this.data[i] = { // pSampleData
-				volume: new pVolume,
-				enable_freq: false,
-				enable_noise: false,
-				noise_value: 0,
-				shift: 0
-			};
-		}
-	}
+/** Single sample definition */
+export default class Sample {
+  name: string = '';
+  data: SampleData[];
+  loop: number = 0;
+  end: number = 0;
+  releasable: boolean = false;
 
-	/**
+  constructor() {
+    this.data = [...Array(256)].map(() => ({
+      volume: new Volume(),
+      enable_freq: false,
+      enable_noise: false,
+      noise_value: 0,
+      shift: 0
+    } as SampleData));
+  }
+
+  /**
 	 * Export sample data to array of readable strings.
 	 * We going backward from the end of sample and unshifting array because of pack
 	 * reasons when "pack" param is true and then only meaningful data will be stored.
 	 */
-	export(pack: boolean = true): string[] {
-		let arr: string[] = [];
+  export(pack: boolean = true): string[] {
+    const arr: string[] = [];
 
-		for (let i = 255; i >= 0; i--) {
-			let o = this.data[i];
-			let k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
+    for (let i = 255; i >= 0; i--) {
+      const o = this.data[i];
+      const k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
 
-			if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
-				continue;
-			}
+      if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
+        continue;
+      }
 
-			let s = k.toHex(1) + (<any> o.volume.byte).toHex(2);
-			if (o.shift) {
-				s += ((o.shift < 0) ? '-' : '+') + (<any> o.shift).toHex(3);
-			}
+      let s = toHex(k, 1) + toHex(o.volume.byte, 2);
+      if (o.shift) {
+        s += ((o.shift < 0) ? '-' : '+') + toHex(o.shift, 3);
+      }
 
-			arr.unshift(s.toUpperCase());
-		}
+      arr.unshift(s.toUpperCase());
+    }
 
-		return arr;
-	}
+    return arr;
+  }
 
-	/**
+  /**
 	 * Parse sample data from array of buch of hex values stored in simple string.
 	 */
-	parse(arr: string[]) {
-		this.data.forEach((o, i) => {
-			let s = arr[i] || '';
-			let k = parseInt(s[0], 16) || 0;
+  parse(arr: string[]) {
+    this.data.forEach((o, i) => {
+      const s = arr[i] || '';
+      const k = parseInt(s[0], 16) || 0;
 
-			o.enable_freq  = !!(k & 1);
-			o.enable_noise = !!(k & 2);
-			o.noise_value  =  (k >> 2);
-			o.volume.byte  = parseInt(s.substr(1, 2), 16) || 0;
+      o.enable_freq = !!(k & 1);
+      o.enable_noise = !!(k & 2);
+      o.noise_value = (k >> 2);
+      o.volume.byte = parseInt(s.substr(1, 2), 16) || 0;
 
-			o.shift = parseInt(s.substr(3), 16) || 0;
-		});
-	}
+      o.shift = parseInt(s.substr(3), 16) || 0;
+    });
+  }
 }
-//---------------------------------------------------------------------------------------

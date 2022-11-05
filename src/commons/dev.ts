@@ -1,6 +1,6 @@
 /**
- * SAA1099Tracker Player: Ornaments class definition.
- * Copyright (c) 2012-2020 Martin Borik <martin@borik.net>
+ * SAA1099Tracker: Development mode test and custom logger.
+ * Copyright (c) 2020-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -21,43 +21,40 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toWidth } from '../commons/number';
+export const isDev = (
+  /[?&#]dev/.test(location.search || location.hash) ||
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === 'development'
+);
 
-/** Single ornament defintion */
-export default class Ornament {
-  name: string = '';
-  data: Int8Array = new Int8Array(256);
-  loop: number = 0;
-  end: number = 0;
-
-  /**
-	 * Export ornament data to array of readable strings.
-	 * We going backward from the end of ornament and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
-  export(pack: boolean = true): string[] {
-    const arr: string[] = [];
-
-    for (let i = 255; i >= 0; i--) {
-      const k = (0 | this.data[i]);
-
-      if (pack && !arr.length && !k) {
-        continue;
-      }
-
-      arr.unshift(((k < 0) ? '-' : '+') + toWidth(k, 2));
-    }
-
-    return arr;
+/**
+ * Log message onto console when development mode is active.
+ * First param
+ * @param {string} section
+ * @param {...any[]} args
+ */
+export const devLog = (section: string, ...args: any[]): void => {
+  if (!isDev) {
+    return;
   }
 
-  /**
-	 * Parse ornament data from array of signed values stored in simple string.
-	 */
-  parse(arr: string[]) {
-    for (let i = 0; i < 256; i++) {
-      this.data[i] = parseInt(arr[i], 10) || 0;
-    }
+  if (section && args.length > 0 && typeof args[0] === 'string') {
+    args.splice(0, 1, `%c[${section}]%c ${args[0]}`, 'color:steelblue', 'color:inherit');
   }
-}
-//---------------------------------------------------------------------------------------
+  else {
+    args.unshift(section);
+  }
+
+  // eslint-disable-next-line
+  console.log.apply(console, args);
+};
+
+export const logHotkey = (description: string, ...args: any[]) => {
+  if ((window as any).logHotkeys) {
+    // eslint-disable-next-line
+    console.log.apply(console, [
+      '%cTrackerHotkey: ' + description, 'color:tan',
+      ...args
+    ]);
+  }
+};

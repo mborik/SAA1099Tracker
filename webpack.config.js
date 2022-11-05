@@ -160,7 +160,7 @@ module.exports = {
       './src/tracker/doc.js',
       './src/tracker/gui.js'
       */
-      './src/init.ts'
+      './src/index.ts'
     ],
   },
 
