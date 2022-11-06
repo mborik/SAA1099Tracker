@@ -123,6 +123,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 
         $(el).tooltip({
           html: true,
+          sanitize: false,
           animation: false,
           delay: { 'show': delay, 'hide': 0 },
           placement: 'auto top' as any,
@@ -626,6 +627,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 
         $(el).tooltip({
           html: true,
+          sanitize: false,
           animation: false,
           trigger: 'hover',
           delay: { 'show': 500, 'hide': 0 },

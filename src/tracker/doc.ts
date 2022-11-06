@@ -207,7 +207,7 @@ Tracker.prototype.doc = {
       return;
     }
 
-    $('#statusbar>p').html(!text ? '' : (
+    $('#statusbar>p').html(!text ? '&nbsp;' : (
       text.replace(/(\[.+?\])/g, '<strong>$1</strong>')
         .replace(/^([\w ]+?)(\:| \-)/, '<kbd>$1</kbd>$2')
         .replace(/(\(.+?\))$/, '<em>$1</em>')
