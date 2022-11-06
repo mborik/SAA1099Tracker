@@ -20,6 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { debounce } from 'typescript-debounce-decorator';
 import { i18n } from './doc';
 import { STMFile, StorageDialogExchange, StorageItem } from './file';
 import Tracker from '.';
@@ -42,6 +43,7 @@ export class FileDialog {
   private _saveFlag: boolean = false;
   private _selectedItem: StorageItem = null;
 
+  @debounce(250)
   private _defaultHandler(e: JQueryEventObject): boolean {
     e.stopPropagation();
 

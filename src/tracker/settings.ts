@@ -39,6 +39,17 @@ interface SettingsOptions {
 }
 
 
+const getConfigProps = (obj: any) => pick(obj, [
+  'tracklistAutosize',
+  'tracklistLines',
+  'tracklistLineHeight',
+  'hexTracklines',
+  'hexSampleFreq',
+  'audioInterrupt',
+  'audioBuffers',
+  'audioGain',
+]);
+
 export default class Settings implements SettingsOptions {
   private _obj: JQuery = null;
   private _audio: AudioDriver.default = AudioDriver.getInstance();
@@ -73,23 +84,26 @@ export default class Settings implements SettingsOptions {
   }
 
   private _applyChanges(backup: SettingsOptions) {
-    localStorage.setItem('settings', JSON.stringify(this));
+    localStorage.setItem('settings', JSON.stringify(getConfigProps(this)));
 
-    if (backup.audioBuffers !== this.audioBuffers ||
-      backup.audioInterrupt !== this.audioInterrupt) {
-
+    if (
+      backup.audioBuffers !== this.audioBuffers ||
+      backup.audioInterrupt !== this.audioInterrupt
+    ) {
       this.audioInit();
     }
-    if (backup.tracklistAutosize !== this.tracklistAutosize ||
+    if (
+      backup.tracklistAutosize !== this.tracklistAutosize ||
       backup.tracklistLineHeight !== this.tracklistLineHeight ||
       backup.tracklistLines !== this.tracklistLines ||
-      backup.hexTracklines !== this.hexTracklines) {
-
-      $(window).trigger('resize', [ true ]);
+      backup.hexTracklines !== this.hexTracklines
+    ) {
+      $(window).trigger('resize', [true]);
     }
-    if (backup.hexSampleFreq !== this.hexSampleFreq ||
-      this._parent.activeTab === 1) {
-
+    if (
+      backup.hexSampleFreq !== this.hexSampleFreq ||
+      this._parent.activeTab === 1
+    ) {
       this._parent.smpornedit.updateSamplePitchShift();
     }
   }
@@ -139,16 +153,7 @@ export default class Settings implements SettingsOptions {
   }
 
   show() {
-    const currentOptionsBackup: SettingsOptions = pick(this, [
-      'tracklistAutosize',
-      'tracklistLines',
-      'tracklistLineHeight',
-      'hexTracklines',
-      'hexSampleFreq',
-      'audioInterrupt',
-      'audioBuffers',
-      'audioGain',
-    ]);
+    const currentOptionsBackup: SettingsOptions = getConfigProps(this);
 
     let wasApplied = false;
     const fnApply = this._applyChanges.bind(this);

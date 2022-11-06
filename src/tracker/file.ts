@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import pako from 'pako';
 import { devLog } from '../commons/dev';
 import { abs, toHex } from '../commons/number';
 import Player from '../player/Player';
@@ -553,17 +554,23 @@ export class STMFile {
     }
 
     devLog('Tracker.file', 'Loading "%s" from localStorage...', name);
-    let data = localStorage.getItem(found.storageId + '-dat');
-    devLog('Tracker.file', 'Compressed JSON file format loaded, size: ' + (data.length << 1));
-    data = '';//LZString.decompressFromUTF16(data);
-    devLog('Tracker.file', 'After LZW decompression has %d bytes, parsing...', data.length);
+    const packed = localStorage.getItem(found.storageId + '-dat');
+    devLog('Tracker.file', 'Compressed JSON file format loaded, size: ' + packed.length);
+    const data = pako.inflate(
+      Uint8Array.from(
+        atob(packed)
+          .split('')
+          .map(c => c.charCodeAt(0))
+      ),
+      { to: 'string' }
+    );
 
-    if (!this.parseJSON(data)) {
+    devLog('Tracker.file', 'After depack has %d bytes, parsing...', data.length);
+    if (!this.parseJSON(data.toString())) {
       devLog('Tracker.file', 'JSON file parsing failed!');
       return false;
     }
 
-    data = null; // force gc
     this.modified = false;
     this.yetSaved = true;
     this.fileName = name;
@@ -588,10 +595,10 @@ export class STMFile {
       return false;
     }
 
-    let data = this.createJSON();
+    const data = this.createJSON();
     devLog('Tracker.file', 'JSON file format built, original size: ' + data.length);
-    data = '';//LZString.compressToUTF16(data);
-    devLog('Tracker.file', 'Compressed with LZW to ' + (data.length << 1));
+    const packed = btoa(String.fromCharCode.apply(null, pako.deflate(data)));
+    devLog('Tracker.file', 'Packed and stored in BASE64, length ' + packed.length);
 
     const now: number = abs(Date.now() / 1000);
     let storageItem: StorageItem;
@@ -601,7 +608,7 @@ export class STMFile {
       storageItem.fileName = fileName;
       storageItem.timeModified = now;
       storageItem.duration = duration;
-      storageItem.length = data.length;
+      storageItem.length = packed.length;
     }
     else {
       storageItem = {
@@ -611,7 +618,7 @@ export class STMFile {
         timeCreated: now,
         timeModified: now,
         duration: duration,
-        length: data.length
+        length: packed.length
       };
     }
 
@@ -621,14 +628,13 @@ export class STMFile {
       '|', storageItem.duration
     ));
 
-    localStorage.setItem(storageItem.storageId + '-dat', data);
+    localStorage.setItem(storageItem.storageId + '-dat', packed);
 
     if (!modify) {
       this._storageMap.push(storageItem);
     }
     this._storageSortAndSum();
 
-    data = null; // force gc
     this.yetSaved = true;
     this.modified = false;
     this.fileName = storageItem.fileName;
