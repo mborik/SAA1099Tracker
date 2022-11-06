@@ -146,7 +146,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           name = el.id.replace('smpedit_', '');
 
           o[name].obj = el;
-          o[name].ctx = el.getContext('2d');
+          o[name].ctx = el.getContext('2d', { willReadFrequently: true });
           o[name].ctx.imageSmoothingEnabled = false;
         }
 
