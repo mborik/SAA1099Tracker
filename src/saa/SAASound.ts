@@ -54,9 +54,7 @@ export class SAASound {
   public static sampleRate: number;
 
   private _register: number = 0;
-  private _enabled: boolean = false;
   private _ampMuted: boolean[] = [ false, false, false, false, false, false ];
-  private _sync: boolean = false;
 
   private _env: SAAEnv[];
   private _noise: SAANoise[];
@@ -201,9 +199,6 @@ export class SAASound {
         this._amp.forEach((amp: SAAAmp, i: number) => {
           amp.mute = (mute || this._ampMuted[i]);
         }, this);
-
-        this._enabled = !mute;
-        this._sync = sync;
         break;
       }
 

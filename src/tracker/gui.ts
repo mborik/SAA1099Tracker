@@ -32,9 +32,7 @@ type JQueryInputEventObject = JQueryEventObject & { currentTarget: HTMLInputElem
 
 /* eslint-disable key-spacing */
 //---------------------------------------------------------------------------------------
-Tracker.prototype.populateGUI = function() {
-  const app = this;
-
+Tracker.prototype.populateGUI = function(app: Tracker) {
   const populatedElementsTable = [
     {
       global:   'document',
@@ -869,7 +867,7 @@ Tracker.prototype.populateGUI = function() {
   });
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.initializeGUI = function() {
+Tracker.prototype.initializeGUI = function(app: Tracker) {
   const initSteps = [
     function() {
       const pixelfont = $('img.pixelfont')[0];
@@ -891,7 +889,7 @@ Tracker.prototype.initializeGUI = function() {
         return false;
       }
 
-      this.smpornedit.init();
+      this.smpornedit.init(this);
       $('#tab-ornedit').tab('show');
       return true;
     },
@@ -949,13 +947,13 @@ Tracker.prototype.initializeGUI = function() {
   const initFn = ((i: number) => {
     const fn = initSteps[i];
     if (fn) {
-      if (fn.call(this, i)) {
+      if (fn.call(app, i)) {
         i++;
       }
 
       setTimeout(initFn, 50, i);
     }
-  }).bind(this);
+  }).bind(app);
 
   initFn(0);
 };

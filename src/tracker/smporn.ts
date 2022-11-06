@@ -73,7 +73,9 @@ export default class SmpOrnEditor {
     rangeStart: -1
   };
 
-  init(): void {
+  init(updateParent?: Tracker): void {
+    this._parent = updateParent;
+
     devLog('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
     [ 'amp', 'noise', 'range' ].forEach((part: string, i: number) => {
       const o: TrackerCanvasPair = this[part];

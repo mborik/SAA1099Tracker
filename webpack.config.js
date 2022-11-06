@@ -49,6 +49,12 @@ const plugins = [
       collapseWhitespace: IS_PRODUCTION
     },
   }),
+
+  new CopyWebpackPlugin({
+    patterns: [
+      { from: 'assets', to: './assets' },
+    ],
+  }),
 ];
 
 if (IS_PRODUCTION) {
@@ -68,11 +74,6 @@ else {
       excludeWarnings: false,
     }),
     new WebpackNotifierPlugin({ title: `${PACKAGE_NAME}: webpack` }),
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: 'assets', to: './assets' },
-      ],
-    }),
   );
 }
 
@@ -118,33 +119,29 @@ module.exports = {
   devtool: IS_PRODUCTION ? false : 'inline-source-map',
 
   entry: {
-    bootstrap: [
+    app: [
       'jquery',
       'bootstrap',
       'bootstrap-toggle',
       './src/bootstrap.mods/touchspin/bootstrap-touchspin.js',
-      './src/bootstrap.mods/confirm/bootstrap-confirm.js'
-    ],
-    app: [
-      /*
-      './src/commons/compat.ts',
+      './src/bootstrap.mods/confirm/bootstrap-confirm.js',
       './src/commons/timer.ts',
-      './src/commons/browser.js',
-      './src/commons/dev.js',
+      './src/commons/browser.ts',
+      './src/commons/dev.ts',
       './src/commons/audio.ts',
-      './src/commons/number.proto.ts',
+      './src/commons/number.ts',
       './src/saa/SAASound.ts',
       './src/saa/SAANoise.ts',
       './src/saa/SAAEnv.ts',
       './src/saa/SAAFreq.ts',
       './src/saa/SAAAmp.ts',
       './src/player/globals.ts',
-      './src/player/sample.ts',
-      './src/player/ornament.ts',
-      './src/player/pattern.ts',
-      './src/player/position.ts',
-      './src/player/runtime.ts',
-      './src/player/core.ts',
+      './src/player/Sample.ts',
+      './src/player/Ornament.ts',
+      './src/player/Pattern.ts',
+      './src/player/Position.ts',
+      './src/player/PlayerRuntime.ts',
+      './src/player/Player.ts',
       './src/tracker/file.ts',
       './src/tracker/file.dialog.ts',
       './src/tracker/file.system.ts',
@@ -152,14 +149,12 @@ module.exports = {
       './src/tracker/smporn.ts',
       './src/tracker/manager.ts',
       './src/tracker/settings.ts',
-      './src/tracker/core.js',
-      './src/tracker/controls.js',
-      './src/tracker/keyboard.js',
+      './src/tracker/controls.ts',
+      './src/tracker/keyboard.ts',
       './src/tracker/mouse.ts',
       './src/tracker/paint.ts',
-      './src/tracker/doc.js',
-      './src/tracker/gui.js'
-      */
+      './src/tracker/doc.ts',
+      './src/tracker/gui.ts',
       './src/index.ts'
     ],
   },
@@ -183,16 +178,12 @@ module.exports = {
     hot: true,
     open: false,
     port: DEV_PORT,
-    static: [
-      path.resolve(__dirname, 'assets'),
-      path.resolve(__dirname, 'demosongs'),
-      path.resolve(__dirname, 'doc'),
-    ],
+    static: path.resolve(__dirname),
   },
 
   output: {
     filename: '[name].js',
-    publicPath: '',
+    publicPath: '/',
     path: path.resolve(__dirname, 'build'),
   },
 
@@ -226,12 +217,24 @@ module.exports = {
         include: path.resolve(__dirname, 'templates'),
       },
       {
-        test: /\.(eot|ttf|woff|woff2|ico|svg|png|gif|jpe?g)$/,
+        test: /\.(eot|ttf|woff|woff2|svg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/[name].[query][hash][ext]',
+          filename: 'assets/[name][ext]?[contenthash]',
         },
       },
+      {
+        test: /\.(ico|png)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              esModule: false,
+              name: 'assets/[name].[ext]?[contenthash]',
+            },
+          },
+        ],
+      }
     ],
   },
 

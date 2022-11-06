@@ -34,20 +34,6 @@ import SmpOrnEditor from './smporn';
 import Tracklist from './tracklist';
 
 
-export interface TrackerControlState {
-  modeEditChannel: number;
-  modeEditColumn: number;
-  workingPattern: number;
-  workingSample: number;
-  workingSampleTone: number;
-  workingOrnament: number;
-  workingOrnTestSample: number;
-  ctrlOctave: number;
-  ctrlSample: number;
-  ctrlOrnament: number;
-  ctrlRowStep: number;
-}
-
 export interface TrackerGlobalKeyState {
   inDialog: boolean;
   modsHandled: boolean;
@@ -60,8 +46,9 @@ export interface TrackerCanvasPair {
   ctx: CanvasRenderingContext2D;
 }
 
-export default class Tracker implements TrackerControlState {
+export default class Tracker {
   doc: TrackerDoc;
+
   loaded: boolean = false;
   destroying: boolean = false;
   activeTab: number = 0;
@@ -97,92 +84,95 @@ export default class Tracker implements TrackerControlState {
   player: Player;
   file: STMFile;
 
-  updatePanels!: (this: Tracker) => void;
-  updatePanelInfo!: (this: Tracker) => void;
-  updatePanelPattern!: (this: Tracker) => void;
-  updatePanelPosition!: (this: Tracker) => void;
-  updateEditorCombo!: (this: Tracker, step?: number) => void;
-  updateSampleEditor!: (this: Tracker, update?: boolean, limitFrom?: number, limitTo?: number) => void;
-  updateOrnamentEditor!: (this: Tracker, update?: boolean, limitFrom?: number, limitTo?: number) => void;
-  updateTracklist!: (this: Tracker, update?: boolean) => void;
-  initPixelFont!: (this: Tracker, font: HTMLImageElement) => void;
-  onCmdAppUpdate!: (this: Tracker, status: Error, data: any) => void;
-  onCmdAppExit!: (this: Tracker) => boolean;
-  onCmdAbout!: (this: Tracker) => void;
-  onCmdEditClear!: (this: Tracker) => void;
-  onCmdEditCopy!: (this: Tracker) => void;
-  onCmdEditCut!: (this: Tracker) => void;
-  onCmdEditPaste!: (this: Tracker) => void;
-  onCmdFileNew!: (this: Tracker) => void;
-  onCmdFileOpen!: (this: Tracker) => void;
-  onCmdFileSave!: (this: Tracker, as?: boolean) => void;
-  onCmdFileImport!: (this: Tracker, demosong?: string) => void;
-  onCmdFileExport!: (this: Tracker) => void;
-  onCmdPreferences!: (this: Tracker) => void;
-  onCmdOrnClear!: (this: Tracker) => void;
-  onCmdOrnCompress!: (this: Tracker) => void;
-  onCmdOrnExpand!: (this: Tracker) => void;
-  onCmdOrnPlay!: (this: Tracker) => void;
-  onCmdOrnShiftLeft!: (this: Tracker) => void;
-  onCmdOrnShiftRight!: (this: Tracker) => void;
-  onCmdOrnTransDown!: (this: Tracker) => void;
-  onCmdOrnTransUp!: (this: Tracker) => void;
-  onCmdPatClean!: (this: Tracker) => void;
-  onCmdPatCreate!: (this: Tracker) => void;
-  onCmdPatDelete!: (this: Tracker) => void;
-  onCmdPatInfo!: (this: Tracker) => void;
-  onCmdPosCreate!: (this: Tracker) => void;
-  onCmdPosDelete!: (this: Tracker) => void;
-  onCmdPosInsert!: (this: Tracker) => void;
-  onCmdPosMoveDown!: (this: Tracker) => void;
-  onCmdPosMoveUp!: (this: Tracker) => void;
-  onCmdPosPlay!: (this: Tracker) => void;
-  onCmdPosPlayStart!: (this: Tracker) => void;
-  onCmdShowDocumentation!: (this: Tracker, name: string) => void;
-  onCmdSmpClear!: (this: Tracker) => void;
-  onCmdSmpCopyLR!: (this: Tracker) => void;
-  onCmdSmpCopyRL!: (this: Tracker) => void;
-  onCmdSmpDisable!: (this: Tracker) => void;
-  onCmdSmpEnable!: (this: Tracker) => void;
-  onCmdSmpLVolDown!: (this: Tracker) => void;
-  onCmdSmpLVolUp!: (this: Tracker) => void;
-  onCmdSmpPlay!: (this: Tracker) => void;
-  onCmdSmpRVolDown!: (this: Tracker) => void;
-  onCmdSmpRVolUp!: (this: Tracker) => void;
-  onCmdSmpRotL!: (this: Tracker) => void;
-  onCmdSmpRotR!: (this: Tracker) => void;
-  onCmdSmpSwap!: (this: Tracker) => void;
-  onCmdSongPlay!: (this: Tracker) => void;
-  onCmdSongPlayStart!: (this: Tracker) => void;
-  onCmdStop!: (this: Tracker) => void;
-  onCmdToggleEditMode!: (this: Tracker, newState?: boolean) => void;
-  onCmdToggleLoop!: (this: Tracker, newState?: boolean) => void;
-  populateGUI!: (this: Tracker) => void;
-  initializeGUI!: (this: Tracker) => void;
-  handleMouseEvent!: (this: Tracker, part: string, obj: any, e: JQueryEventObject) => void;
-  hotkeyMap!: (this: Tracker, type: HotkeyMapType, group: string, key: number) => (key: number) => void;
-  handleHotkeys!: (this: Tracker, type: HotkeyMapType, key: number, isInput: boolean, textInput: boolean) => boolean;
-  handleKeyEvent!: (this: Tracker, event: KeyboardEvent & { target: HTMLElement }) => void;
-  getKeynote!: (this: Tracker, key: number, octave?: number) => number;
+  updatePanels: (this: Tracker) => void;
+  updatePanelInfo: (this: Tracker) => void;
+  updatePanelPattern: (this: Tracker) => void;
+  updatePanelPosition: (this: Tracker) => void;
+  updateEditorCombo: (this: Tracker, step?: number) => void;
+  updateSampleEditor: (this: Tracker, update?: boolean, limitFrom?: number, limitTo?: number) => void;
+  updateOrnamentEditor: (this: Tracker, update?: boolean, limitFrom?: number, limitTo?: number) => void;
+  updateTracklist: (this: Tracker, update?: boolean) => void;
+  initPixelFont: (this: Tracker, font: HTMLImageElement) => void;
+  onCmdAppUpdate: (this: Tracker, status: Error, data: any) => void;
+  onCmdAppExit: (this: Tracker) => boolean;
+  onCmdAbout: (this: Tracker) => void;
+  onCmdEditClear: (this: Tracker) => void;
+  onCmdEditCopy: (this: Tracker) => void;
+  onCmdEditCut: (this: Tracker) => void;
+  onCmdEditPaste: (this: Tracker) => void;
+  onCmdFileNew: (this: Tracker) => void;
+  onCmdFileOpen: (this: Tracker) => void;
+  onCmdFileSave: (this: Tracker, as?: boolean) => void;
+  onCmdFileImport: (this: Tracker, demosong?: string) => void;
+  onCmdFileExport: (this: Tracker) => void;
+  onCmdPreferences: (this: Tracker) => void;
+  onCmdOrnClear: (this: Tracker) => void;
+  onCmdOrnCompress: (this: Tracker) => void;
+  onCmdOrnExpand: (this: Tracker) => void;
+  onCmdOrnPlay: (this: Tracker) => void;
+  onCmdOrnShiftLeft: (this: Tracker) => void;
+  onCmdOrnShiftRight: (this: Tracker) => void;
+  onCmdOrnTransDown: (this: Tracker) => void;
+  onCmdOrnTransUp: (this: Tracker) => void;
+  onCmdPatClean: (this: Tracker) => void;
+  onCmdPatCreate: (this: Tracker) => void;
+  onCmdPatDelete: (this: Tracker) => void;
+  onCmdPatInfo: (this: Tracker) => void;
+  onCmdPosCreate: (this: Tracker) => void;
+  onCmdPosDelete: (this: Tracker) => void;
+  onCmdPosInsert: (this: Tracker) => void;
+  onCmdPosMoveDown: (this: Tracker) => void;
+  onCmdPosMoveUp: (this: Tracker) => void;
+  onCmdPosPlay: (this: Tracker) => void;
+  onCmdPosPlayStart: (this: Tracker) => void;
+  onCmdShowDocumentation: (this: Tracker, name: string) => void;
+  onCmdSmpClear: (this: Tracker) => void;
+  onCmdSmpCopyLR: (this: Tracker) => void;
+  onCmdSmpCopyRL: (this: Tracker) => void;
+  onCmdSmpDisable: (this: Tracker) => void;
+  onCmdSmpEnable: (this: Tracker) => void;
+  onCmdSmpLVolDown: (this: Tracker) => void;
+  onCmdSmpLVolUp: (this: Tracker) => void;
+  onCmdSmpPlay: (this: Tracker) => void;
+  onCmdSmpRVolDown: (this: Tracker) => void;
+  onCmdSmpRVolUp: (this: Tracker) => void;
+  onCmdSmpRotL: (this: Tracker) => void;
+  onCmdSmpRotR: (this: Tracker) => void;
+  onCmdSmpSwap: (this: Tracker) => void;
+  onCmdSongPlay: (this: Tracker) => void;
+  onCmdSongPlayStart: (this: Tracker) => void;
+  onCmdStop: (this: Tracker) => void;
+  onCmdToggleEditMode: (this: Tracker, newState?: boolean) => void;
+  onCmdToggleLoop: (this: Tracker, newState?: boolean) => void;
+  populateGUI: (this: Tracker, instance: Tracker) => void;
+  initializeGUI: (this: Tracker, instance: Tracker) => void;
+  handleMouseEvent: (this: Tracker, part: string, obj: any, e: JQueryEventObject) => void;
+  hotkeyMap: (this: Tracker, type: HotkeyMapType, group: string, key: number) => (key: number) => void;
+  handleHotkeys: (this: Tracker, type: HotkeyMapType, key: number, isInput: boolean, textInput: boolean) => boolean;
+  handleKeyEvent: (this: Tracker, event: KeyboardEvent & { target: HTMLElement }) => void;
+  getKeynote: (this: Tracker, key: number, octave?: number) => number;
 
   constructor(public version: string) {
     devLog('Tracker', 'Inizializing SAA1099Tracker v%s...', version);
 
-    this.doc.i18nInit();
+    /* Dirty hack to get extended prototype into abstract class in TypeScript */
+    const app = Object.assign(this, Object.getPrototypeOf(this));
 
-    this.settings = new Settings(this);
-    this.manager = new Manager(this);
-    this.tracklist = new Tracklist(this);
-    this.smpornedit = new SmpOrnEditor(this);
+    app.doc.i18nInit();
+
+    app.settings = new Settings(app);
+    app.manager = new Manager(app);
+    app.tracklist = new Tracklist(app);
+    app.smpornedit = new SmpOrnEditor(app);
 
     const { sampleRate } = AudioDriver.getInstance();
 
-    this.player = new Player(new SAASound(sampleRate));
-    this.settings.init();
-    this.file = new STMFile(this);
+    app.player = new Player(new SAASound(sampleRate));
+    app.settings.init();
+    app.file = new STMFile(app);
 
-    this.populateGUI();
-    this.initializeGUI();
+    app.populateGUI(app);
+    app.initializeGUI(app);
   }
 
   baseTimer(this: Tracker) {

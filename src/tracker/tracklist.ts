@@ -84,7 +84,7 @@ export interface TracklistCanvasData {
   center: number;
   trkOffset: number;
 
-  offset: DOMRect | null;
+  offset: JQueryCoordinates;
 }
 
 export interface TracklistOffsets {
@@ -150,15 +150,8 @@ export default class Tracklist {
   };
 
   countTracklines(): number {
-    const statusEl = document.querySelector('#statusbar');
-    const tracklistEl = document.querySelector('#tracklist');
-
-    if (!(statusEl && tracklistEl)) {
-      return 0;
-    }
-
-    const s = statusEl.getBoundingClientRect();
-    const t = tracklistEl.getBoundingClientRect();
+    const s = $('#statusbar').offset();
+    const t = $('#tracklist').offset();
     const h = this._parent.settings.tracklistLineHeight;
 
     return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
@@ -176,12 +169,11 @@ export default class Tracklist {
     settings.tracklistLines = newHeight;
     newHeight *= settings.tracklistLineHeight;
 
-    if (this.obj) {
-      this.obj.setAttribute('height', `${height}`);
-      this.obj.style.height = `${height * tracklistZoomFactor}px`;
+    $(this.obj).prop('height', newHeight).css({
+      height: (newHeight * tracklistZoomFactor)
+    });
 
-      this.canvasData.offset = this.obj.getBoundingClientRect();
-    }
+    this.canvasData.offset = $(this.obj).offset();
   }
 
   moveCurrentline(delta: number, noWrap: boolean = false) {

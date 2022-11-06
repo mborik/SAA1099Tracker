@@ -45,7 +45,7 @@ class SyncTimer {
 
     this.#enabled = !!startImmediately;
     if (this.#enabled) {
-      requestAnimationFrame(this.loop);
+      requestAnimationFrame(this.loop.bind(this));
     }
 
     return true;
@@ -56,12 +56,12 @@ class SyncTimer {
   }
   resume() {
     this.#enabled = true;
-    requestAnimationFrame(this.loop);
+    requestAnimationFrame(this.loop.bind(this));
   }
 
   loop(t: number) {
     if (this.#enabled) {
-      requestAnimationFrame(this.loop);
+      requestAnimationFrame(this.loop.bind(this));
     }
     if ((t - this.#lastT) < this.interval) {
       return false;

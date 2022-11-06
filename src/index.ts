@@ -22,9 +22,9 @@
 //---------------------------------------------------------------------------------------
 
 import '../styles/loader.less';
-import { version } from '../package.json';
+import packageJson from '../package.json';
 import Tracker from './tracker';
 
 $(document).ready(function() {
-  (window as any).Tracker = new Tracker(version);
+  (window as any).Tracker = new Tracker(packageJson.version);
 });

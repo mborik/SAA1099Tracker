@@ -348,9 +348,11 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
   }
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.updateSampleEditor = function(update?: boolean,
-  limitFrom?: number, limitTo?: number): void {
-
+Tracker.prototype.updateSampleEditor = function(
+  update?: boolean,
+  limitFrom?: number,
+  limitTo?: number
+): void {
   const o: SmpOrnEditor = this.smpornedit;
   const sample: Sample = this.player.sample[this.workingSample];
   const amp = o.amp.ctx;
