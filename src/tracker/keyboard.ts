@@ -20,6 +20,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import AudioDriver from '../commons/audio';
 import { browser } from '../commons/browser';
 import { logHotkey } from '../commons/dev';
 import SyncTimer from '../commons/timer';
@@ -875,6 +876,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
 
       if (tone > 0) {
         return function() {
+          AudioDriver.play();
           app.player.playSample(sample, ornament, tone);
         };
       }
@@ -937,6 +939,8 @@ Tracker.prototype.handleKeyEvent = function(e) {
         if (o[13] && o.length === 1 && canPlay && !this.modePlay && !o.lastPlayMode) {
           this.modePlay = this.player.playPosition(false, false, false);
           o.lastPlayMode = 3;
+
+          AudioDriver.play();
           SyncTimer.resume();
         }
         else if (o[13] && o.length > 1 && this.modePlay && o.lastPlayMode === 3) {
@@ -967,6 +971,8 @@ Tracker.prototype.handleKeyEvent = function(e) {
         else {
           this.modePlay = this.player.playPosition(false, false, true);
           o.lastPlayMode = 1;
+
+          AudioDriver.play();
           SyncTimer.resume();
         }
 
@@ -984,6 +990,8 @@ Tracker.prototype.handleKeyEvent = function(e) {
         else {
           this.modePlay = this.player.playPosition(false, true, true);
           o.lastPlayMode = 2;
+
+          AudioDriver.play();
           SyncTimer.resume();
         }
 

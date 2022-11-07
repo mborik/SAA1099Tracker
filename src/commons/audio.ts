@@ -37,10 +37,11 @@ interface AudioDriverConfig {
 /**
  * Audio driver and sound output.
  */
-export default class AudioDriver {
+class AudioDriver {
   private _bufferCount: number = 4;
   private _bufferSize: number = 4096;
   private _interruptFrequency: number = 50;
+  private _gainValue: number = 1.0;
   private _sampleRate: number;
 
   private _audioSource: AudioDriverSource | null = null;
@@ -53,19 +54,16 @@ export default class AudioDriver {
     return this._sampleRate;
   }
   set volume(vol: number) {
-    vol = Math.min(Math.max(0, vol), 10);
-    this._gainNode.gain.value = vol;
+    this._gainValue = Math.min(Math.max(0, vol), 10);
+
+    if (this._gainNode?.gain) {
+      this._gainNode.gain.value = this._gainValue;
+    }
   }
 
   constructor() {
     devLog('Audio', 'Creating new AudioDriver...');
-
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-
-    this._audioContext = new AudioContext({ latencyHint: 'interactive' });
-    this._sampleRate = this._audioContext.sampleRate;
-    this._gainNode = this._audioContext.createGain();
-
+    this._sampleRate = (new AudioContext).sampleRate; // this will outputs a browser security warning but we don't care!
     devLog('Audio', `Hardware default samplerate is ${this._sampleRate}Hz...`);
   }
 
@@ -78,24 +76,22 @@ export default class AudioDriver {
     return 1 << Math.min(Math.max(bits, 8), 14);
   }
 
-  play(config?: AudioDriverConfig) {
-    if (config) {
-      if (this._scriptProcessor) {
-        devLog('Audio', 'Freeing script processor...');
-        this.stop();
-      }
+  init(config: AudioDriverConfig) {
+    if (this._scriptProcessor) {
+      devLog('Audio', 'Freeing script processor...');
+      this.stop();
+    }
 
-      if (config.audioSource && config.audioSource !== this._audioSource) {
-        devLog('Audio', 'New audio generator source is %o...', config.audioSource);
-        this._audioSource = config.audioSource;
-      }
+    if (config.audioSource && config.audioSource !== this._audioSource) {
+      devLog('Audio', 'New audio generator source is %o...', config.audioSource);
+      this._audioSource = config.audioSource;
+    }
 
-      if (config.buffers) {
-        this._bufferCount = config.buffers;
-      }
-      if (config.interrupt) {
-        this._interruptFrequency = config.interrupt;
-      }
+    if (config.buffers) {
+      this._bufferCount = config.buffers;
+    }
+    if (config.interrupt) {
+      this._interruptFrequency = config.interrupt;
     }
 
     this._bufferSize = this.getAdjustedSamples(
@@ -106,19 +102,32 @@ export default class AudioDriver {
 
     devLog('Audio', 'Initializing new script processor with examined buffer size: %d...\n\t\t%c[ samplerate: %dHz, buffers: %d, interrupt frequency: %dHz ]',
       this._bufferSize, 'color:gray', this._sampleRate, this._bufferCount, this._interruptFrequency);
+  }
 
-    this._scriptProcessor = this._audioContext.createScriptProcessor(this._bufferSize, 0, 2);
+  play() {
+    if (!(this._audioContext && this._scriptProcessor)) {
+      this._audioContext = new AudioContext({ latencyHint: 'interactive' });
+      this._scriptProcessor = this._audioContext.createScriptProcessor(this._bufferSize, 0, 2);
 
-    devLog('Audio', `Successfully initialized with driver's hardware buffer size ${this._scriptProcessor.bufferSize || '???'}...`);
+      devLog('Audio', `Successfully initialized with driver's hardware buffer size ${this._scriptProcessor.bufferSize || '???'}...`);
 
-    this._scriptProcessor.onaudioprocess = this._audioEventHandler.bind(this);
-    this._scriptProcessor.connect(this._gainNode);
-    this._gainNode.connect(this._audioContext.destination);
+      this._scriptProcessor.onaudioprocess = this._audioEventHandler.bind(this);
+      this._gainNode = this._audioContext.createGain();
+
+      this._scriptProcessor.connect(this._gainNode);
+      this._gainNode.connect(this._audioContext.destination);
+
+      this._gainNode.gain.value = this._gainValue;
+    }
 
     this._audioContext.resume();
   }
 
   stop() {
+    if (!this._audioContext) {
+      return;
+    }
+
     this._audioContext.suspend();
 
     if (this._scriptProcessor?.onaudioprocess) {
@@ -127,7 +136,11 @@ export default class AudioDriver {
       this._scriptProcessor.onaudioprocess = null;
     }
 
+    this._audioContext.close();
+
+    this._gainNode = null;
     this._scriptProcessor = null;
+    this._audioContext = null;
   }
 
 
@@ -141,11 +154,5 @@ export default class AudioDriver {
     );
   }
 }
-
-export let instance: AudioDriver;
-
-/**
- * @return {AudioDriver} singleton instance
- */
-export const getInstance = (): AudioDriver =>
-  (instance instanceof AudioDriver) ? instance : (instance = new AudioDriver());
+//---------------------------------------------------------------------------------------
+export default ((window as any).AudioDriver = new AudioDriver);

@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { pick } from 'lodash';
-import * as AudioDriver from '../commons/audio';
+import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
 import { abs } from '../commons/number';
 import Tracker from '.';
@@ -52,7 +52,6 @@ const getConfigProps = (obj: any) => pick(obj, [
 
 export default class Settings implements SettingsOptions {
   private _obj: JQuery = null;
-  private _audio: AudioDriver.default = AudioDriver.getInstance();
 
   tracklistAutosize = true;
   tracklistLines = 17;
@@ -67,7 +66,7 @@ export default class Settings implements SettingsOptions {
 
   setAudioGain(value: number) {
     const volume = Math.min(Math.max(0, value / 100), 2);
-    this._audio.volume = this.audioGain = volume;
+    AudioDriver.volume = this.audioGain = volume;
   }
 
   private _populateElements() {
@@ -118,7 +117,7 @@ export default class Settings implements SettingsOptions {
     tracker.player.setInterrupt(int);
     $('#rdSetAudioInt' + int).prop('checked', true);
 
-    this._audio.play({
+    AudioDriver.init({
       audioSource: tracker.player,
       buffers: this.audioBuffers,
       interrupt: int
@@ -126,8 +125,8 @@ export default class Settings implements SettingsOptions {
   }
 
   updateLatencyInfo() {
-    const smpRate = this._audio.sampleRate;
-    const samples = this._audio.getAdjustedSamples(smpRate,
+    const smpRate = AudioDriver.sampleRate;
+    const samples = AudioDriver.getAdjustedSamples(smpRate,
       this.audioBuffers,
       this.audioInterrupt
     );
@@ -185,7 +184,7 @@ export default class Settings implements SettingsOptions {
         this._populateElements();
       }
 
-      this._audio.volume = this.audioGain;
+      AudioDriver.volume = this.audioGain;
       tracker.globalKeyState.inDialog = false;
 
     }, this)).modal({

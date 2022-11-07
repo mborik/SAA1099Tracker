@@ -155,7 +155,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           (e: JQueryEventObject) => {
             const originalEvent = e.originalEvent as WheelEvent & { wheelDelta: number };
             const delta =
-              originalEvent.wheelDelta || -originalEvent.deltaY ||
+              -originalEvent.deltaY || originalEvent.wheelDelta ||
                 (originalEvent.type === 'DOMMouseScroll' && -originalEvent.detail);
 
             if (e.type === 'mousedown' && !app.modeEdit && app.player.position.length) {

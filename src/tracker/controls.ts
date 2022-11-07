@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
 import { toTimeString, toWidth } from '../commons/number';
 import SyncTimer from '../commons/timer';
@@ -499,6 +500,8 @@ Tracker.prototype.onCmdSongPlay = function() {
   }
 
   this.modePlay = this.player.playPosition(false, true, true);
+
+  AudioDriver.play();
   SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
@@ -511,6 +514,8 @@ Tracker.prototype.onCmdSongPlayStart = function() {
   }
 
   this.modePlay = this.player.playPosition(true, true, true);
+
+  AudioDriver.play();
   SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
@@ -526,6 +531,8 @@ Tracker.prototype.onCmdPosPlay = function() {
   }
 
   this.modePlay = this.player.playPosition(false, false, false);
+
+  AudioDriver.play();
   SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
@@ -538,6 +545,8 @@ Tracker.prototype.onCmdPosPlayStart = function() {
   }
 
   this.modePlay = this.player.playPosition(false, false, true);
+
+  AudioDriver.play();
   SyncTimer.resume();
 };
 //---------------------------------------------------------------------------------------
@@ -885,6 +894,7 @@ Tracker.prototype.onCmdPosMoveDown = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpPlay = function() {
+  AudioDriver.play();
   this.player.playSample(this.workingSample, 0, this.workingSampleTone);
 };
 //---------------------------------------------------------------------------------------
@@ -1097,6 +1107,7 @@ Tracker.prototype.onCmdSmpDisable = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnPlay = function() {
+  AudioDriver.play();
   this.player.playSample(this.workingOrnTestSample, this.workingOrnament, this.workingSampleTone);
 };
 //---------------------------------------------------------------------------------------

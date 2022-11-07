@@ -21,7 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import * as AudioDriver from '../commons/audio';
+import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
 import Player from '../player/Player';
 import { SAASound } from '../saa/SAASound';
@@ -165,9 +165,7 @@ export default class Tracker {
     app.tracklist = new Tracklist(app);
     app.smpornedit = new SmpOrnEditor(app);
 
-    const { sampleRate } = AudioDriver.getInstance();
-
-    app.player = new Player(new SAASound(sampleRate));
+    app.player = new Player(new SAASound(AudioDriver.sampleRate));
     app.settings.init();
     app.file = new STMFile(app);
 
