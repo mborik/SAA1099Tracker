@@ -21,11 +21,10 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog, isDev } from '../commons/dev';
+import { devLog } from '../commons/dev';
 import { abs } from '../commons/number';
 import SyncTimer from '../commons/timer';
 import { MAX_PATTERN_LEN } from '../player/globals';
-import { i18n } from './doc';
 import Tracker from '.';
 
 type JQueryInputEventObject = JQueryEventObject & { currentTarget: HTMLInputElement };
@@ -75,13 +74,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'on',
       param:    'beforeunload',
       handler:  () => {
-        if (window.electron) {
-          return app.onCmdAppExit();
-        }
-        else if (!isDev) {
-          app.onCmdStop();
-          return i18n.app.msg.unsaved;
-        }
+        app.onCmdStop();
+        return app.onCmdAppExit();
       }
     }, {
       global:   'window',

@@ -226,7 +226,7 @@ Tracker.prototype.onCmdAppExit = function() {
   const keys = this.globalKeyState;
   const file = this.file;
 
-  if (this.destroying || window.electron) {
+  if (this.destroying) {
     return;
   }
   else if (!keys.inDialog) {

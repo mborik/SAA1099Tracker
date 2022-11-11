@@ -39,7 +39,6 @@ Tracker.prototype.doc = {
   txtCache: {},
 
   i18n: {
-    'app.msg.unsaved': 'All unsaved changes in SAA1099Tracker will be lost.',
     'app.smpedit.left': 'LEFT',
     'app.smpedit.right': 'RIGHT',
     'app.filedialog.untitled': 'Untitled',
