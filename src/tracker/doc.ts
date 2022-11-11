@@ -71,12 +71,7 @@ Tracker.prototype.doc = {
     'dialog.app.update.title': 'Application update available...',
     'dialog.app.update.msg': 'update package is available for the download and install.\bAre you sure you want to exit application and install this update?',
     'dialog.app.update.options': [ 'Install',  'Cancel' ],
-    'dialog.app.update.changelog': 'Changelog:',
-    'dialog.app.update.important': 'recommended major update!',
     'dialog.app.update.download': 'downloading\bupdate',
-    'app.error.failed': 'update\bfailed',
-    'app.error.ie': 'don\'t be evil,\bstop using IE',
-    'app.error.webaudio': 'WebAudio\bnot supported'
   },
 
   tooltip: {

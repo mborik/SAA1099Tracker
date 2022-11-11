@@ -4,7 +4,7 @@
   "version": "2.0.0",
   "license": "MIT",
   "private": true,
-  "homepage": "https://github.com/mborik/SAA1099Tracker",
+  "homepage": "https://saa1099tracker.borik.net",
   "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
   "author": {
     "name": "Martin Borik",
@@ -19,20 +19,14 @@
     "clean": "rm -rf build/*",
     "build": "cross-env NODE_ENV=production webpack --mode production --config ./webpack.config.js",
     "dev": "webpack-dev-server --config ./webpack.config.js --host 0.0.0.0",
-    "start": "npm run build && electron . -d",
-    "dist": "build -wl --x64 --ia32 --config electron.json",
-    "dist-osx": "build -m --x64 --config electron.json"
-  },
-  "config": {
-    "updateUrl": "http://saa1099tracker.borik.net/api/update"
+    "start": "concurrently --kill-others \"npm run dev\" -s first \"sleep 5 && electron . -dl\"",
+    "dist": "electron-builder build -wl --x64 --config electron.json",
+    "dist-mac": "electron-builder build -m --arm64 --x64 --config electron.json"
   },
   "dependencies": {
     "bootstrap": "~3.4.1",
     "bootstrap-toggle": "~2.2.2",
-    "classnames": "^2.3.2",
-    "compare-version": "^0.1.2",
     "core-js": "^3.25.5",
-    "digest-stream": "^1.0.1",
     "dom4": "^2.1.5",
     "electron-window-state": "^4.0.1",
     "jquery": "~2.2.4",
@@ -56,10 +50,11 @@
     "@typescript-eslint/eslint-plugin": "^5.39.0",
     "@typescript-eslint/parser": "^5.39.0",
     "autoprefixer": "^10.4.12",
+    "concurrently": "^7.5.0",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
     "cssnano": "^5.1.13",
-    "electron": "^21.2.1",
+    "electron": "^21.2.3",
     "electron-builder": "^23.6.0",
     "electron-builder-squirrel-windows": "^23.6.0",
     "eslint": "^8.24.0",

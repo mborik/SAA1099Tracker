@@ -12,7 +12,7 @@ _NOTE: for more info, please [see `doc` folder](doc) or [wiki-pages](https://git
 
 
 ### Tech
-* [Visual Studio Code] - code editing redefined
+* [VSCode] - code editing redefined
 * [Electron] - cross platform desktop apps with JavaScript, HTML, and CSS
 * [TypeScript] - syntactic sugar for JavaScript
 * [Bootstrap] - great UI boilerplate for modern web apps
@@ -23,8 +23,8 @@ _NOTE: for more info, please [see `doc` folder](doc) or [wiki-pages](https://git
 MIT
 
 
-[Visual Studio Code]:https://code.visualstudio.com
-[Electron]:http://electron.atom.io
-[TypeScript]:http://www.typescriptlang.org
-[Bootstrap]:http://getbootstrap.com/
-[jQuery]:http://jquery.com
+[VSCode]:https://code.visualstudio.com/
+[Electron]:https://www.electronjs.org/
+[TypeScript]:https://www.typescriptlang.org/
+[Bootstrap]:https://getbootstrap.com/
+[jQuery]:https://jquery.com/

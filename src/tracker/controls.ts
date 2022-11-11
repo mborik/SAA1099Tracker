@@ -22,7 +22,6 @@
 //---------------------------------------------------------------------------------------
 
 import AudioDriver from '../commons/audio';
-import { devLog } from '../commons/dev';
 import { toTimeString, toWidth } from '../commons/number';
 import SyncTimer from '../commons/timer';
 import { i18n } from './doc';
@@ -188,31 +187,13 @@ Tracker.prototype.updatePanelPosition = function() {
   pos = null;
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tracker.prototype.onCmdAppUpdate = function(status, data) {
+Tracker.prototype.onCmdAppUpdate = function() {
   const remote = window.electron?.remote;
-  const updater = remote?.getCurrentWindow()?.updater;
-
-  if (!(remote && updater)) {
-    return;
-  }
-  else if (status) {
-    devLog('Tracker.updater', 'Check update status: "%s"', status);
+  if (!remote) {
     return;
   }
 
   const keys = this.globalKeyState;
-  let description = '';
-
-  if (data.changelog instanceof Array && data.changelog.length) {
-    description = data.changelog.join('</li><li>');
-  }
-  if (data.important) {
-    description = `<b>${i18n.dialog.app.update.important}</b>` +
-			(description ? `</li><li>${description}` : '');
-  }
-  if (description) {
-    description = `<p>${i18n.dialog.app.update.changelog}</p><ul><li>${description}</li></ul>`;
-  }
 
   keys.inDialog = true;
   $('#dialoque').confirm({
@@ -221,32 +202,21 @@ Tracker.prototype.onCmdAppUpdate = function(status, data) {
       { caption: i18n.dialog.app.update.options[0], id: 'apply', style: 'btn-warning' },
       { caption: i18n.dialog.app.update.options[1] }
     ],
-    html: `<p><b>${data.name} v${data.version}</b> ` + i18n.dialog.app.update.msg + description,
+    html: `<p><b>SAA1099Tracker</b> ${i18n.dialog.app.update.msg}`,
     style: 'warning',
     callback: (btn) => {
       keys.inDialog = false;
       if (btn === 'apply') {
-        const loader = $('#overlay .loader');
-        const loaderContent = loader.html();
-
-        loader.html(i18n.dialog.app.update.download);
+        $('#overlay .loader').html(i18n.dialog.app.update.download);
         document.body.className = 'loading';
+        this.destroying = true;
 
-        updater.download(((error?: Error) => {
-          if (error) {
-            devLog('Tracker.updater', 'Failed: "%s"', error);
-
-            loader.html(i18n.app.error.failed);
-            setTimeout(() => {
-              document.body.className = '';
-              loader.html(loaderContent);
-            }, 5e3);
-          }
-          else {
-            this.destroying = true;
-            remote.app.quit();
-          }
-        }).bind(this));
+        setTimeout(() => {
+          remote.webContents.session.clearStorageData({
+            storages: ['appcache', 'serviceworkers', 'cachestorage']
+          });
+          remote.app.quit();
+        }, 5e4);
       }
     }
   });

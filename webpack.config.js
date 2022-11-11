@@ -52,19 +52,22 @@ const plugins = [
 
   new CopyWebpackPlugin({
     patterns: [
-      { from: 'assets', to: './assets' },
+      { from: 'assets/resources/png/*', to: 'assets/png/[name][ext]' },
+      { from: 'assets/resources/icon.*', to: 'assets/[name][ext]' },
+      { from: 'assets/*', to: '[name][ext]' },
+      { from: 'demosongs/*', to: '' },
+      { from: 'doc/*', to: '' },
     ],
   }),
 ];
 
 if (IS_PRODUCTION) {
-  // plugins.push(
-  //   new InjectManifest({
-  //     exclude: [/LICENSE\.txt$/],
-  //     swSrc: path.resolve(__dirname, 'src/serviceWorker.ts'),
-  //     swDest: 'sw.js',
-  //   })
-  // );
+  plugins.push(
+    new InjectManifest({
+      swSrc: path.resolve(__dirname, 'src/serviceWorker.ts'),
+      swDest: 'sw.js',
+    })
+  );
 }
 else {
   plugins.push(

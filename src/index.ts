@@ -23,8 +23,11 @@
 
 import '../styles/loader.less';
 import packageJson from '../package.json';
+import { register } from './serviceWorkerRegistration';
 import Tracker from './tracker';
 
 $(document).ready(function() {
   (window as any).Tracker = new Tracker(packageJson.version);
 });
+
+register();
