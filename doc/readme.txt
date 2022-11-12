@@ -1,7 +1,7 @@
 == ABOUT SAA1099TRACKER =======================================================
 ===============================================================================
 
-~ SAA1099Tracker is an offline storage HTML5/JavaScript chiptune music tracker.
+~ SAA1099Tracker is a progressive web chiptune music tracker.
   It emulates soundchip Philips SAA 1099, programmable sound generator produced
   in 80s of 20th century and which was used in/with these 8bit micro-computers:
   - integrated in Sam Coupé
