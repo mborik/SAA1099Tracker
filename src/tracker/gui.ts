@@ -919,24 +919,6 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       devLog('Tracker.gui', 'Initialization done, everything is ready!');
       document.body.className = '';
       return (this.loaded = true);
-    },
-    function() {
-      if (!(this.loaded && window.electron?.remote)) {
-        return false;
-      }
-
-      const win = window.electron?.remote.getCurrentWindow();
-      if (win && win.firstRun) {
-        this.onCmdShowDocumentation('readme');
-      }
-
-      const updater = win && win.updater;
-      if (updater) {
-        devLog('Tracker.updater', 'Checking for updates...');
-        updater.check(this.onCmdAppUpdate.bind(this));
-      }
-
-      return true;
     }
   ];
 

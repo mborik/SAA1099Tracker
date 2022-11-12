@@ -26,10 +26,12 @@ const createWindow = (title, devTools) => {
     acceptFirstMouse: true,
     icon: path.join(__dirname, `../assets/resources/icon.${(process.platform === 'win32') ? 'ico' : 'png'}`),
     webPreferences: {
+      webgl: false,
       devTools: devTools,
       defaultEncoding: 'UTF-8',
       textAreasAreResizable: false,
-      webgl: false
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     }
   });
 

@@ -68,9 +68,9 @@ Tracker.prototype.doc = {
     'dialog.app.exit.msg': 'You could lost all of your changes! Do you want to save your work or exit?',
     'dialog.app.exit.options': [ 'Save', "Don't save", 'Cancel' ],
     'dialog.app.update.title': 'Application update available...',
-    'dialog.app.update.msg': 'update package is available for the download and install.\bAre you sure you want to exit application and install this update?',
-    'dialog.app.update.options': [ 'Install',  'Cancel' ],
-    'dialog.app.update.download': 'downloading\bupdate',
+    'dialog.app.update.msg': 'Updated version of SAA1099Tracker was found on server.\bRestart of application is required to install the update.',
+    'dialog.app.update.options': [ 'Restart',  'Cancel' ],
+    'dialog.app.update.download': 'restarting',
   },
 
   tooltip: {

@@ -188,21 +188,19 @@ Tracker.prototype.updatePanelPosition = function() {
 };
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Tracker.prototype.onCmdAppUpdate = function() {
-  const remote = window.electron?.remote;
-  if (!remote) {
-    return;
-  }
-
+  const remote = window.electron?.version;
   const keys = this.globalKeyState;
 
   keys.inDialog = true;
   $('#dialoque').confirm({
     title: i18n.dialog.app.update.title,
-    buttons: [
-      { caption: i18n.dialog.app.update.options[0], id: 'apply', style: 'btn-warning' },
-      { caption: i18n.dialog.app.update.options[1] }
-    ],
-    html: `<p><b>SAA1099Tracker</b> ${i18n.dialog.app.update.msg}`,
+    html: `<p>${i18n.dialog.app.update.msg}</p>`,
+    buttons: remote ?
+      [
+        { caption: i18n.dialog.app.update.options[0], id: 'apply', style: 'btn-warning' },
+        { caption: i18n.dialog.app.update.options[1] }
+      ]
+      : 'ok',
     style: 'warning',
     callback: (btn) => {
       keys.inDialog = false;
@@ -212,11 +210,9 @@ Tracker.prototype.onCmdAppUpdate = function() {
         this.destroying = true;
 
         setTimeout(() => {
-          remote.webContents.session.clearStorageData({
-            storages: ['appcache', 'serviceworkers', 'cachestorage']
-          });
-          remote.app.quit();
-        }, 5e4);
+          window.electron?.clearCache();
+          window.electron?.close();
+        }, 1024);
       }
     }
   });
@@ -245,12 +241,10 @@ Tracker.prototype.onCmdAppExit = function() {
       text: i18n.dialog.app.exit.msg,
       style: 'danger',
       callback: (btn) => {
-        const app = window.electron?.remote.app;
-
         keys.inDialog = false;
         if (btn === 'exit') {
           this.destroying = true;
-          app.quit();
+          window.electron?.close();
         }
         else if (btn === 'save') {
           if (!file.yetSaved) {
@@ -259,7 +253,7 @@ Tracker.prototype.onCmdAppExit = function() {
           else if (file.fileName) {
             file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
             this.destroying = true;
-            app.quit();
+            window.electron?.close();
           }
         }
       }
@@ -346,9 +340,7 @@ Tracker.prototype.onCmdFileImport = function(demosong) {
 
   let fnToCall: () => void;
   if (demosong) {
-    const url = (window.electron ?
-      ('res://demo/' + demosong) : ('demosongs/' + demosong + '.json'));
-    fnToCall = this.file.importDemosong.bind(this.file, demosong, url);
+    fnToCall = this.file.importDemosong.bind(this.file, demosong, `demosongs/${demosong}.json`);
   }
   else {
     fnToCall = this.file.importFile.bind(this.file);
@@ -545,7 +537,7 @@ Tracker.prototype.onCmdToggleEditMode = function(newState) {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdShowDocumentation = function(name) {
-  const filename = (window.electron ? ('res://doc/' + name) : ('doc/' + name + '.txt'));
+  const filename = `doc/${name}.txt`;
   const cache = this.doc.txtCache;
   const keys = this.globalKeyState;
   const data = cache[name];

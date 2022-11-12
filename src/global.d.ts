@@ -1,5 +1,9 @@
 declare interface Window {
-  electron: any;
+  electron?: {
+    version: string;
+    close: () => void;
+    clearCache: () => void;
+  };
 }
 //---------------------------------------------------------------------------------------
 declare interface JQueryEventObject {
