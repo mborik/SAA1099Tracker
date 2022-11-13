@@ -192,7 +192,7 @@ Tracker.prototype.onCmdAppUpdate = function() {
   const keys = this.globalKeyState;
 
   keys.inDialog = true;
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.app.update.title,
     html: `<p>${i18n.dialog.app.update.msg}</p>`,
     buttons: remote ?
@@ -231,7 +231,7 @@ Tracker.prototype.onCmdAppExit = function() {
     }
 
     keys.inDialog = true;
-    $('#dialoque').confirm({
+    $('#dialog').confirm({
       title: i18n.dialog.app.exit.title,
       buttons: [
         { caption: i18n.dialog.app.exit.options[0], id: 'save' },
@@ -271,7 +271,7 @@ Tracker.prototype.onCmdFileNew = function() {
   }
 
   keys.inDialog = true;
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.file.new.title,
     text: i18n.dialog.file.new.msg,
     buttons: 'yesno',
@@ -298,7 +298,7 @@ Tracker.prototype.onCmdFileOpen = function() {
   if (file.modified) {
     keys.inDialog = true;
 
-    $('#dialoque').confirm({
+    $('#dialog').confirm({
       title: i18n.dialog.file.open.title,
       text: i18n.dialog.file.open.msg,
       buttons: 'yesno',
@@ -349,7 +349,7 @@ Tracker.prototype.onCmdFileImport = function(demosong) {
   if (this.file.modified) {
     keys.inDialog = true;
 
-    $('#dialoque').confirm({
+    $('#dialog').confirm({
       title: i18n.dialog.file.import.title,
       text: i18n.dialog.file.open.msg,
       buttons: 'yesno',
@@ -540,7 +540,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
   const filename = `doc/${name}.txt`;
   const cache = this.doc.txtCache;
   const keys = this.globalKeyState;
-  const data = cache[name];
+  const cached = cache[name];
 
   const dialog = $('#documodal');
   const button = $('<button/>').attr({
@@ -549,11 +549,11 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
     'data-dismiss': 'modal'
   }).text('\xd7');
 
-  if (data) {
+  if (cached) {
     keys.inDialog = true;
     dialog.modal('show')
       .find('.modal-body')
-      .html(data)
+      .html(cached)
       .prepend(button)
       .on('hidden.bs.modal', () => {
         keys.inDialog = false;
@@ -561,13 +561,10 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
       });
   }
   else {
-    $.ajax(filename, {
-      cache: true,
-      contentType: 'text/plain',
-      dataType: 'text',
-      isLocal: true,
-      success: (data) => {
-        data = ('<pre>\n' + data + '</pre>')
+    fetch(filename)
+      .then((response) => response.text())
+      .then((data) => {
+        data = (`<pre>\n${data}</pre>`)
           .replace(/\s*?^\=\=\s*([^\=]+?)\s*[\=\s]+$/gm, '</pre><h3>$1</h3><pre>')
           .replace(/<pre><\/pre>/g, '');
 
@@ -580,8 +577,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
             keys.inDialog = false;
             $(this).find('.modal-body').empty();
           });
-      }
-    });
+      });
   }
 };
 //---------------------------------------------------------------------------------------
@@ -647,7 +643,7 @@ Tracker.prototype.onCmdPatDelete = function() {
   }
 
   keys.inDialog = true;
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.pattern.delete.title,
     text: msg,
     buttons: 'yesno',
@@ -694,7 +690,7 @@ Tracker.prototype.onCmdPatClean = function() {
   const pt = this.player.pattern[this.workingPattern].data;
 
   keys.inDialog = true;
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.pattern.clean.title,
     text: i18n.dialog.pattern.clean.msg,
     buttons: 'yesno',
@@ -786,7 +782,7 @@ Tracker.prototype.onCmdPosDelete = function() {
   const app = this;
 
   keys.inDialog = true;
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.position.delete.title,
     text: i18n.dialog.position.delete.msg,
     buttons: 'yesno',
@@ -866,7 +862,7 @@ Tracker.prototype.onCmdSmpClear = function() {
 
   this.globalKeyState.inDialog = true;
 
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.sample.clear.title,
     text: i18n.dialog.sample.clear.msg,
     style: 'warning',
@@ -1079,7 +1075,7 @@ Tracker.prototype.onCmdOrnClear = function() {
   const app = this;
 
   keys.inDialog = true;
-  $('#dialoque').confirm({
+  $('#dialog').confirm({
     title: i18n.dialog.ornament.clear.title,
     text: i18n.dialog.ornament.clear.msg,
     style: 'warning',

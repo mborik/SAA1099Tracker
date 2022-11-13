@@ -644,39 +644,56 @@ export class STMFile {
   }
 
   importDemosong(songName: string, url: string) {
-    const file = this;
-
     devLog('Tracker.file', 'Loading "%s" demosong...', songName);
-    $.getJSON(url, (data: string) => {
-      if (!file.parseJSON(data)) {
-        devLog('Tracker.file', 'JSON file parsing failed!');
-      }
+    fetch(url)
+      .then((response) => response.json())
+      .then((data: STMFileFormat) => {
+        if (!this.parseJSON(data)) {
+          devLog('Tracker.file', 'JSON file parsing failed!');
+          throw 'JSON parsing failed!';
+        }
 
-      file.modified = true;
-      file.yetSaved = false;
-      file.fileName = '';
-    });
+        this.modified = true;
+        this.yetSaved = false;
+        this.fileName = '';
+      })
+      .catch((error: string) => {
+        $('#dialog').confirm({
+          title: 'File import error',
+          text: error,
+          buttons: 'ok',
+          style: 'danger'
+        });
+      });
   }
 
   importFile() {
-    const file = this;
+    this.system.load(false, `.STMF,${mimeType}`)
+      .then((data: string) => {
+        devLog('Tracker.file', 'File loaded, trying to parse...');
+        if (!this.parseJSON(data)) {
+          devLog('Tracker.file', 'JSON file parsing failed!');
+          throw 'JSON parsing failed!';
+        }
 
-    this.system.load(false, '.STMF,' + mimeType).then(data => {
-      devLog('Tracker.file', 'File loaded, trying to parse...');
-      if (!file.parseJSON(<string> data)) {
-        devLog('Tracker.file', 'JSON file parsing failed!');
-      }
-
-      file.modified = true;
-      file.yetSaved = false;
-      file.fileName = '';
-    });
+        this.modified = true;
+        this.yetSaved = false;
+        this.fileName = '';
+      })
+      .catch((error: string) => {
+        $('#dialog').confirm({
+          title: 'File import error',
+          text: error,
+          buttons: 'ok',
+          style: 'danger'
+        });
+      });
   }
 
   exportFile() {
     const data = this.createJSON(true);
     const fileName = this.getFixedFileName();
 
-    this.system.save(data, fileName + '.STMF', mimeType);
+    this.system.save(data, `${fileName}.STMF`, mimeType);
   }
 }

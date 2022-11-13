@@ -113,7 +113,7 @@ export class FileDialog {
       return false;
     }
 
-    $('#dialoque').confirm({
+    $('#dialog').confirm({
       title: i18n.dialog.file.remove.title,
       text: i18n.dialog.file.remove.msg,
       buttons: 'yesno',

@@ -845,7 +845,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }
   ];
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   devLog('Tracker.gui', 'Populating elements...');
 
   populatedElementsTable.forEach(o => {

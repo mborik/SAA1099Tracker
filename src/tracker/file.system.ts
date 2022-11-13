@@ -35,28 +35,32 @@ export class FileSystem {
     this._link = $('#fsFileSave');
   }
 
-  public load(binary: boolean, fileExt: string): JQueryDeferred<multitype> {
-    const dfd = $.Deferred<multitype>();
+  public load(binary: boolean, fileExt: string): Promise<multitype> {
+    return new Promise((resolve, reject) => {
+      devLog('FileSystem',
+        `Querying user to select ${binary ? 'binary' : 'text'} file of type "${fileExt}"...`);
 
-    devLog('FileSystem', 'Querying user to select %s file of type "%s"...',
-      (binary ? 'binary' : 'text'), fileExt);
+      const obj = this._input;
+      obj.attr({ accept: fileExt }).on('change', (e: JQueryInputEventObject) => {
+        e.stopPropagation();
+        obj.off();
 
-    const obj = this._input;
-    obj.attr({ accept: fileExt }).on('change', (e: JQueryInputEventObject) => {
-      e.stopPropagation();
-      obj.off();
+        const input = <HTMLInputElement> e.target;
+        const reader = new FileReader;
+        const [file] = input.files;
 
-      const input = <HTMLInputElement> e.target;
-      const reader = new FileReader;
-      const file = input.files[0];
+        if (!(file && reader)) {
+          return reject('File not found!');
+        }
 
-      if (file && reader) {
         try {
           devLog('FileSystem', 'FileReader loading %o...', file);
 
-          reader.onload = (evt: any) => {
-            const res = evt.target.result;
-            dfd.resolve(binary ? (new Uint8Array(res)) : res);
+          reader.onload = () => {
+            resolve(binary ?
+              (new Uint8Array(reader.result as ArrayBuffer)) :
+              (reader.result as string)
+            );
           };
 
           if (binary) {
@@ -68,15 +72,15 @@ export class FileSystem {
         }
         catch (ex) {
           devLog('FileSystem', 'FileReader load error: %o', ex);
+          reject("Can't read a file!");
         }
         finally {
           input.value = '';
         }
-      }
-    });
+      });
 
-    obj.first().click();
-    return dfd;
+      (obj[0] as HTMLInputElement).click();
+    });
   }
 
   public save(data: multitype, fileName: string, mimeType?: string) {
@@ -109,17 +113,6 @@ export class FileSystem {
       }
       catch (ex) {
         devLog('FileSystem', 'URL feature for Blob missing [%o]', ex);
-        url = undefined;
-      }
-    }
-
-    if (!url) {
-      if (typeof data === 'string') {
-        devLog('FileSystem', 'Invalid URL, fallback to BASE64 output...');
-        url = 'data:' + mimeType + ';base64,' + btoa(data);
-      }
-      else {
-        devLog('FileSystem', 'Invalid URL, no fallback available...');
         return;
       }
     }
@@ -134,7 +127,7 @@ export class FileSystem {
     devLog('FileSystem', 'Querying user to download file "%s" from url %o...',
       fileName, url);
 
-    obj.first().click();
+    (obj[0] as HTMLAnchorElement).click();
 
     setTimeout(() => {
       obj.attr({ href: null, target: null, download: null });
