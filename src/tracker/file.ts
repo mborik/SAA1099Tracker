@@ -25,6 +25,7 @@ import pako from 'pako';
 import { devLog } from '../commons/dev';
 import { abs, toHex } from '../commons/number';
 import Player from '../player/Player';
+import constants from './constants';
 import { i18n } from './doc';
 import { FileDialog } from './file.dialog';
 import { FileSystem } from './file.system';
@@ -86,9 +87,6 @@ export interface StorageDialogExchange {
   };
 }
 
-const mimeType = 'text/x-saa1099tracker';
-
-
 export class STMFile {
   yetSaved: boolean = false;
   modified: boolean = false;
@@ -97,7 +95,7 @@ export class STMFile {
   dialog: FileDialog;
   system: FileSystem;
 
-  private _storageMap: StorageItem[] = [];
+  private _storageMap: Map<number, StorageItem> = new Map();
   private _storageLastId: number = undefined;
   private _storageBytesUsed: number = 0;
 
@@ -107,12 +105,17 @@ export class STMFile {
     const usageHandler = (() => {
       return {
         bytes: this._storageBytesUsed,
-        percent: Math.ceil(100 / ((2 * 1024 * 1024) / this._storageBytesUsed))
+        percent: Math.min(100, Math.ceil(
+          100 / (constants.LOCALSTORE_ASSUMED_SIZE / this._storageBytesUsed)
+        ))
       };
     });
 
     this.dialog = new FileDialog(_parent, this, {
-      data: this._storageMap,
+      data: Array
+        .from(this._storageMap.values())
+        .sort((a, b) => (b.timeModified - a.timeModified)),
+
       get usage() {
         return usageHandler();
       }
@@ -121,12 +124,19 @@ export class STMFile {
     this.system = new FileSystem;
   }
 
-  private _storageSortAndSum(): void {
+  private _storageSum(): void {
     this._storageBytesUsed = 0;
-    this._storageMap.sort((a, b) => (b.timeModified - a.timeModified));
     this._storageMap.forEach(obj => {
       this._storageBytesUsed += (obj.length + 40) * 2;
     }, this);
+  }
+
+  private _storageFind(fn: (obj: StorageItem) => boolean): StorageItem {
+    for (const [, value] of this._storageMap) {
+      if (fn(value)) {
+        return value;
+      }
+    }
   }
 
   private _updateAll(): void {
@@ -162,7 +172,7 @@ export class STMFile {
    * This method builds an internal database of stored songs in localStorage.
    */
   private _reloadStorage(): void {
-    this._storageMap.splice(0);
+    this._storageMap.clear();
     this._storageLastId = -1;
 
     let match: string[];
@@ -185,19 +195,19 @@ export class STMFile {
         }
 
         this._storageLastId = Math.max(this._storageLastId, id);
-        this._storageMap.push(<StorageItem> {
-          id: id,
+        this._storageMap.set(id, {
+          id,
           storageId: storageId,
           fileName: match[1],
           timeCreated: parseInt(match[2], 10),
           timeModified: parseInt(match[3], 10),
           duration: match[4],
           length: data.length
-        });
+        } as StorageItem);
       }
     }
 
-    this._storageSortAndSum();
+    this._storageSum();
   }
 
   /**
@@ -515,6 +525,7 @@ export class STMFile {
 
     player.clearSong(true);
 
+    tracker.settings.lastLoadedFileNumber = undefined;
     tracker.songTitle = '';
     tracker.songAuthor = '';
 
@@ -540,7 +551,7 @@ export class STMFile {
       name = this._fixFileName(fileNameOrId);
     }
 
-    const found = this._storageMap.find(obj => (
+    const found = this._storageFind(obj => (
       (name && obj.fileName === name) ||
       (!name && typeof fileNameOrId === 'number' && obj.id === fileNameOrId)
     ));
@@ -574,6 +585,8 @@ export class STMFile {
     this.modified = false;
     this.yetSaved = true;
     this.fileName = name;
+
+    this._parent.settings.lastLoadedFileNumber = found.id;
     return true;
   }
 
@@ -582,7 +595,7 @@ export class STMFile {
     devLog('Tracker.file', 'Storing "%s" to localStorage...', fileName);
 
     let modify = false;
-    const found = this._storageMap.find(obj => {
+    const found = this._storageFind(obj => {
       if (obj.id === oldId || obj.fileName === fileName) {
         devLog('Tracker.file', 'File ID:%s exists, will be overwritten...', obj.storageId);
         return (modify = true);
@@ -590,9 +603,14 @@ export class STMFile {
       return false;
     });
 
-    if (typeof oldId === 'number' && !modify) {
-      devLog('Tracker.file', 'Cannot find given storageId: %d!', oldId);
-      return false;
+    if (typeof oldId === 'number') {
+      if (oldId > 0 && !modify) {
+        devLog('Tracker.file', 'Cannot find given storageId: %d!', oldId);
+        return false;
+      }
+      else if (!found) {
+        devLog('Tracker.file', 'File ID:%d %s will be overwritten...!', oldId, fileName);
+      }
     }
 
     const data = this.createJSON();
@@ -611,16 +629,24 @@ export class STMFile {
       storageItem.length = packed.length;
     }
     else {
+      let id = 0;
+      if (!(typeof oldId === 'number' && oldId === 0)) {
+        id = this._storageLastId = Math.max(1, this._storageLastId + 1);
+      }
       storageItem = {
-        id: ++this._storageLastId,
-        storageId: 'stmf' + toHex(this._storageLastId, 3),
+        id,
+        storageId: 'stmf' + toHex(id, 3),
         fileName: fileName,
         timeCreated: now,
         timeModified: now,
         duration: duration,
         length: packed.length
       };
+
+      this._storageMap[id] = storageItem;
     }
+
+    this._storageSum();
 
     localStorage.setItem(storageItem.storageId + '-nfo', fileName.concat(
       '|', storageItem.timeCreated.toString(),
@@ -629,11 +655,6 @@ export class STMFile {
     ));
 
     localStorage.setItem(storageItem.storageId + '-dat', packed);
-
-    if (!modify) {
-      this._storageMap.push(storageItem);
-    }
-    this._storageSortAndSum();
 
     this.yetSaved = true;
     this.modified = false;
@@ -656,6 +677,8 @@ export class STMFile {
         this.modified = true;
         this.yetSaved = false;
         this.fileName = '';
+
+        this._parent.settings.lastLoadedFileNumber = undefined;
       })
       .catch((error: string) => {
         $('#dialog').confirm({
@@ -668,7 +691,7 @@ export class STMFile {
   }
 
   importFile() {
-    this.system.load(false, `.STMF,${mimeType}`)
+    this.system.load(false, `.STMF,${constants.MIMETYPE}`)
       .then((data: string) => {
         devLog('Tracker.file', 'File loaded, trying to parse...');
         if (!this.parseJSON(data)) {
@@ -679,6 +702,8 @@ export class STMFile {
         this.modified = true;
         this.yetSaved = false;
         this.fileName = '';
+
+        this._parent.settings.lastLoadedFileNumber = undefined;
       })
       .catch((error: string) => {
         $('#dialog').confirm({
@@ -694,6 +719,6 @@ export class STMFile {
     const data = this.createJSON(true);
     const fileName = this.getFixedFileName();
 
-    this.system.save(data, `${fileName}.STMF`, mimeType);
+    this.system.save(data, `${fileName}.STMF`, constants.MIMETYPE);
   }
 }

@@ -24,6 +24,7 @@
 import AudioDriver from '../commons/audio';
 import { toTimeString, toWidth } from '../commons/number';
 import SyncTimer from '../commons/timer';
+import constants from './constants';
 import { i18n } from './doc';
 import Tracker from '.';
 
@@ -219,48 +220,23 @@ Tracker.prototype.onCmdAppUpdate = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdAppExit = function() {
-  const keys = this.globalKeyState;
   const file = this.file;
 
   if (this.destroying) {
     return;
   }
-  else if (!keys.inDialog) {
-    if (!file.modified) {
-      return;
+  if (file.modified) {
+    const duration = $('#stInfoPanel u:eq(3)').text();
+    if (this.settings.lastLoadedFileNumber !== undefined && file.fileName) {
+      file.saveFile(file.fileName, duration, this.settings.lastLoadedFileNumber);
     }
-
-    keys.inDialog = true;
-    $('#dialog').confirm({
-      title: i18n.dialog.app.exit.title,
-      buttons: [
-        { caption: i18n.dialog.app.exit.options[0], id: 'save' },
-        { caption: i18n.dialog.app.exit.options[1], id: 'exit' },
-        { caption: i18n.dialog.app.exit.options[2], id: 'cancel' }
-      ],
-      text: i18n.dialog.app.exit.msg,
-      style: 'danger',
-      callback: (btn) => {
-        keys.inDialog = false;
-        if (btn === 'exit') {
-          this.destroying = true;
-          window.electron?.close();
-        }
-        else if (btn === 'save') {
-          if (!file.yetSaved) {
-            return file.dialog.save();
-          }
-          else if (file.fileName) {
-            file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
-            this.destroying = true;
-            window.electron?.close();
-          }
-        }
-      }
-    });
+    else {
+      file.saveFile(constants.AUTOSAVE_FILENAME, duration, 0);
+      this.settings.lastLoadedFileNumber = 0;
+    }
   }
 
-  return true;
+  this.settings.save();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileNew = function() {

@@ -73,9 +73,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       global:   'window',
       method:   'on',
       param:    'beforeunload',
-      handler:  () => {
+      handler:  (e: BeforeUnloadEvent): any => {
+        e.preventDefault();
         app.onCmdStop();
-        return app.onCmdAppExit();
+        app.onCmdAppExit();
       }
     }, {
       global:   'window',
@@ -917,6 +918,10 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
     },
     function() {
       devLog('Tracker.gui', 'Initialization done, everything is ready!');
+      if (this.settings.lastLoadedFileNumber !== undefined) {
+        this.file.loadFile(this.settings.lastLoadedFileNumber);
+      }
+
       document.body.className = '';
       return (this.loaded = true);
     }

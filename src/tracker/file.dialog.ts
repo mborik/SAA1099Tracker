@@ -78,7 +78,7 @@ export class FileDialog {
     const dlg: this = (e.data && e.data.$scope);
     const storageMap = dlg.$storage.data;
     const selectedItem = (dlg._selectedItem =
-      (e.data && typeof e.data.id === 'number') ?
+      (e.data && typeof e.data.id === 'number' && e.data.id > 0) ?
         storageMap[e.data.id] : null);
 
     if (e.pageX === 0 && e.pageY === 0) { // on enter keypress

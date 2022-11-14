@@ -25,9 +25,11 @@ import { pick } from 'lodash';
 import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
 import { abs } from '../commons/number';
+import constants from './constants';
 import Tracker from '.';
 
 interface SettingsOptions {
+  lastLoadedFileNumber: number;
   tracklistAutosize: boolean;
   tracklistLines: number;
   tracklistLineHeight: number;
@@ -40,6 +42,7 @@ interface SettingsOptions {
 
 
 const getConfigProps = (obj: any) => pick(obj, [
+  'lastLoadedFileNumber',
   'tracklistAutosize',
   'tracklistLines',
   'tracklistLineHeight',
@@ -53,14 +56,15 @@ const getConfigProps = (obj: any) => pick(obj, [
 export default class Settings implements SettingsOptions {
   private _obj: JQuery = null;
 
-  tracklistAutosize = true;
-  tracklistLines = 17;
-  tracklistLineHeight = 9;
-  hexTracklines = true;
-  hexSampleFreq = false;
-  audioInterrupt = 50;
-  audioBuffers = 4;
-  audioGain = 1.0;
+  lastLoadedFileNumber: number;
+  tracklistAutosize: boolean = true;
+  tracklistLines: number = 17;
+  tracklistLineHeight: number = 9;
+  hexTracklines: boolean = true;
+  hexSampleFreq: boolean = false;
+  audioInterrupt: number = 50;
+  audioBuffers: number = 4;
+  audioGain: number = 1.0;
 
   constructor(private _parent: Tracker) {}
 
@@ -83,7 +87,7 @@ export default class Settings implements SettingsOptions {
   }
 
   private _applyChanges(backup: SettingsOptions) {
-    localStorage.setItem('settings', JSON.stringify(getConfigProps(this)));
+    this.save();
 
     if (
       backup.audioBuffers !== this.audioBuffers ||
@@ -105,6 +109,13 @@ export default class Settings implements SettingsOptions {
     ) {
       this._parent.smpornedit.updateSamplePitchShift();
     }
+  }
+
+  save() {
+    localStorage.setItem(
+      constants.TRACKER_SETTINGS_KEY,
+      JSON.stringify(getConfigProps(this))
+    );
   }
 
   audioInit() {
@@ -139,7 +150,7 @@ export default class Settings implements SettingsOptions {
     this._obj = $('#settings');
 
     try {
-      const input = localStorage.getItem('settings') || '{}';
+      const input = localStorage.getItem(constants.TRACKER_SETTINGS_KEY) || '{}';
       const userOptions = JSON.parse(input);
       Object.assign(this, userOptions);
     }

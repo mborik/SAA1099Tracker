@@ -94,7 +94,7 @@ export default class Tracker {
   updateTracklist: (this: Tracker, update?: boolean) => void;
   initPixelFont: (this: Tracker, font: HTMLImageElement) => void;
   onCmdAppUpdate: (this: Tracker, status: Error, data: any) => void;
-  onCmdAppExit: (this: Tracker) => boolean;
+  onCmdAppExit: (this: Tracker) => void;
   onCmdAbout: (this: Tracker) => void;
   onCmdEditClear: (this: Tracker) => void;
   onCmdEditCopy: (this: Tracker) => void;
