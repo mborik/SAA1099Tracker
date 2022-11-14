@@ -48,8 +48,10 @@
 		<li class="disabled"><a id="miEditRedo" data-tooltip><span class="glyphicon glyphicon-redo"></span></a></li>
 	</ul>
 	<ul class="nav navbar-nav navbar-right">
+		<li><a id="miPreferences" data-tooltip><span class="glyphicon glyphicon-cog"></span>&ensp;Preferences</a></li>
+		<li class="divider-vertical"></li>
 		<li class="dropdown">
-			<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-help"></span>&ensp;Help&nbsp;<span class="caret"></span>&ensp;</a>
+			<a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-bullhorn"></span>&ensp;Help&nbsp;<span class="caret"></span>&ensp;</a>
 			<ul class="dropdown-menu" role="menu">
 				<li><a id="miHelpInfo" data-filename="readme">Basic info for musicians&hellip;</a></li>
 				<li><a id="miHelpKeys" data-filename="keyboard">Keyboard controls and hotkeys&hellip;</a></li>
@@ -72,7 +74,15 @@
 		<li><a id="miPosPlayStart" data-tooltip><span class="glyphicon glyphicon-play-pattern-start"></span></a></li>
 		<li><a id="miToggleLoop" data-tooltip><span class="glyphicon glyphicon-repeat"></span></a></li>
 		<li class="divider-vertical"></li>
-		<li class="disabled"><a id="miManager" data-tooltip><span class="glyphicon glyphicon-tasks"></span></a></li>
-		<li><a id="miPreferences" data-tooltip><span class="glyphicon glyphicon-wrench"></span></a></li>
 	</ul></div>
+	<form class="navbar-form header-songinfo">
+		<div class="input-group">
+			<label for="txHeaderTitle" class="input-group-addon"><span class="glyphicon glyphicon-tags"></span></label>
+			<input type="text" class="form-control" id="txHeaderTitle" spellcheck="false" tabindex="1" placeholder="Song title">
+		</div>
+		<div class="input-group">
+			<label for="txHeaderAuthor" class="input-group-addon"><span class="glyphicon glyphicon-user"></span></label>
+			<input type="text" class="form-control" id="txHeaderAuthor" spellcheck="false" tabindex="2" placeholder="Author">
+		</div>
+	</form>
 </div>

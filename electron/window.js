@@ -3,7 +3,7 @@ const path = require('path');
 const { BrowserWindow } = require('electron');
 const WindowState = require('electron-window-state');
 
-const minBounds = { w: 1152, h: 790 };
+const minBounds = { w: 1152, h: 690 };
 
 const createWindow = (title, devTools) => {
   const windowState = WindowState({
