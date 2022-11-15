@@ -26,6 +26,7 @@
 
 // defines ------------------------------------------------------------------------------
 @tracker-base-width: 1118px;
+@dialog-top-margin: 32vh;
 
 // custom mixins ------------------------------------------------------------------------
 .make-my-panel-column(@width) {
@@ -76,13 +77,13 @@
 }
 
 //---------------------------------------------------------------------------------------
-@media not screen and (any-pointer: fine), (max-width: 1151px) or (orientation: portrait) {
+@media not screen and (any-pointer: fine), (max-width: 1129px) or (max-height: 679px) {
 	.desktop-app-warning {
 		display: block;
 		background: @body-bg;
 
 		.modal-dialog {
-			margin-top: 32vh;
+			margin-top: @dialog-top-margin;
 
 			> .modal-content {
 				border-radius: 0;
@@ -130,6 +131,7 @@
 			background-color: @navbar-default-bg;
 
 			+ input {
+				font-weight: bold;
 				height: (@input-height-base + 2);
 				border-color: @navbar-default-border;
 				box-shadow: none;
@@ -511,13 +513,14 @@
 		font-family: @font-family-monospace;
 		font-weight: normal;
 		font-size: 13px;
+		line-height: 16px;
 		background: transparent;
 		border: 0;
 	}
 }
 
 #about > .modal-dialog {
-	margin-top: 32vh;
+	margin-top: @dialog-top-margin;
 	width: 400px;
 
 	> .modal-content {
@@ -599,7 +602,7 @@
 
 #dialog {
 	.modal-dialog {
-		margin-top: 32vh;
+		margin-top: @dialog-top-margin;
 
 		> .modal-content { border-radius: 0; }
 	}
