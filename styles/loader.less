@@ -24,88 +24,88 @@
 @import (reference) "mixins.less";
 //---------------------------------------------------------------------------------------
 body {
-	.user-select(none);
+  .user-select(none);
 
-	&.loading {
-		> #overlay {
-		    display: block;
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			z-index: 1024;
-			background: rgba(255,255,255,.75);
-			overflow: hidden;
+  &.loading {
+    > #overlay {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1024;
+      background: rgba(255,255,255,.75);
+      overflow: hidden;
 
-            .wrapper {
-                display: block;
-                position: absolute;
-                left: 50%;
-                top: 50%;
-            }
-			.loader {
-				display: block;
-				position: relative;
-				left: -50%;
-				margin-top: -64%;
-				width: 128px;
+      .wrapper {
+        display: block;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+      }
+      .loader {
+        display: block;
+        position: relative;
+        left: -50%;
+        margin-top: -64%;
+        width: 128px;
 
-				color: #38c;
-				font-size: 16px;
-				text-align: center;
-				font-weight: bold;
-				filter: drop-shadow(0px 0px 5px #9ce);
+        color: #38c;
+        font-size: 16px;
+        text-align: center;
+        font-weight: bold;
+        filter: drop-shadow(0px 0px 5px #9ce);
 
-				&:before {
-					display: block;
-					content: "\A0";
-					width: 48px;
-					height: 48px;
-					margin: 40px;
-					margin-bottom: 12px;
-					border: 7px dotted #38c;
-					border-radius: 50%;
-					animation: spin 2s ease infinite;
-				}
-				&:after {
-					content: "...";
-					margin-right: -10px;
-				}
-			}
-		}
-	}
+        &:before {
+          display: block;
+          content: "\A0";
+          width: 48px;
+          height: 48px;
+          margin: 40px;
+          margin-bottom: 12px;
+          border: 7px dotted #38c;
+          border-radius: 50%;
+          animation: spin 2s ease infinite;
+        }
+        &:after {
+          content: "...";
+          margin-right: -10px;
+        }
+      }
+    }
+  }
 }
 
 @font-face {
-	font-family: 'Droid Sans';
-	src: url('../assets/fonts/droidsans-regular-webfont.eot');
-	src: url('../assets/fonts/droidsans-regular-webfont.eot?#iefix') format('embedded-opentype');
-	src: url('../assets/fonts/droidsans-regular-webfont.svg#droid_sansregular') format('svg');
-	src: url('../assets/fonts/droidsans-regular-webfont.woff') format('woff');
-	src: url('../assets/fonts/droidsans-regular-webfont.ttf') format('truetype');
-	font-weight: normal;
-	font-style: normal;
+  font-family: 'Droid Sans';
+  src: url('../assets/fonts/droidsans-regular-webfont.eot');
+  src: url('../assets/fonts/droidsans-regular-webfont.eot?#iefix') format('embedded-opentype');
+  src: url('../assets/fonts/droidsans-regular-webfont.svg#droid_sansregular') format('svg');
+  src: url('../assets/fonts/droidsans-regular-webfont.woff') format('woff');
+  src: url('../assets/fonts/droidsans-regular-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 @font-face {
-	font-family: 'Droid Sans';
-	src: url('../assets/fonts/droidsans-bold-webfont.eot');
-	src: url('../assets/fonts/droidsans-bold-webfont.eot?#iefix') format('embedded-opentype');
-	src: url('../assets/fonts/droidsans-bold-webfont.svg#droid_sansbold') format('svg');
-	src: url('../assets/fonts/droidsans-bold-webfont.woff') format('woff');
-	src: url('../assets/fonts/droidsans-bold-webfont.ttf') format('truetype');
-	font-weight: bold;
-	font-style: normal;
+  font-family: 'Droid Sans';
+  src: url('../assets/fonts/droidsans-bold-webfont.eot');
+  src: url('../assets/fonts/droidsans-bold-webfont.eot?#iefix') format('embedded-opentype');
+  src: url('../assets/fonts/droidsans-bold-webfont.svg#droid_sansbold') format('svg');
+  src: url('../assets/fonts/droidsans-bold-webfont.woff') format('woff');
+  src: url('../assets/fonts/droidsans-bold-webfont.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
 }
 @font-face {
-	font-family: 'BPmono';
-	src: url('../assets/fonts/bpmono-webfont.eot');
-	src: url('../assets/fonts/bpmono-webfont.eot?#iefix') format('embedded-opentype');
-	src: url('../assets/fonts/bpmono-webfont.svg#droid_sansbold') format('svg');
-	src: url('../assets/fonts/bpmono-webfont.woff') format('woff');
-	src: url('../assets/fonts/bpmono-webfont.ttf') format('truetype');
-	font-weight: normal;
-	font-style: normal;
+  font-family: 'BPmono';
+  src: url('../assets/fonts/bpmono-webfont.eot');
+  src: url('../assets/fonts/bpmono-webfont.eot?#iefix') format('embedded-opentype');
+  src: url('../assets/fonts/bpmono-webfont.svg#droid_sansbold') format('svg');
+  src: url('../assets/fonts/bpmono-webfont.woff') format('woff');
+  src: url('../assets/fonts/bpmono-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
 @keyframes spin { 100% { transform:rotate(360deg); } }

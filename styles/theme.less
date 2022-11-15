@@ -22,313 +22,312 @@
 //---------------------------------------------------------------------------------------
 
 // Navbar =====================================================================
-
 .navbar {
-	cursor: default;
+  cursor: default;
 
-	.divider-vertical {
-		height: @navbar-height;
-		margin: 0 @nav-link-padding;
-		border-right: 1px solid #fff;
-		border-left: 1px solid @gray-lighter;
-	}
+  .divider-vertical {
+    height: @navbar-height;
+    margin: 0 @nav-link-padding;
+    border-right: 1px solid #fff;
+    border-left: 1px solid @gray-lighter;
+  }
 
-	&-inverse {
-		.divider-vertical {
-			border-right-color: #111;
-			border-left-color: #222;
-		}
-		.badge {
-			background-color: #fff;
-			color: @brand-primary;
-		}
-	}
+  &-inverse {
+    .divider-vertical {
+      border-right-color: #111;
+      border-left-color: #222;
+    }
+    .badge {
+      background-color: #fff;
+      color: @brand-primary;
+    }
+  }
 
-	.container, .container-fluid {
-		height: @navbar-height;
-		clear: both;
+  .container, .container-fluid {
+    height: @navbar-height;
+    clear: both;
 
-		.navbar-brand {
-			padding: 12px !important;
-			color: @gray-light !important;
-		}
-	}
+    .navbar-brand {
+      padding: 12px !important;
+      color: @gray-light !important;
+    }
+  }
 }
 
 .dropdown-submenu {
-	position: relative;
+  position: relative;
 
-	&>.dropdown-menu {
-		top: 0;
-		left: 100%;
-		margin-top: -6px;
-		margin-left: -1px;
-		border-radius: 0 @border-radius-base @border-radius-base @border-radius-base;
-	}
+  &>.dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    border-radius: 0 @border-radius-base @border-radius-base @border-radius-base;
+  }
 
-	&:hover {
-		&>.dropdown-menu {
-			display: block;
-		}
-	}
+  &:hover {
+    &>.dropdown-menu {
+      display: block;
+    }
+  }
 
-	&>a:after {
-		display: block;
-		content: " ";
-		float: right;
-		width: 0;
-		height: 0;
-		border-color: transparent;
-		border-style: solid;
-		border-width: @caret-width-base 0 @caret-width-base @caret-width-base;
-		border-left-color: #ccc;
-		margin-top: 2px;
-		margin-right: -8px;
-	}
+  &>a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: @caret-width-base 0 @caret-width-base @caret-width-base;
+    border-left-color: #ccc;
+    margin-top: 2px;
+    margin-right: -8px;
+  }
 
-	&.pull-left {
-		float: none;
-		&>.dropdown-menu {
-			left: -100%;
-			margin-left: 10px;
-			border-radius: @border-radius-base 0 @border-radius-base @border-radius-base;
-		}
-	}
+  &.pull-left {
+    float: none;
+    &>.dropdown-menu {
+      left: -100%;
+      margin-left: 10px;
+      border-radius: @border-radius-base 0 @border-radius-base @border-radius-base;
+    }
+  }
 }
 
 // Buttons ====================================================================
 
 .btn-shadow(@color) {
-	#gradient > .vertical-three-colors(lighten(@color, 3%), @color, 6%, darken(@color, 3%));
-	filter: none;
-	border: 1px solid darken(@color, 10%);
+  #gradient > .vertical-three-colors(lighten(@color, 3%), @color, 6%, darken(@color, 3%));
+  filter: none;
+  border: 1px solid darken(@color, 10%);
 }
 
 button {
-	cursor: default !important;
+  cursor: default !important;
 }
 
 .btn {
-	font-family: @headings-font-family;
+  font-family: @headings-font-family;
 }
 .btn:focus {
-	outline: 0;
-	.form-control-focus();
+  outline: 0;
+  .form-control-focus();
 }
 
 .btn-default,
 .btn-default:hover {
-	.btn-shadow(@btn-default-bg);
-	border: 1px solid @border-mild;
+  .btn-shadow(@btn-default-bg);
+  border: 1px solid @border-mild;
 }
 
 .btn-primary,
 .btn-primary:hover {
-	.btn-shadow(@btn-primary-bg);
+  .btn-shadow(@btn-primary-bg);
 }
 
 .btn-success,
 .btn-success:hover {
-	.btn-shadow(@btn-success-bg);
+  .btn-shadow(@btn-success-bg);
 }
 
 .btn-info,
 .btn-info:hover {
-	.btn-shadow(@btn-info-bg);
+  .btn-shadow(@btn-info-bg);
 }
 
 .btn-warning,
 .btn-warning:hover {
-	.btn-shadow(@btn-warning-bg);
+  .btn-shadow(@btn-warning-bg);
 }
 
 .btn-danger,
 .btn-danger:hover {
-	.btn-shadow(@btn-danger-bg);
+  .btn-shadow(@btn-danger-bg);
 }
 
 // Typography =================================================================
 
 body {
-	font-weight: normal;
+  font-weight: normal;
 }
 
 // Tables =====================================================================
 
 th {
-	color: @headings-color;
+  color: @headings-color;
 }
 
 // Forms ======================================================================
 
 legend {
-	color: @headings-color;
+  color: @headings-color;
 }
 
 label {
-	font-weight: normal;
+  font-weight: normal;
 }
 
 .has-warning {
-	.help-block,
-	.control-label {
-		color: @brand-danger;
-	}
+  .help-block,
+  .control-label {
+    color: @brand-danger;
+  }
 
-	.form-control,
-	.form-control:focus {
-		border-color: @brand-danger;
-	}
+  .form-control,
+  .form-control:focus {
+    border-color: @brand-danger;
+  }
 }
 
 .has-error {
-	.help-block,
-	.control-label {
-		color: @brand-primary;
-	}
+  .help-block,
+  .control-label {
+    color: @brand-primary;
+  }
 
-	.form-control,
-	.form-control:focus {
-		border-color: @brand-primary;
-	}
+  .form-control,
+  .form-control:focus {
+    border-color: @brand-primary;
+  }
 }
 
 .has-success {
-	.help-block,
-	.control-label {
-		color: @brand-success;
-	}
+  .help-block,
+  .control-label {
+    color: @brand-success;
+  }
 
-	.form-control,
-	.form-control:focus {
-		border-color: @brand-success;
-	}
+  .form-control,
+  .form-control:focus {
+    border-color: @brand-success;
+  }
 }
 
 .form-control[disabled],
 .nav > li.disabled > a,
 label.toggle-off,
 label.disabled {
-	color: @gray-light !important;
+  color: @gray-light !important;
 }
 
 // Navs =======================================================================
 
 .pager {
-	a {
-		color: @headings-color;
-	}
+  a {
+    color: @headings-color;
+  }
 
-	a:hover,
-	.active > a {
-		border-color: @brand-primary;
-		color: #fff;
-	}
+  a:hover,
+  .active > a {
+    border-color: @brand-primary;
+    color: #fff;
+  }
 
-	.disabled > a {
-		border-color: @pager-border;
-	}
+  .disabled > a {
+    border-color: @pager-border;
+  }
 }
 
 // Containers =================================================================
 
 .panel {
-//	border-color: @nav-tabs-border-color;
+  // border-color: @nav-tabs-border-color;
 
-	&.tabs-top {
-		border-top: 0;
-	}
-	&.tabs-bottom {
-		border-bottom: 0;
-		margin-bottom: 0;
-	}
+  &.tabs-top {
+    border-top: 0;
+  }
+  &.tabs-bottom {
+    border-bottom: 0;
+    margin-bottom: 0;
+  }
 
-	.panel-heading {
-		border-color: @border-soft;
-		#gradient.vertical(@body-bg, #f4f4f4);
-		h3 { font-size: @font-size-base }
-	}
+  .panel-heading {
+    border-color: @border-soft;
+    #gradient.vertical(@body-bg, #f4f4f4);
+    h3 { font-size: @font-size-base }
+  }
 }
 
 // Bottom tabs extension ================================================================
 
 .nav-tabs > li > a {
-	font-weight: bold;
+  font-weight: bold;
 }
 
 .tabs-bottom > .nav-tabs {
-	border-bottom: 0;
-	border-top: 1px solid @nav-tabs-border-color;
+  border-bottom: 0;
+  border-top: 1px solid @nav-tabs-border-color;
 
-	> li {
-		margin-top: -1px;
-		margin-bottom: 0;
+  > li {
+    margin-top: -1px;
+    margin-bottom: 0;
 
-		> a {
-			border: 1px solid transparent;
-			border-radius: 0 0 @border-radius-base @border-radius-base;
+    > a {
+      border: 1px solid transparent;
+      border-radius: 0 0 @border-radius-base @border-radius-base;
 
-			&:hover {
-				border-top-color: @nav-tabs-border-color;
-			}
-		}
+      &:hover {
+        border-top-color: @nav-tabs-border-color;
+      }
+    }
 
-	    // Active state, and its :hover to override normal :hover
-	    &.active > a {
-	    	&, &:hover, &:focus {
-	    		border-color: transparent @nav-tabs-active-link-hover-border-color @nav-tabs-active-link-hover-border-color @nav-tabs-active-link-hover-border-color;
-	    	}
-	    }
-	}
+    // Active state, and its :hover to override normal :hover
+    &.active > a {
+      &, &:hover, &:focus {
+        border-color: transparent @nav-tabs-active-link-hover-border-color @nav-tabs-active-link-hover-border-color @nav-tabs-active-link-hover-border-color;
+      }
+    }
+  }
 }
 
 // TouchSpin extension ------------------------------------------------------------------
 
 .bootstrap-touchspin {
-	input {
-		border-top-left-radius: @border-radius-base !important;
-		border-bottom-left-radius: @border-radius-base !important;
-	}
+  input {
+    border-top-left-radius: @border-radius-base !important;
+    border-bottom-left-radius: @border-radius-base !important;
+  }
 
-	.input-group-btn-vertical {
-		position: relative;
-		white-space: nowrap;
-		width: 1%;
-		vertical-align: middle;
-		display: table-cell;
+  .input-group-btn-vertical {
+    position: relative;
+    white-space: nowrap;
+    width: 1%;
+    vertical-align: middle;
+    display: table-cell;
 
-		> .btn {
-			display: block;
-			float: none;
-			width: 100%;
-			max-width: 100%;
-			padding: 5px 8px;
-			margin-left: -1px;
-			position: relative;
-		}
-		.bootstrap-touchspin-up {
-			border-radius: 0 4px 0 0;
-		}
-		.bootstrap-touchspin-down {
-			margin-top: -2px;
-			border-radius: 0 0 4px 0;
-		}
-		i {
-			position: absolute;
-			top: 2px;
-			left: 5px;
-			font-size: 7px;
-			font-weight: normal;
-		}
-	}
+    > .btn {
+      display: block;
+      float: none;
+      width: 100%;
+      max-width: 100%;
+      padding: 5px 8px;
+      margin-left: -1px;
+      position: relative;
+    }
+    .bootstrap-touchspin-up {
+      border-radius: 0 4px 0 0;
+    }
+    .bootstrap-touchspin-down {
+      margin-top: -2px;
+      border-radius: 0 0 4px 0;
+    }
+    i {
+      position: absolute;
+      top: 2px;
+      left: 5px;
+      font-size: 7px;
+      font-weight: normal;
+    }
+  }
 }
 
 // ToggleButton extension ---------------------------------------------------------------
 
 .toggle-group label {
-	margin: 0 !important;
-	padding: 4px 0 0 0 !important;
-	font-weight: bold !important;
+  margin: 0 !important;
+  padding: 4px 0 0 0 !important;
+  font-weight: bold !important;
 }
 
 @import (inline) "bootstrap-toggle/css/bootstrap-toggle.css";
