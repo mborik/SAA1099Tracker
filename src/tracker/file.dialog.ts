@@ -22,15 +22,14 @@
 
 import { debounce } from 'typescript-debounce-decorator';
 import { i18n } from './doc';
-import { STMFile, StorageDialogExchange, StorageItem } from './file';
+import { STMFile, StorageItem } from './file';
 import Tracker from '.';
 
 
 export class FileDialog {
   constructor(
     private $app: Tracker,
-    private $parent: STMFile,
-    private $storage: StorageDialogExchange) {}
+    private $parent: STMFile) {}
 
   public load(): boolean {
     return this._openDialog('load');
@@ -41,6 +40,7 @@ export class FileDialog {
 
   private _obj: JQuery = null;
   private _saveFlag: boolean = false;
+  private _storageMap: StorageItem[] = [];
   private _selectedItem: StorageItem = null;
 
   @debounce(250)
@@ -76,10 +76,9 @@ export class FileDialog {
     e.stopPropagation();
 
     const dlg: this = (e.data && e.data.$scope);
-    const storageMap = dlg.$storage.data;
     const selectedItem = (dlg._selectedItem =
-      (e.data && typeof e.data.id === 'number' && e.data.id > 0) ?
-        storageMap[e.data.id] : null);
+      (e.data && typeof e.data.id === 'number') ?
+        dlg._storageMap[e.data.id] : null);
 
     if (e.pageX === 0 && e.pageY === 0) { // on enter keypress
       return dlg._defaultHandler(e);
@@ -95,7 +94,7 @@ export class FileDialog {
         dlg._obj.find('.file-name>input').val(selectedItem.fileName);
       }
 
-      dlg._obj.find('.file-remove').prop('disabled', !selectedItem);
+      dlg._obj.find('.file-remove').prop('disabled', !(selectedItem?.id > 0));
     }
 
     return true;
@@ -105,7 +104,6 @@ export class FileDialog {
     e.stopPropagation();
 
     const dlg: this = (e.data && e.data.$scope);
-    const storageMap = dlg.$storage.data;
     const selectedItem = dlg._selectedItem;
     const mode = (dlg._saveFlag ? 'save' : 'load');
 
@@ -123,11 +121,11 @@ export class FileDialog {
           return;
         }
 
-        const index = storageMap.findIndex(obj =>
+        const index = dlg._storageMap.findIndex(obj =>
           (obj.storageId === selectedItem.storageId));
 
         if (~index) {
-          storageMap.splice(index, 1);
+          dlg._storageMap.splice(index, 1);
           localStorage.removeItem(selectedItem.storageId + '-nfo');
           localStorage.removeItem(selectedItem.storageId + '-dat');
 
@@ -144,7 +142,6 @@ export class FileDialog {
   private _openDialog(mode: string): boolean {
     const tracker = this.$app;
     const file = this.$parent;
-    const storageMap = this.$storage.data;
 
     const titles = i18n.app.filedialog.title;
     const handleArgs = { $scope: this };
@@ -152,15 +149,18 @@ export class FileDialog {
     this._saveFlag = (mode === 'save');
     this._obj = $('#filedialog');
 
-    if (!titles[mode] || (!this._saveFlag && !storageMap.length)) {
+    this._storageMap = Array
+      .from(this.$parent.storageMap.values())
+      .filter(({ id }) => tracker.settings.showAutosaveInFileDialog ? true : id > 0)
+      .sort((a, b) => (b.timeModified - a.timeModified));
+
+    if (!titles[mode] || (!this._saveFlag && !this._storageMap.length)) {
       return false;
     }
 
     tracker.globalKeyState.inDialog = true;
     this._obj.on('show.bs.modal', $.proxy(() => {
-      const usage = this.$storage.usage;
-
-      this._selectedItem = null;
+      const { bytes, percent } = this.$parent.storagetUsageSummary();
 
       this._obj.addClass(mode)
         .before($('<div/>')
@@ -168,15 +168,16 @@ export class FileDialog {
 
       this._obj.find('.modal-title').text(titles[mode] + '\u2026');
       this._obj.find('.file-name>input').val(file.getFixedFileName());
-      this._obj.find('.storage-usage i').text(usage.bytes + ' bytes used');
-      this._obj.find('.storage-usage .progress-bar').css('width', usage.percent + '%');
+      this._obj.find('.storage-usage i').text(bytes + ' bytes used');
+      this._obj.find('.storage-usage .progress-bar').css('width', percent + '%');
       this._obj.find('.btn-success').on('click', handleArgs, this._defaultHandler);
 
       const el = this._obj.find('.file-list').empty();
       const span = $('<span/>');
       const cell = $('<button class="cell"/>');
 
-      storageMap.forEach((obj, i) => {
+      this._selectedItem = null;
+      this._storageMap.forEach((obj, i) => {
         const d: string = (new Date(obj.timeModified * 1000))
           .toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
 

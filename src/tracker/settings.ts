@@ -29,6 +29,7 @@ import constants from './constants';
 import Tracker from '.';
 
 interface SettingsOptions {
+  showAutosaveInFileDialog: boolean;
   lastLoadedFileNumber: number;
   tracklistAutosize: boolean;
   tracklistLines: number;
@@ -42,6 +43,7 @@ interface SettingsOptions {
 
 
 const getConfigProps = (obj: any) => pick(obj, [
+  'showAutosaveInFileDialog',
   'lastLoadedFileNumber',
   'tracklistAutosize',
   'tracklistLines',
@@ -56,7 +58,8 @@ const getConfigProps = (obj: any) => pick(obj, [
 export default class Settings implements SettingsOptions {
   private _obj: JQuery = null;
 
-  lastLoadedFileNumber: number;
+  showAutosaveInFileDialog: boolean = false;
+  lastLoadedFileNumber: number = undefined;
   tracklistAutosize: boolean = true;
   tracklistLines: number = 17;
   tracklistLineHeight: number = 9;
@@ -79,6 +82,7 @@ export default class Settings implements SettingsOptions {
     $('#scSetTrkLineHeight').val(this.tracklistLineHeight);
     $('#chSetHexTracklist').prop('checked', this.hexTracklines);
     $('#chSetHexFreqShifts').prop('checked', this.hexSampleFreq);
+    $('#chShowAutosaveFile').prop('checked', this.showAutosaveInFileDialog);
     $('#rgSetAudioVolume').val(this.audioGain * 100);
     $('#rgSetAudioBuffers').val(this.audioBuffers);
     $('#rdSetAudioInt' + this.audioInterrupt).prop('checked', true);

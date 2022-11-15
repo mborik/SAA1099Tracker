@@ -710,6 +710,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => (app.settings.hexSampleFreq = !!e.currentTarget.checked)
     }, {
+      selector: '#chShowAutosaveFile',
+      method:   'change',
+      handler:  (e: JQueryInputEventObject) => (app.settings.showAutosaveInFileDialog = !!e.currentTarget.checked)
+    }, {
       selector: '#rgSetAudioVolume',
       method:   'on',
       param:    'input change',

@@ -25,5 +25,5 @@ export default {
   TRACKER_SETTINGS_KEY: 'saa1099-tracker-settings',
   MIMETYPE: 'text/x-saa1099tracker',
   AUTOSAVE_FILENAME: 'AUTOSAVE',
-  LOCALSTORE_ASSUMED_SIZE: 2 ** 21,
+  LOCALSTORAGE_ASSUMED_SIZE: 2 ** 21,
 };

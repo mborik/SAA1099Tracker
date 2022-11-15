@@ -79,14 +79,6 @@ export interface STMFileFormat {
   version: string;
 }
 
-export interface StorageDialogExchange {
-  data: StorageItem[];
-  readonly usage: {
-    bytes: number;
-    percent: number;
-  };
-}
-
 export class STMFile {
   yetSaved: boolean = false;
   modified: boolean = false;
@@ -94,45 +86,27 @@ export class STMFile {
 
   dialog: FileDialog;
   system: FileSystem;
+  storageMap: Map<number, StorageItem> = new Map();
 
-  private _storageMap: Map<number, StorageItem> = new Map();
   private _storageLastId: number = undefined;
   private _storageBytesUsed: number = 0;
 
   constructor(private _parent: Tracker) {
     this._reloadStorage();
 
-    const usageHandler = (() => {
-      return {
-        bytes: this._storageBytesUsed,
-        percent: Math.min(100, Math.ceil(
-          100 / (constants.LOCALSTORE_ASSUMED_SIZE / this._storageBytesUsed)
-        ))
-      };
-    });
-
-    this.dialog = new FileDialog(_parent, this, {
-      data: Array
-        .from(this._storageMap.values())
-        .sort((a, b) => (b.timeModified - a.timeModified)),
-
-      get usage() {
-        return usageHandler();
-      }
-    });
-
+    this.dialog = new FileDialog(_parent, this);
     this.system = new FileSystem;
   }
 
   private _storageSum(): void {
     this._storageBytesUsed = 0;
-    this._storageMap.forEach(obj => {
+    this.storageMap.forEach(obj => {
       this._storageBytesUsed += (obj.length + 40) * 2;
     }, this);
   }
 
   private _storageFind(fn: (obj: StorageItem) => boolean): StorageItem {
-    for (const [, value] of this._storageMap) {
+    for (const [, value] of this.storageMap) {
       if (fn(value)) {
         return value;
       }
@@ -172,7 +146,7 @@ export class STMFile {
    * This method builds an internal database of stored songs in localStorage.
    */
   private _reloadStorage(): void {
-    this._storageMap.clear();
+    this.storageMap.clear();
     this._storageLastId = -1;
 
     let match: string[];
@@ -195,7 +169,7 @@ export class STMFile {
         }
 
         this._storageLastId = Math.max(this._storageLastId, id);
-        this._storageMap.set(id, {
+        this.storageMap.set(id, {
           id,
           storageId: storageId,
           fileName: match[1],
@@ -209,6 +183,13 @@ export class STMFile {
 
     this._storageSum();
   }
+
+  storagetUsageSummary = () => ({
+    bytes: this._storageBytesUsed,
+    percent: Math.min(100, Math.ceil(
+      100 / (constants.LOCALSTORAGE_ASSUMED_SIZE / this._storageBytesUsed)
+    ))
+  });
 
   /**
    * This method can parse input JSON with song data
@@ -643,7 +624,7 @@ export class STMFile {
         length: packed.length
       };
 
-      this._storageMap[id] = storageItem;
+      this.storageMap[id] = storageItem;
     }
 
     this._storageSum();

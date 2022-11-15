@@ -30,6 +30,8 @@
 									<div class="form-group">
 										<div class="checkbox"><label class="control-label"><input id="chSetHexTracklist" type="checkbox" tabindex="4">Hexadecimal track-listing line numbers</label></div>
 										<div class="checkbox"><label class="control-label"><input id="chSetHexFreqShifts" type="checkbox" tabindex="5">Hexadecimal frequency shifts in samples</label></div>
+										<hr>
+										<div class="checkbox"><label class="control-label"><input id="chShowAutosaveFile" type="checkbox" tabindex="6">Show <code>AUTOSAVE</code> file in Open/Save dialogs</label></div>
 									</div>
 								</div>
 							</div>
@@ -40,19 +42,19 @@
 								<div class="panel-body">
 									<fieldset class="form-group row">
 										<label>Volume gain:</label>
-										<input id="rgSetAudioVolume" type="range" min="0" max="200" step="1" value="100" tabindex="6">
+										<input id="rgSetAudioVolume" type="range" min="0" max="200" step="1" value="100" tabindex="10">
 									</fieldset>
 									<hr>
 									<fieldset class="form-group row">
 										<label>Buffers:</label>
-										<input id="rgSetAudioBuffers" type="range" min="2" max="16" step="2" value="4" tabindex="7">
+										<input id="rgSetAudioBuffers" type="range" min="2" max="16" step="2" value="4" tabindex="11">
 										<div class="form-control-static text-muted"></div>
 									</fieldset>
 									<hr>
 									<fieldset class="form-group row">
 										<label>Interrupt frequency:</label>
-										<div class="radio"><label class="control-label"><input id="rdSetAudioInt50" name="rdSetAudioInt" type="radio" value="50" tabindex="8"><b>50 Hz</b> (default)</label></div>
-										<div class="radio"><label class="control-label"><input id="rdSetAudioInt32" name="rdSetAudioInt" type="radio" value="32" tabindex="9"><b>32 Hz</b> (MIF 85 experimental)</label></div>
+										<div class="radio"><label class="control-label"><input id="rdSetAudioInt50" name="rdSetAudioInt" type="radio" value="50" tabindex="12"><b>50 Hz</b> (default)</label></div>
+										<div class="radio"><label class="control-label"><input id="rdSetAudioInt32" name="rdSetAudioInt" type="radio" value="32" tabindex="13"><b>32 Hz</b> (MIF 85 experimental)</label></div>
 									</fieldset>
 								</div>
 							</div>
@@ -61,8 +63,8 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button class="btn btn-default cancel" type="button" data-dismiss="modal" tabindex="10">Cancel</button>
-				<button class="btn btn-success apply" type="button" tabindex="11">Apply</button>
+				<button class="btn btn-default cancel" type="button" data-dismiss="modal" tabindex="20">Cancel</button>
+				<button class="btn btn-success apply" type="button" tabindex="21">Apply</button>
 			</div>
 		</div>
 	</div>
