@@ -1,58 +1,95 @@
 {
   "asar": true,
+  "appId": "com.rmteam.saa1099tracker",
+  "copyright": "Copyright (c) 2017-2022 RM-TEAM",
+  "productName": "SAA1099Tracker",
   "directories": {
     "buildResources": "assets/resources",
     "output": "dist"
   },
+  "extraFiles": [
+    {
+      "from": "assets/scripts",
+      "to": "."
+    }
+  ],
   "files": [
     "!**/.*",
-    "!{electron.json,Gruntfile.js,bower.json,tslint.json}",
-    "!{src,styles,templates,dist,bower_components}",
+    "!{electron.json,webpack.config.js,tsconfig.json}",
+    "!{src,styles,templates,build,dist}",
     "!**/*.{svg,eot,map}",
     "!**/{CHANGELOG*,AUTHORS*,LICENSE*,README*,test,__tests__,tests,powered-test,example,examples,screenshot,screenshots,Makefile*,*.d.ts}"
   ],
-  "extraFiles": [{
-    "from": "assets/scripts",
-    "to": "."
-  }],
+  "linux": {
+    "category": "Audio",
+    "packageCategory": "audio",
+    "desktop": {
+      "Categories": "GTK;Audio;AudioVideo;",
+      "Comment": "chiptune music tracker for Philips SAA 1099 soundchip",
+      "MimeType": "text/x-saa1099tracker",
+      "Name": "SAA1099Tracker",
+      "StartupNotify": "false",
+      "Terminal": "false",
+      "Type": "Application",
+      "Version": "1.0",
+      "X-MultipleArgs": "false"
+    },
+    "executableName": "SAA1099Tracker",
+    "icon": "assets/resources/png/",
+    "target": [
+      "AppImage",
+      "rpm",
+      "deb"
+    ]
+  },
+  "appImage": {
+    "artifactName": "${productName}-${version}-${env.ELECTRON_BUILDER_ARCHITECTURE}.${ext}"
+  },
+  "rpm": {
+    "depends": ["util-linux"]
+  },
   "mac": {
+    "identity": null,
     "category": "public.app-category.music",
+    "hardenedRuntime": true,
+    "entitlements": "assets/resources/entitlements.mac.plist",
+    "entitlementsInherit": "assets/resources/entitlements.mac.plist",
+    "artifactName": "${productName}-${version}.${ext}",
     "target": ["dmg"]
   },
   "dmg": {
-    "icon": "assets/resources/icon.icns"
+    "icon": "assets/resources/icon.icns",
+    "background": "assets/resources/background.tiff",
+    "iconSize": 110,
+    "contents": [
+      {
+        "x": 140,
+        "y": 225
+      },
+      {
+        "x": 415,
+        "y": 225,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ],
+    "window": {
+      "width": 540,
+      "height": 405
+    }
   },
   "mas": {
     "publish": null
   },
-  "linux": {
-    "target": ["deb", "rpm", "tar.gz"],
-    "icon": "assets/resources/png/",
-    "category": "Audio",
-    "desktop": {
-      "Version": "1.0",
-      "Name": "SAA1099Tracker",
-      "Comment": "chiptune music tracker for Philips SAA 1099 soundchip",
-      "Terminal": "false",
-      "X-MultipleArgs": "false",
-      "Type": "Application",
-      "Categories": "GTK;Audio;AudioVideo;",
-      "StartupNotify": "false",
-      "MimeType": "text/x-saa1099tracker"
-    }
-  },
   "win": {
-    "target": ["squirrel"],
-    "icon": "assets/resources/icon.ico"
+    "icon": "assets/resources/icon.ico",
+    "target": ["squirrel"]
   },
   "squirrelWindows": {
-    "iconUrl": "https://raw.githubusercontent.com/mborik/SAA1099Tracker/master/assets/resouces/icon.ico",
+    "iconUrl": "https://saa1099tracker.borik.net/assets/icon.ico",
     "loadingGif": "assets/resources/loading.gif",
     "msi": true,
     "remoteReleases": false,
     "useAppIdAsId": false
-  },
-  "appId": "com.rmteam.saa1099tracker",
-  "copyright": "Copyright (c) 2017 RM-TEAM",
-  "productName": "SAA1099Tracker"
+  }
 }

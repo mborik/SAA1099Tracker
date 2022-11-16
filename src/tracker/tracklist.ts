@@ -1,6 +1,6 @@
-/*
- * Tracklist class and dependent interfaces.
- * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Tracklist class and dependent interfaces.
+ * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,202 +20,206 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path="../index.d.ts" />
+
+import { devLog } from '../commons/dev';
+import Tracker from '.';
+
+export interface TracklistStartPoint {
+  x: number;
+  y: number;
+}
+
+export class TracklistPosition {
+  start: TracklistStartPoint;
+
+  constructor(
+    public y: number = 0,
+    public line: number = 0,
+    public channel: number = 0,
+    public column: number = 0,
+    sx: number = 0,
+    sy: number = 0) {
+
+    this.start = { x: sx, y: sy };
+  }
+
+  set<P = TracklistPosition>(p: P): void {
+    if (p instanceof TracklistPosition) {
+      this.y = p.y;
+      this.line = p.line;
+      this.channel = p.channel;
+      this.column = p.column;
+      this.start.x = p.start.x;
+      this.start.y = p.start.y;
+    }
+  }
+  compare<P = TracklistPosition>(p: P): boolean {
+    if (p instanceof TracklistPosition) {
+      return (this.y === p.y &&
+          this.line === p.line &&
+          this.channel === p.channel &&
+          this.column === p.column);
+    }
+
+    return false;
+  }
+}
+
+export interface TracklistSelection {
+  isDragging: boolean;
+  start: TracklistPosition;
+
+  len: number;
+  line: number;
+  channel: number;
+}
+
+export interface TracklistCanvasData {
+  columns: number[];
+
+  selWidth: number;
+  chnWidth: number;
+  lineWidth: number;
+  vpad: number;
+  center: number;
+  trkOffset: number;
+
+  offset: JQueryCoordinates;
+}
+
+export interface TracklistOffsets {
+  x: number[][];
+  y: number[];
+}
+
 //---------------------------------------------------------------------------------------
-interface TracklistStartPoint {
-	x: number;
-	y: number;
-}
-class TracklistPosition {
-	public y: number;
-	public line: number;
-	public channel: number;
-	public column: number;
-	public start: TracklistStartPoint;
+export const tracklistZoomFactor: number = 2;
+export const fontWidth: number = 6;
 
-	constructor(y: number = 0, line: number = 0,
-				channel: number = 0, column: number = 0,
-				sx: number = 0, sy: number = 0) {
+export default class Tracklist {
+  constructor(private _parent: Tracker) {}
 
-		this.y = y;
-		this.line = line;
-		this.channel = channel;
-		this.column = column;
-		this.start = { x: sx, y: sy };
-	}
+  initialized: boolean = false;
 
-	set<TracklistPosition>(p: TracklistPosition): void {
-		if (p instanceof TracklistPosition) {
-			this.y = p.y;
-			this.line = p.line;
-			this.channel = p.channel;
-			this.column = p.column;
-			this.start.x = p.start.x;
-			this.start.y = p.start.y;
-		}
-	}
-	compare<TracklistPosition>(p: TracklistPosition): boolean {
-		if (p instanceof TracklistPosition) {
-			return (this.y === p.y &&
-					this.line === p.line &&
-					this.channel === p.channel &&
-					this.column === p.column);
-		}
+  obj: HTMLCanvasElement | null = null;
+  ctx: CanvasRenderingContext2D | null = null;
 
-		return false;
-	}
-}
-//---------------------------------------------------------------------------------------
-interface TracklistSelection {
-	isDragging: boolean;
-	start:      TracklistPosition;
+  canvasData: TracklistCanvasData = {
+    // offsets to column positions in channel data premultiplied by fontWidth:
+    //         0   4567 9AB
+    //        "A-4 ABFF C01"
+    columns: [ 0, 4, 5, 6, 7, 9, 10, 11 ].map(c => c * fontWidth),
 
-	len:        number;
-	line:       number;
-	channel:    number;
-}
-interface TracklistCanvasData {
-	columns:   number[];
+    // selection width: (12 columns + 1 padding) * fontWidth
+    selWidth: (12 + 1) * fontWidth,
 
-	selWidth:  number;
-	chnWidth:  number;
-	lineWidth: number;
-	vpad:      number;
-	center:    number;
-	trkOffset: number;
+    // channel width: (12 columns + 2 padding) * fontWidth
+    chnWidth: (12 + 2) * fontWidth,
 
-	offset:    JQueryCoordinates;
-}
-interface TracklistOffsets {
-	x: number[][];
-	y: number[];
-}
-//---------------------------------------------------------------------------------------
-const tracklistZoomFactor: number = 2;
-const fontWidth: number = 6;
-//---------------------------------------------------------------------------------------
-class Tracklist {
-	constructor(private $parent: Tracker) {}
+    // trackline width:
+    // (((12 columns + 2 padding) * 6 channels) + 2 tracknum.columns) * fontWidth
+    lineWidth: (((12 + 2) * 6) + 2) * fontWidth,
 
-	public initialized: boolean = false;
+    // vertical padding of pixelfont in trackline height
+    vpad: 0,
 
-	public obj: HTMLCanvasElement = null;
-	public ctx: CanvasRenderingContext2D = null;
+    // horizontal centering of trackline to canvas width
+    center: 0,
 
-	public canvasData: TracklistCanvasData = {
-		// offsets to column positions in channel data premultiplied by fontWidth:
-		//         0   4567 9AB
-		//        "A-4 ABFF C01"
-		columns: [ 0, 4, 5, 6, 7, 9, 10, 11 ].map(c => c * fontWidth),
+    // trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
+    get trkOffset(): number {
+      return this.center + (4 * fontWidth);
+    },
 
-		// selection width: (12 columns + 1 padding) * fontWidth
-		selWidth : (12 + 1) * fontWidth,
+    // jQuery offset object
+    offset: null
+  };
 
-		// channel width: (12 columns + 2 padding) * fontWidth
-		chnWidth : (12 + 2) * fontWidth,
+  offsets: TracklistOffsets = {
+    // 6 channels of 8 column (+1 padding) positions
+    x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
+    y: []
+  };
 
-		// trackline width:
-		// (((12 columns + 2 padding) * 6 channels) + 2 tracknum.columns) * fontWidth
-		lineWidth: (((12 + 2) * 6) + 2) * fontWidth,
+  selection: TracklistSelection = {
+    isDragging: false,
+    start: new TracklistPosition(),
+    len: 0,
+    line: 0,
+    channel: 0
+  };
 
-		// vertical padding of pixelfont in trackline height
-		vpad     : 0,
+  countTracklines(): number {
+    const s = $('#statusbar').offset();
+    const t = $('#tracklist').offset();
+    const h = this._parent.settings.tracklistLineHeight;
 
-		// horizontal centering of trackline to canvas width
-		center   : 0,
+    return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
+  }
 
-		// trackline data offset: center + (2 tracknums + 2 padding) * fontWidth
-		get trkOffset(): number { return this.center + (4 * fontWidth); },
+  setHeight(height: number) {
+    const settings = this._parent.settings;
 
-		// jQuery offset object
-		offset   : null
-	};
+    let newHeight = settings.tracklistAutosize ? height : Math.min(settings.tracklistLines, height);
 
-	public offsets: TracklistOffsets = {
-		// 6 channels of 8 column (+1 padding) positions
-		x: [ new Array(9), new Array(9), new Array(9), new Array(9), new Array(9), new Array(9) ],
-		y: []
-	};
+    if (settings.tracklistLines === newHeight) {
+      devLog('Tracker.tracklist', 'Computed %d tracklines...', newHeight);
+    }
 
-	public selection: TracklistSelection = {
-		isDragging: false,
-		start: new TracklistPosition,
-		len: 0,
-		line: 0,
-		channel: 0
-	};
+    settings.tracklistLines = newHeight;
+    newHeight *= settings.tracklistLineHeight;
 
-	public countTracklines(): number {
-		let s = $('#statusbar').offset();
-		let t = $('#tracklist').offset();
-		let h = this.$parent.settings.tracklistLineHeight;
+    $(this.obj).prop('height', newHeight).css({
+      height: (newHeight * tracklistZoomFactor)
+    });
 
-		return Math.max(((((s.top - t.top) / h / tracklistZoomFactor) | 1) - 2), 5);
-	}
+    this.canvasData.offset = $(this.obj).offset();
+  }
 
-	public setHeight(height: number) {
-		let settings = this.$parent.settings;
+  moveCurrentline(delta: number, noWrap: boolean = false) {
+    const player = this._parent.player;
+    let line = player.currentLine + delta;
+    const pos = player.currentPosition;
+    const pp = player.position[pos];
 
-		height = settings.tracklistAutosize
-			? height : Math.min(settings.tracklistLines, height);
+    if (this._parent.modePlay || pp == null) {
+      return;
+    }
 
-		if (settings.tracklistLines === height) {
-			console.log('Tracker.tracklist', 'Computed %d tracklines...', height);
-		}
+    if (noWrap) {
+      line = Math.min(Math.max(line, 0), pp.length - 1);
+    }
+    else if (line < 0) {
+      line += pp.length;
+    }
+    else if (line >= pp.length) {
+      line -= pp.length;
+    }
 
-		settings.tracklistLines = height;
-		height *= settings.tracklistLineHeight;
-		$(this.obj).prop('height', height).css({
-			height: (height * tracklistZoomFactor)
-		});
+    player.currentLine = line;
+  }
 
-		this.canvasData.offset = $(this.obj).offset();
-	}
+  pointToTracklist(x: number, y: number): TracklistPosition | null {
+    const lines: number = this._parent.settings.tracklistLines;
+    const tx: number = x / tracklistZoomFactor;
+    const ty: number = y / tracklistZoomFactor;
+    let ln: number = this._parent.player.currentLine - (lines >> 1);
 
-	public moveCurrentline(delta: number, noWrap: boolean = false) {
-		let player = this.$parent.player;
-		let line = player.currentLine + delta;
-		let pos = player.currentPosition;
-		let pp = player.position[pos];
+    for (let i = 0; i < lines; i++, ln++) {
+      if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
+        for (let chl = 0; chl < 6; chl++) {
+          if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
+            for (let j = 0; j < 8; j++) {
+              if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1]) {
+                return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
+              }
+            }
+          }
+        }
+      }
+    }
 
-		if (this.$parent.modePlay || pp == null) {
-			return;
-		}
-
-		if (noWrap) {
-			line = Math.min(Math.max(line, 0), pp.length - 1);
-		}
-		else if (line < 0) {
-			line += pp.length;
-		}
-		else if (line >= pp.length) {
-			line -= pp.length;
-		}
-
-		player.currentLine = line;
-	}
-
-	public pointToTracklist(x: number, y: number): TracklistPosition {
-		let lines: number = this.$parent.settings.tracklistLines;
-		let tx: number = x / tracklistZoomFactor;
-		let ty: number = y / tracklistZoomFactor;
-		let ln: number = this.$parent.player.currentLine - (lines >> 1);
-
-		for (let i = 0; i < lines; i++, ln++) {
-			if (ty >= this.offsets.y[i] && ty <= this.offsets.y[i + 1]) {
-				for (let chl = 0; chl < 6; chl++) {
-					if (tx >= this.offsets.x[chl][0] && tx <= this.offsets.x[chl][8]) {
-						for (let j = 0; j < 8; j++) {
-							if (tx >= this.offsets.x[chl][j] && tx <= this.offsets.x[chl][j + 1]) {
-								return new TracklistPosition(i, Math.max(ln, 0), chl, j, x, y);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return null;
-	}
+    return null;
+  }
 }
 //---------------------------------------------------------------------------------------

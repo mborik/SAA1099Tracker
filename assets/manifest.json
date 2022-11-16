@@ -1,0 +1,18 @@
+{
+  "name": "SAA1099Tracker",
+  "short_name": "SAA1099Tracker",
+  "start_url": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#ffffff",
+  "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
+  "lang": "en-US",
+  "dir": "ltr",
+  "icons": [
+    { "src": "assets/png/256x256.png", "type": "image/png", "sizes": "256x256" },
+    { "src": "assets/png/128x128.png", "type": "image/png", "sizes": "128x128" },
+    { "src": "assets/png/64x64.png", "type": "image/png", "sizes": "64x64" },
+    { "src": "assets/png/32x32.png", "type": "image/png", "sizes": "32x32" },
+    { "src": "assets/png/16x16.png", "type": "image/png", "sizes": "16x16" }
+  ]
+}

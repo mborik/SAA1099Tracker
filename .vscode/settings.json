@@ -1,20 +1,24 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-	"editor.tabSize": 4,
-	"editor.insertSpaces": false,
-	"editor.scrollBeyondLastLine": false,
-	"editor.autoClosingBrackets": false,
-	"editor.renderIndentGuides": true,
-	"editor.renderControlCharacters": true,
-	"editor.rulers": [ 90, 120 ],
-
-	"files.exclude": {
-        "**/.git": true,
-        "**/*.js.map": true,
-        "**/*.js": {"when": "$(basename).ts"}
-    },
-    "files.autoSave": "afterDelay",
-    "files.autoSaveDelay": 5000,
-	"files.eol": "\n",
-	"files.trimTrailingWhitespace": true
+  "editor.autoClosingBrackets": "never",
+  "editor.autoClosingQuotes": "never",
+  "editor.autoSurround": "never",
+  "editor.guides.indentation": true,
+  "editor.insertSpaces": true,
+  "editor.renderControlCharacters": true,
+  "editor.rulers": [
+    90,
+    120
+  ],
+  "editor.scrollBeyondLastLine": false,
+  "editor.tabSize": 2,
+  "files.eol": "\n",
+  "files.exclude": {
+      "**/*.js": {
+        "when": "$(basename).ts"
+      },
+      "**/*.js.map": true,
+      "**/.git": true
+  },
+  "files.trimTrailingWhitespace": true
 }

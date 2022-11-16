@@ -1,6 +1,6 @@
-/*
- * Tracker file dialog sub-class.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Tracker file dialog sub-class.
+ * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -19,191 +19,199 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-//---------------------------------------------------------------------------------------
-/// <reference path="../index.d.ts" />
-//---------------------------------------------------------------------------------------
-class FileDialog {
-	constructor(
-		private $app: Tracker,
-		private $parent: STMFile,
-		private $storage: StorageDialogExchange) {}
 
-	public load(): boolean { return this._openDialog('load'); }
-	public save(): boolean { return this._openDialog('save'); }
+import { debounce } from 'typescript-debounce-decorator';
+import { i18n } from './doc';
+import { STMFile, StorageItem } from './file';
+import Tracker from '.';
 
-	private _obj: JQuery = null;
-	private _saveFlag: boolean = false;
-	private _selectedItem: StorageItem = null;
 
-	private _defaultHandler(e: JQueryEventObject): boolean {
-		e.stopPropagation();
+export class FileDialog {
+  constructor(
+    private $app: Tracker,
+    private $parent: STMFile) {}
 
-		let dlg: this = (e.data && e.data.$scope);
-		let file = dlg.$parent;
-		let globalKeyState = dlg.$app.globalKeyState;
-		let selectedItem = dlg._selectedItem;
+  public load(): boolean {
+    return this._openDialog('load');
+  }
+  public save(): boolean {
+    return this._openDialog('save');
+  }
 
-		if (dlg._saveFlag) {
-			let fileName = dlg._obj.find('.file-name>input').val();
-			let duration = $('#stInfoPanel u:eq(3)').text();
+  private _obj: JQuery = null;
+  private _saveFlag: boolean = false;
+  private _storageMap: StorageItem[] = [];
+  private _selectedItem: StorageItem = null;
 
-			file.saveFile(fileName, duration,
-					(selectedItem && selectedItem.id) || undefined);
-		}
-		else {
-			if (!selectedItem) {
-				return false;
-			}
+  @debounce(250)
+  private _defaultHandler(e: JQueryEventObject): boolean {
+    e.stopPropagation();
 
-			file.loadFile(selectedItem.id);
-		}
+    const dlg: this = (e.data && e.data.$scope);
+    const file = dlg.$parent;
+    const globalKeyState = dlg.$app.globalKeyState;
+    const selectedItem = dlg._selectedItem;
 
-		globalKeyState.inDialog = false;
-		dlg._obj.modal('hide');
-		return true;
-	}
+    if (dlg._saveFlag) {
+      const fileName = dlg._obj.find('.file-name>input').val();
+      const duration = $('#stInfoPanel u:eq(3)').text();
 
-	private _itemClickHandler(e: JQueryEventObject): boolean {
-		e.stopPropagation();
+      file.saveFile(fileName, duration,
+        (selectedItem && selectedItem.id) || undefined);
+    }
+    else {
+      if (!selectedItem) {
+        return false;
+      }
 
-		let dlg: this = (e.data && e.data.$scope);
-		let file = dlg.$parent;
-		let globalKeyState = dlg.$app.globalKeyState;
-		let storageMap = dlg.$storage.data;
-		let selectedItem = (dlg._selectedItem =
-			(e.data && typeof e.data.id === 'number') ?
-				storageMap[e.data.id] : null);
+      file.loadFile(selectedItem.id);
+    }
 
-		if (e.pageX === 0 && e.pageY === 0) { // on enter keypress
-			return dlg._defaultHandler(e);
-		}
+    globalKeyState.inDialog = false;
+    dlg._obj.modal('hide');
+    return true;
+  }
 
-		dlg._obj.find('.file-list>button').removeClass('selected');
+  private _itemClickHandler(e: JQueryEventObject): boolean {
+    e.stopPropagation();
 
-		if (selectedItem) {
-			$(this).addClass('selected');
-		}
-		if (dlg._saveFlag) {
-			if (selectedItem) {
-				dlg._obj.find('.file-name>input').val(selectedItem.fileName);
-			}
+    const dlg: this = (e.data && e.data.$scope);
+    const selectedItem = (dlg._selectedItem =
+      (e.data && typeof e.data.id === 'number') ?
+        dlg._storageMap[e.data.id] : null);
 
-			dlg._obj.find('.file-remove').prop('disabled', !selectedItem);
-		}
+    if (e.pageX === 0 && e.pageY === 0) { // on enter keypress
+      return dlg._defaultHandler(e);
+    }
 
-		return true;
-	}
+    dlg._obj.find('.file-list>button').removeClass('selected');
 
-	private _removeHandler(e: JQueryEventObject): boolean {
-		e.stopPropagation();
+    if (selectedItem) {
+      $(this).addClass('selected');
+    }
+    if (dlg._saveFlag) {
+      if (selectedItem) {
+        dlg._obj.find('.file-name>input').val(selectedItem.fileName);
+      }
 
-		let dlg: this = (e.data && e.data.$scope);
-		let storageMap = dlg.$storage.data;
-		let selectedItem = dlg._selectedItem;
-		let mode = (dlg._saveFlag ? 'save' : 'load');
+      dlg._obj.find('.file-remove').prop('disabled', !(selectedItem?.id > 0));
+    }
 
-		if (!selectedItem) {
-			return false;
-		}
+    return true;
+  }
 
-		$('#dialoque').confirm({
-			title: i18n.dialog.file.remove.title,
-			text: i18n.dialog.file.remove.msg,
-			buttons: 'yesno',
-			style: 'danger',
-			callback: (btn) => {
-				if (btn !== 'yes') {
-					return;
-				}
+  private _removeHandler(e: JQueryEventObject): boolean {
+    e.stopPropagation();
 
-				let index = storageMap.findIndex(obj =>
-					(obj.storageId === selectedItem.storageId));
+    const dlg: this = (e.data && e.data.$scope);
+    const selectedItem = dlg._selectedItem;
+    const mode = (dlg._saveFlag ? 'save' : 'load');
 
-				if (~index) {
-					storageMap.splice(index, 1);
-					localStorage.removeItem(selectedItem.storageId + '-nfo');
-					localStorage.removeItem(selectedItem.storageId + '-dat');
+    if (!selectedItem) {
+      return false;
+    }
 
-					dlg._itemClickHandler(e);
-					dlg._obj.modal('hide');
-					dlg._openDialog(mode);
-				}
-			}
-		});
+    $('#dialog').confirm({
+      title: i18n.dialog.file.remove.title,
+      text: i18n.dialog.file.remove.msg,
+      buttons: 'yesno',
+      style: 'danger',
+      callback: (btn) => {
+        if (btn !== 'yes') {
+          return;
+        }
 
-		return true;
-	}
-//---------------------------------------------------------------------------------------
-	private _openDialog(mode: string): boolean {
-		let tracker = this.$app;
-		let file = this.$parent;
-		let storageMap = this.$storage.data;
+        const index = dlg._storageMap.findIndex(obj =>
+          (obj.storageId === selectedItem.storageId));
 
-		const titles = i18n.app.filedialog.title;
-		const handleArgs = { $scope: this };
+        if (~index) {
+          dlg._storageMap.splice(index, 1);
+          localStorage.removeItem(selectedItem.storageId + '-nfo');
+          localStorage.removeItem(selectedItem.storageId + '-dat');
 
-		this._saveFlag = (mode === 'save');
-		this._obj = $('#filedialog');
+          dlg._itemClickHandler(e);
+          dlg._obj.modal('hide');
+          dlg._openDialog(mode);
+        }
+      }
+    });
 
-		if (!titles[mode] || (!this._saveFlag && !storageMap.length)) {
-			return false;
-		}
+    return true;
+  }
+  //---------------------------------------------------------------------------------------
+  private _openDialog(mode: string): boolean {
+    const tracker = this.$app;
+    const file = this.$parent;
 
-		tracker.globalKeyState.inDialog = true;
-		this._obj.on('show.bs.modal', $.proxy(() => {
-			let usage = this.$storage.usage;
+    const titles = i18n.app.filedialog.title;
+    const handleArgs = { $scope: this };
 
-			this._selectedItem = null;
+    this._saveFlag = (mode === 'save');
+    this._obj = $('#filedialog');
 
-			this._obj.addClass(mode)
-				.before($('<div/>')
-				.addClass('modal-backdrop in').css('z-index', '1030'));
+    this._storageMap = Array
+      .from(this.$parent.storageMap.values())
+      .filter(({ id }) => tracker.settings.showAutosaveInFileDialog ? true : id > 0)
+      .sort((a, b) => (b.timeModified - a.timeModified));
 
-			this._obj.find('.modal-title').text(titles[mode] + '\u2026');
-			this._obj.find('.file-name>input').val(file.getFixedFileName());
-			this._obj.find('.storage-usage i').text(usage.bytes + ' bytes used');
-			this._obj.find('.storage-usage .progress-bar').css('width', usage.percent + '%');
-			this._obj.find('.btn-success').on('click', handleArgs, this._defaultHandler);
+    if (!titles[mode] || (!this._saveFlag && !this._storageMap.length)) {
+      return false;
+    }
 
-			let el = this._obj.find('.file-list').empty();
-			let span = $('<span/>');
-			let cell = $('<button class="cell"/>');
+    tracker.globalKeyState.inDialog = true;
+    this._obj.on('show.bs.modal', $.proxy(() => {
+      const { bytes, percent } = this.$parent.storagetUsageSummary();
 
-			storageMap.forEach((obj, i) => {
-				let d: string = (new Date(obj.timeModified * 1000))
-						.toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
+      this._obj.addClass(mode)
+        .before($('<div/>')
+          .addClass('modal-backdrop in').css('z-index', '1030'));
 
-				cell.clone()
-					.append(span.clone().addClass('filename').text(obj.fileName))
-					.append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
-					.prop('tabindex', 300)
-					.appendTo(el)
-					.on('click focus', Object.assign({ id: i }, handleArgs), this._itemClickHandler)
-					.on('dblclick', handleArgs, this._defaultHandler);
-			}, this);
+      this._obj.find('.modal-title').text(titles[mode] + '\u2026');
+      this._obj.find('.file-name>input').val(file.getFixedFileName());
+      this._obj.find('.storage-usage i').text(bytes + ' bytes used');
+      this._obj.find('.storage-usage .progress-bar').css('width', percent + '%');
+      this._obj.find('.btn-success').on('click', handleArgs, this._defaultHandler);
 
-			this._obj.find('.file-open,.file-save').on('click', handleArgs, this._defaultHandler);
+      const el = this._obj.find('.file-list').empty();
+      const span = $('<span/>');
+      const cell = $('<button class="cell"/>');
 
-			if (this._saveFlag) {
-				this._obj.find('.file-list').on('click', handleArgs, this._itemClickHandler);
-				this._obj.find('.file-remove').on('click', handleArgs, this._removeHandler);
-			}
-		}, this)).on('shown.bs.modal', $.proxy(() => {
-			this._obj.find(this._saveFlag
-				? '.file-name>input'
-				: '.file-list>button:first-child').focus();
+      this._selectedItem = null;
+      this._storageMap.forEach((obj, i) => {
+        const d: string = (new Date(obj.timeModified * 1000))
+          .toISOString().replace(/^([\d\-]+)T([\d:]+).+$/, '$1 $2');
 
-		}, this)).on('hide.bs.modal', $.proxy(() => {
-			this._obj.removeClass(mode).prev('.modal-backdrop').remove();
-			this._obj.off().find('.file-list').off().empty();
-			this._obj.find('.modal-footer>.btn').off();
-			tracker.globalKeyState.inDialog = false;
+        cell.clone()
+          .append(span.clone().addClass('filename').text(obj.fileName))
+          .append(span.clone().addClass('fileinfo').text(d + ' | duration: ' + obj.duration))
+          .prop('tabindex', 300)
+          .appendTo(el)
+          .on('click focus', Object.assign({ id: i }, handleArgs), this._itemClickHandler)
+          .on('dblclick', handleArgs, this._defaultHandler);
+      }, this);
 
-		}, this)).modal({
-			show: true,
-			backdrop: false
-		});
+      this._obj.find('.file-open,.file-save').on('click', handleArgs, this._defaultHandler);
 
-		return true;
-	}
+      if (this._saveFlag) {
+        this._obj.find('.file-list').on('click', handleArgs, this._itemClickHandler);
+        this._obj.find('.file-remove').on('click', handleArgs, this._removeHandler);
+      }
+    }, this)).on('shown.bs.modal', $.proxy(() => {
+      this._obj.find(this._saveFlag
+        ? '.file-name>input'
+        : '.file-list>button:first-child').focus();
+
+    }, this)).on('hide.bs.modal', $.proxy(() => {
+      this._obj.removeClass(mode).prev('.modal-backdrop').remove();
+      this._obj.off().find('.file-list').off().empty();
+      this._obj.find('.modal-footer>.btn').off();
+      tracker.globalKeyState.inDialog = false;
+
+    }, this)).modal({
+      show: true,
+      backdrop: false
+    });
+
+    return true;
+  }
 }

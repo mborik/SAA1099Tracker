@@ -1,6 +1,6 @@
-/*!
- * Common functions, handy helpers and WebAudio sound output driver.
- * Copyright (c) 2015-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Browser compatibility tests.
+ * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,3 +20,17 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+interface Browser {
+  isOpera: boolean;
+  isFirefox: boolean;
+  isIE: boolean;
+}
+//---------------------------------------------------------------------------------------
+export const browser = (window => <Browser>{
+  // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+  isOpera: (!!(window as any).opera || navigator.userAgent.indexOf(' OPR/') >= 0),
+  // Firefox 1.0+
+  isFirefox: (typeof (window as any).InstallTrigger !== 'undefined'),
+  // At least IE6
+  isIE: (/*@cc_on!@*/false || !!(window.document as any).documentMode)
+})(window);

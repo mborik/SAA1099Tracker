@@ -1,6 +1,6 @@
-/*
- * Player: Positions class a interface definition.
- * Copyright (c) 2012-2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker Player: Positions class a interface definition.
+ * Copyright (c) 2012-2020 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,75 +20,63 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference path='runtime.ts' />
-//---------------------------------------------------------------------------------------
-// Position channel definition interface
-interface pChannel {
+
+import { toHex, toWidth } from '../commons/number';
+import { MAX_PATTERN_LEN } from './globals';
+import PlayerRuntime from './PlayerRuntime';
+
+/** Position channel definition interface */
+interface Channel {
 	pattern: number;
 	pitch: number;
 }
-//---------------------------------------------------------------------------------------
+
 /**
  * Position class declaration with 6 channels definition, length and default speed.
- * @property frames Number of interupts which takes every line in tracklist;
  */
-class pPosition {
-	ch: pChannel[];
-	speed: number;
-	length: number;
-	frames: number[];
-	initParams: pRuntime;
+export default class Position {
+  /** Describers for every channel [0..5] */
+  ch: Channel[];
+  /** Number of interupts which takes every line in tracklist */
+  frames: number[] = [];
+  /** Initial runtime parameters when player entering into this position */
+  initParams: PlayerRuntime | null = null;
 
-	constructor(length: number, speed: number = 6) {
-		this.ch = [];
-		this.speed = speed;
-		this.length = length;
-		this.frames = [];
-		this.initParams = undefined;
+  constructor(public length: number, public speed: number = 6) {
+    this.ch = [...Array(6)].map(() => ({
+      pattern: 0,
+      pitch: 0
+    } as Channel));
 
-		for (let i: number = 0; i < 6; i++) {
-			this.ch[i] = { pattern: 0, pitch: 0 };
-		}
-		for (let i: number = 0, line: number = 0; line <= MAX_PATTERN_LEN; line++, i += speed) {
-			this.frames[line] = i;
-		}
-	}
+    for (let i: number = 0, line: number = 0; line <= MAX_PATTERN_LEN; line++, i += speed) {
+      this.frames[line] = i;
+    }
+  }
 
-	hasPattern(pattern: number): boolean { return this.indexOf(pattern) >= 0; }
-	indexOf(pattern: number): number {
-		for (let i: number = 0; i < 6; i++) {
-			if (this.ch[i].pattern === pattern) {
-				return i;
-			}
-		}
-		return -1;
-	}
+  hasPattern = (pattern: number): boolean => this.indexOf(pattern) >= 0;
+  indexOf(pattern: number): number {
+    for (let i: number = 0; i < 6; i++) {
+      if (this.ch[i].pattern === pattern) {
+        return i;
+      }
+    }
+    return -1;
+  }
 
-	export(): string[] {
-		let arr: string[] = [];
+  export(): string[] {
+    const arr: string[] = [];
 
-		this.ch.forEach(chn => {
-			let k = chn.pitch;
-			let s = chn.pattern.toWidth(3);
+    this.ch.forEach(chn => {
+      const k = chn.pitch;
+      let s = toWidth(chn.pattern, 3);
 
-			if (k) {
-				s += ((k < 0) ? '-' : '+') + k.toHex(2);
-			}
+      if (k) {
+        s += ((k < 0) ? '-' : '+') + toHex(k, 2);
+      }
 
-			arr.push(s);
-		});
+      arr.push(s);
+    });
 
-		return arr;
-	}
-
-	destroy() {
-		this.initParams.destroy();
-		delete this.initParams;
-		for (let i = 0; i < 6; i++) {
-			delete this.ch[i];
-		}
-		delete this.ch;
-		delete this.frames;
-	}
+    return arr;
+  }
 }
-//---------------------------------------------------------------------------------------

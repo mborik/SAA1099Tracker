@@ -1,50 +1,94 @@
 {
-  "name": "SAA1099Tracker",
-  "version": "1.2.0",
-  "homepage": "https://github.com/mborik/SAA1099Tracker",
-  "description": "SAA1099Tracker is an offline-storage HTML5/JavaScript chiptune music tracker for Philips SAA 1099 soundchip",
+  "name": "saa1099tracker",
+  "displayName": "SAA1099Tracker",
+  "version": "2.0.0",
+  "license": "MIT",
+  "private": true,
+  "homepage": "https://saa1099tracker.borik.net",
+  "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
   "author": {
     "name": "Martin Borik",
-    "email": "mborik@users.sourceforge.net"
+    "email": "martin@borik.net"
   },
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mborik/SAA1099Tracker.git"
+  },
   "main": "electron/main.js",
   "scripts": {
-    "start": "electron . -d",
-    "build": "grunt",
-    "dist": "build -wl --x64 --ia32 --config electron.json",
-    "dist-osx": "build -m --x64 --config electron.json"
-  },
-  "config": {
-    "updateUrl": "http://saa1099tracker.borik.net/api/update"
+    "clean": "rm -rf build/*",
+    "build": "cross-env NODE_ENV=production webpack --mode production --config ./webpack.config.js",
+    "dev": "webpack-dev-server --config ./webpack.config.js --host 0.0.0.0",
+    "start": "concurrently --kill-others \"npm run dev\" -s first \"sleep 5 && electron . -dl\"",
+    "dist": "electron-builder build -wl --x64 --config electron.json",
+    "dist-mac": "electron-builder build -m --arm64 --x64 --config electron.json"
   },
   "dependencies": {
-    "compare-version": "^0.1.2",
-    "digest-stream": "^1.0.1",
-    "electron-window-state": "^4.0.1",
+    "bootstrap": "~3.4.1",
+    "bootstrap-toggle": "~2.2.2",
+    "electron-window-state": "^5.0.3",
+    "jquery": "~2.2.4",
+    "lodash.pick": "^4.4.0",
     "meow": "^3.7.0",
-    "object-assign": "^4.1.1",
-    "request": "^2.79.0"
+    "pako": "^2.0.4",
+    "typescript-debounce-decorator": "^0.0.18",
+    "workbox-core": "^6.5.4",
+    "workbox-precaching": "^6.5.4",
+    "workbox-routing": "^6.5.4"
   },
   "devDependencies": {
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@types/bootstrap": "^3.3.32",
+    "@types/bootstrap-toggle": "^2.2.3",
     "@types/jquery": "^2.0.39",
-    "@types/lz-string": "^1.3.31",
-    "babili": "0.0.10",
-    "bower": "~1.8.0",
-    "electron": "^1.4.15",
-    "electron-builder": "^14.5.3",
-    "electron-builder-squirrel-windows": "^15.0.0",
-    "grunt": "~1.0.1",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-concat": "~1.0.1",
-    "grunt-contrib-copy": "~1.0.0",
-    "grunt-contrib-cssmin": "~1.0.2",
-    "grunt-contrib-less": "~1.4.0",
-    "grunt-contrib-uglify": "~2.0.0",
-    "grunt-html-build": "^0.6.1",
-    "grunt-ts": "latest",
-    "less-middleware": "~2.2.0",
-    "typescript": "^2.1.4"
+    "@types/lodash.pick": "^4.4.7",
+    "@types/pako": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
+    "@typescript-eslint/parser": "^5.39.0",
+    "autoprefixer": "^10.4.12",
+    "concurrently": "^7.5.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.7.1",
+    "cssnano": "^5.1.13",
+    "electron": "^21.2.3",
+    "electron-builder": "^23.6.0",
+    "electron-builder-squirrel-windows": "^23.6.0",
+    "eslint": "^8.24.0",
+    "eslint-plugin-import": "^2.26.0",
+    "file-loader": "^6.2.0",
+    "fork-ts-checker-notifier-webpack-plugin": "^6.0.0",
+    "fork-ts-checker-webpack-plugin": "^7.2.13",
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.0",
+    "less": "^4.1.3",
+    "less-loader": "^11.1.0",
+    "mini-css-extract-plugin": "^2.6.1",
+    "postcss": "^8.4.17",
+    "postcss-discard-comments": "^5.1.2",
+    "postcss-loader": "^7.0.1",
+    "source-map-loader": "^4.0.0",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.4.1",
+    "ts-transformer-optimize-const-enum": "^0.1.2",
+    "typescript": "^4.8.2",
+    "underscore-template-loader": "^1.1.0",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.11.1",
+    "webpack-notifier": "^1.15.0",
+    "workbox-webpack-plugin": "^6.5.4"
+  },
+  "browserslist": {
+    "production": [
+      "supports audio-api",
+      "supports es6-module",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

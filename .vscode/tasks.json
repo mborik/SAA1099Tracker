@@ -1,16 +1,20 @@
 {
-	"version": "0.1.0",
-	"command": "grunt",
-	"isShellCommand": true,
-	"tasks": [{
-		"taskName": "default",
-		"args": [],
-		"isBuildCommand": true,
-		"isWatching": false,
-		"problemMatcher": [
-			"$lessCompile",
-			"$tsc",
-			"$jshint"
-		]
-	}]
+  "version": "2.0.0",
+  "command": "grunt",
+  "tasks": [
+    {
+      "label": "default",
+      "type": "grunt",
+      "task": "default",
+      "problemMatcher": [
+        "$lessCompile",
+        "$tsc",
+        "$jshint"
+      ],
+      "group": {
+        "_id": "build",
+        "isDefault": false
+      }
+    }
+  ]
 }

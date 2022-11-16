@@ -1,52 +1,88 @@
-const fs = require('fs');
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
+const { app, BrowserWindow, nativeImage, ipcMain } = require('electron');
 const meow = require('meow');
+const { squirrel } = require('./squirrel');
+const { createWindow } = require('./window');
 
 const cli = meow({
-	help: `
-	Options:
-		-d, --dev        Developer's mode
-		-h, --help       Show help
-		-v, --version    Version number
+  help: `
+  Options:
+    -d, --dev        Developer's mode
+    -l, --localhost  Serve from localhost
+    -p, --port       Optional port
+    -h, --help       Show help
+    -v, --version    Version number
 `,
-	argv: process.argv.slice(1)
+  argv: process.argv.slice(1)
 }, {
-	boolean: [ 'dev' ],
-	alias: {
-		d: 'dev',
-		h: 'help',
-		v: 'version'
-	}
+  boolean: ['dev', 'localhost'],
+  port: { type: 'number' },
+  alias: {
+    d: 'dev',
+    l: 'localhost',
+    p: 'port',
+    h: 'help',
+    v: 'version'
+  }
 });
 
-const { app, dialog } = require('electron');
-const { registerResourceProtocol, createWindow } = require('./window');
-const { AutoUpdater } = require('./updater');
-const { squirrel } = require('./squirrel');
-
 if (squirrel(cli.flags, app.quit)) {
-	app.on('window-all-closed', () => app.quit());
-	app.on('ready', () => {
-		registerResourceProtocol();
+  const title = cli.pkg.displayName;
+  const icon = nativeImage.createFromPath(path.join(__dirname, '../assets/resources/icon.png'));
 
-		window = createWindow(cli.pkg.name, cli.flags.dev);
-		window.loadURL('file://' + path.join(__dirname, '../build/index.html') +
-			(cli.flags.dev ? '?dev' : ''));
+  const createMainWindow = () => {
+    const mainWindow = createWindow(title, cli.flags.dev);
+    mainWindow.loadURL(`${
+      cli.flags.localhost ?
+        `http://localhost:${cli.flags.port || process.env.PORT || 3000}` :
+        cli.pkg.homepage
+    }${cli.flags.dev ? '?dev' : ''}`);
+    return mainWindow;
+  };
 
-		try {
-			window.updater = new AutoUpdater(cli.flags.dev, cli.pkg, app.getAppPath());
-		}
-		catch (e) {
-			console.warn(`AutoUpdater disabled because of ${e}`);
-		}
+  app.setName(title);
+  app.setAboutPanelOptions({
+    applicationName: title,
+    applicationVersion: cli.pkg.version,
+    website: cli.pkg.homepage,
+    copyright: 'Copyright (c) 2012-2022 Martin Bórik',
+    iconPath: icon
+  });
 
-		window.on('closed', () => (window = null));
-		window.webContents.once('did-finish-load', () => {
-			if (cli.flags.dev) {
-				window.webContents.openDevTools();
-			}
-		});
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(icon);
+  }
 
-		window.firstRun = !!cli.flags.squirrelFirstrun;
-	});
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  app.on('ready', () => {
+    let mainWindow = createMainWindow();
+
+    app.on('activate', () => {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (!BrowserWindow.getAllWindows().length) {
+        mainWindow = createMainWindow();
+      }
+    });
+
+    mainWindow.on('closed', () => (mainWindow = null));
+    mainWindow.webContents.once('did-finish-load', () => {
+      if (cli.flags.dev) {
+        mainWindow.webContents.openDevTools();
+      }
+    });
+
+    ipcMain.handle('close', () => mainWindow?.close());
+    ipcMain.handle('clear-cache', () => {
+      mainWindow?.webContents.session.clearStorageData({
+        storages: ['appcache', 'serviceworkers', 'cachestorage']
+      });
+    });
+  });
 }

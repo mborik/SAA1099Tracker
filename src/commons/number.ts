@@ -1,6 +1,6 @@
-/*!
- * References to all required TypeScript definitions.
- * Copyright (c) 2017 Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Number utilities.
+ * Copyright (c) 2020-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,15 +20,26 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
-/// <reference types="jquery" />
-/// <reference types="lz-string" />
 
-/// <reference types="bootstrap" />
-/// <reference path="bootstrap.mods/confirm/bootstrap-confirm.d.ts" />
-/// <reference path="bootstrap.mods/touchspin/bootstrap-touchspin.d.ts" />
+// fastest absolute integer value helper
+export function abs(input: number): number {
+  const s = input >> 31;
+  return (input ^ s) - s;
+}
 
-/// <reference path="Commons.d.ts" />
-/// <reference path="SAASound.d.ts" />
-/// <reference path="Player.d.ts" />
-/// <reference path="Tracker.d.ts" />
-//---------------------------------------------------------------------------------------
+// align absolute decimal integer value to exact character width with zeroes from left
+export function toWidth(input: number, width?: number): string {
+  const a = '' + abs(input);
+  return ('0000000000' + a).substr(-Math.max(width || 0, a.length));
+}
+
+// align absolute integer value to hexadecimal string with exact character width
+export function toHex(input: number, width?: number): string {
+  const a = abs(input).toString(16);
+  return ('00000000' + a).substr(-Math.max(width || 0, a.length));
+}
+
+export function toTimeString(a: number): string {
+  const m = abs(a / 60), s = abs(a % 60);
+  return ('0' + m).substr(-2) + ':' + ('0' + s).substr(-2);
+}

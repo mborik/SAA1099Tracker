@@ -1,6 +1,6 @@
-/*!
- * SAA1099Tracker v<%= pkg.version %>
- * Copyright (c) 2012-<%= year %> Martin Borik <mborik@users.sourceforge.net>
+/**
+ * SAA1099Tracker: Development mode test and custom logger.
+ * Copyright (c) 2020-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,3 +20,41 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------
+
+export const isDev = (
+  /[?&#]dev/.test(location.search || location.hash) ||
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === 'development'
+);
+
+/**
+ * Log message onto console when development mode is active.
+ * First param
+ * @param {string} section
+ * @param {...any[]} args
+ */
+export const devLog = (section: string, ...args: any[]): void => {
+  if (!isDev) {
+    return;
+  }
+
+  if (section && args.length > 0 && typeof args[0] === 'string') {
+    args.splice(0, 1, `%c[${section}]%c ${args[0]}`, 'color:steelblue', 'color:inherit');
+  }
+  else {
+    args.unshift(section);
+  }
+
+  // eslint-disable-next-line
+  console.log.apply(console, args);
+};
+
+export const logHotkey = (description: string, ...args: any[]) => {
+  if ((window as any).logHotkeys) {
+    // eslint-disable-next-line
+    console.log.apply(console, [
+      '%cTrackerHotkey: ' + description, 'color:tan',
+      ...args
+    ]);
+  }
+};

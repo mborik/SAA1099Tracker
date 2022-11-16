@@ -1,5 +1,5 @@
 // Type definitions for Bootstrap Confirm
-// Definitions by: Copyright 2017 Martin Bórik <mborik@users.sourceforge.net>
+// Definitions by: Copyright 2017 Martin Bórik <martin@borik.net>
 
 /// <reference types="jquery" />
 
@@ -7,7 +7,7 @@ interface ConfirmDialogButtonDefinition {
     /**
      * Button identifier.
      */
-    id: string;
+    id?: string | number;
 
     /**
      * Button caption.
@@ -57,7 +57,7 @@ interface ConfirmDialogOptions {
     /**
      * Callback .
      */
-    callback?: (id: string, order: number, obj?: any) => void;
+    callback?: (id: string | number, order: number, obj?: any) => void;
 
     /**
      * Additional CSS style class for the dialog.
