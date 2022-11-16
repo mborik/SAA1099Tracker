@@ -21,7 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { pick } from 'lodash';
+import pick from 'lodash.pick';
 import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
 import { abs } from '../commons/number';
