@@ -1,0 +1,67 @@
+<div class="modal" id="compiler" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-md" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
+				<h4 class="modal-title">Binary compilation</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="form-horizontal row">
+						<div class="col-sm-18">
+							<div class="panel panel-default">
+								<div class="panel-heading"><h2 class="panel-title text-left">Player options:</h2></div>
+								<div class="panel-body">
+									<div class="row">
+										<div class="col-sm-1"><input id="chIncludePlayer" type="checkbox" class="form-check" tabindex="1"></div>
+										<div class="col-sm-17"><label for="chIncludePlayer" class="control-label">Prepend Player before the compiled data:</label></div>
+									</div>
+									<hr>
+									<div class="form-group row">
+										<div class="col-sm-4"><label for="scPlayerPlatform" class="control-label">Target platform:</label></div>
+										<div class="col-sm-14">
+											<div class="radio"><label class="control-label"><input id="scPlayerPlatformSam" name="scPlayerPlatform" type="radio" value="1" tabindex="2"><b>Zilog Z80</b> @ Sam Coupé (SAA1099P ports: Data=#00FF, Reg=#01FF)</label></div>
+											<div class="radio"><label class="control-label"><input id="scPlayerPlatformPMD85" name="scPlayerPlatform" type="radio" value="2" tabindex="3"><b>Intel 8080</b> @ PMD 85 (SAA1099P ports: Data=#EE, Reg=#EF)</label></div>
+											<div class="radio"><label class="control-label"><input id="scPlayerPlatformPP01" name="scPlayerPlatform" type="radio" value="3" tabindex="4"><b>Intel 8080</b> @ PP-01 (SAA1099P ports: PIO 0C4h-0C7h)</label></div>
+										</div>
+									</div>
+									<div class="form-group row overline">
+										<div class="col-sm-4"><label for="scPlayerType" class="control-label">Player type:</label></div>
+										<div class="col-sm-14">
+											<div class="radio"><label class="control-label"><input id="scPlayerTypeAuto" name="scPlayerType" type="radio" value="-1" tabindex="5"><b>Autodetect</b></label></div>
+											<div class="radio"><label class="control-label"><input id="scPlayerTypeV0" name="scPlayerType" type="radio" value="0" tabindex="6"><b>v0</b> - supported commands: <code>BCDEF</code></label></div>
+											<div class="radio"><label class="control-label"><input id="scPlayerTypeV1" name="scPlayerType" type="radio" value="1" tabindex="7"><b>v1</b> - supported commands: <code>123A+BCDEF</code></label></div>
+											<div class="radio"><label class="control-label text-muted"><input id="scPlayerTypeV2" name="scPlayerType" type="radio" value="2" disabled="disabled" tabindex="8"><b>v2</b> - supported commands: <code>123+6789+ABCDEF</code></label></div>
+											<div class="radio"><label class="control-label text-muted"><input id="scPlayerTypeV3" name="scPlayerType" type="radio" value="3" disabled="disabled" tabindex="9"><b>v3</b> - supported commands: <code>123+45+6789ABCDEF</code></label></div>
+										</div>
+									</div>
+									<br>
+									<div class="form-group row">
+										<div class="col-sm-4"><label for="scPlayerAddress" class="control-label">Base address:</label></div>
+										<div class="col-sm-14">
+											<div class="input-group mt-1">
+												<input id="scPlayerAddress" type="text" class="form-control" autocomplete="off" tabindex="10">
+												<div class="input-group-btn"><input id="scPlayerAddressHex" type="checkbox" value="hex" tabindex="11"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="panel-footer">
+									<div class="form-group">
+										<div class="checkbox"><label class="control-label"><input id="chPlayerRepeat" type="checkbox" tabindex="10">Repeat song</label></div>
+										<div class="checkbox"><label class="control-label"><input id="chPlayerHeader" type="checkbox" tabindex="11">Include song title&amp;author into compiled data</label></div>
+										<div class="checkbox"><label class="control-label"><input id="chPlayerVerbose" type="checkbox" tabindex="12">Show verbose log for developers after compilation</label></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-default cancel" type="button" data-dismiss="modal" tabindex="20">Cancel</button>
+				<button class="btn btn-success apply" type="button" tabindex="21">Generate</button>
+			</div>
+		</div>
+	</div>
+</div>
