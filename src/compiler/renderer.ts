@@ -67,7 +67,10 @@ export default class CompilerRender extends CompilerOptimizer {
       }
       else {
         const totalLength = (sample.releasable) ? sample.data.length : sampleLength;
-        const totalDataLength = (3 * sampleLength + 1) + ((sample.releasable) ? 1 + ((totalLength - sampleLength) * 3) + 1 : 0);
+        const totalDataLength: number =
+          (3 * sampleLength + 1) +
+          ((sample.releasable) ? 1 + ((totalLength - sampleLength) * 3) + 1 : 0);
+
         const data = new Uint8Array(totalDataLength);
 
         let offset = 0;
@@ -114,7 +117,7 @@ export default class CompilerRender extends CompilerOptimizer {
         }
       }
       else {
-        const data: Uint8Array = new Uint8Array(ornLength + 1);
+        const data = new Uint8Array(ornLength + 1);
         for (let i = 0; i < ornLength; i++) {
           data[i] = ornament.data[i] & 0x7F;
         }
@@ -126,234 +129,234 @@ export default class CompilerRender extends CompilerOptimizer {
   }
 
   preparePatterns(log?: (msg: string) => void) {
-    const usedCmdId: Set<number> = new Set<number>();
-    const usedCmd: Set<string> = new Set<string>();
-    const removedCmd: Set<string> = new Set<string>();
+    const usedCmdId = new Set<number>();
+    const usedCmd = new Set<string>();
+    const removedCmd = new Set<string>();
 
-    // pattern 0 is always empty
-    const emptyPattern = new Uint8Array(1);
-    emptyPattern[0] = 0xFF;
-
-    this.patList = [
-      emptyPattern,
-      ...(this._parent.player.pattern.map((pattern) => {
-        let patLen = 0;
-        if (pattern != null) {
-          patLen = pattern.end;
+    this.patList = this._parent.player.pattern.map((pattern, patNumber) => {
+      let patLen = 0;
+      if (pattern != null) {
+        patLen = pattern.end;
+      }
+      if (pattern === null || patLen === 0) {
+        if (patNumber === 0) {
+          // pattern 0 is always empty
+          const emptyPattern = new Uint8Array(1);
+          emptyPattern[0] = 0xFF;
+          return emptyPattern;
         }
-        if (pattern === null || patLen === 0) {
-          return null;
-        }
-        else {
-          let data = new Uint8Array(5 * patLen + 1);
+        return null;
+      }
+      else {
+        let data = new Uint8Array(5 * patLen + 1);
 
-          // searching for possible Cmd-B
-          let breakToLine = -1;
-          let breakToLineOffset = -1;
-          for (let i = 0; i < patLen; i++) {
-            const patLine = pattern.data[i];
-            if (patLine.cmd === 0x0B) {
-              // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
-              const line = patLine.cmd_data;
-              if (line >= 0 && line < i) {
-                breakToLine = line;
+        // searching for possible Cmd-B
+        let breakToLine = -1;
+        let breakToLineOffset = -1;
+        for (let i = 0; i < patLen; i++) {
+          const patLine = pattern.data[i];
+          if (patLine.cmd === 0x0B) {
+            // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
+            const line = patLine.cmd_data;
+            if (line >= 0 && line < i) {
+              breakToLine = line;
+              break;
+            }
+          }
+        }
+
+        let offY = 0;
+        let lastEmptyLines = 0;
+        let lastCmd = 0;
+        let lastDat = -1;
+        for (let i = 0; i < patLen; i++) {
+          let {
+            tone: ton, smp, orn,
+            volume: { byte: vol },
+            cmd, cmd_data: dat,
+            release, orn_release
+          } = pattern.data[i];
+
+          let cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
+
+          // filter invalid commands
+          if (cmd > 0) {
+            switch (cmd) {
+              case 0x1 : // PORTAMENTO UP
+              case 0x2 : // PORTAMENTO DOWN
+              case 0x3 : // GLISSANDO TO GIVEN NOTE
+              case 0xA : // VOLUME SLIDE
+                if (
+                  (dat & 0x0F) === 0 || (dat & 0xF0) === 0 || // `period` nor `pitch` cannot be 0
+                    (cmd === 0xA && (dat & 0x0F) === 0x08) ||   // value change for VOLUME SLIDE cannot be 8
+                    (cmd === 0x3 && ton === 0)                  // missing tone for GLISSANDO
+                ) {
+                  removedCmd.add(cmdStr);
+                  cmd = 0;
+                }
                 break;
-              }
+
+              case 0x4 : // VIBRATO ON CURRENT NOTE
+              case 0x5 : // TREMOLO ON CURRENT NOTE
+                if ((dat & 0x0F) === 0 || (dat & 0xF0) === 0) { // `period` or `pitch` cannot be 0
+                  removedCmd.add(cmdStr);
+                  cmd = 0;
+                }
+                break;
+
+              case 0x6 : // DELAY ORNAMENT
+              case 0x7 : // ORNAMENT OFFSET
+              case 0x8 : // DELAY SAMPLE
+              case 0x9 : // SAMPLE OFFSET
+              case 0xD : // DELAY LISTING ON CURRENT LINE
+                if (dat === 0) { // dat cannot be 0
+                  removedCmd.add(cmdStr);
+                  cmd = 0;
+                }
+                break;
+
+              case 0xB : // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
+                if (dat < 0 || dat >= i) { // line number cannot be >= actual line number
+                  removedCmd.add(cmdStr);
+                  cmd = 0;
+                }
+                break;
+
+              case 0xC : // SPECIAL COMMAND
+                if (dat > 0) {
+                  if (dat >= 0xF0) {
+                    dat &= 0xF1; // currently all Fx values behaves as STEREO-SWAP - 0. bit
+                  }
+                  cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
+                  if (dat >= 0xF2) {
+                    removedCmd.add(cmdStr);
+                    cmd = 0;
+                  }
+                }
+                break;
+
+              case 0xE : // SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL
+                const d = dat & 0xF0;
+                if ((d > 0x20 && d !== 0xD0) // invalid values for ENVELOPE-CONTROL
+                    || (d === 0x20 && dat > 0x24)) { // invalid values for NOISE-CONTROL
+                  removedCmd.add(cmdStr);
+                  cmd = 0;
+                }
+                break;
+
+              case 0xF : // CHANGE GLOBAL SPEED
+                // 0 value is not allowed
+                if (dat === 0) {
+                  removedCmd.add(cmdStr);
+                  cmd = 0;
+                }
+                else if (dat > 0x1F) {
+                  // invalid value for SWING MODE
+                  if ((dat & 0x0F) < 2) {
+                    removedCmd.add(cmdStr);
+                    cmd = 0;
+                  }
+                  // equal SWING values will be changed to normal speed
+                  else if ((dat & 0x0F) === ((dat & 0xF0) >> 4)) {
+                    dat &= 0x0F;
+                    cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
+                  }
+                }
+                break;
             }
           }
 
-          let offY = 0;
-          let lastEmptyLines = 0;
-          let lastCmd = 0;
-          let lastDat = -1;
-          for (let i = 0; i < patLen; i++) {
-            let {
-              tone: ton, smp, orn,
-              volume: { byte: vol },
-              cmd, cmd_data: dat,
-              release, orn_release
-            } = pattern.data[i];
+          // release is meaningful only for CMD A to F
+          if (release && cmd > 0 && cmd < 0xA) {
+            removedCmd.add(cmdStr);
+            cmd = 0;
+          }
 
-            let cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
-
-            // filter invalid commands
-            if (cmd > 0) {
-              switch (cmd) {
-                case 0x1 : // PORTAMENTO UP
-                case 0x2 : // PORTAMENTO DOWN
-                case 0x3 : // GLISSANDO TO GIVEN NOTE
-                case 0xA : // VOLUME SLIDE
-                  if (
-                    (dat & 0x0F) === 0 || (dat & 0xF0) === 0 || // `period` nor `pitch` cannot be 0
-                    (cmd === 0xA && (dat & 0x0F) === 0x08) ||   // value change for VOLUME SLIDE cannot be 8
-                    (cmd === 0x3 && ton === 0)                  // missing tone for GLISSANDO
-                  ) {
-                    removedCmd.add(cmdStr);
-                    cmd = 0;
-                  }
-                  break;
-
-                case 0x4 : // VIBRATO ON CURRENT NOTE
-                case 0x5 : // TREMOLO ON CURRENT NOTE
-                  if ((dat & 0x0F) === 0 || (dat & 0xF0) === 0) { // `period` or `pitch` cannot be 0
-                    removedCmd.add(cmdStr);
-                    cmd = 0;
-                  }
-                  break;
-
-                case 0x6 : // DELAY ORNAMENT
-                case 0x7 : // ORNAMENT OFFSET
-                case 0x8 : // DELAY SAMPLE
-                case 0x9 : // SAMPLE OFFSET
-                case 0xD : // DELAY LISTING ON CURRENT LINE
-                  if (dat === 0) { // dat cannot be 0
-                    removedCmd.add(cmdStr);
-                    cmd = 0;
-                  }
-                  break;
-
-                case 0xB : // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
-                  if (dat < 0 || dat >= i) { // line number cannot be >= actual line number
-                    removedCmd.add(cmdStr);
-                    cmd = 0;
-                  }
-                  break;
-
-                case 0xC : // SPECIAL COMMAND
-                  if (dat > 0) {
-                    if (dat >= 0xF0) {
-                      dat &= 0xF1; // currently all Fx values behaves as STEREO-SWAP - 0. bit
-                    }
-                    cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
-                    if (dat >= 0xF2) {
-                      removedCmd.add(cmdStr);
-                      cmd = 0;
-                    }
-                  }
-                  break;
-
-                case 0xE : // SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL
-                  const d = dat & 0xF0;
-                  if ((d > 0x20 && d !== 0xD0) // invalid values for ENVELOPE-CONTROL
-                    || (d === 0x20 && dat > 0x24)) { // invalid values for NOISE-CONTROL
-                    removedCmd.add(cmdStr);
-                    cmd = 0;
-                  }
-                  break;
-
-                case 0xF : // CHANGE GLOBAL SPEED
-                  // 0 value is not allowed
-                  if (dat === 0) {
-                    removedCmd.add(cmdStr);
-                    cmd = 0;
-                  }
-                  else if (dat > 0x1F) {
-                    // invalid value for SWING MODE
-                    if ((dat & 0x0F) < 2) {
-                      removedCmd.add(cmdStr);
-                      cmd = 0;
-                    }
-                    // equal SWING values will be changed to normal speed
-                    else if ((dat & 0x0F) === ((dat & 0xF0) >> 4)) {
-                      dat &= 0x0F;
-                      cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
-                    }
-                  }
-                  break;
-              }
-            }
-
-            // release is meaningful only for CMD A to F
-            if (release && cmd > 0 && cmd < 0xA) {
+          if (cmd > 0) {
+            // remove repeated Cmd-4xy a Cmd-5xy
+            if ((cmd === 0x4 || cmd === 0x5) && (lastCmd === cmd && lastDat === dat)) {
               removedCmd.add(cmdStr);
               cmd = 0;
+              dat = -1;
             }
+            else {
+              lastCmd = cmd;
+              lastDat = dat;
+            }
+          }
 
-            if (cmd > 0) {
-            // remove repeated Cmd-4xy a Cmd-5xy
-              if ((cmd === 0x4 || cmd === 0x5) && (lastCmd === cmd && lastDat === dat)) {
-                removedCmd.add(cmdStr);
-                cmd = 0;
-                dat = -1;
-              }
-              else {
-                lastCmd = cmd;
-                lastDat = dat;
-              }
-            }
+          if (cmd > 0) {
+            usedCmd.add(cmdStr);
+            usedCmdId.add(cmd);
+          }
 
-            if (cmd > 0) {
-              usedCmd.add(cmdStr);
-              usedCmdId.add(cmd);
-            }
-
-            // release of using empty sample
-            const b1 = (release || smp > 0 && this.smpList[smp] === null) ? 0x7f : ton;
-            let b2 = ((vol > 0) ? 0x80 : 0) | (orn_release ? 0x40 : 0) | smp;
-            let b3 = (cmd << 4) | orn;
-            if (b1 === 0x7f) {
-              b2 = 0;
-              b3 &= 0xF0;
-            }
-            if (b1 === 0 && b2 === 0 && b3 === 0 && breakToLine !== i) {
+          // release of using empty sample
+          const b1 = (release || smp > 0 && this.smpList[smp] === null) ? 0x7f : ton;
+          let b2 = ((vol > 0) ? 0x80 : 0) | (orn_release ? 0x40 : 0) | smp;
+          let b3 = (cmd << 4) | orn;
+          if (b1 === 0x7f) {
+            b2 = 0;
+            b3 &= 0xF0;
+          }
+          if (b1 === 0 && b2 === 0 && b3 === 0 && breakToLine !== i) {
             // empty line, which is not target for Cmd-B
+            data[offY++] = 0x80;
+            lastEmptyLines++;
+          }
+          else {
+            if (lastEmptyLines > 1) {
+              offY -= lastEmptyLines;
+              while (lastEmptyLines > 0) {
+                const lel = (lastEmptyLines > 127) ? 127 : lastEmptyLines;
+                data[offY++] = (lel - 1) | 0x80;
+                lastEmptyLines -= lel;
+              }
+            }
+
+            if (breakToLine === i) {
+              // offset of pattern line, where should be jump after Cmd-B
+              breakToLineOffset = offY;
+            }
+
+            if (b1 === 0 && b2 === 0 && b3 === 0) {
+              // empty line
               data[offY++] = 0x80;
               lastEmptyLines++;
             }
             else {
-              if (lastEmptyLines > 1) {
-                offY -= lastEmptyLines;
-                while (lastEmptyLines > 0) {
-                  const lel = (lastEmptyLines > 127) ? 127 : lastEmptyLines;
-                  data[offY++] = (lel - 1) | 0x80;
-                  lastEmptyLines -= lel;
-                }
+              lastEmptyLines = 0;
+              data[offY++] = b1;
+              data[offY++] = b2;
+              data[offY++] = b3;
+              if (vol > 0) {
+                data[offY++] = vol;
               }
-
-              if (breakToLine === i) {
-                breakToLineOffset = offY;
-              } // offset of pattern line, where should be jump after Cmd-B
-
-              if (b1 === 0 && b2 === 0 && b3 === 0) {
-              // empty line
-                data[offY++] = 0x80;
-                lastEmptyLines++;
-              }
-              else {
-                lastEmptyLines = 0;
-                data[offY++] = b1;
-                data[offY++] = b2;
-                data[offY++] = b3;
-                if (vol > 0) {
-                  data[offY++] = vol;
+              if (cmd > 0) {
+                if (cmd === 0xB) { // Cmd-B
+                  const backOffset = offY - breakToLineOffset + 2;
+                  writeWordLE(data, offY, -backOffset);
+                  offY += 2;
+                  break;
                 }
-                if (cmd > 0) {
-                  if (cmd === 0xB) { // Cmd-B
-                    const backOffset = offY - breakToLineOffset + 2;
-                    writeWordLE(data, offY, -backOffset);
-                    offY += 2;
-                    break;
-                  }
 
-                  data[offY++] = dat;
-                }
+                data[offY++] = dat;
               }
             }
           }
-
-          if (breakToLineOffset < 0) { // end mark, only when Cmd-B was not occurs
-            offY -= lastEmptyLines; // empty lines at the end will be elliminated
-            data[offY++] = 0xFF;  // end mark
-          }
-
-          if (offY < data.length) {
-            data = data.slice(0, offY);
-          }
-
-          return data;
         }
-      }))
-    ];
+
+        if (breakToLineOffset < 0) { // end mark, only when Cmd-B was not occurs
+          offY -= lastEmptyLines; // empty lines at the end will be elliminated
+          data[offY++] = 0xFF;  // end mark
+        }
+
+        if (offY < data.length) {
+          data = data.slice(0, offY);
+        }
+
+        return data;
+      }
+    });
 
     if (usedCmdId.has(4) || usedCmdId.has(5)) {
       // vX.3 - 123+45+6789ABCDEF
@@ -374,10 +377,10 @@ export default class CompilerRender extends CompilerOptimizer {
 
     this.version = constants.CURRENT_PLAYER_MAJOR_VERSION * 16 + this.playerTypeByData;
 
-    let cmdArray = [...usedCmd];
-    cmdArray.length && log(`Used Cmd: [ ${cmdArray.join(', ')} ]`);
-    cmdArray = [...removedCmd];
-    cmdArray.length && log(`Removed Cmd: [ ${cmdArray.join(', ')} ]`);
+    let cmdArray = [...usedCmd].sort();
+    cmdArray.length && log(`Used commands: [ ${cmdArray.join(', ')} ]`);
+    cmdArray = [...removedCmd].sort();
+    cmdArray.length && log(`Removed commands: [ ${cmdArray.join(', ')} ]`);
   }
 
   preparePositions() {

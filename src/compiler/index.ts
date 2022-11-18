@@ -260,6 +260,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       }
       catch (error) {
         this.log(error, true);
+        return;
       }
     }
 
@@ -268,7 +269,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
 
   private log(str: string, error: boolean = false) {
     this.messageLogger += `${error ? 'ERROR: ' : ''}${str}\n`;
-    $('#documodal .modal-body > pre').text(`\n${this.messageLogger}`).scrollTop(1e5);
+    $('#documodal .modal-body > pre').text(`\n${this.messageLogger}`);
   }
 
   private openOutputLog() {
@@ -298,7 +299,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     let titAutLen = 0;
     let titleAuthor: Uint8Array = null;
 
-    // prepare Song title and author
+    // prepare song title and author
     if (this.songHeader) {
       const title = this._parent.songTitle ? stringToBytes(this._parent.songTitle, true) : null;
       const tl = title?.length ?? 0;
@@ -325,32 +326,32 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
         titleAuthor[titAutLen - 1] = 0x0D;
       }
       if (titAutLen > 0) {
-        this.log('Title: ' + bytesToString(titleAuthor).trim());
+        this.log(`Title: "${bytesToString(titleAuthor).trim()}"`);
       }
     }
 
-    // prepare number and data length for Samples
+    // prepare number and data length for samples
     const smpCnt = this.smpList.length;
     const smpLen = this.smpList.reduce(
       (counter, sample) => counter + (sample?.length ?? 0), 0);
 
     this.verbose && this.log('SMP: ' + smpCnt + '/' + smpLen);
 
-    // prepare number and data length for Ornaments
+    // prepare number and data length for ornaments
     const ornCnt = this.ornList.length;
     const ornLen = this.ornList.reduce(
       (counter, orn) => counter + (orn?.length ?? 0), 0);
 
     this.verbose && this.log('ORN: ' + ornCnt + '/' + ornLen);
 
-    // prepare number and data length for Patterns
+    // prepare number and data length for patterns
     const patCnt = this.patList.length;
     const patLen = this.patList.reduce(
       (counter, pattern) => counter + (pattern?.length ?? 0), 0);
 
     this.verbose && this.log('PAT: ' + patCnt + '/' + patLen);
 
-    // prepare number and data length for Positions
+    // prepare number and data length for positions
     const posCnt = this.posList.length;
     const posLen = this.posList.reduce(
       (counter, position) => counter + (position?.length ?? 0), 0);
@@ -366,7 +367,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       (patCnt * 2 + patLen) + // patterns
       (posLen + 1 + 2);       // positions
 
-    // byte array for Song data
+    // byte array for song data
     this.songData = new Uint8Array(totalLen);
 
     // prepare ofssets to particular data parts
@@ -387,7 +388,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     this.songData[off] = this.version;
     off += 1;
 
-    // store addresses (offsets) of lists pointers to data of Samples, Ornaments, Patterns a Positions
+    // store addresses (offsets) of lists pointers to data of samples, ornaments, patterns a positions
     writeWordLE(this.songData, off, smpListOff);
     off += 2;
     writeWordLE(this.songData, off, ornListOff);
@@ -403,7 +404,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       off += titAutLen;
     }
 
-    // store list of pointers to Sample data
+    // store list of pointers to sample data
     let offX = 0;
     for (let i = 0; i < smpCnt; i++) {
       writeWordLE(this.songData, off, smpDataOff + offX);
@@ -411,7 +412,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       off += 2;
     }
 
-    // store list of pointers to Ornament data
+    // store list of pointers to ornament data
     offX = 0;
     for (let i = 0; i < ornCnt; i++) {
       writeWordLE(this.songData, off, ornDataOff + offX);
@@ -419,7 +420,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       off += 2;
     }
 
-    // store list of pointers to Pattern data
+    // store list of pointers to pattern data
     offX = 0;
     for (let i = 0; i < patCnt; i++) {
       writeWordLE(this.songData, off, patDataOff + offX);
@@ -427,7 +428,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       off += 2;
     }
 
-    // store Positions data
+    // store positions data
     for (let i = 0; i < posCnt; i++) {
       this.songData.set(this.posList[i], off);
       off += this.posList[i].length;
@@ -440,19 +441,19 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       ) ? 0 : (posDataOff + this._parent.player.repeatPosition * 14));
     off += 2;
 
-    // store data of Samples
+    // store data of samples
     for (let i = 0; i < smpCnt; i++) {
       this.songData.set(this.smpList[i], off);
       off += this.smpList[i].length;
     }
 
-    // store data of Ornaments
+    // store data of ornaments
     for (let i = 0; i < ornCnt; i++) {
       this.songData.set(this.ornList[i], off);
       off += this.ornList[i].length;
     }
 
-    // store data of Patterns
+    // store data of patterns
     for (let i = 0; i < patCnt; i++) {
       this.songData.set(this.patList[i], off);
       off += this.patList[i].length;
@@ -460,7 +461,8 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
 
     // check if final offset correspond to expected data length
     if (off !== this.songData.length) {
-      this.log(`Fatal error on composing song data! Expected data length (${this.songData.length}) is not equal to the result data (${off})!`, true);
+      this.log(`Fatal error on composing song data!
+Expected data length (${this.songData.length}) is not equal to the result data (${off})!`, true);
     }
   }
 
@@ -482,25 +484,25 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       this.playerPlatform === PlayerPlatform.I8080PP ? '-pp' : ''
     }`;
 
-    this.verbose && this.log('Loading Player binary...');
+    this.verbose && this.log('Loading player binary...');
 
-    this.playerData = await fetch(resourceFileName + '.bin')
+    this.playerData = await fetch(`${resourceFileName}.bin`)
       .then(response => response.arrayBuffer())
       .then(buffer => new Uint8Array(buffer))
-      .catch((error: string) => {
-        throw `Failed to fetch Player binary! [${error}]`;
+      .catch(() => {
+        throw `Failed to fetch player binary! [${resourceFileName}.bin]`;
       });
 
     this.verbose && this.log('Loading relocation table ...');
 
-    const relocTable = await fetch(resourceFileName + '.rtb')
+    const relocTable = await fetch(`${resourceFileName}.rtb`)
       .then(response => response.arrayBuffer())
       .then(buffer => new Uint16Array(buffer))
-      .catch((error: string) => {
-        throw `Failed to fetch relocation table! [${error}]`;
+      .catch(() => {
+        throw `Failed to fetch relocation table! [${resourceFileName}.rtb]`;
       });
 
-    this.verbose && this.log(`Relocating of the Player to ${this.playerAddress}...`);
+    this.verbose && this.log(`Relocating of the player to ${this.playerAddress}...`);
     relocTable.forEach((offset) => {
       if (offset > 0) {
         writeWordLE(this.playerData, offset,
@@ -549,15 +551,15 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     }
 
     let offset = 0;
-    const resultBin: Uint8Array = new Uint8Array(totalLen);
+    const result = new Uint8Array(totalLen);
     if (this.playerData != null) {
-      resultBin.set(this.playerData, offset);
+      result.set(this.playerData, offset);
       offset = this.playerData.length;
     }
     if (this.songData != null) {
-      resultBin.set(this.songData, offset);
+      result.set(this.songData, offset);
     }
 
-    this._parent.file.system.save(resultBin, this._parent.file.getFixedFileName() + '.bin');
+    this._parent.file.system.save(result, this._parent.file.getFixedFileName() + '.bin');
   }
 }

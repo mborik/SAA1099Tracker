@@ -38,9 +38,9 @@ export class CompilerOptimizer {
   posList: Nullable<Array<Uint8Array>> = null;
 
   /**
-   * Prepare list of used Sample or Ornaments in patterns.
+   * Prepare list of used sample or ornaments in patterns.
    */
-  private getUsedInPatterns(ornaments: boolean = false) {
+  private getUsedInPatterns(ornaments = false) {
     return this.patList.reduce<Set<number>>(
       (set, patData) => {
         for (let i = 0; i < patData.length; i++) {
@@ -80,14 +80,14 @@ export class CompilerOptimizer {
   }
 
   /**
-   * Method removes duplicated, "empty" and unused Samples.
+   * Method removes duplicated, "empty" and unused samples.
    */
   optimizeSamples(log?: (msg: string) => void) {
     if (!(this.smpList?.length && this.patList?.length)) {
       return;
     }
 
-    // remove "empty" Samples
+    // remove "empty" samples
     let removedSamples = 0;
     let smpNum = 0;
     do {
@@ -102,8 +102,8 @@ export class CompilerOptimizer {
       }
     } while (smpNum > 0);
 
-    // remove duplicated Samples
-    let wasReplaced: boolean = false;
+    // remove duplicated samples
+    let wasReplaced = false;
     let duplicateSamples = 0;
     do {
       wasReplaced = false;
@@ -129,10 +129,10 @@ export class CompilerOptimizer {
       }
     } while (wasReplaced);
 
-    // prepare list of used Sample numbers
+    // prepare list of used sample numbers
     let samples = this.getUsedInPatterns();
 
-    // remove unused Samples
+    // remove unused samples
     let unusedSamples = 0;
     if (samples.size < this.smpList.length - 1) {
       do {
@@ -150,18 +150,18 @@ export class CompilerOptimizer {
     }
 
     if (removedSamples > 0) {
-      log?.(removedSamples + ' empty Sample(s) was removed.');
+      log?.(removedSamples + ' empty sample(s) was removed.');
     }
     if (duplicateSamples > 0) {
-      log?.(duplicateSamples + ' duplicated Sample(s) was removed.');
+      log?.(duplicateSamples + ' duplicated sample(s) was removed.');
     }
     if (unusedSamples > 0) {
-      log?.(unusedSamples + ' unused Sample(s) was removed.');
+      log?.(unusedSamples + ' unused sample(s) was removed.');
     }
   }
 
   /**
-   * Method replaces one Sample by another.
+   * Method replaces one sample by another.
    */
   private replaceSampleInPatterns(oldSmpNum: number, newSmpNum: number) {
     this.patList?.forEach(patData => {
@@ -191,7 +191,7 @@ export class CompilerOptimizer {
   }
 
   /**
-   * Method to renumber Samples, which have number greater than `smpNum`.
+   * Method to renumber samples, which have number greater than `smpNum`.
    */
   private renumberSamplesInPatterns(smpNum: number): void {
     this.patList?.forEach(patData => {
@@ -221,14 +221,14 @@ export class CompilerOptimizer {
   }
 
   /**
-   * Method removes duplicated, "empty" and unused Ornaments.
+   * Method removes duplicated, "empty" and unused ornaments.
    */
   optimizeOrnaments(log?: (msg: string) => void) {
     if (!(this.ornList?.length && this.patList?.length)) {
       return;
     }
 
-    // remove "empty" Ornaments
+    // remove "empty" ornaments
     let removedOrnaments = 0;
     let ornNum = 0;
     do {
@@ -243,8 +243,8 @@ export class CompilerOptimizer {
       }
     } while (ornNum > 0);
 
-    // remove duplicated Ornaments
-    let wasReplaced: boolean = false;
+    // remove duplicated ornaments
+    let wasReplaced = false;
     let duplicateOrnaments = 0;
     do {
       wasReplaced = false;
@@ -270,10 +270,10 @@ export class CompilerOptimizer {
       }
     } while (wasReplaced);
 
-    // prepare list of numbers of used Ornaments
+    // prepare list of numbers of used ornaments
     let ornaments = this.getUsedInPatterns(true);
 
-    // remove unused Ornaments
+    // remove unused ornaments
     let unusedOrnaments = 0;
     if (ornaments.size < this.ornList.length - 1) {
       do {
@@ -291,18 +291,18 @@ export class CompilerOptimizer {
     }
 
     if (removedOrnaments > 0) {
-      log?.(removedOrnaments + ' empty Ornament(s) was removed.');
+      log?.(removedOrnaments + ' empty ornament(s) was removed.');
     }
     if (duplicateOrnaments > 0) {
-      log?.(duplicateOrnaments + ' duplicated Ornament(s) was removed.');
+      log?.(duplicateOrnaments + ' duplicated ornament(s) was removed.');
     }
     if (unusedOrnaments > 0) {
-      log?.(unusedOrnaments + ' unused Ornament(s) was removed.');
+      log?.(unusedOrnaments + ' unused ornament(s) was removed.');
     }
   }
 
   /**
-   * Method replaces one Ornament by another.
+   * Method replaces one ornament by another.
    */
   private replaceOrnamentInPatterns(oldOrnNum: number, newOrnNum: number): void {
     this.patList?.forEach(patData => {
@@ -332,7 +332,7 @@ export class CompilerOptimizer {
   }
 
   /**
-   * Method to renumber Ornaments, which have number greater than `ornNum`.
+   * Method to renumber ornaments, which have number greater than `ornNum`.
    */
   private renumberOrnamentsInPatterns(ornNum: number): void {
     this.patList?.forEach(patData => {
@@ -362,14 +362,14 @@ export class CompilerOptimizer {
   }
 
   /**
-   * Method removes duplicated, "empty" and unused Patterns.
+   * Method removes duplicated, "empty" and unused patterns.
    */
   optimizePatterns(log?: (msg: string) => void) {
     if (!(this.patList?.length && this.posList?.length)) {
       return;
     }
 
-    // remove "empty" Patterns
+    // remove "empty" patterns
     let removedPatterns = 0;
     let patNum = 0;
     do {
@@ -384,8 +384,8 @@ export class CompilerOptimizer {
       }
     } while (patNum > 0);
 
-    // remove duplicated Patterns
-    let wasReplaced: boolean = false;
+    // remove duplicated patterns
+    let wasReplaced = false;
     let duplicatePatterns = 0;
     do {
       wasReplaced = false;
@@ -411,7 +411,7 @@ export class CompilerOptimizer {
       }
     } while (wasReplaced);
 
-    // prepare list of numbers of used Patterns
+    // prepare list of numbers of used patterns
     let patterns = this.posList.reduce<Set<number>>(
       (set, posData) => {
         for (let i = 0; i < 6; i++) {
@@ -423,7 +423,7 @@ export class CompilerOptimizer {
         return set;
       }, new Set<number>());
 
-    // remove unused Patterns
+    // remove unused patterns
     let unusedPatterns = 0;
     if (patterns.size < this.patList.length - 1) {
       do {
@@ -442,13 +442,13 @@ export class CompilerOptimizer {
     }
 
     if (removedPatterns > 0) {
-      log?.(removedPatterns + ' empty Pattern(s) was removed.');
+      log?.(removedPatterns + ' empty pattern(s) was removed.');
     }
     if (duplicatePatterns > 0) {
-      log?.(duplicatePatterns + ' duplicated Pattern(s) was removed.');
+      log?.(duplicatePatterns + ' duplicated pattern(s) was removed.');
     }
     if (unusedPatterns > 0) {
-      log?.(unusedPatterns + ' unused Pattern(s) was removed.');
+      log?.(unusedPatterns + ' unused pattern(s) was removed.');
     }
   }
 
