@@ -550,6 +550,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
           .replace(/\s*?^\=\=\s*([^\=]+?)\s*[\=\s]+$/gm, '</pre><h3>$1</h3><pre>')
           .replace(/<pre><\/pre>/g, '');
 
+        keys.inDialog = true;
         cache[name] = data;
         dialog.modal('show')
           .find('.modal-body')

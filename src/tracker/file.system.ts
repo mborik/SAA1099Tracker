@@ -24,7 +24,7 @@
 import { devLog } from '../commons/dev';
 
 
-declare type multitype = string | Uint8Array | Uint8ClampedArray | ArrayBuffer;
+declare type multitype = string | Uint8Array;
 
 export class FileSystem {
   private _input: JQuery<HTMLInputElement>;

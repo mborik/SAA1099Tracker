@@ -54,6 +54,7 @@ const plugins = [
     patterns: [
       { from: 'assets/resources/png/*', to: 'assets/png/[name][ext]' },
       { from: 'assets/resources/icon.*', to: 'assets/[name][ext]' },
+      { from: 'assets/data/*', to: 'data/[name][ext]' },
       { from: 'assets/*', to: '[name][ext]' },
       { from: 'demosongs/*', to: '' },
       { from: 'doc/*', to: '' },
@@ -148,6 +149,8 @@ module.exports = {
       './src/tracker/file.ts',
       './src/tracker/file.dialog.ts',
       './src/tracker/file.system.ts',
+      './src/tracker/file.optimizer.ts',
+      './src/tracker/file.compiler.ts',
       './src/tracker/tracklist.ts',
       './src/tracker/smporn.ts',
       './src/tracker/manager.ts',

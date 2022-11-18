@@ -224,7 +224,7 @@ export class STMFile {
     const count = { smp: 0, orn: 0, pat: 0, pos: 0 };
 
     // detection of old JSON format v1.1 from previous project MIF85Tracker...
-    if (!data.version || (data.version && data.version !== '1.2')) {
+    if (!data.version || (data.version && data.version !== constants.CURRENT_FILE_VERSION)) {
       return false;
     }
 
@@ -415,7 +415,7 @@ export class STMFile {
         loopMode: player.loopMode
       },
 
-      version: '1.2'
+      version: constants.CURRENT_FILE_VERSION
     };
 
     // storing samples going backward and unshifting array...
