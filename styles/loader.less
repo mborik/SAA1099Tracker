@@ -77,6 +77,53 @@ body {
   }
 }
 
+@media not screen and (any-pointer: fine), (max-width: 1129px), (max-height: 679px) {
+  body > #overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 16384;
+    background: #fff !important;
+    overflow: hidden;
+
+    .wrapper {
+      display: block;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+
+      .loader { display: none !important; }
+      .desktop-app-warning {
+        color: #000;
+        display: block;
+        position: relative;
+        left: -50%;
+        width: 30rem;
+        margin-top: -15ex;
+        font-size: 15px;
+
+        &:before {
+          display: block;
+          content: "\A0";
+          width: 50px;
+          height: 64px;
+          margin: 0 auto;
+          margin-bottom: 15px;
+          background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAABAAgMAAAAlu8zoAAAACVBMVEUAAAAAAAD///+D3c/SAAAAAXRSTlMAQObYZgAAAGxJREFUKM+90rEOwCAIBFAW/8+F5f7vlvtKh7aaqpC0Scv2Bg8MmHmvanZXUS/OwpDqoisEq9hDnoqUyL0ESdgrfZd2B2MRsZJMuiMSJCLQkRFr2y/bQ7q/D0RI54cX/TxLGVfuNiu5+deK+zXIR8kiPqrOmAAAAABJRU5ErkJggg==');
+        }
+
+        ul {
+          padding-inline-start: 3rem;
+        }
+      }
+    }
+  }
+}
+//---------------------------------------------------------------------------------------
+
 @font-face {
   font-family: 'Droid Sans';
   src: url('../assets/fonts/droidsans-regular-webfont.eot');

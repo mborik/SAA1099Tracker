@@ -77,23 +77,6 @@
 }
 
 //---------------------------------------------------------------------------------------
-@media not screen and (any-pointer: fine), (max-width: 1129px) or (max-height: 679px) {
-	.desktop-app-warning {
-		display: block;
-		background: @body-bg;
-
-		.modal-dialog {
-			margin-top: @dialog-top-margin;
-
-			> .modal-content {
-				border-radius: 0;
-				font-size: 16px;
-				.confirm-gradient(@modal-content-bg, lighten(@brand-danger, 50%));
-			}
-		}
-	}
-}
-//---------------------------------------------------------------------------------------
 .btn-half {
 	float: left;
 	width: 50%;
@@ -488,7 +471,7 @@
 
 // modal windows ------------------------------------------------------------------------
 #documodal .modal-body {
-	.user-select(initial);
+	.user-select(text);
 
 	height: 50ex;
 	min-height: 50ex;
