@@ -30,7 +30,7 @@ const renumberSet = (set: Set<number>, index: number) =>
     [...set].map(item => (item > index) ? item - 1 : item)
   );
 
-export class FileOptimizer {
+export class CompilerOptimizer {
   // lists of byte arrays for compiled parts of the song
   smpList: Nullable<Array<Uint8Array>> = null;
   ornList: Nullable<Array<Uint8Array>> = null;
@@ -43,7 +43,7 @@ export class FileOptimizer {
   private getUsedInPatterns(ornaments: boolean = false) {
     return this.patList.reduce<Set<number>>(
       (set, patData) => {
-        for (let i: number = 0; i < patData.length; i++) {
+        for (let i = 0; i < patData.length; i++) {
           const v = patData[i];
           if ((v & 0x80) > 0) {
             continue;
@@ -88,8 +88,8 @@ export class FileOptimizer {
     }
 
     // remove "empty" Samples
-    let removedSamples: number = 0;
-    let smpNum: number = 0;
+    let removedSamples = 0;
+    let smpNum = 0;
     do {
       for (smpNum = this.smpList.length - 1; smpNum > 0; smpNum--) {
         if (this.smpList[smpNum] == null) {
@@ -104,13 +104,13 @@ export class FileOptimizer {
 
     // remove duplicated Samples
     let wasReplaced: boolean = false;
-    let duplicateSamples: number = 0;
+    let duplicateSamples = 0;
     do {
       wasReplaced = false;
-      for (let i: number = this.smpList.length - 1; i > 0; i--) {
-        const b1: Uint8Array = this.smpList[i];
-        for (let j: number = i - 1; j >= 0; j--) {
-          const b2: Uint8Array = this.smpList[j];
+      for (let i = this.smpList.length - 1; i > 0; i--) {
+        const b1 = this.smpList[i];
+        for (let j = i - 1; j >= 0; j--) {
+          const b2 = this.smpList[j];
           if (b1.length !== b2.length) {
             continue;
           }
@@ -133,7 +133,7 @@ export class FileOptimizer {
     let samples = this.getUsedInPatterns();
 
     // remove unused Samples
-    let unusedSamples: number = 0;
+    let unusedSamples = 0;
     if (samples.size < this.smpList.length - 1) {
       do {
         for (smpNum = this.smpList.length - 1; smpNum > 0; smpNum--) {
@@ -165,7 +165,7 @@ export class FileOptimizer {
    */
   private replaceSampleInPatterns(oldSmpNum: number, newSmpNum: number) {
     this.patList?.forEach(patData => {
-      for (let i: number = 0; i < patData.length; i++) {
+      for (let i = 0; i < patData.length; i++) {
         const v = patData[i];
         if ((v & 0x80) > 0) {
           continue;
@@ -195,7 +195,7 @@ export class FileOptimizer {
    */
   private renumberSamplesInPatterns(smpNum: number): void {
     this.patList?.forEach(patData => {
-      for (let i: number = 0; i < patData.length; i++) {
+      for (let i = 0; i < patData.length; i++) {
         const v = patData[i];
         if ((v & 0x80) > 0) {
           continue;
@@ -229,8 +229,8 @@ export class FileOptimizer {
     }
 
     // remove "empty" Ornaments
-    let removedOrnaments: number = 0;
-    let ornNum: number = 0;
+    let removedOrnaments = 0;
+    let ornNum = 0;
     do {
       for (ornNum = this.ornList.length - 1; ornNum > 0; ornNum--) {
         if (this.ornList[ornNum] == null) {
@@ -245,13 +245,13 @@ export class FileOptimizer {
 
     // remove duplicated Ornaments
     let wasReplaced: boolean = false;
-    let duplicateOrnaments: number = 0;
+    let duplicateOrnaments = 0;
     do {
       wasReplaced = false;
-      for (let i: number = this.ornList.length - 1; i > 0; i--) {
-        const b1: Uint8Array = this.ornList[i];
-        for (let j: number = i - 1; j >= 0; j--) {
-          const b2: Uint8Array = this.ornList[j];
+      for (let i = this.ornList.length - 1; i > 0; i--) {
+        const b1 = this.ornList[i];
+        for (let j = i - 1; j >= 0; j--) {
+          const b2 = this.ornList[j];
           if (b1.length !== b2.length) {
             continue;
           }
@@ -274,7 +274,7 @@ export class FileOptimizer {
     let ornaments = this.getUsedInPatterns(true);
 
     // remove unused Ornaments
-    let unusedOrnaments: number = 0;
+    let unusedOrnaments = 0;
     if (ornaments.size < this.ornList.length - 1) {
       do {
         for (ornNum = this.ornList.length - 1; ornNum > 0; ornNum--) {
@@ -306,7 +306,7 @@ export class FileOptimizer {
    */
   private replaceOrnamentInPatterns(oldOrnNum: number, newOrnNum: number): void {
     this.patList?.forEach(patData => {
-      for (let i: number = 0; i < patData.length; i++) {
+      for (let i = 0; i < patData.length; i++) {
         const v = patData[i];
         if ((v & 0x80) > 0) {
           continue;
@@ -336,14 +336,14 @@ export class FileOptimizer {
    */
   private renumberOrnamentsInPatterns(ornNum: number): void {
     this.patList?.forEach(patData => {
-      for (let i: number = 0; i < patData.length; i++) {
-        const v: number = patData[i];
+      for (let i = 0; i < patData.length; i++) {
+        const v = patData[i];
         if ((v & 0x80) > 0) {
           continue;
         }
-        const s: number = patData[++i];
-        const o: number = patData[++i];
-        const oi: number = i;
+        const s = patData[++i];
+        const o = patData[++i];
+        const oi = i;
         if ((s & 0x80) > 0) {
           i++;
         }
@@ -370,8 +370,8 @@ export class FileOptimizer {
     }
 
     // remove "empty" Patterns
-    let removedPatterns: number = 0;
-    let patNum: number = 0;
+    let removedPatterns = 0;
+    let patNum = 0;
     do {
       for (patNum = this.patList.length - 1; patNum > 0; patNum--) {
         if (this.patList[patNum] == null) {
@@ -386,13 +386,13 @@ export class FileOptimizer {
 
     // remove duplicated Patterns
     let wasReplaced: boolean = false;
-    let duplicatePatterns: number = 0;
+    let duplicatePatterns = 0;
     do {
       wasReplaced = false;
-      for (let i: number = this.patList.length - 1; i > 0; i--) {
-        const b1: Uint8Array = this.patList[i];
-        for (let j: number = i - 1; j >= 0; j--) {
-          const b2: Uint8Array = this.patList[j];
+      for (let i = this.patList.length - 1; i > 0; i--) {
+        const b1 = this.patList[i];
+        for (let j = i - 1; j >= 0; j--) {
+          const b2 = this.patList[j];
           if (b1.length !== b2.length) {
             continue;
           }
@@ -414,8 +414,8 @@ export class FileOptimizer {
     // prepare list of numbers of used Patterns
     let patterns = this.posList.reduce<Set<number>>(
       (set, posData) => {
-        for (let i: number = 0; i < 6; i++) {
-          const pn: number = posData[2 + i * 2];
+        for (let i = 0; i < 6; i++) {
+          const pn = posData[2 + i * 2];
           if (pn > 0) {
             set.add(pn);
           }
@@ -424,7 +424,7 @@ export class FileOptimizer {
       }, new Set<number>());
 
     // remove unused Patterns
-    let unusedPatterns: number = 0;
+    let unusedPatterns = 0;
     if (patterns.size < this.patList.length - 1) {
       do {
         for (patNum = this.patList.length - 1; patNum > 0; patNum--) {
@@ -457,7 +457,7 @@ export class FileOptimizer {
    */
   private replacePatternInPositions(oldPatNum: number, newPatNum: number): void {
     this.posList?.forEach(posData => {
-      for (let i: number = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i++) {
         const pn = 2 + i * 2;
         if (posData[pn] === oldPatNum) {
           posData[pn] = newPatNum;
@@ -471,7 +471,7 @@ export class FileOptimizer {
    */
   private renumberPatternsInPositions(patNum: number): void {
     this.posList?.forEach(posData => {
-      for (let i: number = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i++) {
         const pn = 2 + i * 2;
         if (posData[pn] > patNum) {
           posData[pn] = posData[pn] - 1;

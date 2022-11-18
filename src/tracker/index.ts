@@ -23,11 +23,11 @@
 
 import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
+import Compiler from '../compiler';
 import Player from '../player/Player';
 import { SAASound } from '../saa/SAASound';
 import { TrackerDoc } from './doc';
 import { STMFile } from './file';
-import FileCompiler from './file.compiler';
 import { HotkeyMapType } from './keyboard';
 import Manager from './manager';
 import Settings from './settings';
@@ -84,7 +84,7 @@ export default class Tracker {
 
   player: Player;
   file: STMFile;
-  compiler: FileCompiler;
+  compiler: Compiler;
 
   updatePanels: (this: Tracker) => void;
   updatePanelInfo: (this: Tracker) => void;
@@ -171,7 +171,7 @@ export default class Tracker {
     app.player = new Player(new SAASound(AudioDriver.sampleRate));
     app.settings.init();
     app.file = new STMFile(app);
-    app.compiler = new FileCompiler(app);
+    app.compiler = new Compiler(app);
 
     app.populateGUI(app);
     app.initializeGUI(app);
