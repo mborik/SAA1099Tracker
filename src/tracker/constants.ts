@@ -23,6 +23,7 @@
 
 export default {
   TRACKER_SETTINGS_KEY: 'saa1099-tracker-settings',
+  COMPILER_SETTINGS_KEY: 'saa1099-compiler-settings',
   MIMETYPE: 'text/x-saa1099tracker',
   AUTOSAVE_FILENAME: 'AUTOSAVE',
   LOCALSTORAGE_ASSUMED_SIZE: 2 ** 21,

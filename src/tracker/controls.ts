@@ -349,6 +349,10 @@ Tracker.prototype.onCmdFileExport = function() {
   this.file.exportFile();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileCompile = function() {
+  this.compiler.show();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     this.manager.copyFromTracklist();
