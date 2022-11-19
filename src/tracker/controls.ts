@@ -210,9 +210,9 @@ Tracker.prototype.onCmdAppUpdate = function() {
         document.body.className = 'loading';
         this.destroying = true;
 
+        window.electron?.clearCache();
         setTimeout(() => {
-          window.electron?.clearCache();
-          window.electron?.close();
+          window.electron?.relaunch();
         }, 1024);
       }
     }

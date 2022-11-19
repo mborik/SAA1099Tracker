@@ -1,7 +1,7 @@
 declare interface Window {
   electron?: {
     version: string;
-    close: () => void;
+    relaunch: () => void;
     clearCache: () => void;
   };
 }

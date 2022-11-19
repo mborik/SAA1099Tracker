@@ -7,12 +7,6 @@
     "buildResources": "assets/resources",
     "output": "dist"
   },
-  "extraFiles": [
-    {
-      "from": "assets/scripts",
-      "to": "."
-    }
-  ],
   "files": [
     "!**/.*",
     "!{electron.json,webpack.config.js,tsconfig.json}",
@@ -43,7 +37,7 @@
     ]
   },
   "appImage": {
-    "artifactName": "${productName}-${version}-${env.ELECTRON_BUILDER_ARCHITECTURE}.${ext}"
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
   },
   "rpm": {
     "depends": ["util-linux"]

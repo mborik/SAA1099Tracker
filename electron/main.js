@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
-const { app, BrowserWindow, nativeImage, ipcMain } = require('electron');
+const { app, ipcMain, BrowserWindow, nativeImage, session } = require('electron');
 const meow = require('meow');
 const { squirrel } = require('./squirrel');
 const { createWindow } = require('./window');
@@ -78,9 +78,13 @@ if (squirrel(cli.flags, app.quit)) {
       }
     });
 
-    ipcMain.handle('close', () => mainWindow?.close());
-    ipcMain.handle('clear-cache', () => {
-      mainWindow?.webContents.session.clearStorageData({
+    ipcMain.handle('relaunch', () => {
+      app.relaunch();
+      app.quit();
+    });
+    ipcMain.handle('clear-cache', async () => {
+      await session.defaultSession.clearCache();
+      await session.defaultSession.clearStorageData({
         storages: ['appcache', 'serviceworkers', 'cachestorage']
       });
     });

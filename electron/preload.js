@@ -3,6 +3,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
   version: process.versions.electron,
-  close: () => ipcRenderer.invoke('close'),
+  relaunch: () => ipcRenderer.invoke('relaunch'),
   clearCache: () => ipcRenderer.invoke('clear-cache'),
 });
