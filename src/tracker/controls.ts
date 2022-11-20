@@ -540,6 +540,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
     dialog.modal('show')
       .find('.modal-body')
       .html(cached)
+      .scrollTop(0)
       .prepend(button);
   }
   else {
@@ -555,6 +556,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
         dialog.modal('show')
           .find('.modal-body')
           .html(data)
+          .scrollTop(0)
           .prepend(button);
       });
   }
