@@ -378,9 +378,9 @@ export default class CompilerRender extends CompilerOptimizer {
     this.version = constants.CURRENT_PLAYER_MAJOR_VERSION * 16 + this.playerTypeByData;
 
     let cmdArray = [...usedCmd].sort();
-    cmdArray.length && log(`Used commands: [ ${cmdArray.join(', ')} ]`);
+    cmdArray.length && log?.(`Used commands: [ ${cmdArray.join(', ')} ]`);
     cmdArray = [...removedCmd].sort();
-    cmdArray.length && log(`Removed commands: [ ${cmdArray.join(', ')} ]`);
+    cmdArray.length && log?.(`Removed commands: [ ${cmdArray.join(', ')} ]`);
   }
 
   preparePositions() {
