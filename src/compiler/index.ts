@@ -460,8 +460,9 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
 
     // check if final offset correspond to expected data length
     if (off !== this.songData.length) {
-      this.log(`Fatal error on composing song data!
-Expected data length (${this.songData.length}) is not equal to the result data (${off})!`, true);
+      this.log(`Fatal error in composed song data!\nExpected data length (${
+        this.songData.length
+      }) is not equal to the result data length (${off})!`, true);
     }
   }
 
@@ -491,6 +492,14 @@ Expected data length (${this.songData.length}) is not equal to the result data (
       .catch(() => {
         throw `Failed to fetch player binary! [${resourceFileName}.bin]`;
       });
+
+    if (this.playerAddress + this.playerData.length + this.songData.length > 65535) {
+      throw `Player cannot be relocated to ${
+        this.playerAddress
+      }!\nExceeding 64k memory limit with own (${
+        this.playerData.length
+      }) and song data (${this.songData.length}) length!`;
+    }
 
     this.verbose && this.log('Loading relocation table ...');
 
