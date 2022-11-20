@@ -184,11 +184,12 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
   }
   private onPlayerAddressChanged() {
     const playerAddress = this.playerAddress;
-    $('#txPlayerAddress').val(
-      this.hexPlayerAddress ?
-        toHex(playerAddress).toUpperCase() :
-        playerAddress
-    );
+    $('#txPlayerAddress')
+      .prop('maxlength', this.hexPlayerAddress ? 4 : 5).val(
+        this.hexPlayerAddress ?
+          toHex(playerAddress, 4).toUpperCase() :
+          playerAddress
+      );
   }
 
   private save() {
