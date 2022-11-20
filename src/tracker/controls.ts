@@ -525,16 +525,18 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
     'data-dismiss': 'modal'
   }).text('\xd7');
 
-  if (cached) {
+  dialog.on('shown.bs.modal', () => {
     keys.inDialog = true;
+  }).on('hidden.bs.modal', () => {
+    $(dialog).off().find('.modal-body').empty();
+    keys.inDialog = false;
+  });
+
+  if (cached) {
     dialog.modal('show')
       .find('.modal-body')
       .html(cached)
-      .prepend(button)
-      .on('hidden.bs.modal', () => {
-        keys.inDialog = false;
-        $(this).find('.modal-body').empty();
-      });
+      .prepend(button);
   }
   else {
     fetch(filename)
@@ -548,11 +550,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
         dialog.modal('show')
           .find('.modal-body')
           .html(data)
-          .prepend(button)
-          .on('hidden.bs.modal', () => {
-            keys.inDialog = false;
-            $(this).find('.modal-body').empty();
-          });
+          .prepend(button);
       });
   }
 };
@@ -568,6 +566,7 @@ Tracker.prototype.onCmdAbout = function() {
         keys.inDialog = true;
       })
       .on('hidden.bs.modal', () => {
+        $(dialog).off();
         keys.inDialog = false;
       });
   }
@@ -835,9 +834,9 @@ Tracker.prototype.onCmdSmpPlay = function() {
 Tracker.prototype.onCmdSmpClear = function() {
   const app = this;
   const smp = this.player.sample[this.workingSample];
+  const keys = this.globalKeyState;
 
-  this.globalKeyState.inDialog = true;
-
+  keys.inDialog = true;
   $('#dialog').confirm({
     title: i18n.dialog.sample.clear.title,
     text: i18n.dialog.sample.clear.msg,
@@ -850,7 +849,7 @@ Tracker.prototype.onCmdSmpClear = function() {
       { caption: i18n.dialog.sample.clear.options[4], id: 'cancel' }
     ],
     callback: (mask) => {
-      app.globalKeyState.inDialog = false;
+      keys.inDialog = false;
       if (mask === 'cancel' || typeof mask === 'string') {
         return;
       }

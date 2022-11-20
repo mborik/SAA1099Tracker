@@ -28,8 +28,8 @@ import Tracker from '.';
 
 export class FileDialog {
   constructor(
-    private $app: Tracker,
-    private $parent: STMFile) {}
+    private _app: Tracker,
+    private _parent: STMFile) {}
 
   public load(): boolean {
     return this._openDialog('load');
@@ -48,8 +48,8 @@ export class FileDialog {
     e.stopPropagation();
 
     const dlg: this = (e.data && e.data.$scope);
-    const file = dlg.$parent;
-    const globalKeyState = dlg.$app.globalKeyState;
+    const file = dlg._parent;
+    const keys = dlg._app.globalKeyState;
     const selectedItem = dlg._selectedItem;
 
     if (dlg._saveFlag) {
@@ -67,7 +67,7 @@ export class FileDialog {
       file.loadFile(selectedItem.id);
     }
 
-    globalKeyState.inDialog = false;
+    keys.inDialog = false;
     dlg._obj.modal('hide');
     return true;
   }
@@ -140,8 +140,9 @@ export class FileDialog {
   }
   //---------------------------------------------------------------------------------------
   private _openDialog(mode: string): boolean {
-    const tracker = this.$app;
-    const file = this.$parent;
+    const tracker = this._app;
+    const file = this._parent;
+    const keys = tracker.globalKeyState;
 
     const titles = i18n.app.filedialog.title;
     const handleArgs = { $scope: this };
@@ -150,7 +151,7 @@ export class FileDialog {
     this._obj = $('#filedialog');
 
     this._storageMap = Array
-      .from(this.$parent.storageMap.values())
+      .from(this._parent.storageMap.values())
       .filter(({ id }) => tracker.settings.showAutosaveInFileDialog ? true : id > 0)
       .sort((a, b) => (b.timeModified - a.timeModified));
 
@@ -158,10 +159,10 @@ export class FileDialog {
       return false;
     }
 
-    tracker.globalKeyState.inDialog = true;
     this._obj.on('show.bs.modal', $.proxy(() => {
-      const { bytes, percent } = this.$parent.storagetUsageSummary();
+      const { bytes, percent } = this._parent.storagetUsageSummary();
 
+      keys.inDialog = true;
       this._obj.addClass(mode)
         .before($('<div/>')
           .addClass('modal-backdrop in').css('z-index', '1030'));
@@ -205,7 +206,7 @@ export class FileDialog {
       this._obj.removeClass(mode).prev('.modal-backdrop').remove();
       this._obj.off().find('.file-list').off().empty();
       this._obj.find('.modal-footer>.btn').off();
-      tracker.globalKeyState.inDialog = false;
+      keys.inDialog = false;
 
     }, this)).modal({
       show: true,

@@ -173,8 +173,10 @@ export default class Settings implements SettingsOptions {
     const fnApply = this._applyChanges.bind(this);
 
     const tracker = this._parent;
-    tracker.globalKeyState.inDialog = true;
+    const keys = tracker.globalKeyState;
     this._obj.on('show.bs.modal', $.proxy(() => {
+      keys.inDialog = true;
+
       this._obj
         .before($('<div/>')
           .addClass('modal-backdrop in').css('z-index', '1030'));
@@ -200,7 +202,7 @@ export default class Settings implements SettingsOptions {
       }
 
       AudioDriver.volume = this.audioGain;
-      tracker.globalKeyState.inDialog = false;
+      keys.inDialog = false;
 
     }, this)).modal({
       show: true,
