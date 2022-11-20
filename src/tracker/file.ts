@@ -366,7 +366,8 @@ export class STMFile {
   //---------------------------------------------------------------------------------------
   public getFixedFileName(): string {
     return this._fixFileName(
-      this.fileName || this._parent.songTitle || i18n.app.filedialog.untitled
+      (this.fileName !== constants.AUTOSAVE_FILENAME && this.fileName) ||
+        this._parent.songTitle || i18n.app.filedialog.untitled
     );
   }
 

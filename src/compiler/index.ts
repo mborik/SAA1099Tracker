@@ -156,12 +156,6 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       this.onPlayerAddressChanged();
     });
 
-    this.dialog.find('.apply').click(async () => {
-      this.dialog.modal('hide');
-      await this.compile();
-      return true;
-    });
-
     this.onIncludePlayerChanged();
   }
 
@@ -219,6 +213,12 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
         .before($('<div/>')
           .addClass('modal-backdrop in').css('z-index', '1030'));
 
+      this.dialog.find('.apply').click(() => {
+        this.dialog.modal('hide');
+        this.compile();
+        return true;
+      });
+
     }, this)).on('hide.bs.modal', () => {
       this.dialog.prev('.modal-backdrop').remove();
       this.dialog.find('.modal-footer>.btn').off();
@@ -233,7 +233,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     });
   }
 
-  async compile() {
+  compile() {
     this.openOutputLog();
 
     const optiLogger = this.verbose ? (msg: string) => {
@@ -253,18 +253,18 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     this.playerData = null;
 
     this.composeSongData();
-
-    if (this.includePlayer) {
-      try {
-        await this.preparePlayer();
-      }
-      catch (error) {
-        this.log(error, true);
-        return;
-      }
+    if (!this.includePlayer) {
+      this.finalizeOutputBinary();
+      return;
     }
 
-    this.finalizeOutputBinary();
+    this.preparePlayer()
+      .then(() => {
+        this.finalizeOutputBinary();
+      })
+      .catch((error) => {
+        this.log(error, true);
+      });
   }
 
   private log(str: string, error: boolean = false) {
