@@ -1,5 +1,6 @@
 /**
- * SAA1099Tracker: Tracker constants.
+ * SAA1099Tracker: Binary utilities.
+ * Copyright (c) 2017-2019 Roman Borik <pmd85emu@gmail.com>
  * Copyright (c) 2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,14 +22,36 @@
  */
 //---------------------------------------------------------------------------------------
 
-export default {
-  TRACKER_SETTINGS_KEY: 'saa1099-tracker-settings',
-  COMPILER_SETTINGS_KEY: 'saa1099-compiler-settings',
+export const equalsByteArrays = (
+  b1: Uint8Array, off1: number,
+  b2: Uint8Array, off2: number,
+  len: number
+): boolean => {
+  if (len <= 0 || off1 < 0 || off1 >= b1.length || off2 < 0 || off2 >= b2.length) {
+    throw 'Argument(s) len, off1 or off2 is out of array ranges.';
+  }
+  if (off1 + len > b1.length || off2 + len > b2.length) {
+    return false;
+  }
+  for (let i: number = 0; i < len; i++) {
+    if (b1[off1 + i] !== b2[off2 + i]) {
+      return false;
+    }
+  }
+  return true;
+};
 
-  MIMETYPE: 'text/x-saa1099tracker',
-  AUTOSAVE_FILENAME: 'AUTOSAVE',
-  LOCALSTORAGE_ASSUMED_SIZE: 2 ** 21,
+export const stringToBytes = (str: string, asciiOnly?: boolean): Uint8Array =>
+  Uint8Array.from(
+    str.split('')
+      .map(c => c.charCodeAt(0))
+      .filter(c => asciiOnly ? (c >= 32 && c <= 126) : true)
+  );
 
-  CURRENT_FILE_VERSION: '1.2',
-  CURRENT_PLAYER_MAJOR_VERSION: 1
+export const bytesToString = (bytes: Uint8Array): string =>
+  String.fromCharCode.apply(null, bytes);
+
+export const writeWordLE = (bytes: Uint8Array, offset: number, word: number) => {
+  bytes[offset] = (word & 0xFF);
+  bytes[offset + 1] = ((word >>> 8) & 0xFF);
 };

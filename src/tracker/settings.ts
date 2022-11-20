@@ -160,7 +160,7 @@ export default class Settings implements SettingsOptions {
     }
     catch (e) {}
 
-    devLog('Settings', 'User options fetched from localStorage %o...', this);
+    devLog('Settings', 'User options fetched from localStorage %o...', getConfigProps(this));
 
     this._populateElements();
     this.audioInit();

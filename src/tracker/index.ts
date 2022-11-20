@@ -23,6 +23,7 @@
 
 import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
+import Compiler from '../compiler';
 import Player from '../player/Player';
 import { SAASound } from '../saa/SAASound';
 import { TrackerDoc } from './doc';
@@ -83,6 +84,7 @@ export default class Tracker {
 
   player: Player;
   file: STMFile;
+  compiler: Compiler;
 
   updatePanels: (this: Tracker) => void;
   updatePanelInfo: (this: Tracker) => void;
@@ -105,6 +107,7 @@ export default class Tracker {
   onCmdFileSave: (this: Tracker, as?: boolean) => void;
   onCmdFileImport: (this: Tracker, demosong?: string) => void;
   onCmdFileExport: (this: Tracker) => void;
+  onCmdFileCompile: (this: Tracker) => void;
   onCmdPreferences: (this: Tracker) => void;
   onCmdOrnClear: (this: Tracker) => void;
   onCmdOrnCompress: (this: Tracker) => void;
@@ -168,6 +171,7 @@ export default class Tracker {
     app.player = new Player(new SAASound(AudioDriver.sampleRate));
     app.settings.init();
     app.file = new STMFile(app);
+    app.compiler = new Compiler(app);
 
     app.populateGUI(app);
     app.initializeGUI(app);

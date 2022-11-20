@@ -24,7 +24,7 @@
 import { devLog } from '../commons/dev';
 
 
-declare type multitype = string | Uint8Array | Uint8ClampedArray | ArrayBuffer;
+declare type multitype = string | Uint8Array;
 
 export class FileSystem {
   private _input: JQuery<HTMLInputElement>;
@@ -97,7 +97,7 @@ export class FileSystem {
         });
       }
       else {
-        blob = new Blob(<any> data, {
+        blob = new Blob([ data ], {
           type: mimeType || 'application/octet-stream'
         });
       }
@@ -109,7 +109,7 @@ export class FileSystem {
     if (blob) {
       try {
         devLog('FileSystem', 'Conversion of Blob to URL Object...');
-        url = URL.createObjectURL(blob) + '';
+        url = URL.createObjectURL(blob);
       }
       catch (ex) {
         devLog('FileSystem', 'URL feature for Blob missing [%o]', ex);
@@ -130,8 +130,9 @@ export class FileSystem {
     (obj[0] as HTMLAnchorElement).click();
 
     setTimeout(() => {
+      URL.revokeObjectURL(url);
       obj.attr({ href: null, target: null, download: null });
-    }, 128);
+    }, 1024);
   }
 }
 //---------------------------------------------------------------------------------------

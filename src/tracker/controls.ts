@@ -349,6 +349,10 @@ Tracker.prototype.onCmdFileExport = function() {
   this.file.exportFile();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileCompile = function() {
+  this.compiler.show();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     this.manager.copyFromTracklist();
@@ -536,6 +540,7 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
     dialog.modal('show')
       .find('.modal-body')
       .html(cached)
+      .scrollTop(0)
       .prepend(button);
   }
   else {
@@ -546,10 +551,12 @@ Tracker.prototype.onCmdShowDocumentation = function(name) {
           .replace(/\s*?^\=\=\s*([^\=]+?)\s*[\=\s]+$/gm, '</pre><h3>$1</h3><pre>')
           .replace(/<pre><\/pre>/g, '');
 
+        keys.inDialog = true;
         cache[name] = data;
         dialog.modal('show')
           .find('.modal-body')
           .html(data)
+          .scrollTop(0)
           .prepend(button);
       });
   }

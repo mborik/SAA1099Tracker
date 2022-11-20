@@ -619,7 +619,7 @@
 	}
 }
 
-#settings {
+#settings, #compiler {
 	z-index: 1030;
 
 	.modal-body {
@@ -630,6 +630,11 @@
 				margin-top: 0;
 				cursor: default;
 			}
+		}
+
+		.row.overline {
+			border-top: 1px solid @dlg-footer-bg;
+			margin-top: (@grid-gutter-width * 2);
 		}
 
 		fieldset.form-group {
@@ -651,7 +656,7 @@
 				background: @dlg-footer-bg;
 			}
 		}
-		.panel-editor {
+		.panel-editor, .panel-player {
 			border-color: @state-info-border;
 			> .panel-heading {
 				#gradient.vertical(lighten(@brand-primary, 52%), @modal-content-bg);
@@ -680,6 +685,10 @@
 			}
 		}
 	}
+}
+
+#compiler .modal-footer .btn {
+	width: 20%;
 }
 
 #filedialog {
