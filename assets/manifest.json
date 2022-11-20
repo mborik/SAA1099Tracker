@@ -1,10 +1,18 @@
 {
+  "id": "saa1099tracker",
   "name": "SAA1099Tracker",
   "short_name": "SAA1099Tracker",
+  "version": "2.0.1",
+  "developer": {
+    "name": "Martin Borik",
+    "url": "https://github.com/mborik"
+  },
+  "scope": "/",
   "start_url": ".",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "landscape",
   "background_color": "#ffffff",
+  "theme_color": "#3388cc",
   "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
   "lang": "en-US",
   "dir": "ltr",
