@@ -104,6 +104,7 @@ export class FileDialog {
     e.stopPropagation();
 
     const dlg: this = (e.data && e.data.$scope);
+    const file = dlg._parent;
     const selectedItem = dlg._selectedItem;
     const mode = (dlg._saveFlag ? 'save' : 'load');
 
@@ -121,11 +122,8 @@ export class FileDialog {
           return;
         }
 
-        const index = dlg._storageMap.findIndex(obj =>
-          (obj.storageId === selectedItem.storageId));
-
-        if (~index) {
-          dlg._storageMap.splice(index, 1);
+        if (selectedItem.id > 0) {
+          file.storageMap.delete(selectedItem.id);
           localStorage.removeItem(selectedItem.storageId + '-nfo');
           localStorage.removeItem(selectedItem.storageId + '-dat');
 

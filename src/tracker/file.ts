@@ -181,6 +181,7 @@ export class STMFile {
       }
     }
 
+    devLog('Tracker.file', 'Storage reloaded: %d files available', this.storageMap.size);
     this._storageSum();
   }
 
@@ -629,19 +630,20 @@ export class STMFile {
 
     this._storageSum();
 
-    localStorage.setItem(storageItem.storageId + '-nfo', fileName.concat(
-      '|', storageItem.timeCreated.toString(),
-      '|', storageItem.timeModified.toString(),
-      '|', storageItem.duration
-    ));
+    localStorage.setItem(
+      `${storageItem.storageId}-nfo`,
+      `${fileName}|${storageItem.timeCreated}|${storageItem.timeModified}|${storageItem.duration}`
+    );
 
-    localStorage.setItem(storageItem.storageId + '-dat', packed);
+    localStorage.setItem(`${storageItem.storageId}-dat`, packed);
+    devLog('Tracker.file', 'Everything stored into localStorage...');
 
     this.yetSaved = true;
     this.modified = false;
     this.fileName = storageItem.fileName;
 
-    devLog('Tracker.file', 'Everything stored into localStorage...');
+    this._parent.settings.lastLoadedFileNumber = storageItem.id;
+    this._reloadStorage();
     return true;
   }
 
