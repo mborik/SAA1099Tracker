@@ -175,8 +175,6 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     $('label[for=txPlayerAddress]').toggleClass('disabled', state);
     $('#txPlayerAddress,#chPlayerAddressHex').prop('disabled', state);
     $('#chPlayerAddressHex').bootstrapToggle(state ? 'disable' : 'enable');
-
-    $('#chPlayerRepeat').prop('disabled', state);
   }
 
   private onPlayerAddressChanging(value: string = $('#txPlayerAddress').val()) {
