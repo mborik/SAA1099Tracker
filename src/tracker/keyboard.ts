@@ -179,17 +179,20 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           app.onCmdPosPlayStart();
         },
         120: function() {
-          logHotkey('F9 - Track manager');
+          logHotkey('F9 - Toggle loop');
+          app.onCmdToggleLoop();
         },
         121: function() {
           logHotkey('F10 - Preferences');
+          app.onCmdPreferences();
         },
         122: function() {
-          logHotkey('F11 - Toggle loop');
-          app.onCmdToggleLoop();
+          logHotkey('F11 - Show commands documentation');
+          app.onCmdShowDocumentation('commands');
         },
         123: function() {
-          logHotkey('F12 - Unimplemented');
+          logHotkey('F12 - Show keyboard documentation');
+          app.onCmdShowDocumentation('keyboard');
         }
       }[key];
 

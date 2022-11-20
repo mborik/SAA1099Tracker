@@ -1,7 +1,7 @@
 == GLOBAL HOTKEYS =============================================================
 ===============================================================================
 
-Esc                   | stop
+Esc                   | stop / exit current operation / close dialog
 F1                    | about dialog
 F2                    | tracklist editor
 F3                    | sample editor
@@ -10,9 +10,10 @@ F5, Right Ctrl        | play song
 F6                    | play song from start
 F7, Right Shift       | play position
 F8                    | play position from start
-F9                    | track manager
+F9                    | toggle loop
 F10                   | preferences
-F11                   | toggle loop
+F11                   | show effect commands
+F12                   | show keyboard and controls
 Ctrl+O                | open
 Ctrl+S                | save
 Ctrl+X                | cut
