@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker Player core: data-effecient channel-pattern tracker format.
- * Copyright (c) 2012-2020 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -39,7 +39,7 @@ export default class Player {
   public ornament: Ornament[] = [];
   public pattern: Pattern[] = [];
   public position: Position[] = [];
-  public nullPosition: Position | null = null;
+  public nullPosition: Position = null;
 
   public loopMode: boolean = true;
   public changedLine: boolean = false;
@@ -53,8 +53,8 @@ export default class Player {
   public mode: number = 0;
   public mixer: Mixer = new Mixer();
 
-  public rtSong: PlayerRuntime | null = null;
-  public rtSample: PlayerRuntime | null = null;
+  public rtSong: PlayerRuntime = null;
+  public rtSample: PlayerRuntime = null;
 
 
   constructor(public SAA1099: SAASound) {
@@ -77,7 +77,7 @@ export default class Player {
     ];
 
     this.tones = [ new Tone() ];
-    for (let i: number = 1, o: number = 0, p: number = 1; i <= 96; i++, p++) {
+    for (let i = 1, o = 0, p = 1; i <= 96; i++, p++) {
       const t = new Tone();
       t.txt = tab_tones[p].prefix + (o + 1);
 
@@ -129,7 +129,7 @@ export default class Player {
       devLog('Player', 'Song objects and parameters initialized...');
     }
     else if (this.rtSong) {
-      for (let chn: number = 0; chn < 6; chn++) {
+      for (let chn = 0; chn < 6; chn++) {
         this.rtSong.clearPlayParams(chn);
       }
 
@@ -139,7 +139,7 @@ export default class Player {
 
   /** Clear all samples. */
   public clearSamples() {
-    for (let i: number = 0; i < 32; i++) {
+    for (let i = 0; i < 32; i++) {
       this.sample[i] = new Sample();
     }
 
@@ -148,7 +148,7 @@ export default class Player {
 
   /** Clear all ornaments. */
   public clearOrnaments() {
-    for (let i: number = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i++) {
       this.ornament[i] = new Ornament();
     }
 
@@ -156,22 +156,22 @@ export default class Player {
   }
 
   /**
-	 * Create bare pattern at the end of the array of patterns and return it's number.
-	 * @returns {number} new pattern number
-	 */
+   * Create bare pattern at the end of the array of patterns and return it's number.
+   * @returns {number} new pattern number
+   */
   public addNewPattern(): number {
-    const index: number = this.pattern.length;
+    const index = this.pattern.length;
     this.pattern.push(new Pattern());
     return index;
   }
 
   /**
-	 * Create new position in given length and basic speed.
-	 * @param length Position length;
-	 * @param speed Basic position speed;
-	 * @param add Should be position added to stack?
-	 * @returns {Position} new position object;
-	 */
+   * Create new position in given length and basic speed.
+   * @param length Position length;
+   * @param speed Basic position speed;
+   * @param add Should be position added to stack?
+   * @returns {Position} new position object;
+   */
   public addNewPosition(length: number, speed: number, add: boolean = true): Position {
     const pos = new Position(length, speed);
     pos.initParams = new PlayerRuntime(this);
@@ -185,20 +185,20 @@ export default class Player {
 
   //---------------------------------------------------------------------------------------
   /**
-	 * Set processor's interrupt of virtual pseudo-emulated 8bit computer to the mixer.
-	 * @param freq Interrupt frequency in Hz;
-	 */
+   * Set processor's interrupt of virtual pseudo-emulated 8bit computer to the mixer.
+   * @param freq Interrupt frequency in Hz;
+   */
   public setInterrupt(freq: number) {
     this.mixer.length = SAASound.sampleRate / freq;
   }
 
   /**
-	 * Method which provides audio data of both channels separately for AudioDriver
-	 * and calling prepareFrame() every interrupt of 8bit processor.
-	 * @param leftBuf TypedArray of 32bit float type;
-	 * @param rightBuf TypedArray of 32bit float type;
-	 * @param length of buffer;
-	 */
+   * Method which provides audio data of both channels separately for AudioDriver
+   * and calling prepareFrame() every interrupt of 8bit processor.
+   * @param leftBuf TypedArray of 32bit float type;
+   * @param rightBuf TypedArray of 32bit float type;
+   * @param length of buffer;
+   */
   public getAudio(leftBuf: Float32Array, rightBuf: Float32Array, length: number) {
     if (!this.mode) {
       return this.SAA1099.output(leftBuf, rightBuf, length);
@@ -227,12 +227,12 @@ export default class Player {
   }
 
   /**
-	 * This method do a simulation of playback in position for given number of lines.
-	 * @param lines Number of lines to simulate;
-	 * @param pos Optional position number in which do a simulation;
-	 * @param rt Simulate over the custom runtime parameters;
-	 */
-  private simulation(lines: number, pos: number = this.currentPosition, rt: PlayerRuntime | null = this.rtSong): boolean {
+   * This method do a simulation of playback in position for given number of lines.
+   * @param lines Number of lines to simulate;
+   * @param pos Optional position number in which do a simulation;
+   * @param rt Simulate over the custom runtime parameters;
+   */
+  private simulation(lines: number, pos: number = this.currentPosition, rt: PlayerRuntime = this.rtSong): boolean {
     if (lines <= 0) {
       return false;
     }
@@ -309,17 +309,17 @@ export default class Player {
   }
 
   /**
-	 * Most important part of Player: Method needs to be called every interrupt/frame.
-	 * It handles all the pointers and settings to output values on SAA1099 registers.
-	 */
+   * Most important part of Player: Method needs to be called every interrupt/frame.
+   * It handles all the pointers and settings to output values on SAA1099 registers.
+   */
   private prepareFrame(rt: PlayerRuntime = this.runtimeByMode): PlayerRuntime {
     if (!this.mode) {
       return rt;
     }
 
     const vol = new Volume();
-    let oct: number = 0;
-    let eFreq: number = 0, eNoiz: number = 0, eChar: number = 0, ePlay: number = 0;
+    let oct = 0;
+    let eFreq = 0, eNoiz = 0, eChar = 0, ePlay = 0;
 
     // We processing channels backward! It's because of SAA1099 register architecture
     // which expect settings for pairs or triplets of adjacent channels. We need
@@ -331,7 +331,7 @@ export default class Player {
       // pick playParams for channel...
       const pp = rt.params[chn];
 
-      const eMask = (1 << chn);      // bit mask of channel
+      const eMask = (1 << chn);       // bit mask of channel
       const chn2nd = (chn >> 1);      // calculate pair of channels
       const chn3rd = +(chn >= 3);     // calculate triple of channels
 
@@ -442,7 +442,7 @@ export default class Player {
             // sample offset
           case 0x9:
             if (pp.commandParam > 0 &&
-							(pp.sample.releasable || pp.commandParam < pp.sample.end)) {
+              (pp.sample.releasable || pp.commandParam < pp.sample.end)) {
 
               pp.sample_cursor = pp.commandParam;
               samp = pp.sample.data[pp.sample_cursor];
@@ -666,11 +666,11 @@ export default class Player {
   }
 
   /**
-	 * Another very important part of Player, sibling to prepareFrame():
-	 * This method prepares parameters for next trackline in position...
-	 * @param next Move to the next trackline (default true);
-	 * @returns {boolean} success or failure
-	 */
+   * Another very important part of Player, sibling to prepareFrame():
+   * This method prepares parameters for next trackline in position...
+   * @param next Move to the next trackline (default true);
+   * @returns {boolean} success or failure
+   */
   private prepareLine(next?: boolean, rt: PlayerRuntime = this.runtimeByMode): boolean {
     if (this.currentTick) {
       this.currentTick--;
@@ -686,7 +686,7 @@ export default class Player {
       this.changedLine = true;
     }
 
-    let p: Position = this.position[this.currentPosition];
+    let p = this.position[this.currentPosition];
 
     if (this.currentLine >= p.length) {
       if (this.mode & PlayerMode.PM_SONG) {
@@ -722,7 +722,7 @@ export default class Player {
       this.currentSpeed = p.speed;
     }
 
-    for (let chn: number = 0; chn < 6; chn++) {
+    for (let chn = 0; chn < 6; chn++) {
       const pc = p.ch[chn];
       const pt_number = (pc.pattern < this.pattern.length) ? pc.pattern : 0;
       const pt = this.pattern[pt_number];
@@ -740,8 +740,8 @@ export default class Player {
         if (pl.cmd === 0xF && pl.cmd_data > 0) {
           this.currentSpeed = pl.cmd_data;
           if (this.currentSpeed >= 0x20) {
-            const sH: number = (this.currentSpeed & 0xF0) >> 4;
-            const sL: number = this.currentSpeed & 0x0F;
+            const sH = (this.currentSpeed & 0xF0) >> 4;
+            const sL = this.currentSpeed & 0x0F;
 
             if (sL < 2 || sH === sL) {
               // invalid swing speed
@@ -792,9 +792,9 @@ export default class Player {
           pp.slideShift -= pp.commandValue2;
         }
 
-        const base: Tone = this.calculateTone(pp.tone, 0, 0, pp.slideShift);
-        const target: Tone = this.calculateTone(pl.tone, 0, 0, 0);
-        const delta: number = target.word - base.word;
+        const base = this.calculateTone(pp.tone, 0, 0, pp.slideShift);
+        const target = this.calculateTone(pl.tone, 0, 0, 0);
+        const delta = target.word - base.word;
 
         if (delta === 0) {
           pp.tone = pl.tone;
@@ -847,9 +847,9 @@ export default class Player {
 
   //---------------------------------------------------------------------------------------
   /**
-	 * Play only current row in current position.
-	 * @returns {boolean}
-	 */
+   * Play only current row in current position.
+   * @returns {boolean}
+   */
   public playLine(): boolean {
     if (this.mode === PlayerMode.PM_LINE && this.currentTick > 0) {
       return false;
@@ -863,12 +863,12 @@ export default class Player {
   }
 
   /**
-	 * Start playback of position or pattern.
-	 * @param fromStart Start playing from first position;
-	 * @param follow Follow the song, change next position when position reach the end;
-	 * @param resetLine Start playing from first row of the position;
-	 * @returns {boolean} success or failure
-	 */
+   * Start playback of position or pattern.
+   * @param fromStart Start playing from first position;
+   * @param follow Follow the song, change next position when position reach the end;
+   * @param resetLine Start playing from first row of the position;
+   * @returns {boolean} success or failure
+   */
   public playPosition(fromStart: boolean = true, follow: boolean = true, resetLine: boolean = true): boolean {
     if (fromStart) {
       this.currentPosition = 0;
@@ -906,19 +906,19 @@ export default class Player {
   }
 
   /**
-	 * Play custom tone with particular sample/ornament in particular channel.
-	 * @param s Sample;
-	 * @param o Ornament;
-	 * @param tone Tone number;
-	 * @param chn (optional) Channel number or autodetect first "free" channel;
-	 * @returns {number} channel (1-6) where the sample has been played or 0 if error
-	 */
+   * Play custom tone with particular sample/ornament in particular channel.
+   * @param s Sample;
+   * @param o Ornament;
+   * @param tone Tone number;
+   * @param chn (optional) Channel number or autodetect first "free" channel;
+   * @returns {number} channel (1-6) where the sample has been played or 0 if error
+   */
   public playSample(s: number, o: number, tone: number, chn?: number): number {
     if (this.mode & (PlayerMode.PM_SONG_OR_POS | PlayerMode.PM_LINE)) {
       return 0;
     }
 
-    const rt: PlayerRuntime | null = this.rtSample;
+    const rt: PlayerRuntime = this.rtSample;
     if (!rt) {
       return 0;
     }
@@ -974,10 +974,10 @@ export default class Player {
   }
 
   /**
-	 * Stops a playback of particular channel (1 <= chn <= 6) or stop playback (chn = 0).
-	 * Method reset appropriate channel's playParams.
-	 * @param chn Zero or channel number (1-6);
-	 */
+   * Stops a playback of particular channel (1 <= chn <= 6) or stop playback (chn = 0).
+   * Method reset appropriate channel's playParams.
+   * @param chn Zero or channel number (1-6);
+   */
   public stopChannel(chn: number = 0) {
     const rt = this.runtimeByMode;
 
@@ -1007,16 +1007,16 @@ export default class Player {
 
   //---------------------------------------------------------------------------------------
   /**
-	 * Calculate pTone object with actual frequency from a lot of parameters of player.
-	 * It takes into account all nuances which can occur in tracklist...
-	 * @param toneValue Base tone on input;
-	 * @param globalShift Global pattern tone shift;
-	 * @param toneShift Ornament tone shift;
-	 * @param slideShift Fine tune frequency shift;
-	 * @returns {Tone} object
-	 */
+   * Calculate pTone object with actual frequency from a lot of parameters of player.
+   * It takes into account all nuances which can occur in tracklist...
+   * @param toneValue Base tone on input;
+   * @param globalShift Global pattern tone shift;
+   * @param toneShift Ornament tone shift;
+   * @param slideShift Fine tune frequency shift;
+   * @returns {Tone} object
+   */
   private calculateTone(toneValue: number, globalShift: number, toneShift: number, slideShift: number): Tone {
-    let pitch: number = toneValue + globalShift + toneShift;
+    let pitch = toneValue + globalShift + toneShift;
 
     // base tone overflowing in tones range
     while (pitch < 0) {
@@ -1042,10 +1042,10 @@ export default class Player {
   }
 
   /**
-	 * Count how many times was particular pattern used in all positions.
-	 * @param patt Pattern number;
-	 * @returns {number} count
-	 */
+   * Count how many times was particular pattern used in all positions.
+   * @param patt Pattern number;
+   * @returns {number} count
+   */
   public countPatternUsage(patt: number): number {
     // is pattern number in range?
     if (patt >= this.pattern.length) {
@@ -1053,9 +1053,9 @@ export default class Player {
     }
 
     // proceed all positions/channels and count matches to 'c'
-    let c: number = 0;
-    for (let i: number = 0, l: number = this.position.length; i < l; i++) {
-      for (let j: number = 0; j < 6; j++) {
+    let c = 0;
+    for (let i = 0, l = this.position.length; i < l; i++) {
+      for (let j = 0; j < 6; j++) {
         if (this.position[i].ch[j].pattern === patt) {
           c++;
         }
@@ -1066,22 +1066,22 @@ export default class Player {
   }
 
   /**
-	 * Method that count "position frames" or number of interupts which takes every
-	 * line in tracklist. It's very important for time calculations!
-	 * @param pos If ommited, method calls itself recursively for all positions;
-	 */
+   * Method that count "position frames" or number of interupts which takes every
+   * line in tracklist. It's very important for time calculations!
+   * @param pos If ommited, method calls itself recursively for all positions;
+   */
   public countPositionFrames(pos?: number) {
-    const l: number = this.position.length;
+    const len = this.position.length;
 
     // if 'pos' wasn't specified, recursively calling itself for all positions
     if (pos === undefined || pos < 0) {
-      for (let i = 0; i < l; i++) {
+      for (let i = 0; i < len; i++) {
         this.countPositionFrames(i);
       }
 
       // is position number in range?
     }
-    else if (pos < l) {
+    else if (pos < len) {
       let speed = this.position[pos].speed;
       let i = 0, line = 0;
 
@@ -1096,8 +1096,8 @@ export default class Player {
 
             // is it swing tempo change? we need to check validity...
             if (speed >= 0x20) {
-              const sH: number = (speed & 0xf0) >> 4,
-                sL: number = (speed & 0x0f);
+              const sH = (speed & 0xf0) >> 4;
+              const sL = (speed & 0x0f);
 
               if (sL < 2 || sH === sL) {
                 // invalid swing speed!
@@ -1131,10 +1131,10 @@ export default class Player {
   }
 
   /**
-	 * Method calculates runtime parameters by simulation of playback from start
-	 * of the previous position to first line of the actual position.
-	 * @param pos Position number bigger than zero;
-	 */
+   * Method calculates runtime parameters by simulation of playback from start
+   * of the previous position to first line of the actual position.
+   * @param pos Position number bigger than zero;
+   */
   public storePositionRuntime(pos: number): boolean {
     if (pos === undefined || pos <= 0) {
       return false;
@@ -1154,71 +1154,71 @@ export default class Player {
   }
 
   //---------------------------------------------------------------------------------------
-  /* eslint-disable object-curly-spacing, no-multi-spaces, no-mixed-spaces-and-tabs */
+  /* eslint-disable indent */
   private static vibratable: number[] = [
-		  0,   0,   0,   0,   0,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-		 -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   0,   0,   0,   0,   0,
-		  0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
-		  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   0,   0,   0,
-		  0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
-		  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   0,   0,   0,
-		  0,   0,   0,   0,   0,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-		 -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   0,   0,   0,   0,   0,
-		  0,   0,   1,   1,   1,   1,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
-		  3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   2,   1,   1,   1,   1,   0,
-		  0,   0,  -1,  -1,  -1,  -1,  -2,  -2,  -2,  -2,  -2,  -3,  -3,  -3,  -3,  -3,
-		 -3,  -3,  -3,  -3,  -3,  -3,  -2,  -2,  -2,  -2,  -2,  -1,  -1,  -1,  -1,   0,
-		  0,   0,   1,   1,   2,   2,   3,   3,   4,   4,   4,   4,   5,   5,   5,   5,
-		  5,   5,   5,   5,   5,   4,   4,   4,   4,   3,   3,   2,   2,   1,   1,   0,
-		  0,   0,  -1,  -1,  -2,  -2,  -3,  -3,  -4,  -4,  -4,  -4,  -5,  -5,  -5,  -5,
-		 -5,  -5,  -5,  -5,  -5,  -4,  -4,  -4,  -4,  -3,  -3,  -2,  -2,  -1,  -1,   0,
-		  0,   1,   1,   2,   3,   3,   4,   4,   5,   5,   6,   6,   6,   7,   7,   7,
-		  7,   7,   7,   7,   6,   6,   6,   5,   5,   4,   4,   3,   3,   2,   1,   1,
-		  0,  -1,  -1,  -2,  -3,  -3,  -4,  -4,  -5,  -5,  -6,  -6,  -6,  -7,  -7,  -7,
-		 -7,  -7,  -7,  -7,  -6,  -6,  -6,  -5,  -5,  -4,  -4,  -3,  -3,  -2,  -1,  -1,
-		  0,   1,   2,   3,   3,   4,   5,   6,   6,   7,   7,   8,   8,   9,   9,   9,
-		  9,   9,   9,   9,   8,   8,   7,   7,   6,   6,   5,   4,   3,   3,   2,   1,
-		  0,  -1,  -2,  -3,  -3,  -4,  -5,  -6,  -6,  -7,  -7,  -8,  -8,  -9,  -9,  -9,
-		 -9,  -9,  -9,  -9,  -8,  -8,  -7,  -7,  -6,  -6,  -5,  -4,  -3,  -3,  -2,  -1,
-		  0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   9,  10,  10,  11,  11,  11,
-		 11,  11,  11,  11,  10,  10,   9,   9,   8,   7,   6,   5,   4,   3,   2,   1,
-		  0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9,  -9, -10, -10, -11, -11, -11,
-    -11, -11, -11, -11, -10, -10,  -9,  -9,  -8,  -7,  -6,  -5,  -4,  -3,  -2,  -1,
-		  0,   1,   3,   4,   5,   6,   7,   8,   9,  10,  11,  11,  12,  12,  13,  13,
-		 13,  13,  13,  12,  12,  11,  11,  10,   9,   8,   7,   6,   5,   4,   3,   1,
-		  0,  -1,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -11, -12, -12, -13, -13,
-    -13, -13, -13, -12, -12, -11, -11, -10,  -9,  -8,  -7,  -6,  -5,  -4,  -3,  -1,
-		  0,   1,   3,   4,   6,   7,   8,  10,  11,  12,  12,  13,  14,  14,  15,  15,
-		 15,  15,  15,  14,  14,  13,  12,  12,  11,  10,   8,   7,   6,   4,   3,   1,
-		  0,  -1,  -3,  -4,  -6,  -7,  -8, -10, -11, -12, -12, -13, -14, -14, -15, -15,
-    -15, -15, -15, -14, -14, -13, -12, -12, -11, -10,  -8,  -7,  -6,  -4,  -3,  -1,
-		  0,   2,   3,   5,   7,   8,   9,  11,  12,  13,  14,  15,  16,  16,  17,  17,
-		 17,  17,  17,  16,  16,  15,  14,  13,  12,  11,   9,   8,   7,   5,   3,   2,
-		  0,  -2,  -3,  -5,  -7,  -8,  -9, -11, -12, -13, -14, -15, -16, -16, -17, -17,
-    -17, -17, -17, -16, -16, -15, -14, -13, -12, -11,  -9,  -8,  -7,  -5,  -3,  -2,
-		  0,   2,   4,   6,   7,   9,  11,  12,  13,  15,  16,  17,  18,  18,  19,  19,
-		 19,  19,  19,  18,  18,  17,  16,  15,  13,  12,  11,   9,   7,   6,   4,   2,
-		  0,  -2,  -4,  -6,  -7,  -9, -11, -12, -13, -15, -16, -17, -18, -18, -19, -19,
-    -19, -19, -19, -18, -18, -17, -16, -15, -13, -12, -11,  -9,  -7,  -6,  -4,  -2,
-		  0,   2,   4,   6,   8,  10,  12,  13,  15,  16,  17,  19,  19,  20,  21,  21,
-		 21,  21,  21,  20,  19,  19,  17,  16,  15,  13,  12,  10,   8,   6,   4,   2,
-		  0,  -2,  -4,  -6,  -8, -10, -12, -13, -15, -16, -17, -19, -19, -20, -21, -21,
-    -21, -21, -21, -20, -19, -19, -17, -16, -15, -13, -12, -10,  -8,  -6,  -4,  -2,
-		  0,   2,   4,   7,   9,  11,  13,  15,  16,  18,  19,  20,  21,  22,  23,  23,
-		 23,  23,  23,  22,  21,  20,  19,  18,  16,  15,  13,  11,   9,   7,   4,   2,
-		  0,  -2,  -4,  -7,  -9, -11, -13, -15, -16, -18, -19, -20, -21, -22, -23, -23,
-    -23, -23, -23, -22, -21, -20, -19, -18, -16, -15, -13, -11,  -9,  -7,  -4,  -2,
-		  0,   2,   5,   7,  10,  12,  14,  16,  18,  19,  21,  22,  23,  24,  25,  25,
-		 25,  25,  25,  24,  23,  22,  21,  19,  18,  16,  14,  12,  10,   7,   5,   2,
-		  0,  -2,  -5,  -7, -10, -12, -14, -16, -18, -19, -21, -22, -23, -24, -25, -25,
-    -25, -25, -25, -24, -23, -22, -21, -19, -18, -16, -14, -12, -10,  -7,  -5,  -2,
-		  0,   3,   5,   8,  10,  13,  15,  17,  19,  21,  22,  24,  25,  26,  26,  27,
-		 27,  27,  26,  26,  25,  24,  22,  21,  19,  17,  15,  13,  10,   8,   5,   3,
-		  0,  -3,  -5,  -8, -10, -13, -15, -17, -19, -21, -22, -24, -25, -26, -26, -27,
-    -27, -27, -26, -26, -25, -24, -22, -21, -19, -17, -15, -13, -10,  -8,  -5,  -3,
-		  0,   3,   6,   8,  11,  14,  16,  18,  21,  22,  24,  26,  27,  28,  28,  29,
-		 29,  29,  28,  28,  27,  26,  24,  22,  21,  18,  16,  14,  11,   8,   6,   3,
-		  0,  -3,  -6,  -8, -11, -14, -16, -18, -21, -22, -24, -26, -27, -28, -28, -29,
-    -29, -29, -28, -28, -27, -26, -24, -22, -21, -18, -16, -14, -11,  -8,  -6,  -3
+     0,   0,   0,   0,   0,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+     1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+     1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   0,   0,   0,   0,   0,
+     0,   0,   1,   1,   1,   1,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
+     3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   2,   1,   1,   1,   1,   0,
+     0,   0,  -1,  -1,  -1,  -1,  -2,  -2,  -2,  -2,  -2,  -3,  -3,  -3,  -3,  -3,
+    -3,  -3,  -3,  -3,  -3,  -3,  -2,  -2,  -2,  -2,  -2,  -1,  -1,  -1,  -1,   0,
+     0,   0,   1,   1,   2,   2,   3,   3,   4,   4,   4,   4,   5,   5,   5,   5,
+     5,   5,   5,   5,   5,   4,   4,   4,   4,   3,   3,   2,   2,   1,   1,   0,
+     0,   0,  -1,  -1,  -2,  -2,  -3,  -3,  -4,  -4,  -4,  -4,  -5,  -5,  -5,  -5,
+    -5,  -5,  -5,  -5,  -5,  -4,  -4,  -4,  -4,  -3,  -3,  -2,  -2,  -1,  -1,   0,
+     0,   1,   1,   2,   3,   3,   4,   4,   5,   5,   6,   6,   6,   7,   7,   7,
+     7,   7,   7,   7,   6,   6,   6,   5,   5,   4,   4,   3,   3,   2,   1,   1,
+     0,  -1,  -1,  -2,  -3,  -3,  -4,  -4,  -5,  -5,  -6,  -6,  -6,  -7,  -7,  -7,
+    -7,  -7,  -7,  -7,  -6,  -6,  -6,  -5,  -5,  -4,  -4,  -3,  -3,  -2,  -1,  -1,
+     0,   1,   2,   3,   3,   4,   5,   6,   6,   7,   7,   8,   8,   9,   9,   9,
+     9,   9,   9,   9,   8,   8,   7,   7,   6,   6,   5,   4,   3,   3,   2,   1,
+     0,  -1,  -2,  -3,  -3,  -4,  -5,  -6,  -6,  -7,  -7,  -8,  -8,  -9,  -9,  -9,
+    -9,  -9,  -9,  -9,  -8,  -8,  -7,  -7,  -6,  -6,  -5,  -4,  -3,  -3,  -2,  -1,
+     0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   9,  10,  10,  11,  11,  11,
+    11,  11,  11,  11,  10,  10,   9,   9,   8,   7,   6,   5,   4,   3,   2,   1,
+     0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,  -8,  -9,  -9, -10, -10, -11, -11, -11,
+   -11, -11, -11, -11, -10, -10,  -9,  -9,  -8,  -7,  -6,  -5,  -4,  -3,  -2,  -1,
+     0,   1,   3,   4,   5,   6,   7,   8,   9,  10,  11,  11,  12,  12,  13,  13,
+    13,  13,  13,  12,  12,  11,  11,  10,   9,   8,   7,   6,   5,   4,   3,   1,
+     0,  -1,  -3,  -4,  -5,  -6,  -7,  -8,  -9, -10, -11, -11, -12, -12, -13, -13,
+   -13, -13, -13, -12, -12, -11, -11, -10,  -9,  -8,  -7,  -6,  -5,  -4,  -3,  -1,
+     0,   1,   3,   4,   6,   7,   8,  10,  11,  12,  12,  13,  14,  14,  15,  15,
+    15,  15,  15,  14,  14,  13,  12,  12,  11,  10,   8,   7,   6,   4,   3,   1,
+     0,  -1,  -3,  -4,  -6,  -7,  -8, -10, -11, -12, -12, -13, -14, -14, -15, -15,
+   -15, -15, -15, -14, -14, -13, -12, -12, -11, -10,  -8,  -7,  -6,  -4,  -3,  -1,
+     0,   2,   3,   5,   7,   8,   9,  11,  12,  13,  14,  15,  16,  16,  17,  17,
+    17,  17,  17,  16,  16,  15,  14,  13,  12,  11,   9,   8,   7,   5,   3,   2,
+     0,  -2,  -3,  -5,  -7,  -8,  -9, -11, -12, -13, -14, -15, -16, -16, -17, -17,
+   -17, -17, -17, -16, -16, -15, -14, -13, -12, -11,  -9,  -8,  -7,  -5,  -3,  -2,
+     0,   2,   4,   6,   7,   9,  11,  12,  13,  15,  16,  17,  18,  18,  19,  19,
+    19,  19,  19,  18,  18,  17,  16,  15,  13,  12,  11,   9,   7,   6,   4,   2,
+     0,  -2,  -4,  -6,  -7,  -9, -11, -12, -13, -15, -16, -17, -18, -18, -19, -19,
+   -19, -19, -19, -18, -18, -17, -16, -15, -13, -12, -11,  -9,  -7,  -6,  -4,  -2,
+     0,   2,   4,   6,   8,  10,  12,  13,  15,  16,  17,  19,  19,  20,  21,  21,
+    21,  21,  21,  20,  19,  19,  17,  16,  15,  13,  12,  10,   8,   6,   4,   2,
+     0,  -2,  -4,  -6,  -8, -10, -12, -13, -15, -16, -17, -19, -19, -20, -21, -21,
+   -21, -21, -21, -20, -19, -19, -17, -16, -15, -13, -12, -10,  -8,  -6,  -4,  -2,
+     0,   2,   4,   7,   9,  11,  13,  15,  16,  18,  19,  20,  21,  22,  23,  23,
+    23,  23,  23,  22,  21,  20,  19,  18,  16,  15,  13,  11,   9,   7,   4,   2,
+     0,  -2,  -4,  -7,  -9, -11, -13, -15, -16, -18, -19, -20, -21, -22, -23, -23,
+   -23, -23, -23, -22, -21, -20, -19, -18, -16, -15, -13, -11,  -9,  -7,  -4,  -2,
+     0,   2,   5,   7,  10,  12,  14,  16,  18,  19,  21,  22,  23,  24,  25,  25,
+    25,  25,  25,  24,  23,  22,  21,  19,  18,  16,  14,  12,  10,   7,   5,   2,
+     0,  -2,  -5,  -7, -10, -12, -14, -16, -18, -19, -21, -22, -23, -24, -25, -25,
+   -25, -25, -25, -24, -23, -22, -21, -19, -18, -16, -14, -12, -10,  -7,  -5,  -2,
+     0,   3,   5,   8,  10,  13,  15,  17,  19,  21,  22,  24,  25,  26,  26,  27,
+    27,  27,  26,  26,  25,  24,  22,  21,  19,  17,  15,  13,  10,   8,   5,   3,
+     0,  -3,  -5,  -8, -10, -13, -15, -17, -19, -21, -22, -24, -25, -26, -26, -27,
+   -27, -27, -26, -26, -25, -24, -22, -21, -19, -17, -15, -13, -10,  -8,  -5,  -3,
+     0,   3,   6,   8,  11,  14,  16,  18,  21,  22,  24,  26,  27,  28,  28,  29,
+    29,  29,  28,  28,  27,  26,  24,  22,  21,  18,  16,  14,  11,   8,   6,   3,
+     0,  -3,  -6,  -8, -11, -14, -16, -18, -21, -22, -24, -26, -27, -28, -28, -29,
+   -29, -29, -28, -28, -27, -26, -24, -22, -21, -18, -16, -14, -11,  -8,  -6,  -3
   ];
 }

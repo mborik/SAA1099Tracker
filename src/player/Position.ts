@@ -27,8 +27,8 @@ import PlayerRuntime from './PlayerRuntime';
 
 /** Position channel definition interface */
 interface Channel {
-	pattern: number;
-	pitch: number;
+  pattern: number;
+  pitch: number;
 }
 
 /**
@@ -40,7 +40,7 @@ export default class Position {
   /** Number of interupts which takes every line in tracklist */
   frames: number[] = [];
   /** Initial runtime parameters when player entering into this position */
-  initParams: PlayerRuntime | null = null;
+  initParams: Maybe<PlayerRuntime> = null;
 
   constructor(public length: number, public speed: number = 6) {
     this.ch = [...Array(6)].map(() => ({

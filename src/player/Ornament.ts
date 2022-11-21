@@ -31,10 +31,10 @@ export default class Ornament {
   end: number = 0;
 
   /**
-	 * Export ornament data to array of readable strings.
-	 * We going backward from the end of ornament and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
+   * Export ornament data to array of readable strings.
+   * We going backward from the end of ornament and unshifting array because of pack
+   * reasons when "pack" param is true and then only meaningful data will be stored.
+   */
   export(pack: boolean = true): string[] {
     const arr: string[] = [];
 
@@ -52,8 +52,8 @@ export default class Ornament {
   }
 
   /**
-	 * Parse ornament data from array of signed values stored in simple string.
-	 */
+   * Parse ornament data from array of signed values stored in simple string.
+   */
   parse(arr: string[]) {
     for (let i = 0; i < 256; i++) {
       this.data[i] = parseInt(arr[i], 10) || 0;

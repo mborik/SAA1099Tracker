@@ -26,11 +26,11 @@ import { Volume } from './globals';
 
 /** Sample data interface */
 interface SampleData {
-	volume: Volume;
-	enable_freq: boolean;
-	enable_noise: boolean;
-	noise_value: number;
-	shift: number;
+  volume: Volume;
+  enable_freq: boolean;
+  enable_noise: boolean;
+  noise_value: number;
+  shift: number;
 }
 
 /** Single sample definition */
@@ -52,10 +52,10 @@ export default class Sample {
   }
 
   /**
-	 * Export sample data to array of readable strings.
-	 * We going backward from the end of sample and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
+   * Export sample data to array of readable strings.
+   * We going backward from the end of sample and unshifting array because of pack
+   * reasons when "pack" param is true and then only meaningful data will be stored.
+   */
   export(pack: boolean = true): string[] {
     const arr: string[] = [];
 
@@ -79,8 +79,8 @@ export default class Sample {
   }
 
   /**
-	 * Parse sample data from array of buch of hex values stored in simple string.
-	 */
+   * Parse sample data from array of buch of hex values stored in simple string.
+   */
   parse(arr: string[]) {
     this.data.forEach((o, i) => {
       const s = arr[i] || '';

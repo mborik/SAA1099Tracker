@@ -26,14 +26,14 @@ import { MAX_PATTERN_LEN, Volume } from './globals';
 
 /** Channel-pattern line interface */
 interface PatternLine {
-	tone: number;
-	release: boolean;
-	smp: number;
-	orn: number;
-	orn_release: boolean;
-	volume: Volume;
-	cmd: number;
-	cmd_data: number;
+  tone: number;
+  release: boolean;
+  smp: number;
+  orn: number;
+  orn_release: boolean;
+  volume: Volume;
+  cmd: number;
+  cmd_data: number;
 }
 
 /** Definition of channel-pattern containing its pattern-lines */
@@ -54,10 +54,10 @@ export default class Pattern {
   }
 
   /**
-	 * Export pattern data to array of readable strings.
-	 * We going backward from the end of pattern and unshifting array because of pack
-	 * reasons when "pack" param is true and then only meaningful data will be stored.
-	 */
+   * Export pattern data to array of readable strings.
+   * We going backward from the end of pattern and unshifting array because of pack
+   * reasons when "pack" param is true and then only meaningful data will be stored.
+   */
   export(start: number = 0, length: number = MAX_PATTERN_LEN, pack: boolean = true): string[] {
     const arr: string[] = [];
 
@@ -83,8 +83,8 @@ export default class Pattern {
   }
 
   /**
-	 * Parse pattern data from array of strings with values like in tracklist.
-	 */
+   * Parse pattern data from array of strings with values like in tracklist.
+   */
   parse(arr: string[], start: number = 0, length: number = MAX_PATTERN_LEN) {
     let i: number = start;
     const l = Math.min(MAX_PATTERN_LEN, start + length);
