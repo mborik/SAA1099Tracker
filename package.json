@@ -29,7 +29,7 @@
     "electron-window-state": "^5.0.3",
     "jquery": "~2.2.4",
     "lodash.pick": "^4.4.0",
-    "meow": "^3.7.0",
+    "meow": "^11.0.0",
     "pako": "^2.0.4",
     "typescript-debounce-decorator": "^0.0.18",
     "workbox-core": "^6.5.4",
