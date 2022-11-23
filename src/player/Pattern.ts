@@ -24,6 +24,13 @@
 import { toHex, toWidth } from '../commons/number';
 import { MAX_PATTERN_LEN, Volume } from './globals';
 
+/** Trackline data interface */
+interface TracklineData {
+  active: boolean;
+  tone: string;
+  column: string;
+}
+
 /** Channel-pattern line interface */
 interface PatternLine {
   tone: number;
@@ -34,14 +41,18 @@ interface PatternLine {
   volume: Volume;
   cmd: number;
   cmd_data: number;
+
+  get tracklist(): TracklineData;
 }
 
 /** Definition of channel-pattern containing its pattern-lines */
 export default class Pattern {
   data: PatternLine[];
+  tracklist: TracklineData[];
 
   constructor(public end: number = 0) {
-    this.data = [...Array(MAX_PATTERN_LEN)].map(() => ({
+    const currentPattern = this;
+    this.data = [...Array(MAX_PATTERN_LEN)].map((_, index) => ({
       tone: 0,
       release: false,
       smp: 0,
@@ -49,8 +60,58 @@ export default class Pattern {
       orn_release: false,
       volume: new Volume(),
       cmd: 0,
-      cmd_data: 0
-    } as PatternLine));
+      cmd_data: 0,
+
+      get tracklist() {
+        return currentPattern.tracklist[index];
+      }
+    }) as PatternLine);
+
+    this.tracklist = [...Array(MAX_PATTERN_LEN)].map(() => ({
+      active: false,
+      tone: '---',
+      column: Array(7).fill('\x7f').join('')
+    }));
+  }
+
+  /**
+   * Go over pattern and generate textual representation of pattern data for render.
+   */
+  updateTracklist(start: number = 0, length: number = MAX_PATTERN_LEN) {
+    const player = (window as any).Tracker.player;
+    const l = Math.min(MAX_PATTERN_LEN, start + length);
+    let active = true;
+
+    for (let i = start, line = i, j = 0; i < l; i++, j++, line++) {
+      const dat = this.data[line];
+      const trk = this.tracklist[i];
+
+      trk.active = active;
+
+      if (line >= this.end) {
+        trk.tone = '---';
+        trk.column = Array(7).fill('\x7f').join('');
+        continue;
+      }
+
+      trk.tone = dat.release ? 'R--' : dat.tone ? player.tones[dat.tone].txt : '---';
+      trk.column = `${
+        dat.smp ? dat.smp.toString(36) : '\x7f'
+      }${
+        dat.orn_release ? 'X' : dat.orn ? dat.orn.toString(16) : '\x7f'
+      }${
+        dat.volume.byte ? toHex(dat.volume.byte, 2) : '\x7f\x7f'
+      }${
+        (dat.cmd || dat.cmd_data) ? dat.cmd.toString(16) : '\x7f'
+      }${
+        (dat.cmd || dat.cmd_data) ? toHex(dat.cmd_data, 2) : '\x7f\x7f'
+      }`;
+
+      if (dat.cmd === 0xB && dat.cmd_data <= line) {
+        line = dat.cmd_data - 1;
+        active = false;
+      }
+    }
   }
 
   /**
@@ -70,13 +131,17 @@ export default class Pattern {
         continue;
       }
 
-      arr.unshift(s.concat(
-        o.smp.toString(32),
-        k.toString(36),
-        toHex(o.volume.byte, 2),
-        toHex(o.cmd, 1),
+      arr.unshift(`${s}${
+        o.smp.toString(32)
+      }${
+        k.toString(36)
+      }${
+        toHex(o.volume.byte, 2)
+      }${
+        toHex(o.cmd, 1)
+      }${
         toHex(o.cmd_data, 2)
-      ).toUpperCase());
+      }`.toUpperCase());
     }
 
     return arr;
@@ -86,10 +151,9 @@ export default class Pattern {
    * Parse pattern data from array of strings with values like in tracklist.
    */
   parse(arr: string[], start: number = 0, length: number = MAX_PATTERN_LEN) {
-    let i: number = start;
     const l = Math.min(MAX_PATTERN_LEN, start + length);
 
-    for (let j = 0; i < l; i++, j++) {
+    for (let i = start, j = 0; i < l; i++, j++) {
       const s = arr[j] || '000000000';
       const o = this.data[i];
 
@@ -104,5 +168,7 @@ export default class Pattern {
       o.cmd = parseInt(s[6], 16) || 0;
       o.cmd_data = parseInt(s.substr(7), 16) || 0;
     }
+
+    this.updateTracklist(start, length);
   }
 }

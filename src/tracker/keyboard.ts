@@ -316,6 +316,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
             }
           }
 
+          pp.updateTracklist();
           app.updateTracklist();
           app.file.modified = true;
         }
@@ -476,18 +477,19 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           let line = sel.len ? sel.line : p.currentLine;
 
           const end = line + sel.len;
-          const pos = p.position[p.currentPosition] || p.nullPosition;
-          const pp = p.pattern[pos.ch[ch].pattern];
+          const pp = p.position[p.currentPosition] || p.nullPosition;
+          const pt = p.pattern[pp.ch[ch].pattern];
 
           for (--plus; line <= end; line++) {
-            if (line >= pp.end) {
+            if (line >= pt.end) {
               break;
             }
-            else if (pp.data[line].tone) {
-              pp.data[line].tone = Math.min(Math.max(pp.data[line].tone + plus, 1), 96);
+            else if (pt.data[line].tone) {
+              pt.data[line].tone = Math.min(Math.max(pt.data[line].tone + plus, 1), 96);
             }
           }
 
+          pt.updateTracklist();
           app.updateTracklist();
           app.file.modified = true;
         }
@@ -505,7 +507,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
       const pt = app.player.pattern[cp];
       const pl = pt.data[cl];
 
-      if (cl < pt.end) {
+      if (cl < pt.end && pl.tracklist.active) {
         switch (key) {
           case 8:
             return function() {
@@ -530,6 +532,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
               data[A].release = data[A].orn_release = false;
               data[A].cmd = data[A].cmd_data = data[A].volume.byte = 0;
 
+              pt.updateTracklist();
               app.updateTracklist();
               app.file.modified = true;
             };
@@ -557,6 +560,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
               data[B].release = data[B].orn_release = false;
               data[B].cmd = data[B].cmd_data = data[B].volume.byte = 0;
 
+              pt.updateTracklist();
               app.updateTracklist();
               app.file.modified = true;
             };
@@ -592,6 +596,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   break;
               }
 
+              pt.updateTracklist();
               app.updateEditorCombo();
               app.file.modified = true;
             };
@@ -627,6 +632,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   pl.orn_release = false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // SAMPLE column
@@ -649,6 +655,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // ORNAMENT column
@@ -681,6 +688,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // ATTENUATION 1 column
@@ -703,6 +711,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // ATTENUATION 2 column
@@ -725,6 +734,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // COMMAND column
@@ -752,6 +762,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // COMMAND DATA 1 column
@@ -778,6 +789,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   app.player.countPositionFrames(app.player.currentPosition);
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // COMMAND DATA 2 column
@@ -804,6 +816,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   app.player.countPositionFrames(app.player.currentPosition);
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               }
             } as HotkeyMapColumnHandler;

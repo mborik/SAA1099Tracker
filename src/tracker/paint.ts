@@ -29,6 +29,13 @@ import SmpOrnEditor from './smporn';
 import { fontWidth, TracklistCanvasData, TracklistOffsets, TracklistSelection } from './tracklist';
 import Tracker from '.';
 
+
+
+interface TracklistBackupPosLine {
+  pp: Position;
+  lineOffset: number;
+}
+
 /**
  * This method initialize pixel font pre-colored template canvas. Color combinations:
  *   0 - [ fg: BLACK, bg: WHITE ]
@@ -100,11 +107,6 @@ Tracker.prototype.initPixelFont = function(font: HTMLImageElement): void {
   copy = null;
 };
 //---------------------------------------------------------------------------------------
-interface TracklistBackupPosLine {
-  pp: Position;
-  line: number;
-}
-//---------------------------------------------------------------------------------------
 Tracker.prototype.updateTracklist = function(update?: boolean): void {
   const o: TracklistCanvasData = this.tracklist.canvasData;
   const sel: TracklistSelection = this.tracklist.selection;
@@ -125,7 +127,8 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
   const half = lines >> 1;
 
   let buf: string;
-  const charFromBuf = ((i: number = 0) => (buf.charCodeAt(i) - 32) * fontWidth);
+  const charFromBuf = ((i: number = 0, custom?: string) =>
+    ((custom ?? buf).charCodeAt(i) - 32) * fontWidth);
 
   if (update) {
     o.center = ((w - o.lineWidth) >> 1);
@@ -170,7 +173,7 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
         continue;
       }
 
-      backup = { pp: pp, line: line };
+      backup = { pp: pp, lineOffset: prevPos.length };
       line += prevPos.length;
       pp = prevPos;
     }
@@ -185,7 +188,7 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
         continue;
       }
 
-      backup = { pp: pp, line: line };
+      backup = { pp: pp, lineOffset: -pp.length };
       line -= pp.length;
       pp = nextPos;
     }
@@ -199,48 +202,51 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
     ctx.drawImage(font, charFromBuf(1), ccb, 5, 5, o.center, ypad, 5, 5);
     ctx.drawImage(font, charFromBuf(2), ccb, 5, 5, o.center + fontWidth, ypad, 5, 5);
 
-    for (let chn = 0; chn < 6; chn++) {
-      const pt = player.pattern[pp.ch[chn].pattern];
+    for (let channel = 0; channel < 6; channel++) {
+      const pt = player.pattern[pp.ch[channel].pattern];
       const dat = pt.data[line];
 
-      for (let col = 0; col < 8; col++) {
+      for (let column = 0; column < 8; column++) {
         // x = center + (4 * fontWidth)
         //   + channel * ((12 columns + 2 padding) * fontWidth)
         //   + column offset premulitplied by fontWidth
-        let x = o.trkOffset + (chn * o.chnWidth) + o.columns[col];
+        let x = o.trkOffset + (channel * o.chnWidth) + o.columns[column];
 
         if (update) {
-          offs.x[chn][col] = x;
+          offs.x[channel][column] = x;
 
           // overlapping area between channels
-          if (!col && chn) {
-            offs.x[chn - 1][8] = x;
+          if (!column && channel) {
+            offs.x[channel - 1][8] = x;
           }
         }
 
         let cc = ccb; // per column adjusted color combination
-        if (!backup &&
+        if (
+          !backup &&
           !(i === half && this.modeEdit) &&
-          sel.len && sel.channel === chn &&
+          sel.len && sel.channel === channel &&
           line >= sel.line &&
-          line <= (sel.line + sel.len)) {
-
-          if (!col) {
+          line <= (sel.line + sel.len)
+        ) {
+          if (!column) {
             ctx.fillStyle = '#000';
             ctx.fillRect(x - 3, y, o.selWidth, h);
           }
 
           cc = 30; // col.combination: 6:WHITE|BLACK
         }
-        else if (i === half && this.modeEdit &&
-            this.modeEditChannel === chn &&
-            this.modeEditColumn === col) {
-
+        else if (
+          i === half &&
+          this.modeEdit &&
+          this.modeEditChannel === channel &&
+          this.modeEditColumn === column
+        ) {
           // value for statusbar
-          status = (col >= 5) ? dat.cmd : 0;
+          status = (column >= 5) ? dat.cmd : 0;
 
           ctx.fillStyle = '#800';
-          if (col) {
+          if (column) {
             ctx.fillRect(x - 1, y, 7, h);
           }
           else {
@@ -250,82 +256,27 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
           cc = 40; // col.combination: 6:WHITE|DARKRED
         }
 
-        if (line >= pt.end) {
+        if (line >= pt.end || !dat.tracklist.active) {
           cc += 5; // col.combination to GRAY foreground
         }
 
-        if (col) {
-          let value: number = -1;
-          switch (col) {
-            case 1:
-              if (dat.smp) {
-                value = dat.smp;
-              }
-              break;
-
-            case 2:
-              if (dat.orn_release) {
-                value = 33; // ('X' - 'A') + 10;
-              }
-              else if (dat.orn) {
-                value = dat.orn;
-              }
-              break;
-
-            case 3:
-              if (dat.volume.byte) {
-                value = dat.volume.L;
-              }
-              break;
-
-            case 4:
-              if (dat.volume.byte) {
-                value = dat.volume.R;
-              }
-              break;
-
-            case 5:
-              if (dat.cmd || dat.cmd_data) {
-                value = dat.cmd;
-              }
-              break;
-
-            case 6:
-              if (dat.cmd || dat.cmd_data) {
-                value = ((dat.cmd_data & 0xf0) >> 4);
-              }
-              break;
-
-            case 7:
-              if (dat.cmd || dat.cmd_data) {
-                value = (dat.cmd_data & 0x0f);
-              }
-              break;
-          }
-
-          buf = (value < 0) ? '\x7f' : value.toString(36);
-          ctx.drawImage(font, charFromBuf(), cc, 5, 5, x, ypad, 5, 5);
+        if (column) {
+          ctx.drawImage(font, charFromBuf(column - 1), cc, 5, 5, x, ypad, 5, 5);
         }
         else {
-          buf = '---';
-          if (dat.release) {
-            buf = 'R--';
-          }
-          else if (dat.tone) {
-            buf = player.tones[dat.tone].txt;
-          }
-
           for (let k = 0; k < 3; k++) {
-            ctx.drawImage(font, charFromBuf(k), cc, 5, 5, x, ypad, 5, 5);
+            ctx.drawImage(font, charFromBuf(k, dat.tracklist.tone), cc, 5, 5, x, ypad, 5, 5);
             x += fontWidth;
           }
+
+          buf = dat.tracklist.column;
         }
       }
     }
 
     if (backup) {
       pp = backup.pp;
-      line = backup.line;
+      line -= backup.lineOffset;
       backup = undefined;
 
       ctx.save();

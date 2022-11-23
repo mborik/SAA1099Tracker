@@ -284,6 +284,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         }
 
         pp.end = +(el.val());
+        pp.updateTracklist();
         app.player.countPositionFrames();
         app.updatePanelPattern();
         app.updateTracklist();

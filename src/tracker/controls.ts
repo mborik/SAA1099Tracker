@@ -669,7 +669,7 @@ Tracker.prototype.onCmdPatClean = function() {
 
   const app = this;
   const keys = this.globalKeyState;
-  const pt = this.player.pattern[this.workingPattern].data;
+  const pt = this.player.pattern[this.workingPattern];
 
   keys.inDialog = true;
   $('#dialog').confirm({
@@ -683,7 +683,7 @@ Tracker.prototype.onCmdPatClean = function() {
         return;
       }
 
-      pt.forEach(line => {
+      pt.data.forEach(line => {
         line.tone = 0;
         line.release = false;
         line.smp = 0;
@@ -694,6 +694,7 @@ Tracker.prototype.onCmdPatClean = function() {
         line.cmd_data = 0;
       });
 
+      pt.updateTracklist();
       app.updatePanelInfo();
       app.updateTracklist();
       app.file.modified = true;
