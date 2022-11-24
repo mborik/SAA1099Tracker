@@ -50,6 +50,8 @@ export default class Player {
   public currentLine: number = 0;
   public currentTick: number = 0;
 
+  private channelPatternRuntimeLine: number[] = [0, 0, 0, 0, 0, 0];
+
   public mode: number = 0;
   public mixer: Mixer = new Mixer();
 
@@ -113,6 +115,8 @@ export default class Player {
     this.currentSpeed = 6;
     this.currentLine = 0;
     this.currentTick = 0;
+
+    this.channelPatternRuntimeLine.fill(0);
 
     if (reinit) {
       this.rtSong = null;
@@ -250,7 +254,8 @@ export default class Player {
         pos: this.currentPosition,
         line: this.currentLine,
         tick: this.currentTick,
-        speed: this.currentSpeed
+        speed: this.currentSpeed,
+        runtimeLine: [...this.channelPatternRuntimeLine],
       };
 
       this.currentPosition = pos;
@@ -259,6 +264,8 @@ export default class Player {
     this.currentLine = 0;
     this.currentTick = 0;
     this.currentSpeed = ps.speed;
+
+    this.channelPatternRuntimeLine.fill(0);
 
     if (ps.initParams) {
       rt.replace(ps.initParams);
@@ -287,6 +294,8 @@ export default class Player {
       this.currentTick = backup.tick;
       this.currentSpeed = backup.speed;
       this.currentPosition = backup.pos;
+
+      this.channelPatternRuntimeLine = backup.runtimeLine;
     }
     else {
       this.currentTick++;
@@ -305,6 +314,12 @@ export default class Player {
     }
     else {
       throw new Error('PlayerRuntime missing!');
+    }
+  }
+
+  private channelPatternRuntimeLineAdd(add: number) {
+    for (let i = 0; i < this.channelPatternRuntimeLine.length; i++) {
+      this.channelPatternRuntimeLine[i] += add;
     }
   }
 
@@ -368,7 +383,7 @@ export default class Player {
             }
             break;
 
-            // glissando to given note
+          // glissando to given note
           case 0x3:
             if (!pp.commandPhase && pp.commandParam) {
               pp.commandPhase = paramH;
@@ -393,7 +408,7 @@ export default class Player {
             }
             break;
 
-            // vibrato
+          // vibrato
           case 0x4:
             if (pp.commandParam) {
               pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
@@ -405,7 +420,7 @@ export default class Player {
 
             break;
 
-            // tremolo
+          // tremolo
           case 0x5:
             if (pp.commandParam) {
               pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
@@ -413,7 +428,7 @@ export default class Player {
             }
             break;
 
-            // delay ornament by ticks
+          // delay ornament by ticks
           case 0x6:
             if (pp.commandParam) {
               pp.commandPhase = pp.commandParam;
@@ -430,7 +445,7 @@ export default class Player {
             }
             break;
 
-            // ornament offset
+          // ornament offset
           case 0x7:
             if (pp.commandParam > 0 && pp.commandParam < pp.ornament.end) {
               height = 0;
@@ -439,7 +454,7 @@ export default class Player {
             cmd = -1;
             break;
 
-            // sample offset
+          // sample offset
           case 0x9:
             if (pp.commandParam > 0 &&
               (pp.sample.releasable || pp.commandParam < pp.sample.end)) {
@@ -451,7 +466,7 @@ export default class Player {
             cmd = -1;
             break;
 
-            // volume slide
+          // volume slide
           case 0xA:
             if (!pp.commandPhase && pp.commandParam) {
               pp.commandPhase = paramH;
@@ -461,12 +476,7 @@ export default class Player {
             }
             break;
 
-            // break current pattern and loop from line
-          case 0xB:
-            // TODO!
-            break;
-
-            // special command
+          // special command
           case 0xC:
             if (!pp.commandParam) {
               pp.commandPhase = 0;
@@ -494,7 +504,7 @@ export default class Player {
             }
             break;
 
-            // soundchip control
+          // soundchip control
           case 0xE:
             if (paramH === 0x2) {
               pp.commandParam &= 7;
@@ -684,6 +694,8 @@ export default class Player {
     if (next === undefined || next === true) {
       this.currentLine++;
       this.changedLine = true;
+
+      this.channelPatternRuntimeLineAdd(1);
     }
 
     let p = this.position[this.currentPosition];
@@ -697,20 +709,27 @@ export default class Player {
           }
           else {
             this.currentLine--;
+            this.channelPatternRuntimeLineAdd(-1);
+
             this.stopChannel();
             return false;
           }
         }
 
         this.currentLine = 0;
+        this.channelPatternRuntimeLine.fill(0);
+
         this.changedPosition = true;
         p = this.position[this.currentPosition];
       }
       else if (this.loopMode) {
         this.currentLine = 0;
+        this.channelPatternRuntimeLine.fill(0);
       }
       else {
         this.currentLine--;
+        this.channelPatternRuntimeLineAdd(-1);
+
         this.stopChannel();
         return false;
       }
@@ -726,8 +745,9 @@ export default class Player {
       const pc = p.ch[chn];
       const pt_number = (pc.pattern < this.pattern.length) ? pc.pattern : 0;
       const pt = this.pattern[pt_number];
+      const cl = this.channelPatternRuntimeLine[chn];
 
-      if (this.currentLine >= pt.end) {
+      if (cl >= pt.end) {
         continue;
       }
 
@@ -735,9 +755,10 @@ export default class Player {
       pp.globalPitch = p.ch[chn].pitch;
       pp.playing = true;
 
-      const pl = pt.data[this.currentLine];
+      const pl = pt.data[cl];
       if (pl.cmd) {
         if (pl.cmd === 0xF && pl.cmd_data > 0) {
+          // speed (init)
           this.currentSpeed = pl.cmd_data;
           if (this.currentSpeed >= 0x20) {
             const sH = (this.currentSpeed & 0xF0) >> 4;
@@ -753,6 +774,11 @@ export default class Player {
             }
           }
 
+          pp.command = pp.commandParam = pp.commandPhase = 0;
+        }
+        else if (pl.cmd === 0xB && pl.cmd_data <= cl) {
+          // break current pattern and loop from line
+          this.channelPatternRuntimeLine[chn] = pl.cmd_data - 1;
           pp.command = pp.commandParam = pp.commandPhase = 0;
         }
         else {
@@ -772,6 +798,7 @@ export default class Player {
         pp.attenuation.byte = ~pl.volume.byte;
 
         if (pl.cmd === 0x5 || pl.cmd === 0xA) {
+          // tremolo and volume slide restart
           pp.commandValue2 = 0;
         }
       }
@@ -787,6 +814,7 @@ export default class Player {
         continue;
       }
       else if (pl.tone && pl.cmd === 0x3 && pl.cmd_data) {
+        // glisando to given note (init)
         if (pp.commandValue1) {
           pp.tone = pp.commandValue1;
           pp.slideShift -= pp.commandValue2;
@@ -875,6 +903,7 @@ export default class Player {
     }
     if (resetLine) {
       this.currentLine = 0;
+      this.channelPatternRuntimeLine.fill(0);
     }
 
     if (this.currentPosition >= this.position.length) {
