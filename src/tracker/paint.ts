@@ -1,5 +1,5 @@
 /**
- * SAA1099Tracker: Canvas Initializing and drawing function prototypes.
+ * SAA1099Tracker: Canvas initializing and drawing function prototypes.
  * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining

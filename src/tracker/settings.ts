@@ -1,5 +1,5 @@
 /**
- * SAA1099Tracker: Tracker file dialog sub-class.
+ * SAA1099Tracker: Tracker settings dialog sub-class.
  * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining

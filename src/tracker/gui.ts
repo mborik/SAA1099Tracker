@@ -1,5 +1,5 @@
 /**
- * SAA1099Tracker: Template loader and element populator with jQuery
+ * SAA1099Tracker: User interface initializer and element populator
  * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining

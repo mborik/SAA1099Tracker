@@ -1,5 +1,5 @@
 /**
- * SAA1099Tracker: Mouse events handler prototype.
+ * SAA1099Tracker: Keyboard events handler prototype.
  * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining

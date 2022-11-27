@@ -1,5 +1,5 @@
 /**
- * SAA1099Tracker: File API helper functions for manupulation with native files form user's disk.
+ * SAA1099Tracker: File API helper functions for manupulation with uploads & downloads.
  * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
