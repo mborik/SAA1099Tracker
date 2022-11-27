@@ -40,7 +40,7 @@ export default class Position {
   /** Number of interupts which takes every line in tracklist */
   frames: number[] = [];
   /** Initial runtime parameters when player entering into this position */
-  initParams: Maybe<PlayerRuntime> = null;
+  initParams: Nullable<PlayerRuntime> = null;
 
   constructor(public length: number, public speed: number = 6) {
     this.ch = [...Array(6)].map(() => ({
