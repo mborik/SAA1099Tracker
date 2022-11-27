@@ -473,9 +473,10 @@ export default class Player {
 
           // sample offset
           case 0x9:
-            if (pp.cmdValue > 0 &&
-              (pp.smp.releasable || pp.cmdValue < pp.smp.end)) {
-
+            if (
+              pp.cmdValue > 0 &&
+              (pp.smp.releasable || pp.cmdValue < pp.smp.end)
+            ) {
               pp.smpCursor = pp.cmdValue;
               samp = pp.smp.data[pp.smpCursor];
               noise = samp.noise_value | (+samp.enable_noise << 2);
@@ -1210,7 +1211,7 @@ export default class Player {
       return false;
     }
 
-    const prev = this.positions[pos - 1] || this.nullPosition;
+    const prev = this.positions[pos - 1] ?? this.nullPosition;
     const current = this.positions[pos];
 
     if (current && current.initParams && prev.initParams) {

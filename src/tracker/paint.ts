@@ -116,7 +116,7 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
 
   const player: Player = this.player;
   const pos = player.position;
-  let pp = player.positions[pos] || player.nullPosition;
+  let pp = player.positions[pos] ?? player.nullPosition;
 
   const hexa: boolean = this.settings.hexTracklines;
   const triDigitLine = (!hexa && pp.length > 100);

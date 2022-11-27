@@ -716,7 +716,7 @@ Tracker.prototype.onCmdPosCreate = function() {
 
   const p = this.player;
   const total = p.positions.length;
-  const current = p.positions[p.position] || p.nullPosition;
+  const current = p.positions[p.position] ?? p.nullPosition;
 
   p.addNewPosition(current.length, current.speed);
   p.position = total;
@@ -738,7 +738,7 @@ Tracker.prototype.onCmdPosInsert = function() {
 
   let p = this.player, chn;
   const i = p.position;
-  const current = p.positions[i] || p.nullPosition;
+  const current = p.positions[i] ?? p.nullPosition;
   const pt = p.addNewPosition(current.length, current.speed, false);
 
   for (chn = 0; chn < 6; chn++) {

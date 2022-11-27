@@ -36,7 +36,7 @@ export default class Manager {
     const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
     const line = sel.len ? sel.line : p.line;
     const length = sel.len ? (sel.len + 1) : undefined;
-    const pos = p.positions[p.position] || p.nullPosition;
+    const pos = p.positions[p.position] ?? p.nullPosition;
     const chn = pos.ch[ch];
     const patt = chn.pattern;
 

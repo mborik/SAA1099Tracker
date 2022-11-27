@@ -399,7 +399,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const el = e.currentTarget;
         const pp = app.player.position;
         const chn = parseInt(el.id.substr(-1)) - 1;
-        const pos = app.player.positions[pp] || app.player.nullPosition;
+        const pos = app.player.positions[pp] ?? app.player.nullPosition;
         const val = +el.value;
         const prev = pos.ch[chn].pattern;
 

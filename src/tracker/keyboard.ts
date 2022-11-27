@@ -230,7 +230,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
         40: function() {
           logHotkey('Down - Cursor movement forward to every 16th line (signature)');
 
-          const pp = app.player.positions[app.player.position] || app.player.nullPosition;
+          const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
           const pl = pp.length;
 
           let cl = app.player.line;
@@ -297,7 +297,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           let line = sel.len ? sel.line : p.line;
 
           const end = line + sel.len;
-          const pos = p.positions[p.position] || p.nullPosition;
+          const pos = p.positions[p.position] ?? p.nullPosition;
           const pp = p.patterns[pos.ch[ch].pattern];
 
           let t;
@@ -477,7 +477,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           let line = sel.len ? sel.line : p.line;
 
           const end = line + sel.len;
-          const pp = p.positions[p.position] || p.nullPosition;
+          const pp = p.positions[p.position] ?? p.nullPosition;
           const pt = p.patterns[pp.ch[ch].pattern];
 
           for (--plus; line <= end; line++) {
@@ -502,7 +502,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
       }
 
       const cl = app.player.line;
-      const pp = app.player.positions[app.player.position] || app.player.nullPosition;
+      const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
       const cp = pp.ch[app.modeEditChannel].pattern;
       const pt = app.player.patterns[cp];
       const pl = pt.data[cl];
