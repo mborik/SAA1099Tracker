@@ -54,13 +54,13 @@ export default class SmpOrnEditor {
 
   initialized: boolean = false;
 
-  img: HTMLImageElement | null = null;
+  img: Nullable<HTMLImageElement> = null;
   amp: TrackerCanvasPair = { obj: null, ctx: null } as any;
   noise: TrackerCanvasPair = { obj: null, ctx: null } as any;
   range: TrackerCanvasPair = { obj: null, ctx: null } as any;
 
   smpeditShiftShown: boolean = false;
-  smpeditOffset: SampleEditorOffsets | null = null;
+  smpeditOffset: Nullable<SampleEditorOffsets> = null;
   smpeditScroll: number = 0;
   columnWidth: number = 0;
   halfing: number = 0;

@@ -101,8 +101,8 @@ export default class Tracklist {
 
   initialized: boolean = false;
 
-  obj: HTMLCanvasElement | null = null;
-  ctx: CanvasRenderingContext2D | null = null;
+  obj: Nullable<HTMLCanvasElement> = null;
+  ctx: Nullable<CanvasRenderingContext2D> = null;
 
   canvasData: TracklistCanvasData = {
     // offsets to column positions in channel data premultiplied by fontWidth:
@@ -199,7 +199,7 @@ export default class Tracklist {
     player.line = line;
   }
 
-  pointToTracklist(x: number, y: number): TracklistPosition | null {
+  pointToTracklist(x: number, y: number): Nullable<TracklistPosition> {
     const lines: number = this._parent.settings.tracklistLines;
     const tx: number = x / tracklistZoomFactor;
     const ty: number = y / tracklistZoomFactor;
