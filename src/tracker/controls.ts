@@ -46,6 +46,9 @@ Tracker.prototype.updatePanels = function() {
 Tracker.prototype.updateEditorCombo = function(step) {
   if (step === undefined) {
     this.player.playLine();
+    AudioDriver.play();
+    SyncTimer.resume();
+
     step = this.ctrlRowStep;
   }
 

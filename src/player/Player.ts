@@ -920,10 +920,14 @@ export default class Player {
       return false;
     }
 
+    if (!this.simulation(this.line)) {
+      const pos = this.positions[this.position];
+      this.rtSong.replace(pos.initParams);
+    }
+
+    this.tick = 0;
     this.mixer.index = 0;
     this.mode = PlayerMode.PM_LINE;
-    this.tick = 0;
-
     return this.prepareLine(false);
   }
 
