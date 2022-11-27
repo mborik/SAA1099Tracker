@@ -32,20 +32,20 @@ import Sample from './Sample';
 interface PlayerParams {
 	tone: number;
 	playing: boolean;
-	sample: Sample;
-	ornament: Ornament;
-	sample_cursor: number;
-	ornament_cursor: number;
-	attenuation: Volume;
-	slideShift: number;
-	globalPitch: number;
+	smp: Sample;
+	orn: Ornament;
+	smpCursor: number;
+	ornCursor: number;
+	attn: Volume;
+	shift: number;
+	chnPitch: number;
 	released: boolean;
-	command: number;
-	commandParam: number;
-	commandPhase: number;
-	commandValue1: number;
-	commandValue2: number;
-  commandDelaySample: Nullable<{
+	cmd: number;
+	cmdValue: number;
+	cmdPhase: number;
+	cmdParam1: number;
+	cmdParam2: number;
+  cmdDelay: Nullable<{
     phase: number;
     tone: number;
     smp: Sample;
@@ -75,20 +75,20 @@ export default class PlayerRuntime extends SAASoundRegData {
     this.params[chn] = {
       tone: 0,
       playing: false,
-      sample: this.player.sample[0],
-      ornament: this.player.ornament[0],
-      sample_cursor: 0,
-      ornament_cursor: 0,
-      attenuation: new Volume(),
-      slideShift: 0,
-      globalPitch: 0,
+      smp: this.player.samples[0],
+      orn: this.player.ornaments[0],
+      smpCursor: 0,
+      ornCursor: 0,
+      attn: new Volume(),
+      shift: 0,
+      chnPitch: 0,
       released: false,
-      command: 0,
-      commandParam: 0,
-      commandPhase: 0,
-      commandValue1: 0,
-      commandValue2: 0,
-      commandDelaySample: null
+      cmd: 0,
+      cmdValue: 0,
+      cmdPhase: 0,
+      cmdParam1: 0,
+      cmdParam2: 0,
+      cmdDelay: null
     };
   }
 

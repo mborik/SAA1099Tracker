@@ -62,10 +62,10 @@ Tracker.prototype.updatePanelInfo = function() {
   ] = $('#stInfoPanel u').toArray();
 
   const int = this.settings.audioInterrupt;
-  const curpos = this.player.currentPosition;
-  const len = this.player.position.length;
-  const pos = this.player.position[curpos];
-  const line = this.player.currentLine;
+  const curpos = this.player.position;
+  const len = this.player.positions.length;
+  const pos = this.player.positions[curpos];
+  const line = this.player.line;
   const even = line & -2;
   let total = 0;
   let current = 0;
@@ -75,7 +75,7 @@ Tracker.prototype.updatePanelInfo = function() {
   if (len) {
     bpm = (i / (pos.frames[even + 2] - pos.frames[even])) >> 1;
 
-    this.player.position.forEach((posi, i) => {
+    this.player.positions.forEach((posi, i) => {
       if (i === curpos) {
         current = total;
       }
@@ -92,7 +92,7 @@ Tracker.prototype.updatePanelInfo = function() {
     elTimeTotal.textContent = toTimeString(total / int);
   }
   else {
-    bpm = (i / this.player.currentSpeed) >> 2;
+    bpm = (i / this.player.speed) >> 2;
 
     elTimeCurrent.textContent = elTimeTotal.textContent = toTimeString(0);
     elTicksCurrent.textContent = elTicksTotal.textContent = '0';
@@ -106,7 +106,7 @@ Tracker.prototype.updatePanelPattern = function() {
   const a = [ '#scPattern', '#scPatternLen', '#btPatternDelete', '#btPatternClean', '#btPatternInfo'];
   const lastState = $(a[0]).prop('disabled');
   let pat = this.workingPattern;
-  let len = this.player.pattern.length;
+  let len = this.player.patterns.length;
   let min = 0, max = 0;
   let d = true;
 
@@ -126,7 +126,7 @@ Tracker.prototype.updatePanelPattern = function() {
 
   if (pat) {
     d = false;
-    $(a[1]).val(this.player.pattern[pat].end);
+    $(a[1]).val(this.player.patterns[pat].end);
   }
   else {
     $(a[1]).val(64);
@@ -149,8 +149,8 @@ Tracker.prototype.updatePanelPosition = function() {
   const a = [ '#scPosCurrent', '#scPosLength', '#scPosSpeed', '#txPosTotal', '#scPosRepeat' ];
   const lastState = $(a[0]).prop('disabled');
   let pos = this.player.nullPosition, buf;
-  const len = this.player.position.length;
-  const p = this.player.currentPosition;
+  const len = this.player.positions.length;
+  const p = this.player.position;
   let d = true;
 
   if (len) {
@@ -160,7 +160,7 @@ Tracker.prototype.updatePanelPosition = function() {
     $(a[3]).val(len);
     $(a[4]).val(this.player.repeatPosition + 1);
 
-    pos = this.player.position[p];
+    pos = this.player.positions[p];
   }
   else {
     $(a[0] + ',' + a[4]).val(0).trigger('touchspin.updatesettings', { min: 0, max: 0 });
@@ -295,7 +295,7 @@ Tracker.prototype.onCmdFileOpen = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileSave = function(as) {
-  if (!this.player.position.length) {
+  if (!this.player.positions.length) {
     return;
   }
 
@@ -358,7 +358,7 @@ Tracker.prototype.onCmdEditCut = function() {
     this.manager.copyFromTracklist();
     this.manager.clearFromTracklist();
 
-    this.player.countPositionFrames(this.player.currentPosition);
+    this.player.countPositionFrames(this.player.position);
     this.updateEditorCombo(0);
   }
   else if (this.activeTab === 1) {
@@ -389,7 +389,7 @@ Tracker.prototype.onCmdEditCopy = function() {
 Tracker.prototype.onCmdEditPaste = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     if (this.manager.pasteToTracklist()) {
-      this.player.countPositionFrames(this.player.currentPosition);
+      this.player.countPositionFrames(this.player.position);
       this.updateEditorCombo(this.ctrlRowStep);
     }
   }
@@ -407,7 +407,7 @@ Tracker.prototype.onCmdEditPaste = function() {
 Tracker.prototype.onCmdEditClear = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     this.manager.clearFromTracklist();
-    this.player.countPositionFrames(this.player.currentPosition);
+    this.player.countPositionFrames(this.player.position);
     this.updateEditorCombo(0);
   }
   else if (this.activeTab === 1) {
@@ -438,7 +438,7 @@ Tracker.prototype.onCmdSongPlay = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.currentPosition);
+    this.player.storePositionRuntime(this.player.position);
   }
 
   this.modePlay = this.player.playPosition(false, true, true);
@@ -452,7 +452,7 @@ Tracker.prototype.onCmdSongPlayStart = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.currentPosition);
+    this.player.storePositionRuntime(this.player.position);
   }
 
   this.modePlay = this.player.playPosition(true, true, true);
@@ -469,7 +469,7 @@ Tracker.prototype.onCmdPosPlay = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.currentPosition);
+    this.player.storePositionRuntime(this.player.position);
   }
 
   this.modePlay = this.player.playPosition(false, false, false);
@@ -483,7 +483,7 @@ Tracker.prototype.onCmdPosPlayStart = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.currentPosition);
+    this.player.storePositionRuntime(this.player.position);
   }
 
   this.modePlay = this.player.playPosition(false, false, true);
@@ -509,7 +509,7 @@ Tracker.prototype.onCmdToggleEditMode = function(newState) {
 
   if (!state) {
     this.doc.setStatusText();
-    this.player.storePositionRuntime(this.player.currentPosition);
+    this.player.storePositionRuntime(this.player.position);
   }
 
   el[state ? 'addClass' : 'removeClass']('edit');
@@ -591,8 +591,8 @@ Tracker.prototype.onCmdPatCreate = function() {
   }
 
   const id = this.player.addNewPattern();
-  const pt = this.player.pattern[id];
-  const len = (this.workingPattern && this.player.pattern[this.workingPattern].end) || 64;
+  const pt = this.player.patterns[id];
+  const len = (this.workingPattern && this.player.patterns[this.workingPattern].end) || 64;
 
   pt.end = len;
   this.workingPattern = id;
@@ -611,7 +611,7 @@ Tracker.prototype.onCmdPatDelete = function() {
   const p = this.player;
   let pt = this.workingPattern;
   const keys = this.globalKeyState;
-  const len = p.pattern.length - 1;
+  const len = p.patterns.length - 1;
   let msg = null;
 
   if (p.countPatternUsage(pt) > 0) {
@@ -636,8 +636,8 @@ Tracker.prototype.onCmdPatDelete = function() {
         return;
       }
 
-      for (let i = 0, l = p.position.length, pos, chn; i < l; i++) {
-        for (pos = p.position[i], chn = 0; chn < 6; chn++) {
+      for (let i = 0, l = p.positions.length, pos, chn; i < l; i++) {
+        for (pos = p.positions[i], chn = 0; chn < 6; chn++) {
           if (pos.ch[chn].pattern === pt) {
             pos.ch[chn].pattern = 0;
           }
@@ -647,7 +647,7 @@ Tracker.prototype.onCmdPatDelete = function() {
         }
       }
 
-      p.pattern.splice(pt, 1);
+      p.patterns.splice(pt, 1);
       if (pt === len) {
         pt--;
       }
@@ -669,7 +669,7 @@ Tracker.prototype.onCmdPatClean = function() {
 
   const app = this;
   const keys = this.globalKeyState;
-  const pt = this.player.pattern[this.workingPattern];
+  const pt = this.player.patterns[this.workingPattern];
 
   keys.inDialog = true;
   $('#dialog').confirm({
@@ -712,12 +712,12 @@ Tracker.prototype.onCmdPosCreate = function() {
   }
 
   const p = this.player;
-  const total = p.position.length;
-  const current = p.position[p.currentPosition] || p.nullPosition;
+  const total = p.positions.length;
+  const current = p.positions[p.position] || p.nullPosition;
 
   p.addNewPosition(current.length, current.speed);
-  p.currentPosition = total;
-  p.currentLine = 0;
+  p.position = total;
+  p.line = 0;
 
   this.updatePanelInfo();
   this.updatePanelPosition();
@@ -729,13 +729,13 @@ Tracker.prototype.onCmdPosInsert = function() {
   if (this.modePlay) {
     return;
   }
-  if (!this.player.position.length) {
+  if (!this.player.positions.length) {
     return this.onCmdPosCreate();
   }
 
   let p = this.player, chn;
-  const i = p.currentPosition;
-  const current = p.position[i] || p.nullPosition;
+  const i = p.position;
+  const current = p.positions[i] || p.nullPosition;
   const pt = p.addNewPosition(current.length, current.speed, false);
 
   for (chn = 0; chn < 6; chn++) {
@@ -743,10 +743,10 @@ Tracker.prototype.onCmdPosInsert = function() {
     pt.ch[chn].pitch = current.ch[chn].pitch;
   }
 
-  p.position.splice(i, 0, pt);
+  p.positions.splice(i, 0, pt);
   p.countPositionFrames(i);
   p.storePositionRuntime(i);
-  p.currentLine = 0;
+  p.line = 0;
 
   this.updatePanelInfo();
   this.updatePanelPattern();
@@ -756,12 +756,12 @@ Tracker.prototype.onCmdPosInsert = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosDelete = function() {
-  if (this.modePlay || !this.player.position.length) {
+  if (this.modePlay || !this.player.positions.length) {
     return;
   }
 
   const keys = this.globalKeyState;
-  const pos = this.player.currentPosition;
+  const pos = this.player.position;
   const app = this;
 
   keys.inDialog = true;
@@ -776,10 +776,10 @@ Tracker.prototype.onCmdPosDelete = function() {
         return;
       }
 
-      app.player.currentLine = 0;
-      app.player.position.splice(pos, 1);
-      if (pos >= app.player.position.length) {
-        app.player.currentPosition--;
+      app.player.line = 0;
+      app.player.positions.splice(pos, 1);
+      if (pos >= app.player.positions.length) {
+        app.player.position--;
       }
 
       app.updatePanelInfo();
@@ -793,18 +793,18 @@ Tracker.prototype.onCmdPosDelete = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveUp = function() {
   const p = this.player;
-  let i = p.currentPosition;
-  const swap = p.position[i];
+  let i = p.position;
+  const swap = p.positions[i];
 
-  if (this.modePlay || !p.position.length || !i) {
+  if (this.modePlay || !p.positions.length || !i) {
     return;
   }
 
-  p.position[i] = p.position[--i];
-  p.position[i] = swap;
+  p.positions[i] = p.positions[--i];
+  p.positions[i] = swap;
 
-  p.currentPosition = i;
-  p.currentLine = 0;
+  p.position = i;
+  p.line = 0;
 
   this.updatePanelInfo();
   this.updatePanelPosition();
@@ -814,19 +814,19 @@ Tracker.prototype.onCmdPosMoveUp = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveDown = function() {
   const p = this.player;
-  let i = p.currentPosition;
-  const total = p.position.length;
-  const swap = p.position[i];
+  let i = p.position;
+  const total = p.positions.length;
+  const swap = p.positions[i];
 
   if (this.modePlay || !total || i === (total - 1)) {
     return;
   }
 
-  p.position[i] = p.position[++i];
-  p.position[i] = swap;
+  p.positions[i] = p.positions[++i];
+  p.positions[i] = swap;
 
-  p.currentPosition = i;
-  p.currentLine = 0;
+  p.position = i;
+  p.line = 0;
 
   this.updatePanelInfo();
   this.updatePanelPosition();
@@ -841,7 +841,7 @@ Tracker.prototype.onCmdSmpPlay = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpClear = function() {
   const app = this;
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
   const keys = this.globalKeyState;
 
   keys.inDialog = true;
@@ -895,7 +895,7 @@ Tracker.prototype.onCmdSmpClear = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpSwap = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => {
     const swap = tick.volume.L;
@@ -908,7 +908,7 @@ Tracker.prototype.onCmdSmpSwap = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolUp = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach((tick, i) => {
     if ((i < smp.end && tick.volume.L < 15) ||
@@ -923,7 +923,7 @@ Tracker.prototype.onCmdSmpLVolUp = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpLVolDown = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => {
     if (tick.volume.L > 0) {
@@ -936,7 +936,7 @@ Tracker.prototype.onCmdSmpLVolDown = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolUp = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach((tick, i) => {
     if ((i < smp.end && tick.volume.R < 15) ||
@@ -951,7 +951,7 @@ Tracker.prototype.onCmdSmpRVolUp = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRVolDown = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => {
     if (tick.volume.R > 0) {
@@ -964,7 +964,7 @@ Tracker.prototype.onCmdSmpRVolDown = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyLR = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => (tick.volume.R = tick.volume.L));
 
@@ -973,7 +973,7 @@ Tracker.prototype.onCmdSmpCopyLR = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpCopyRL = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => (tick.volume.L = tick.volume.R));
 
@@ -982,7 +982,7 @@ Tracker.prototype.onCmdSmpCopyRL = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotL = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
   const data = smp.data;
 
   let i = 0;
@@ -1003,7 +1003,7 @@ Tracker.prototype.onCmdSmpRotL = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpRotR = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
   const data = smp.data;
 
   let i = 255;
@@ -1024,7 +1024,7 @@ Tracker.prototype.onCmdSmpRotR = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpEnable = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => {
     if (tick.volume.byte) {
@@ -1037,7 +1037,7 @@ Tracker.prototype.onCmdSmpEnable = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpDisable = function() {
-  const smp = this.player.sample[this.workingSample];
+  const smp = this.player.samples[this.workingSample];
 
   smp.data.forEach(tick => {
     tick.enable_freq = false;
@@ -1054,7 +1054,7 @@ Tracker.prototype.onCmdOrnPlay = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnClear = function() {
   const keys = this.globalKeyState;
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
   const app = this;
 
   keys.inDialog = true;
@@ -1080,7 +1080,7 @@ Tracker.prototype.onCmdOrnClear = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftLeft = function() {
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
 
   for (let i = 0, ref = data[i]; i < 256; i++) {
@@ -1092,7 +1092,7 @@ Tracker.prototype.onCmdOrnShiftLeft = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnShiftRight = function() {
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
 
   for (let i = 255, ref = data[i]; i >= 0; i--) {
@@ -1104,7 +1104,7 @@ Tracker.prototype.onCmdOrnShiftRight = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnTransUp = function() {
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
 
   for (let i = 0, l = orn.end; i < l; i++) {
     orn.data[i]++;
@@ -1115,7 +1115,7 @@ Tracker.prototype.onCmdOrnTransUp = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnTransDown = function() {
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
 
   for (let i = 0, l = orn.end; i < l; i++) {
     orn.data[i]--;
@@ -1126,7 +1126,7 @@ Tracker.prototype.onCmdOrnTransDown = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnCompress = function() {
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
   let i = 0;
 
@@ -1143,7 +1143,7 @@ Tracker.prototype.onCmdOrnCompress = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdOrnExpand = function() {
-  const orn = this.player.ornament[this.workingOrnament];
+  const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
 
   for (let i = 127, k = 256; k > 0; i--) {

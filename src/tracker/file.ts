@@ -117,17 +117,17 @@ export class STMFile {
     const tracker: Tracker = this._parent;
     const player: Player = tracker.player;
 
-    const actualLine = player.currentLine;
+    const actualLine = player.line;
 
     tracker.onCmdToggleEditMode(tracker.modeEdit);
     tracker.onCmdToggleLoop(player.loopMode);
 
     $('#scPattern').val(tracker.workingPattern.toString());
     $('#scPosRepeat').val((player.repeatPosition + 1).toString());
-    $('#scPosCurrent').val((player.currentPosition + 1).toString());
+    $('#scPosCurrent').val((player.position + 1).toString());
 
     tracker.updatePanels();
-    player.currentLine = actualLine;
+    player.line = actualLine;
     tracker.updateTracklist();
 
     $('#scSampleNumber').val(tracker.workingSample.toString(32).toUpperCase());
@@ -239,7 +239,7 @@ export class STMFile {
     if (data.samples && data.samples.length) {
       for (let i: number = 1, obj: any; i < 32; i++) {
         if ((obj = data.samples[i - 1])) {
-          const it = player.sample[i];
+          const it = player.samples[i];
 
           if (obj.name) {
             it.name = obj.name;
@@ -262,7 +262,7 @@ export class STMFile {
     if (data.ornaments && data.ornaments.length) {
       for (let i: number = 1, obj: any; i < 16; i++) {
         if ((obj = data.ornaments[i - 1])) {
-          const it = player.ornament[i];
+          const it = player.ornaments[i];
 
           if (obj.name) {
             it.name = obj.name;
@@ -284,7 +284,7 @@ export class STMFile {
     if (data.patterns) {
       data.patterns.forEach(obj => {
         const newIdx = player.addNewPattern();
-        const it = player.pattern[newIdx];
+        const it = player.patterns[newIdx];
         it.end = obj.end || 0;
 
         if (obj.data != null) {
@@ -317,8 +317,8 @@ export class STMFile {
       const o: any = data.current;
 
       player.repeatPosition = data.repeatPos || 0;
-      player.currentPosition = o.position || 0;
-      player.currentLine = o.line || 0;
+      player.position = o.position || 0;
+      player.line = o.line || 0;
 
       tracker.workingPattern = o.pattern || 0;
       tracker.workingSample = o.sample || 1;
@@ -397,10 +397,10 @@ export class STMFile {
         ornSample: tracker.workingOrnTestSample,
         smpornTone: tracker.workingSampleTone,
 
-        position: player.currentPosition,
+        position: player.position,
         pattern: tracker.workingPattern,
 
-        line: player.currentLine,
+        line: player.line,
         channel: tracker.modeEditChannel,
         column: tracker.modeEditColumn
       },
@@ -422,7 +422,7 @@ export class STMFile {
 
     // storing samples going backward and unshifting array...
     for (let i: number = 31; i > 0; i--) {
-      const it = player.sample[i];
+      const it = player.samples[i];
       let obj: any = {
         loop: it.loop,
         end: it.end,
@@ -449,7 +449,7 @@ export class STMFile {
 
     // storing ornaments going backward and unshifting array...
     for (let i: number = 15; i > 0; i--) {
-      const it = player.ornament[i];
+      const it = player.ornaments[i];
       let obj: any = {
         loop: it.loop,
         end: it.end,
@@ -472,8 +472,8 @@ export class STMFile {
     }
 
     // storing patterns...
-    for (let i: number = 1, l = player.pattern.length; i < l; i++) {
-      const it = player.pattern[i];
+    for (let i: number = 1, l = player.patterns.length; i < l; i++) {
+      const it = player.patterns[i];
       let obj: any = {
         end: it.end,
         data: it.export()
@@ -491,7 +491,7 @@ export class STMFile {
     }
 
     // storing positions, no optimizations needed...
-    output.positions = player.position.map(it => ({
+    output.positions = player.positions.map(it => ({
       length: it.length,
       speed: it.speed,
       ch: it.export()
@@ -512,9 +512,9 @@ export class STMFile {
     tracker.songTitle = '';
     tracker.songAuthor = '';
 
-    player.currentPosition = 0;
+    player.position = 0;
     player.repeatPosition = 0;
-    player.currentLine = 0;
+    player.line = 0;
 
     tracker.modeEdit = false;
     tracker.modeEditChannel = 0;

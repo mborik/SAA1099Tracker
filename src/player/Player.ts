@@ -35,28 +35,28 @@ import Sample from './Sample';
  */
 export default class Player {
   public tones: Tone[];
-  public sample: Sample[] = [];
-  public ornament: Ornament[] = [];
-  public pattern: Pattern[] = [];
-  public position: Position[] = [];
+  public samples: Sample[] = [];
+  public ornaments: Ornament[] = [];
+  public patterns: Pattern[] = [];
+  public positions: Position[] = [];
   public nullPosition: Position = null;
 
   public loopMode: boolean = true;
   public changedLine: boolean = false;
   public changedPosition: boolean = false;
-  public currentPosition: number = 0;
   public repeatPosition: number = 0;
-  public currentSpeed: number = 6;
-  public currentLine: number = 0;
-  public currentTick: number = 0;
-
-  private channelPatternRuntimeLine: number[] = [0, 0, 0, 0, 0, 0];
+  public position: number = 0;
+  public speed: number = 6;
+  public line: number = 0;
+  public tick: number = 0;
 
   public mode: number = 0;
   public mixer: Mixer = new Mixer();
 
   public rtSong: PlayerRuntime = null;
   public rtSample: PlayerRuntime = null;
+
+  private chnLine: number[] = [0, 0, 0, 0, 0, 0];
 
 
   constructor(public SAA1099: SAASound) {
@@ -104,19 +104,19 @@ export default class Player {
 
   /** Clear or initialize song (positions, patterns, pointers and playParams). */
   public clearSong(reinit?: boolean) {
-    this.position.splice(0);
-    this.pattern.splice(0);
+    this.positions.splice(0);
+    this.patterns.splice(0);
     this.addNewPattern();
 
     this.changedLine = true;
     this.changedPosition = true;
-    this.currentPosition = 0;
     this.repeatPosition = 0;
-    this.currentSpeed = 6;
-    this.currentLine = 0;
-    this.currentTick = 0;
+    this.position = 0;
+    this.speed = 6;
+    this.line = 0;
+    this.tick = 0;
 
-    this.channelPatternRuntimeLine.fill(0);
+    this.chnLine.fill(0);
 
     if (reinit) {
       this.rtSong = null;
@@ -144,7 +144,7 @@ export default class Player {
   /** Clear all samples. */
   public clearSamples() {
     for (let i = 0; i < 32; i++) {
-      this.sample[i] = new Sample();
+      this.samples[i] = new Sample();
     }
 
     devLog('Player', 'Samples cleared...');
@@ -153,7 +153,7 @@ export default class Player {
   /** Clear all ornaments. */
   public clearOrnaments() {
     for (let i = 0; i < 16; i++) {
-      this.ornament[i] = new Ornament();
+      this.ornaments[i] = new Ornament();
     }
 
     devLog('Player', 'Ornaments cleared...');
@@ -164,8 +164,8 @@ export default class Player {
    * @returns {number} new pattern number
    */
   public addNewPattern(): number {
-    const index = this.pattern.length;
-    this.pattern.push(new Pattern());
+    const index = this.patterns.length;
+    this.patterns.push(new Pattern());
     return index;
   }
 
@@ -181,7 +181,7 @@ export default class Player {
     pos.initParams = new PlayerRuntime(this);
 
     if (add) {
-      this.position.push(pos);
+      this.positions.push(pos);
     }
 
     return pos;
@@ -236,36 +236,36 @@ export default class Player {
    * @param pos Optional position number in which do a simulation;
    * @param rt Simulate over the custom runtime parameters;
    */
-  private simulation(lines: number, pos: number = this.currentPosition, rt: PlayerRuntime = this.rtSong): boolean {
+  private simulation(lines: number, pos: number = this.position, rt: PlayerRuntime = this.rtSong): boolean {
     if (lines <= 0) {
       return false;
     }
 
     let backup;
-    const ps = this.position[pos];
+    const ps = this.positions[pos];
 
     if (!ps || !rt) {
       return false;
     }
 
     const lastMode = this.mode;
-    if (this.currentPosition !== pos) {
+    if (this.position !== pos) {
       backup = {
-        pos: this.currentPosition,
-        line: this.currentLine,
-        tick: this.currentTick,
-        speed: this.currentSpeed,
-        runtimeLine: [...this.channelPatternRuntimeLine],
+        pos: this.position,
+        line: this.line,
+        tick: this.tick,
+        speed: this.speed,
+        runtimeLine: [...this.chnLine],
       };
 
-      this.currentPosition = pos;
+      this.position = pos;
     }
 
-    this.currentLine = 0;
-    this.currentTick = 0;
-    this.currentSpeed = ps.speed;
+    this.line = 0;
+    this.tick = 0;
+    this.speed = ps.speed;
 
-    this.channelPatternRuntimeLine.fill(0);
+    this.chnLine.fill(0);
 
     if (ps.initParams) {
       rt.replace(ps.initParams);
@@ -290,15 +290,15 @@ export default class Player {
     }
 
     if (backup) {
-      this.currentLine = backup.line;
-      this.currentTick = backup.tick;
-      this.currentSpeed = backup.speed;
-      this.currentPosition = backup.pos;
+      this.line = backup.line;
+      this.tick = backup.tick;
+      this.speed = backup.speed;
+      this.position = backup.pos;
 
-      this.channelPatternRuntimeLine = backup.runtimeLine;
+      this.chnLine = backup.runtimeLine;
     }
     else {
-      this.currentTick++;
+      this.tick++;
     }
 
     this.mode = lastMode;
@@ -317,9 +317,9 @@ export default class Player {
     }
   }
 
-  private channelPatternRuntimeLineAdd(add: number) {
-    for (let i = 0; i < this.channelPatternRuntimeLine.length; i++) {
-      this.channelPatternRuntimeLine[i] += add;
+  private chnLineAdd(add: number) {
+    for (let i = 0; i < this.chnLine.length; i++) {
+      this.chnLine[i] += add;
     }
   }
 
@@ -351,74 +351,74 @@ export default class Player {
       const chn3rd = +(chn >= 3);     // calculate triple of channels
 
       // check if delay sample was triggered
-      if (pp.commandDelaySample?.phase > 0) {
-        pp.commandDelaySample.phase = pp.commandDelaySample.phase - 1;
+      if (pp.cmdDelay?.phase > 0) {
+        pp.cmdDelay.phase = pp.cmdDelay.phase - 1;
       }
-      else if (pp.commandDelaySample) {
-        pp.tone = pp.commandDelaySample.tone;
-        pp.sample = pp.commandDelaySample.smp;
-        pp.ornament = pp.commandDelaySample.orn;
-        pp.sample_cursor = 0;
-        pp.ornament_cursor = 0;
-        pp.slideShift = 0;
-        pp.commandParam = pp.commandPhase = pp.commandValue1 = pp.commandValue2 = 0;
+      else if (pp.cmdDelay) {
+        pp.tone = pp.cmdDelay.tone;
+        pp.smp = pp.cmdDelay.smp;
+        pp.orn = pp.cmdDelay.orn;
+        pp.smpCursor = 0;
+        pp.ornCursor = 0;
+        pp.shift = 0;
+        pp.cmdValue = pp.cmdPhase = pp.cmdParam1 = pp.cmdParam2 = 0;
         pp.released = false;
         pp.playing = true;
-        pp.commandDelaySample = null;
+        pp.cmdDelay = null;
       }
 
       if (pp.playing) {
         // if playback in channel is enabled, fetch all smp/orn values...
-        let samp = pp.sample.data[pp.sample_cursor];
+        let samp = pp.smp.data[pp.smpCursor];
 
         // set channel bit if it's enabled or sample is still playing...
-        if (!pp.sample.releasable && pp.sample_cursor >= pp.sample.end) {
-          samp = this.sample[0].data[0];
+        if (!pp.smp.releasable && pp.smpCursor >= pp.smp.end) {
+          samp = this.samples[0].data[0];
         }
         else {
           ePlay |= eMask;
         }
 
         vol.byte = samp.volume.byte;
-        let height = pp.ornament.data[pp.ornament_cursor];
+        let height = pp.orn.data[pp.ornCursor];
         let noise = samp.noise_value | (+samp.enable_noise << 2);
 
         // get command on trackline and calculate nibbles of command parameter...
-        let cmd = pp.command;
-        const paramH = (pp.commandParam & 0xf0) >> 4;
-        const paramL = (pp.commandParam & 0x0f);
+        let cmd = pp.cmd;
+        const paramH = (pp.cmdValue & 0xf0) >> 4;
+        const paramL = (pp.cmdValue & 0x0f);
 
         switch (cmd) {
           // portamento up/down
           case 0x1:
           case 0x2:
-            if (!pp.commandPhase && pp.commandParam) {
-              pp.commandPhase = paramH;
+            if (!pp.cmdPhase && pp.cmdValue) {
+              pp.cmdPhase = paramH;
             }
-            if (pp.commandPhase && !(--pp.commandPhase)) {
-              pp.slideShift += paramL * ((cmd & 1) ? 1 : -1);
+            if (pp.cmdPhase && !(--pp.cmdPhase)) {
+              pp.shift += paramL * ((cmd & 1) ? 1 : -1);
             }
             break;
 
           // glissando to given note
           case 0x3:
-            if (!pp.commandPhase && pp.commandParam) {
-              pp.commandPhase = paramH;
+            if (!pp.cmdPhase && pp.cmdValue) {
+              pp.cmdPhase = paramH;
             }
-            if (pp.commandValue1 && pp.commandPhase && !(--pp.commandPhase)) {
-              if (pp.commandValue2 > 0) {
-                pp.slideShift += paramL;
-                if (pp.slideShift >= pp.commandValue2) {
-                  pp.tone = pp.commandValue1;
-                  pp.slideShift = pp.commandValue1 = pp.commandValue2 = 0;
+            if (pp.cmdParam1 && pp.cmdPhase && !(--pp.cmdPhase)) {
+              if (pp.cmdParam2 > 0) {
+                pp.shift += paramL;
+                if (pp.shift >= pp.cmdParam2) {
+                  pp.tone = pp.cmdParam1;
+                  pp.shift = pp.cmdParam1 = pp.cmdParam2 = 0;
                   cmd = -1;
                 }
               }
               else {
-                pp.slideShift -= paramL;
-                if (pp.slideShift <= pp.commandValue2) {
-                  pp.tone = pp.commandValue1;
-                  pp.slideShift = pp.commandValue1 = pp.commandValue2 = 0;
+                pp.shift -= paramL;
+                if (pp.shift <= pp.cmdParam2) {
+                  pp.tone = pp.cmdParam1;
+                  pp.shift = pp.cmdParam1 = pp.cmdParam2 = 0;
                   cmd = -1;
                 }
               }
@@ -427,61 +427,61 @@ export default class Player {
 
           // vibrato
           case 0x4:
-            if (pp.commandParam) {
-              pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
-              pp.slideShift = Player.vibratable[(paramL << 6) + pp.commandPhase];
+            if (pp.cmdValue) {
+              pp.cmdPhase = paramH ? ((pp.cmdPhase + paramH) & 0x3F) : 0;
+              pp.shift = Player.vibratable[(paramL << 6) + pp.cmdPhase];
             }
             else {
-              pp.slideShift = 0;
+              pp.shift = 0;
             }
 
             break;
 
           // tremolo
           case 0x5:
-            if (pp.commandParam) {
-              pp.commandPhase = paramH ? ((pp.commandPhase + paramH) & 0x3F) : 0;
-              pp.commandValue2 = Player.vibratable[(paramL << 6) + pp.commandPhase];
+            if (pp.cmdValue) {
+              pp.cmdPhase = paramH ? ((pp.cmdPhase + paramH) & 0x3F) : 0;
+              pp.cmdParam2 = Player.vibratable[(paramL << 6) + pp.cmdPhase];
             }
             break;
 
           // delay ornament by ticks
           case 0x6:
-            if (pp.commandParam) {
-              pp.commandPhase = pp.commandParam;
-              pp.commandParam = 0;
+            if (pp.cmdValue) {
+              pp.cmdPhase = pp.cmdValue;
+              pp.cmdValue = 0;
             }
-            if (pp.commandPhase) {
+            if (pp.cmdPhase) {
               height = 0;
-              pp.commandPhase--;
+              pp.cmdPhase--;
             }
             else {
-              pp.ornament_cursor = 0;
-              height = pp.ornament.data[pp.ornament_cursor];
+              pp.ornCursor = 0;
+              height = pp.orn.data[pp.ornCursor];
               cmd = -1;
             }
             break;
 
           // ornament offset
           case 0x7:
-            if (pp.commandParam > 0 && pp.commandParam < pp.ornament.end) {
-              pp.ornament_cursor = pp.commandParam;
-              height = pp.ornament.data[pp.ornament_cursor];
+            if (pp.cmdValue > 0 && pp.cmdValue < pp.orn.end) {
+              pp.ornCursor = pp.cmdValue;
+              height = pp.orn.data[pp.ornCursor];
             }
             cmd = -1;
             break;
 
           // sample offset
           case 0x9:
-            if (pp.commandParam > 0 &&
-              (pp.sample.releasable || pp.commandParam < pp.sample.end)) {
+            if (pp.cmdValue > 0 &&
+              (pp.smp.releasable || pp.cmdValue < pp.smp.end)) {
 
-              pp.sample_cursor = pp.commandParam;
-              samp = pp.sample.data[pp.sample_cursor];
+              pp.smpCursor = pp.cmdValue;
+              samp = pp.smp.data[pp.smpCursor];
               noise = samp.noise_value | (+samp.enable_noise << 2);
               vol.byte = samp.volume.byte;
 
-              if (pp.sample.releasable && pp.commandParam >= pp.sample.end) {
+              if (pp.smp.releasable && pp.cmdValue >= pp.smp.end) {
                 pp.released = true;
               }
             }
@@ -490,59 +490,59 @@ export default class Player {
 
           // volume slide
           case 0xA:
-            if (!pp.commandPhase && pp.commandParam) {
-              pp.commandPhase = paramH;
+            if (!pp.cmdPhase && pp.cmdValue) {
+              pp.cmdPhase = paramH;
             }
-            if (pp.commandPhase && !(--pp.commandPhase)) {
-              pp.commandValue2 += (pp.commandParam & 7) * ((pp.commandParam & 8) ? 1 : -1);
+            if (pp.cmdPhase && !(--pp.cmdPhase)) {
+              pp.cmdParam2 += (pp.cmdValue & 7) * ((pp.cmdValue & 8) ? 1 : -1);
             }
             break;
 
           // special command
           case 0xC:
-            if (!pp.commandParam) {
-              pp.commandPhase = 0;
+            if (!pp.cmdValue) {
+              pp.cmdPhase = 0;
             }
             else if (paramH < 0xF) {
-              switch (pp.commandPhase) {
+              switch (pp.cmdPhase) {
                 default:
-                  pp.commandPhase = 2;
+                  pp.cmdPhase = 2;
                   break;
                 case 2:
                   height += paramH;
-                  pp.commandPhase--;
+                  pp.cmdPhase--;
                   break;
                 case 1:
                   height += paramL;
-                  pp.commandPhase--;
+                  pp.cmdPhase--;
                   break;
               }
             }
             else if (paramL & 1) {
-              pp.commandPhase = vol.R;
+              pp.cmdPhase = vol.R;
               vol.R = vol.L;
-              vol.L = pp.commandPhase;
-              pp.commandPhase = 0;
+              vol.L = pp.cmdPhase;
+              pp.cmdPhase = 0;
             }
             break;
 
           // soundchip control
           case 0xE:
             if (paramH === 0x2) {
-              pp.commandParam &= 7;
-              noise = pp.commandParam ^ 4;
+              pp.cmdValue &= 7;
+              noise = pp.cmdValue ^ 4;
             }
             else {
               // mute base tone volume if bit3=0
-              if (!(pp.commandParam & 0x10)) {
-                pp.attenuation.byte = 0xFF;
+              if (!(pp.cmdValue & 0x10)) {
+                pp.attn.byte = 0xFF;
               }
 
-              pp.commandParam = ((pp.commandParam & 0x0E) << 1) | (pp.commandParam & 0x81);
-              pp.commandParam ^= 0x82;
+              pp.cmdValue = ((pp.cmdValue & 0x0E) << 1) | (pp.cmdValue & 0x81);
+              pp.cmdValue ^= 0x82;
 
               ///~ SAA1099 DATA 18/19: Envelope generator 0/1
-              rt.setRegData(24 + chn3rd, pp.commandParam);
+              rt.setRegData(24 + chn3rd, pp.cmdValue);
               cmd = -1;
             }
             break;
@@ -554,25 +554,25 @@ export default class Player {
 
         // reset command if not needed anymore...
         if (cmd < 0) {
-          pp.command = 0;
-          pp.commandParam = 0;
-          pp.commandPhase = 0;
+          pp.cmd = 0;
+          pp.cmdValue = 0;
+          pp.cmdPhase = 0;
         }
 
         // apply attenuation...
         let addAttn = 0;
         if (cmd === 0x5 || cmd === 0xA) {
-          addAttn = pp.commandValue2 = Math.max(-15, Math.min(15, pp.commandValue2));
+          addAttn = pp.cmdParam2 = Math.max(-15, Math.min(15, pp.cmdParam2));
         }
-        vol.L -= pp.attenuation.L + addAttn;
-        vol.R -= pp.attenuation.R + addAttn;
+        vol.L -= pp.attn.L + addAttn;
+        vol.R -= pp.attn.R + addAttn;
 
         ///~ SAA1099 DATA 00-05: Amplitude controller 0-5
         rt.setRegData(chn, vol.byte);
 
         // get tone from tracklist, calculate proper frequency to register...
         if (pp.tone) {
-          const tone = this.calculateTone(pp.tone, pp.globalPitch, height, samp.shift + pp.slideShift);
+          const tone = this.calculateTone(pp.tone, pp.chnPitch, height, samp.shift + pp.shift);
 
           ///~ SAA1099 DATA 08-0D: Tone generator 0-5
           rt.setRegData(8 + chn, tone.cent);
@@ -599,11 +599,11 @@ export default class Player {
         }
 
         // current sample cursor position handler...
-        if (pp.sample_cursor + 1 >= pp.sample.end) {
+        if (pp.smpCursor + 1 >= pp.smp.end) {
           // it had to be released?
-          if (pp.sample.releasable && pp.released) {
-            if (pp.sample_cursor < 255) {
-              pp.sample_cursor++;
+          if (pp.smp.releasable && pp.released) {
+            if (pp.smpCursor < 255) {
+              pp.smpCursor++;
 
             }
             else {
@@ -614,9 +614,9 @@ export default class Player {
 
             // it had to be stopped at the end?
           }
-          else if (pp.sample.loop === pp.sample.end) {
+          else if (pp.smp.loop === pp.smp.end) {
             if (!(this.mode & PlayerMode.PM_SAMP_OR_LINE)) {
-              pp.sample_cursor = pp.sample.end;
+              pp.smpCursor = pp.smp.end;
             }
 
             pp.playing = false;
@@ -632,19 +632,19 @@ export default class Player {
             // it had to be repeated?
           }
           else {
-            pp.sample_cursor = pp.sample.loop;
+            pp.smpCursor = pp.smp.loop;
           }
         }
         else {
-          pp.sample_cursor++;
+          pp.smpCursor++;
         }
 
         // current ornament cursor position handler...
-        if (pp.ornament_cursor + 1 >= pp.ornament.end) {
-          pp.ornament_cursor = pp.ornament.loop;
+        if (pp.ornCursor + 1 >= pp.orn.end) {
+          pp.ornCursor = pp.orn.loop;
         }
         else {
-          pp.ornament_cursor++;
+          pp.ornCursor++;
         }
       }
       else {
@@ -686,8 +686,8 @@ export default class Player {
       rt.setRegData(0x1C, 1);
 
       // is there time to next trackline?
-      if (!!(this.mode & PlayerMode.PM_LINE) && this.currentTick > 0) {
-        this.currentTick--;
+      if (!!(this.mode & PlayerMode.PM_LINE) && this.tick > 0) {
+        this.tick--;
       }
       else if (this.mode & PlayerMode.PM_SONG_OR_POS) {
         this.prepareLine(true, rt);
@@ -704,53 +704,53 @@ export default class Player {
    * @returns {boolean} success or failure
    */
   private prepareLine(next?: boolean, rt: PlayerRuntime = this.runtimeByMode): boolean {
-    if (this.currentTick) {
-      this.currentTick--;
+    if (this.tick) {
+      this.tick--;
       return true;
     }
 
-    if (this.currentPosition >= this.position.length) {
+    if (this.position >= this.positions.length) {
       return false;
     }
 
     if (next === undefined || next === true) {
-      this.currentLine++;
+      this.line++;
       this.changedLine = true;
 
-      this.channelPatternRuntimeLineAdd(1);
+      this.chnLineAdd(1);
     }
 
-    let p = this.position[this.currentPosition];
+    let p = this.positions[this.position];
 
-    if (this.currentLine >= p.length) {
+    if (this.line >= p.length) {
       if (this.mode & PlayerMode.PM_SONG) {
-        this.currentPosition++;
-        if (this.currentPosition >= this.position.length) {
+        this.position++;
+        if (this.position >= this.positions.length) {
           if (this.loopMode) {
-            this.currentPosition = this.repeatPosition;
+            this.position = this.repeatPosition;
           }
           else {
-            this.currentLine--;
-            this.channelPatternRuntimeLineAdd(-1);
+            this.line--;
+            this.chnLineAdd(-1);
 
             this.stopChannel();
             return false;
           }
         }
 
-        this.currentLine = 0;
-        this.channelPatternRuntimeLine.fill(0);
+        this.line = 0;
+        this.chnLine.fill(0);
 
         this.changedPosition = true;
-        p = this.position[this.currentPosition];
+        p = this.positions[this.position];
       }
       else if (this.loopMode) {
-        this.currentLine = 0;
-        this.channelPatternRuntimeLine.fill(0);
+        this.line = 0;
+        this.chnLine.fill(0);
       }
       else {
-        this.currentLine--;
-        this.channelPatternRuntimeLineAdd(-1);
+        this.line--;
+        this.chnLineAdd(-1);
 
         this.stopChannel();
         return false;
@@ -760,88 +760,88 @@ export default class Player {
         rt.replace(p.initParams);
       }
 
-      this.currentSpeed = p.speed;
+      this.speed = p.speed;
     }
 
     for (let chn = 0; chn < 6; chn++) {
       const pc = p.ch[chn];
-      const pt_number = (pc.pattern < this.pattern.length) ? pc.pattern : 0;
-      const pt = this.pattern[pt_number];
-      const cl = this.channelPatternRuntimeLine[chn];
+      const pt_number = (pc.pattern < this.patterns.length) ? pc.pattern : 0;
+      const pt = this.patterns[pt_number];
+      const cl = this.chnLine[chn];
 
       if (cl >= pt.end) {
         continue;
       }
 
       const pp = rt.params[chn];
-      pp.globalPitch = p.ch[chn].pitch;
+      pp.chnPitch = p.ch[chn].pitch;
       pp.playing = true;
 
       const pl = pt.data[cl];
       if (pl.cmd) {
         if (pl.cmd === 0xF && pl.cmd_data > 0) {
           // speed (init)
-          this.currentSpeed = pl.cmd_data;
-          if (this.currentSpeed >= 0x20) {
-            const sH = (this.currentSpeed & 0xF0) >> 4;
-            const sL = this.currentSpeed & 0x0F;
+          this.speed = pl.cmd_data;
+          if (this.speed >= 0x20) {
+            const sH = (this.speed & 0xF0) >> 4;
+            const sL = this.speed & 0x0F;
 
             if (sL < 2 || sH === sL) {
               // invalid swing speed
-              this.currentSpeed = sH;
+              this.speed = sH;
             }
-            else if (this.currentLine & 1) {
+            else if (this.line & 1) {
               // odd line swaps swing values
-              this.currentSpeed = sH | (sL << 4);
+              this.speed = sH | (sL << 4);
             }
           }
 
-          pp.command = pp.commandParam = pp.commandPhase = 0;
+          pp.cmd = pp.cmdValue = pp.cmdPhase = 0;
         }
         else if (pl.cmd === 0xB && pl.cmd_data <= cl) {
           // break current pattern and loop from line
-          this.channelPatternRuntimeLine[chn] = pl.cmd_data - 1;
-          pp.command = pp.commandParam = pp.commandPhase = 0;
+          this.chnLine[chn] = pl.cmd_data - 1;
+          pp.cmd = pp.cmdValue = pp.cmdPhase = 0;
         }
-        else if (pl.cmd === 0x8 && pl.cmd_data < this.currentSpeed && pl.smp && !pl.release) {
+        else if (pl.cmd === 0x8 && pl.cmd_data < this.speed && pl.smp && !pl.release) {
           // delay sample by ticks (leave player untouched, just prepare state to trigger)
-          if (!pp.commandDelaySample) {
-            pp.commandDelaySample = {
+          if (!pp.cmdDelay) {
+            pp.cmdDelay = {
               phase: pl.cmd_data,
               tone: pl.tone,
-              smp: this.sample[pl.smp],
-              orn: pl.orn_release ? this.ornament[0] :
-                (pl.orn ? this.ornament[pl.orn] : pp.ornament)
+              smp: this.samples[pl.smp],
+              orn: pl.orn_release ? this.ornaments[0] :
+                (pl.orn ? this.ornaments[pl.orn] : pp.orn)
             };
           }
 
           continue;
         }
         else {
-          pp.command = pl.cmd;
-          pp.commandParam = pl.cmd_data;
+          pp.cmd = pl.cmd;
+          pp.cmdValue = pl.cmd_data;
 
-          if (pl.cmd !== pp.command) {
-            pp.commandPhase = 0;
+          if (pl.cmd !== pp.cmd) {
+            pp.cmdPhase = 0;
           }
         }
       }
       else if (pl.tone || pl.smp) {
-        pp.command = pp.commandParam = pp.commandPhase = 0;
-        pp.commandDelaySample = null;
+        pp.cmd = pp.cmdValue = pp.cmdPhase = 0;
+        pp.cmdDelay = null;
       }
 
       if (pl.volume.byte) {
-        pp.attenuation.byte = ~pl.volume.byte;
+        pp.attn.byte = ~pl.volume.byte;
 
         if (pl.cmd === 0x5 || pl.cmd === 0xA) {
           // tremolo and volume slide restart
-          pp.commandValue2 = 0;
+          pp.cmdParam2 = 0;
         }
       }
 
       if (pl.release) {
-        if (pp.sample.releasable && !pp.released) {
+        if (pp.smp.releasable && !pp.released) {
           pp.released = true;
         }
         else {
@@ -852,61 +852,61 @@ export default class Player {
       }
       else if (pl.tone && pl.cmd === 0x3 && pl.cmd_data) {
         // glisando to given note (init)
-        if (pp.commandValue1) {
-          pp.tone = pp.commandValue1;
-          pp.slideShift -= pp.commandValue2;
+        if (pp.cmdParam1) {
+          pp.tone = pp.cmdParam1;
+          pp.shift -= pp.cmdParam2;
         }
 
-        const base = this.calculateTone(pp.tone, 0, 0, pp.slideShift);
+        const base = this.calculateTone(pp.tone, 0, 0, pp.shift);
         const target = this.calculateTone(pl.tone, 0, 0, 0);
         const delta = target.word - base.word;
 
         if (delta === 0) {
           pp.tone = pl.tone;
-          pp.commandValue1 = pp.commandValue2 = 0;
-          pp.command = pp.commandParam = pp.commandPhase = 0;
+          pp.cmdParam1 = pp.cmdParam2 = 0;
+          pp.cmd = pp.cmdValue = pp.cmdPhase = 0;
         }
         else {
-          pp.commandValue1 = pl.tone;
-          pp.commandValue2 = delta + pp.slideShift;
-          pp.commandPhase = (pp.commandParam & 0xF0) >> 4;
+          pp.cmdParam1 = pl.tone;
+          pp.cmdParam2 = delta + pp.shift;
+          pp.cmdPhase = (pp.cmdValue & 0xF0) >> 4;
         }
       }
       else if (pl.tone) {
         pp.tone = pl.tone;
-        pp.sample_cursor = 0;
-        pp.ornament_cursor = 0;
-        pp.slideShift = pp.commandValue1 = pp.commandValue2 = 0;
+        pp.smpCursor = 0;
+        pp.ornCursor = 0;
+        pp.shift = pp.cmdParam1 = pp.cmdParam2 = 0;
         pp.released = false;
       }
 
       if (pl.smp) {
-        pp.sample = this.sample[pl.smp];
-        pp.sample_cursor = 0;
+        pp.smp = this.samples[pl.smp];
+        pp.smpCursor = 0;
         pp.released = false;
       }
       if (pl.orn) {
-        pp.ornament = this.ornament[pl.orn];
-        pp.ornament_cursor = 0;
+        pp.orn = this.ornaments[pl.orn];
+        pp.ornCursor = 0;
       }
       else if (pl.orn_release) {
-        pp.ornament = this.ornament[0];
-        pp.ornament_cursor = 0;
+        pp.orn = this.ornaments[0];
+        pp.ornCursor = 0;
 
-        if (pp.command === 0x6 || pp.command === 0x7) {
-          pp.command = pp.commandParam = pp.commandPhase = 0;
+        if (pp.cmd === 0x6 || pp.cmd === 0x7) {
+          pp.cmd = pp.cmdValue = pp.cmdPhase = 0;
         }
       }
     }
 
-    if (this.currentSpeed > 0x20) {
-      this.currentTick = (this.currentLine & 1) ? (this.currentSpeed & 0x0F) : ((this.currentSpeed & 0xF0) >> 4);
+    if (this.speed > 0x20) {
+      this.tick = (this.line & 1) ? (this.speed & 0x0F) : ((this.speed & 0xF0) >> 4);
     }
     else {
-      this.currentTick = this.currentSpeed;
+      this.tick = this.speed;
     }
 
-    this.currentTick--;
+    this.tick--;
     return true;
   }
 
@@ -916,13 +916,13 @@ export default class Player {
    * @returns {boolean}
    */
   public playLine(): boolean {
-    if (this.mode === PlayerMode.PM_LINE && this.currentTick > 0) {
+    if (this.mode === PlayerMode.PM_LINE && this.tick > 0) {
       return false;
     }
 
     this.mixer.index = 0;
     this.mode = PlayerMode.PM_LINE;
-    this.currentTick = 0;
+    this.tick = 0;
 
     return this.prepareLine(false);
   }
@@ -936,26 +936,26 @@ export default class Player {
    */
   public playPosition(fromStart: boolean = true, follow: boolean = true, resetLine: boolean = true): boolean {
     if (fromStart) {
-      this.currentPosition = 0;
+      this.position = 0;
     }
     if (resetLine) {
-      this.currentLine = 0;
-      this.channelPatternRuntimeLine.fill(0);
+      this.line = 0;
+      this.chnLine.fill(0);
     }
 
-    if (this.currentPosition >= this.position.length) {
+    if (this.position >= this.positions.length) {
       return false;
     }
 
     this.stopChannel();
     this.mixer.index = 0;
 
-    const pos = this.position[this.currentPosition];
-    if (this.currentLine > 0) {
-      this.simulation(this.currentLine);
+    const pos = this.positions[this.position];
+    if (this.line > 0) {
+      this.simulation(this.line);
     }
     else {
-      this.currentTick = 0;
+      this.tick = 0;
 
       if (this.rtSong && pos.initParams) {
         this.rtSong.replace(pos.initParams);
@@ -966,7 +966,7 @@ export default class Player {
     this.changedPosition = true;
 
     this.mode = follow ? PlayerMode.PM_SONG : PlayerMode.PM_POSITION;
-    this.currentSpeed = pos.speed;
+    this.speed = pos.speed;
 
     return this.prepareLine(false);
   }
@@ -1005,9 +1005,9 @@ export default class Player {
         let chnToStop = -1;
 
         for (chn = 0; chn < 6; chn++) {
-          if (rt.params[chn].sample === this.sample[s]) {
-            if (rt.params[chn].sample_cursor > farther) {
-              farther = rt.params[chn].sample_cursor;
+          if (rt.params[chn].smp === this.samples[s]) {
+            if (rt.params[chn].smpCursor > farther) {
+              farther = rt.params[chn].smpCursor;
               chnToStop = chn;
             }
           }
@@ -1031,8 +1031,8 @@ export default class Player {
     rt.clearPlayParams(chn);
     rt.params[chn].playing = true;
     rt.params[chn].tone = tone;
-    rt.params[chn].sample = this.sample[s];
-    rt.params[chn].ornament = this.ornament[o];
+    rt.params[chn].smp = this.samples[s];
+    rt.params[chn].orn = this.ornaments[o];
 
     this.mixer.index = 0;
     this.mode = PlayerMode.PM_SAMPLE;
@@ -1057,7 +1057,7 @@ export default class Player {
 
       this.mode = PlayerMode.PM_LINE;
       this.prepareFrame(rt);
-      this.currentTick = 0;
+      this.tick = 0;
       this.changedLine = true;
 
       this.SAA1099.setAllRegs(rt);
@@ -1114,15 +1114,15 @@ export default class Player {
    */
   public countPatternUsage(patt: number): number {
     // is pattern number in range?
-    if (patt >= this.pattern.length) {
+    if (patt >= this.patterns.length) {
       return 0;
     }
 
     // proceed all positions/channels and count matches to 'c'
     let c = 0;
-    for (let i = 0, l = this.position.length; i < l; i++) {
+    for (let i = 0, l = this.positions.length; i < l; i++) {
       for (let j = 0; j < 6; j++) {
-        if (this.position[i].ch[j].pattern === patt) {
+        if (this.positions[i].ch[j].pattern === patt) {
           c++;
         }
       }
@@ -1137,7 +1137,7 @@ export default class Player {
    * @param pos If ommited, method calls itself recursively for all positions;
    */
   public countPositionFrames(pos?: number) {
-    const len = this.position.length;
+    const len = this.positions.length;
 
     // if 'pos' wasn't specified, recursively calling itself for all positions
     if (pos === undefined || pos < 0) {
@@ -1148,13 +1148,13 @@ export default class Player {
       // is position number in range?
     }
     else if (pos < len) {
-      let speed = this.position[pos].speed;
+      let speed = this.positions[pos].speed;
       let i = 0, line = 0;
 
       // proceed through all tracklines and all channel-patterns
       for (; line < MAX_PATTERN_LEN; line++) {
         for (let chn = 0; chn < 6; chn++) {
-          const ptr = this.pattern[this.position[pos].ch[chn].pattern].data[line];
+          const ptr = this.patterns[this.positions[pos].ch[chn].pattern].data[line];
 
           // in every channel-pattern we are looking for speed changes
           if (ptr.cmd === 0xF && ptr.cmd_data > 0) {
@@ -1179,7 +1179,7 @@ export default class Player {
         }
 
         // store count of interupts from start of position for every line
-        this.position[pos].frames[line] = i;
+        this.positions[pos].frames[line] = i;
 
         // increment number of interupts by speed value;
         // swing speed handled with nibble value of speed for even/odd trackline
@@ -1192,7 +1192,7 @@ export default class Player {
       }
 
       // and at last: total number of interupts for all tracklines of pattern...
-      this.position[pos].frames[line] = i;
+      this.positions[pos].frames[line] = i;
     }
   }
 
@@ -1206,8 +1206,8 @@ export default class Player {
       return false;
     }
 
-    const prev = this.position[pos - 1] || this.nullPosition;
-    const current = this.position[pos];
+    const prev = this.positions[pos - 1] || this.nullPosition;
+    const current = this.positions[pos];
 
     if (current && current.initParams && prev.initParams) {
       current.initParams.replace(prev.initParams);

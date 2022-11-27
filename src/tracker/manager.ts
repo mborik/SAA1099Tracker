@@ -34,14 +34,14 @@ export default class Manager {
     const p = this._parent.player;
     const sel: TracklistSelection = this._parent.tracklist.selection;
     const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
-    const line = sel.len ? sel.line : p.currentLine;
+    const line = sel.len ? sel.line : p.line;
     const length = sel.len ? (sel.len + 1) : undefined;
-    const pos = p.position[p.currentPosition] || p.nullPosition;
+    const pos = p.positions[p.position] || p.nullPosition;
     const chn = pos.ch[ch];
     const patt = chn.pattern;
 
     return {
-      pp: p.pattern[patt],
+      pp: p.patterns[patt],
       line: line,
       len: length
     };
@@ -87,7 +87,7 @@ export default class Manager {
   //---------------------------------------------------------------------------------------
   public clearSample() {
     const app = this._parent;
-    const smp = app.player.sample[app.workingSample];
+    const smp = app.player.samples[app.workingSample];
 
     smp.name = '';
     smp.loop = 0;
@@ -98,7 +98,7 @@ export default class Manager {
 
   public copySample() {
     const app = this._parent;
-    const smp = app.player.sample[app.workingSample];
+    const smp = app.player.samples[app.workingSample];
     const obj = {
       name: smp.name,
       loop: smp.loop,
@@ -116,7 +116,7 @@ export default class Manager {
     }
 
     const app = this._parent;
-    const smp = app.player.sample[app.workingSample];
+    const smp = app.player.samples[app.workingSample];
     let obj: any;
 
     try {
@@ -142,7 +142,7 @@ export default class Manager {
   //---------------------------------------------------------------------------------------
   public clearOrnament() {
     const app = this._parent;
-    const orn = app.player.ornament[app.workingOrnament];
+    const orn = app.player.ornaments[app.workingOrnament];
 
     orn.name = '';
     orn.data.fill(0);
@@ -151,7 +151,7 @@ export default class Manager {
 
   public copyOrnament() {
     const app = this._parent;
-    const orn = app.player.ornament[app.workingOrnament];
+    const orn = app.player.ornaments[app.workingOrnament];
     const obj = {
       name: orn.name,
       loop: orn.loop,
@@ -168,7 +168,7 @@ export default class Manager {
     }
 
     const app = this._parent;
-    const orn = app.player.ornament[app.workingOrnament];
+    const orn = app.player.ornaments[app.workingOrnament];
     let obj: any;
 
     try {

@@ -51,7 +51,7 @@ export default class CompilerRender extends CompilerOptimizer {
   version: number;
 
   prepareSamples(): void {
-    this.smpList = this._parent.player.sample.map((sample, sampleNumber) => {
+    this.smpList = this._parent.player.samples.map((sample, sampleNumber) => {
       let sampleLength = 0;
       if (sample != null) {
         sampleLength = sample.end;
@@ -104,7 +104,7 @@ export default class CompilerRender extends CompilerOptimizer {
   }
 
   prepareOrnaments() {
-    this.ornList = this._parent.player.ornament.map((ornament, ornNumber) => {
+    this.ornList = this._parent.player.ornaments.map((ornament, ornNumber) => {
       let ornLength = 0;
       if (ornament != null) {
         ornLength = ornament.end;
@@ -133,7 +133,7 @@ export default class CompilerRender extends CompilerOptimizer {
     const usedCmd = new Set<string>();
     const removedCmd = new Set<string>();
 
-    this.patList = this._parent.player.pattern.map((pattern, patNumber) => {
+    this.patList = this._parent.player.patterns.map((pattern, patNumber) => {
       let patLen = 0;
       if (pattern != null) {
         patLen = pattern.end;
@@ -384,7 +384,7 @@ export default class CompilerRender extends CompilerOptimizer {
   }
 
   preparePositions() {
-    this.posList = this._parent.player.position.map((position) => {
+    this.posList = this._parent.player.positions.map((position) => {
       const data = new Uint8Array(14);
       let offset = 0;
       data[offset++] = position.length;

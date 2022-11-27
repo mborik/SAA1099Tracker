@@ -115,8 +115,8 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
   const font: HTMLCanvasElement = this.pixelfont.obj;
 
   const player: Player = this.player;
-  const pos = player.currentPosition;
-  let pp = player.position[pos] || player.nullPosition;
+  const pos = player.position;
+  let pp = player.positions[pos] || player.nullPosition;
 
   const hexa: boolean = this.settings.hexTracklines;
   const triDigitLine = (!hexa && pp.length > 100);
@@ -136,7 +136,7 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
     offs.y = [];
   }
 
-  let line = player.currentLine - half;
+  let line = player.line - half;
   let backup: TracklistBackupPosLine = null;
   let status: number;
 
@@ -168,7 +168,7 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
       }
 
       // prev position hints
-      const prevPos = player.position[pos - 1];
+      const prevPos = player.positions[pos - 1];
       if (line + prevPos.length < 0) {
         continue;
       }
@@ -178,12 +178,12 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
       pp = prevPos;
     }
     else if (line >= pp.length) {
-      if (!(pos < (player.position.length - 1) && pp)) {
+      if (!(pos < (player.positions.length - 1) && pp)) {
         continue;
       }
 
       // next position hints
-      const nextPos = player.position[pos + 1];
+      const nextPos = player.positions[pos + 1];
       if (line - pp.length >= nextPos.length) {
         continue;
       }
@@ -203,7 +203,7 @@ Tracker.prototype.updateTracklist = function(update?: boolean): void {
     ctx.drawImage(font, charFromBuf(2), ccb, 5, 5, o.center + fontWidth, ypad, 5, 5);
 
     for (let channel = 0; channel < 6; channel++) {
-      const pt = player.pattern[pp.ch[channel].pattern];
+      const pt = player.patterns[pp.ch[channel].pattern];
       const dat = pt.data[line];
 
       for (let column = 0; column < 8; column++) {
@@ -305,7 +305,7 @@ Tracker.prototype.updateSampleEditor = function(
   limitTo?: number
 ): void {
   const o: SmpOrnEditor = this.smpornedit;
-  const sample: Sample = this.player.sample[this.workingSample];
+  const sample: Sample = this.player.samples[this.workingSample];
   const amp = o.amp.ctx;
   const noise = o.noise.ctx;
   const range = o.range.ctx;

@@ -153,7 +153,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
               -originalEvent.deltaY || originalEvent.wheelDelta ||
                 (originalEvent.type === 'DOMMouseScroll' && -originalEvent.detail);
 
-            if (e.type === 'mousedown' && !app.modeEdit && app.player.position.length) {
+            if (e.type === 'mousedown' && !app.modeEdit && app.player.positions.length) {
               app.onCmdToggleEditMode();
 
               e.stopPropagation();
@@ -261,7 +261,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scPattern',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        if (app.player.pattern.length <= 1) {
+        if (app.player.patterns.length <= 1) {
           return false;
         }
 
@@ -273,9 +273,9 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const el = $(e.currentTarget);
-        const pp = app.player.pattern[app.workingPattern];
+        const pp = app.player.patterns[app.workingPattern];
 
-        if (app.player.pattern.length <= 1) {
+        if (app.player.patterns.length <= 1) {
           return false;
         }
         else if (app.modePlay) {
@@ -297,18 +297,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryInputEventObject) => {
         const el = $(e.currentTarget);
 
-        if (!app.player.position.length) {
+        if (!app.player.positions.length) {
           return false;
         }
         else if (app.modePlay) {
-          el.val(app.player.currentPosition + 1);
+          el.val(app.player.position + 1);
           return false;
         }
 
         const pos = el.val() - 1;
 
-        app.player.currentPosition = pos;
-        app.player.currentLine = 0;
+        app.player.position = pos;
+        app.player.line = 0;
 
         app.player.storePositionRuntime(pos);
 
@@ -321,10 +321,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const el = e.currentTarget;
-        const pp = app.player.currentPosition;
-        const pos = app.player.position[pp];
+        const pp = app.player.position;
+        const pos = app.player.positions[pp];
 
-        if (!app.player.position.length) {
+        if (!app.player.positions.length) {
           return false;
         }
         else if (app.modePlay) {
@@ -334,8 +334,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 
         pos.length = +el.value;
 
-        if (app.player.currentLine >= pos.length) {
-          app.player.currentLine = pos.length - 1;
+        if (app.player.line >= pos.length) {
+          app.player.line = pos.length - 1;
         }
 
         app.player.countPositionFrames(pp);
@@ -355,10 +355,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const el = e.currentTarget;
-        const pp = app.player.currentPosition;
-        const pos = app.player.position[pp];
+        const pp = app.player.position;
+        const pos = app.player.positions[pp];
 
-        if (!app.player.position.length) {
+        if (!app.player.positions.length) {
           return false;
         }
         else if (app.modePlay) {
@@ -379,7 +379,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryInputEventObject) => {
         const el = e.currentTarget;
 
-        if (!app.player.position.length) {
+        if (!app.player.positions.length) {
           return false;
         }
         else if (app.modePlay) {
@@ -397,13 +397,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const el = e.currentTarget;
-        const pp = app.player.currentPosition;
+        const pp = app.player.position;
         const chn = parseInt(el.id.substr(-1)) - 1;
-        const pos = app.player.position[pp] || app.player.nullPosition;
+        const pos = app.player.positions[pp] || app.player.nullPosition;
         const val = +el.value;
         const prev = pos.ch[chn].pattern;
 
-        if (!app.player.position.length) {
+        if (!app.player.positions.length) {
           return false;
         }
         else if (app.modePlay) {
@@ -432,9 +432,9 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         }).change((e: JQueryInputEventObject) => {
           const el = e.currentTarget;
           const chn = parseInt(el.id.substr(-1)) - 1;
-          const pos = app.player.position[app.player.currentPosition];
+          const pos = app.player.positions[app.player.position];
 
-          if (!app.player.position.length) {
+          if (!app.player.positions.length) {
             return false;
           }
           else if (app.modePlay) {
@@ -526,14 +526,14 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#txSampleName',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.player.sample[app.workingSample].name = e.currentTarget.value;
+        app.player.samples[app.workingSample].name = e.currentTarget.value;
         app.file.modified = true;
       }
     }, {
       selector: '#txOrnName',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.player.ornament[app.workingOrnament].name = e.currentTarget.value;
+        app.player.ornaments[app.workingOrnament].name = e.currentTarget.value;
         app.file.modified = true;
       }
     }, {
@@ -581,7 +581,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#chSampleRelease',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        const sample = app.player.sample[app.workingSample];
+        const sample = app.player.samples[app.workingSample];
         if (sample.end !== sample.loop) {
           sample.releasable = e.currentTarget.checked;
         }
@@ -592,7 +592,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scSampleLength',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        const sample = app.player.sample[app.workingSample];
+        const sample = app.player.samples[app.workingSample];
         const offset = +e.currentTarget.value - sample.end;
         const looper = (sample.loop += offset);
 
@@ -606,7 +606,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scSampleRepeat',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        const sample = app.player.sample[app.workingSample];
+        const sample = app.player.samples[app.workingSample];
         const value = +e.currentTarget.value;
 
         sample.loop = sample.end - value;
@@ -629,7 +629,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           delay: { 'show': 500, 'hide': 0 },
           title: chord.name + `<kbd>{ ${seqtxt} }</kbd>`
         }).click(() => {
-          const orn = app.player.ornament[app.workingOrnament];
+          const orn = app.player.ornaments[app.workingOrnament];
           const l = chord.sequence.length;
 
           orn.data.fill(0);
@@ -649,7 +649,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scOrnLength',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        const orn = app.player.ornament[app.workingOrnament];
+        const orn = app.player.ornaments[app.workingOrnament];
         const offset = +e.currentTarget.value - orn.end;
         const looper = (orn.loop += offset);
 
@@ -663,7 +663,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scOrnRepeat',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        const orn = app.player.ornament[app.workingOrnament];
+        const orn = app.player.ornaments[app.workingOrnament];
         const value = +e.currentTarget.value;
 
         orn.loop = orn.end - value;
