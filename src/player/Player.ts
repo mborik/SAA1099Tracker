@@ -350,6 +350,23 @@ export default class Player {
       const chn2nd = (chn >> 1);      // calculate pair of channels
       const chn3rd = +(chn >= 3);     // calculate triple of channels
 
+      // check if delay sample was triggered
+      if (pp.commandDelaySample?.phase > 0) {
+        pp.commandDelaySample.phase = pp.commandDelaySample.phase - 1;
+      }
+      else if (pp.commandDelaySample) {
+        pp.tone = pp.commandDelaySample.tone;
+        pp.sample = pp.commandDelaySample.smp;
+        pp.ornament = pp.commandDelaySample.orn;
+        pp.sample_cursor = 0;
+        pp.ornament_cursor = 0;
+        pp.slideShift = 0;
+        pp.commandParam = pp.commandPhase = pp.commandValue1 = pp.commandValue2 = 0;
+        pp.released = false;
+        pp.playing = true;
+        pp.commandDelaySample = null;
+      }
+
       if (pp.playing) {
         // if playback in channel is enabled, fetch all smp/orn values...
         let samp = pp.sample.data[pp.sample_cursor];
@@ -448,8 +465,8 @@ export default class Player {
           // ornament offset
           case 0x7:
             if (pp.commandParam > 0 && pp.commandParam < pp.ornament.end) {
-              height = 0;
               pp.ornament_cursor = pp.commandParam;
+              height = pp.ornament.data[pp.ornament_cursor];
             }
             cmd = -1;
             break;
@@ -461,7 +478,12 @@ export default class Player {
 
               pp.sample_cursor = pp.commandParam;
               samp = pp.sample.data[pp.sample_cursor];
+              noise = samp.noise_value | (+samp.enable_noise << 2);
               vol.byte = samp.volume.byte;
+
+              if (pp.sample.releasable && pp.commandParam >= pp.sample.end) {
+                pp.released = true;
+              }
             }
             cmd = -1;
             break;
@@ -781,6 +803,20 @@ export default class Player {
           this.channelPatternRuntimeLine[chn] = pl.cmd_data - 1;
           pp.command = pp.commandParam = pp.commandPhase = 0;
         }
+        else if (pl.cmd === 0x8 && pl.cmd_data < this.currentSpeed && pl.smp && !pl.release) {
+          // delay sample by ticks (leave player untouched, just prepare state to trigger)
+          if (!pp.commandDelaySample) {
+            pp.commandDelaySample = {
+              phase: pl.cmd_data,
+              tone: pl.tone,
+              smp: this.sample[pl.smp],
+              orn: pl.orn_release ? this.ornament[0] :
+                (pl.orn ? this.ornament[pl.orn] : pp.ornament)
+            };
+          }
+
+          continue;
+        }
         else {
           pp.command = pl.cmd;
           pp.commandParam = pl.cmd_data;
@@ -792,6 +828,7 @@ export default class Player {
       }
       else if (pl.tone || pl.smp) {
         pp.command = pp.commandParam = pp.commandPhase = 0;
+        pp.commandDelaySample = null;
       }
 
       if (pl.volume.byte) {

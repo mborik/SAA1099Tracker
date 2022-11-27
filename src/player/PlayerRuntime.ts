@@ -45,6 +45,12 @@ interface PlayerParams {
 	commandPhase: number;
 	commandValue1: number;
 	commandValue2: number;
+  commandDelaySample: Nullable<{
+    phase: number;
+    tone: number;
+    smp: Sample;
+    orn: Ornament;
+  }>;
 
 	[key: string]: any;
 }
@@ -81,7 +87,8 @@ export default class PlayerRuntime extends SAASoundRegData {
       commandParam: 0,
       commandPhase: 0,
       commandValue1: 0,
-      commandValue2: 0
+      commandValue2: 0,
+      commandDelaySample: null
     };
   }
 
