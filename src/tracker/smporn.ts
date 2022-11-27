@@ -54,13 +54,13 @@ export default class SmpOrnEditor {
 
   initialized: boolean = false;
 
-  img: HTMLImageElement | null = null;
+  img: Nullable<HTMLImageElement> = null;
   amp: TrackerCanvasPair = { obj: null, ctx: null } as any;
   noise: TrackerCanvasPair = { obj: null, ctx: null } as any;
   range: TrackerCanvasPair = { obj: null, ctx: null } as any;
 
   smpeditShiftShown: boolean = false;
-  smpeditOffset: SampleEditorOffsets | null = null;
+  smpeditOffset: Nullable<SampleEditorOffsets> = null;
   smpeditScroll: number = 0;
   columnWidth: number = 0;
   halfing: number = 0;
@@ -127,7 +127,7 @@ export default class SmpOrnEditor {
 
   public updateSamplePitchShift(): void {
     const working = this._parent.workingSample;
-    const sample = this._parent.player.sample[working];
+    const sample = this._parent.player.samples[working];
     const noloop = (sample.end === sample.loop);
     const radix = this._parent.settings.hexSampleFreq ? 16 : 10;
 
@@ -186,7 +186,7 @@ export default class SmpOrnEditor {
       })
         .change({ index: i }, e => {
           const working = this._parent.workingSample;
-          const sample = this._parent.player.sample[working];
+          const sample = this._parent.player.samples[working];
           const data = sample.data;
           const el = <HTMLInputElement> e.target;
           const radix = settings.hexSampleFreq ? 16 : 10;
@@ -217,7 +217,7 @@ export default class SmpOrnEditor {
 
   public updateOrnamentEditor(update?: boolean): void {
     const working = this._parent.workingOrnament;
-    const orn = this._parent.player.ornament[working];
+    const orn = this._parent.player.ornaments[working];
     const noloop = (orn.end === orn.loop);
 
     $('#fxOrnEditor>.cell').each((i: number, el: HTMLElement) => {
@@ -260,7 +260,7 @@ export default class SmpOrnEditor {
       })
         .change({ index: i }, e => {
           const working = this._parent.workingOrnament;
-          const orn = this._parent.player.ornament[working];
+          const orn = this._parent.player.ornaments[working];
           const el = <HTMLInputElement> e.target;
 
           orn.data[e.data.index] = parseInt(el.value, 10);

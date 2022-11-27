@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker Player: Global helper classes definition.
- * Copyright (c) 2012-2020 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -77,6 +77,10 @@ export class Volume {
   set byte(v: number) {
     this._l = (v & 0x0f);
     this._r = (v >> 4) & 0x0f;
+  }
+
+  valueOf() {
+    return ((this._r & 0x0f) | ((this._l & 0x0f) << 4));
   }
 }
 

@@ -213,7 +213,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
         38: function() {
           logHotkey('Up - Cursor movement backward to every 16th line (signature)');
 
-          let cl = app.player.currentLine;
+          let cl = app.player.line;
           if (cl >= 16 && (cl & 0xf0) === cl) {
             cl = 16;
           }
@@ -230,10 +230,10 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
         40: function() {
           logHotkey('Down - Cursor movement forward to every 16th line (signature)');
 
-          const pp = app.player.position[app.player.currentPosition] || app.player.nullPosition;
+          const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
           const pl = pp.length;
 
-          let cl = app.player.currentLine;
+          let cl = app.player.line;
           if (cl < (pl - 16)) {
             cl = 16 - (cl & 0x0f);
           }
@@ -294,11 +294,11 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           const p = app.player;
           const sel = app.tracklist.selection;
           const ch = sel.len ? sel.channel : app.modeEditChannel;
-          let line = sel.len ? sel.line : p.currentLine;
+          let line = sel.len ? sel.line : p.line;
 
           const end = line + sel.len;
-          const pos = p.position[p.currentPosition] || p.nullPosition;
-          const pp = p.pattern[pos.ch[ch].pattern];
+          const pos = p.positions[p.position] ?? p.nullPosition;
+          const pp = p.patterns[pos.ch[ch].pattern];
 
           let t;
           for (plus = (plus - 1) * 12; line <= end; line++) {
@@ -316,13 +316,14 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
             }
           }
 
+          pp.updateTracklist();
           app.updateTracklist();
           app.file.modified = true;
         }
       }[key];
 
     case 'editorShift':
-      if (!keydown || !app.modeEdit || !app.player.position.length) {
+      if (!keydown || !app.modeEdit || !app.player.positions.length) {
         return;
       }
 
@@ -354,14 +355,14 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
         if (app.modePlay) {
           app.onCmdStop();
         }
-        else if (!app.player.position.length || (!app.modeEdit && app.modePlay)) {
+        else if (!app.player.positions.length || (!app.modeEdit && app.modePlay)) {
           return;
         }
       }
 
       return {
         9: function() {
-          if (!app.player.position.length || !app.modeEdit) {
+          if (!app.player.positions.length || !app.modeEdit) {
             return;
           }
 
@@ -380,7 +381,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           if (app.modePlay) {
             app.onCmdStop();
           }
-          if (app.player.position.length) {
+          if (app.player.positions.length) {
             app.onCmdToggleEditMode();
           }
         },
@@ -473,21 +474,22 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
           const p = app.player;
           const sel = app.tracklist.selection;
           const ch = sel.len ? sel.channel : app.modeEditChannel;
-          let line = sel.len ? sel.line : p.currentLine;
+          let line = sel.len ? sel.line : p.line;
 
           const end = line + sel.len;
-          const pos = p.position[p.currentPosition] || p.nullPosition;
-          const pp = p.pattern[pos.ch[ch].pattern];
+          const pp = p.positions[p.position] ?? p.nullPosition;
+          const pt = p.patterns[pp.ch[ch].pattern];
 
           for (--plus; line <= end; line++) {
-            if (line >= pp.end) {
+            if (line >= pt.end) {
               break;
             }
-            else if (pp.data[line].tone) {
-              pp.data[line].tone = Math.min(Math.max(pp.data[line].tone + plus, 1), 96);
+            else if (pt.data[line].tone) {
+              pt.data[line].tone = Math.min(Math.max(pt.data[line].tone + plus, 1), 96);
             }
           }
 
+          pt.updateTracklist();
           app.updateTracklist();
           app.file.modified = true;
         }
@@ -499,13 +501,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
         return;
       }
 
-      const cl = app.player.currentLine;
-      const pp = app.player.position[app.player.currentPosition] || app.player.nullPosition;
+      const cl = app.player.line;
+      const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
       const cp = pp.ch[app.modeEditChannel].pattern;
-      const pt = app.player.pattern[cp];
+      const pt = app.player.patterns[cp];
       const pl = pt.data[cl];
 
-      if (cl < pt.end) {
+      if (cl < pt.end && pl.tracklist.active) {
         switch (key) {
           case 8:
             return function() {
@@ -530,6 +532,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
               data[A].release = data[A].orn_release = false;
               data[A].cmd = data[A].cmd_data = data[A].volume.byte = 0;
 
+              pt.updateTracklist();
               app.updateTracklist();
               app.file.modified = true;
             };
@@ -557,6 +560,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
               data[B].release = data[B].orn_release = false;
               data[B].cmd = data[B].cmd_data = data[B].volume.byte = 0;
 
+              pt.updateTracklist();
               app.updateTracklist();
               app.file.modified = true;
             };
@@ -592,6 +596,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   break;
               }
 
+              pt.updateTracklist();
               app.updateEditorCombo();
               app.file.modified = true;
             };
@@ -627,6 +632,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   pl.orn_release = false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // SAMPLE column
@@ -649,6 +655,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // ORNAMENT column
@@ -681,6 +688,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // ATTENUATION 1 column
@@ -703,6 +711,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // ATTENUATION 2 column
@@ -725,6 +734,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
                   return false;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // COMMAND column
@@ -745,13 +755,14 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
 
                   // recalculate position frames if we changing speed
                   if (pl.cmd === 0xF && pl.cmd_data) {
-                    app.player.countPositionFrames(app.player.currentPosition);
+                    app.player.countPositionFrames(app.player.position);
                   }
                 }
                 else {
                   return;
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // COMMAND DATA 1 column
@@ -775,9 +786,10 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
 
                 // recalculate position frames if we changing speed
                 if (pl.cmd === 0xF && pl.cmd_data) {
-                  app.player.countPositionFrames(app.player.currentPosition);
+                  app.player.countPositionFrames(app.player.position);
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               },
               // COMMAND DATA 2 column
@@ -801,9 +813,10 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, key: 
 
                 // recalculate position frames if we changing speed
                 if (pl.cmd === 0xF && pl.cmd_data) {
-                  app.player.countPositionFrames(app.player.currentPosition);
+                  app.player.countPositionFrames(app.player.position);
                 }
 
+                pt.updateTracklist();
                 app.updateEditorCombo();
               }
             } as HotkeyMapColumnHandler;
@@ -897,7 +910,7 @@ Tracker.prototype.handleKeyEvent = function(e) {
   let key = e.which || e.charCode || e.keyCode;
 
   const textInput = (isInput && e.target.id.indexOf('tx') === 0);
-  const canPlay = !!this.player.position.length;
+  const canPlay = !!this.player.positions.length;
 
   // cross-platform fixes
   if (browser.isOpera && key === 219) {
@@ -1099,7 +1112,7 @@ Tracker.prototype.handleHotkeys = function(type, key, isInput, textInput) {
     }
     else if (!o.inDialog && !(fn = this.hotkeyMap(type, 'globalFs', key)) && !isInput) {
       if (this.activeTab === 0) {
-        if (!(fn = this.hotkeyMap(type, 'editorKeys', key)) && this.player.position.length && this.modeEdit) {
+        if (!(fn = this.hotkeyMap(type, 'editorKeys', key)) && this.player.positions.length && this.modeEdit) {
           fn = this.hotkeyMap(type, 'editorEdit', key);
         }
       }

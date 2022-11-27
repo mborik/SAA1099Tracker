@@ -37,11 +37,11 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
     const obj = <Tracklist> inputObj;
     let redraw = false;
     const p = this.player;
-    const pp = p.position[p.currentPosition];
+    const pp = p.positions[p.position];
     const sel = obj.selection;
     const offset = obj.canvasData.offset;
     const point = obj.pointToTracklist(x - offset.left, y - offset.top);
-    const line = p.currentLine;
+    const line = p.line;
     let len;
 
     if (this.modePlay || !pp) {
@@ -112,7 +112,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
 
       this.modeEditChannel = sel.start.channel;
       this.modeEditColumn = sel.start.column;
-      p.currentLine = point.line;
+      p.line = point.line;
       redraw = true;
     }
     else if (e.type === 'mousemove' && leftButton && !point.compare(sel.start)) {
@@ -136,7 +136,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
         if (this.modeEditColumn >= 5) {
           const chn = this.modeEditChannel;
           const pt = pp.ch[chn].pattern;
-          const patt = p.pattern[pt];
+          const patt = p.patterns[pt];
           cmd = patt.data[line].cmd;
         }
 
@@ -149,7 +149,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
   }
   else {
     const obj = <SmpOrnEditor> inputObj;
-    const sample = this.player.sample[this.workingSample];
+    const sample = this.player.samples[this.workingSample];
     const dragging = /mouse(down|move)/.test(e.type);
     let update = false;
     let redrawAll = false;

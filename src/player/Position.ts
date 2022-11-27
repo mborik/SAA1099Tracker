@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker Player: Positions class a interface definition.
- * Copyright (c) 2012-2020 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,8 @@ import PlayerRuntime from './PlayerRuntime';
 
 /** Position channel definition interface */
 interface Channel {
-	pattern: number;
-	pitch: number;
+  pattern: number;
+  pitch: number;
 }
 
 /**
@@ -40,7 +40,7 @@ export default class Position {
   /** Number of interupts which takes every line in tracklist */
   frames: number[] = [];
   /** Initial runtime parameters when player entering into this position */
-  initParams: PlayerRuntime | null = null;
+  initParams: Nullable<PlayerRuntime> = null;
 
   constructor(public length: number, public speed: number = 6) {
     this.ch = [...Array(6)].map(() => ({
