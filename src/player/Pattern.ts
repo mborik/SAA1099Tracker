@@ -100,7 +100,7 @@ export default class Pattern {
       }${
         dat.orn_release ? 'X' : dat.orn ? dat.orn.toString(16) : '\x7f'
       }${
-        dat.volume.byte ? toHex(dat.volume.byte, 2) : '\x7f\x7f'
+        dat.volume.byte ? toHex(dat.volume.valueOf(), 2) : '\x7f\x7f'
       }${
         (dat.cmd || dat.cmd_data) ? dat.cmd.toString(16) : '\x7f'
       }${

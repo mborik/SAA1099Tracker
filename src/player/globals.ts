@@ -78,6 +78,10 @@ export class Volume {
     this._l = (v & 0x0f);
     this._r = (v >> 4) & 0x0f;
   }
+
+  valueOf() {
+    return ((this._r & 0x0f) | ((this._l & 0x0f) << 4));
+  }
 }
 
 /** Channel mixer */
