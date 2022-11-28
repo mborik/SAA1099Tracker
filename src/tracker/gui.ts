@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { devLog } from '../commons/dev';
-import { abs } from '../commons/number';
+import { abs, validateAndClamp } from '../commons/number';
 import SyncTimer from '../commons/timer';
 import { MAX_PATTERN_LEN } from '../player/globals';
 import Tracker from '.';
@@ -207,7 +207,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scOctave',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.ctrlOctave = +e.currentTarget.value)
+      handler:  (e: JQueryInputEventObject) => {
+        app.ctrlOctave = validateAndClamp({
+          value: e.currentTarget.value,
+          initval: 2,
+          min: 1, max: 8
+        });
+      }
     }, {
       selector: '#scAutoSmp',
       method:   'TouchSpin',
@@ -219,7 +225,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scAutoSmp',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.ctrlSample = parseInt(e.currentTarget.value, 32))
+      handler:  (e: JQueryInputEventObject) => {
+        app.ctrlSample = validateAndClamp({
+          value: e.currentTarget.value,
+          radix: 32,
+          min: 0, max: 31
+        });
+      }
     }, {
       selector: '#scAutoOrn',
       method:   'TouchSpin',
@@ -231,7 +243,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scAutoOrn',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.ctrlOrnament = parseInt(e.currentTarget.value, 16))
+      handler:  (e: JQueryInputEventObject) => {
+        app.ctrlOrnament = validateAndClamp({
+          value: e.currentTarget.value,
+          radix: 16,
+          min: 0, max: 15
+        });
+      }
     }, {
       selector: '#scRowStep',
       method:   'TouchSpin',
@@ -242,7 +260,12 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scRowStep',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.ctrlRowStep = +e.currentTarget.value)
+      handler:  (e: JQueryInputEventObject) => {
+        app.ctrlRowStep = validateAndClamp({
+          value: e.currentTarget.value,
+          min: 0, max: 8
+        });
+      }
     }, {
       selector: '#scPattern,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
       method:   'TouchSpin',
@@ -264,8 +287,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         if (app.player.patterns.length <= 1) {
           return false;
         }
-
-        app.workingPattern = +e.currentTarget.value;
+        app.workingPattern = validateAndClamp({
+          value: e.currentTarget.value,
+          initval: 64,
+          min: 1, max: MAX_PATTERN_LEN
+        });
         app.updatePanelPattern();
       }
     }, {
@@ -295,22 +321,27 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scPosCurrent',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        const el = $(e.currentTarget);
+        const el = e.currentTarget;
+        const positions = app.player.positions.length;
 
-        if (!app.player.positions.length) {
+        if (!positions) {
           return false;
         }
         else if (app.modePlay) {
-          el.val(app.player.position + 1);
+          el.value = String(app.player.position + 1);
           return false;
         }
 
-        const pos = el.val() - 1;
+        const pos = validateAndClamp({
+          value: el.value,
+          initval: 64,
+          min: 1, max: positions
+        });
 
-        app.player.position = pos;
+        app.player.position = pos - 1;
         app.player.line = 0;
 
-        app.player.storePositionRuntime(pos);
+        app.player.storePositionRuntime();
 
         app.updatePanelInfo();
         app.updatePanelPosition();
@@ -332,7 +363,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
-        pos.length = +el.value;
+        pos.length = validateAndClamp({
+          value: el.value,
+          initval: 64,
+          min: 1, max: MAX_PATTERN_LEN
+        });
 
         if (app.player.line >= pos.length) {
           app.player.line = pos.length - 1;
@@ -366,7 +401,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
-        pos.speed = +el.value;
+        pos.speed = validateAndClamp({
+          value: el.value,
+          initval: 6,
+          min: 1, max: 31
+        });
 
         app.player.countPositionFrames(pp);
         app.updateTracklist();
@@ -378,6 +417,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const el = e.currentTarget;
+        const value = validateAndClamp({
+          value: el.value,
+          min: 1, max: app.player.positions.length
+        });
 
         if (!app.player.positions.length) {
           return false;
@@ -387,7 +430,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
         else {
-          app.player.repeatPosition = +el.value - 1;
+          app.player.repeatPosition = value - 1;
         }
 
         app.file.modified = true;
@@ -400,10 +443,9 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const pp = app.player.position;
         const chn = parseInt(el.id.substr(-1)) - 1;
         const pos = app.player.positions[pp] ?? app.player.nullPosition;
-        const val = +el.value;
         const prev = pos.ch[chn].pattern;
 
-        if (!app.player.positions.length) {
+        if (!(app.player.positions.length && app.player.patterns.length)) {
           return false;
         }
         else if (app.modePlay) {
@@ -411,8 +453,12 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
-        pos.ch[chn].pattern = val;
+        const val = validateAndClamp({
+          value: el.value,
+          min: 0, max: app.player.patterns.length - 1
+        });
 
+        pos.ch[chn].pattern = val;
         if (app.workingPattern === val || app.workingPattern === prev) {
           app.updatePanelPattern();
         }
@@ -426,10 +472,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: 'input[id^="scChnTrans"]',
       method:   'each',
       handler:  (_: number, el: HTMLInputElement) => {
-        $(el).TouchSpin({
-          initval: '0',
+        const props = {
+          initval: 0,
           min: -24, max: 24
-        }).change((e: JQueryInputEventObject) => {
+        };
+        $(el).TouchSpin(props).change((e: JQueryInputEventObject) => {
           const el = e.currentTarget;
           const chn = parseInt(el.id.substr(-1)) - 1;
           const pos = app.player.positions[app.player.position];
@@ -442,7 +489,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
             return false;
           }
           else {
-            pos.ch[chn].pitch = +el.value;
+            pos.ch[chn].pitch = validateAndClamp({
+              value: el.value,
+              ...props
+            });
           }
 
           app.file.modified = true;
@@ -495,18 +545,38 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scSampleNumber',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.workingSample = parseInt(e.currentTarget.value, 32);
-        app.workingOrnTestSample = app.workingSample;
+        app.workingSample = app.workingOrnTestSample = validateAndClamp({
+          value: e.currentTarget.value,
+          radix: 32,
+          initval: 1,
+          min: 1, max: 31
+        });
+
         app.updateSampleEditor(true);
         app.smpornedit.updateSamplePitchShift();
-
         $('#sbSampleScroll').scrollLeft(0);
+
+        $(e.currentTarget).val(app.workingSample.toString(32).toUpperCase());
+        $('#scOrnTestSample').val(app.workingOrnTestSample.toString(32).toUpperCase());
+      }
+    }, {
+      selector: '#scSampleNumber,#scOrnTestSample',
+      method:   'blur',
+      handler:  ({ currentTarget }: any) => {
+        currentTarget.value = app.workingSample.toString(32).toUpperCase();
         $('#scOrnTestSample').val(app.workingOrnTestSample.toString(32).toUpperCase());
       }
     }, {
       selector: '#scOrnTestSample',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.workingOrnTestSample = parseInt(e.currentTarget.value, 32))
+      handler:  (e: JQueryInputEventObject) => {
+        app.workingOrnTestSample = validateAndClamp({
+          value: e.currentTarget.value,
+          radix: 32,
+          initval: 1,
+          min: 1, max: 31
+        });
+      }
     }, {
       selector: '#scOrnNumber',
       method:   'TouchSpin',
@@ -519,8 +589,19 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scOrnNumber',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.workingOrnament = parseInt(e.currentTarget.value, 16);
+        app.workingOrnament = validateAndClamp({
+          value: e.currentTarget.value,
+          radix: 16,
+          initval: 1,
+          min: 1, max: 15
+        });
         app.smpornedit.updateOrnamentEditor(true);
+      }
+    }, {
+      selector: '#scOrnNumber',
+      method:   'blur',
+      handler:  ({ currentTarget }: any) => {
+        currentTarget.value = app.workingOrnament.toString(16).toUpperCase();
       }
     }, {
       selector: '#txSampleName',
@@ -541,12 +622,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'each',
       handler:  (_: number, el: HTMLInputElement) => {
         const cc = 'tx' + el.id.substr(2);
-        $(el).TouchSpin({
+        const props = {
           initval: app.workingSampleTone,
           min: 1, max: 96
-        }).change((e: JQueryInputEventObject) => {
+        };
+        $(el).TouchSpin(props).change((e: JQueryInputEventObject) => {
           const el = e.currentTarget;
-          const val = parseInt(el.value);
+          const val = validateAndClamp({ value: el.value, ...props });
           app.workingSampleTone = val;
 
           $('#scSampleTone,#scOrnTone')
@@ -593,7 +675,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const sample = app.player.samples[app.workingSample];
-        const offset = +e.currentTarget.value - sample.end;
+        const value = validateAndClamp({
+          value: e.currentTarget.value,
+          min: 0, max: 255
+        });
+        const offset = value - sample.end;
         const looper = (sample.loop += offset);
 
         sample.end += offset;
@@ -607,7 +693,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const sample = app.player.samples[app.workingSample];
-        const value = +e.currentTarget.value;
+        const value = validateAndClamp({
+          value: e.currentTarget.value,
+          min: 0, max: sample.end
+        });
 
         sample.loop = sample.end - value;
         app.updateSampleEditor(true);
@@ -650,7 +739,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const orn = app.player.ornaments[app.workingOrnament];
-        const offset = +e.currentTarget.value - orn.end;
+        const value = validateAndClamp({
+          value: e.currentTarget.value,
+          min: 0, max: 255
+        });
+        const offset = value - orn.end;
         const looper = (orn.loop += offset);
 
         orn.end += offset;
@@ -664,7 +757,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const orn = app.player.ornaments[app.workingOrnament];
-        const value = +e.currentTarget.value;
+        const value = validateAndClamp({
+          value: e.currentTarget.value,
+          min: 0, max: orn.end
+        });
 
         orn.loop = orn.end - value;
         app.smpornedit.updateOrnamentEditor(true);
@@ -680,7 +776,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSetTrkLines',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.settings.tracklistLines = +e.currentTarget.value)
+      handler:  (e: JQueryInputEventObject) => {
+        app.settings.tracklistLines = validateAndClamp({
+          value: e.currentTarget.value,
+          initval: 17,
+          min: 5, max: 127
+        });
+      }
     }, {
       selector: '#scSetTrkLineHeight',
       method:   'TouchSpin',
@@ -691,7 +793,13 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSetTrkLineHeight',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.settings.tracklistLineHeight = +e.currentTarget.value)
+      handler:  (e: JQueryInputEventObject) => {
+        app.settings.tracklistLineHeight = validateAndClamp({
+          value: e.currentTarget.value,
+          initval: 9,
+          min: 7, max: 15
+        });
+      }
     }, {
       selector: '#chSetTrkAutosize',
       method:   'change',

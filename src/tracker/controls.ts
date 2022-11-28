@@ -441,7 +441,7 @@ Tracker.prototype.onCmdSongPlay = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.position);
+    this.player.storePositionRuntime();
   }
 
   this.modePlay = this.player.playPosition(false, true, true);
@@ -455,7 +455,7 @@ Tracker.prototype.onCmdSongPlayStart = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.position);
+    this.player.storePositionRuntime();
   }
 
   this.modePlay = this.player.playPosition(true, true, true);
@@ -472,7 +472,7 @@ Tracker.prototype.onCmdPosPlay = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.position);
+    this.player.storePositionRuntime();
   }
 
   this.modePlay = this.player.playPosition(false, false, false);
@@ -486,7 +486,7 @@ Tracker.prototype.onCmdPosPlayStart = function() {
     this.doc.setStatusText();
   }
   if (this.modeEdit) {
-    this.player.storePositionRuntime(this.player.position);
+    this.player.storePositionRuntime();
   }
 
   this.modePlay = this.player.playPosition(false, false, true);
@@ -512,7 +512,7 @@ Tracker.prototype.onCmdToggleEditMode = function(newState) {
 
   if (!state) {
     this.doc.setStatusText();
-    this.player.storePositionRuntime(this.player.position);
+    this.player.storePositionRuntime();
   }
 
   el[state ? 'addClass' : 'removeClass']('edit');
@@ -736,12 +736,12 @@ Tracker.prototype.onCmdPosInsert = function() {
     return this.onCmdPosCreate();
   }
 
-  let p = this.player, chn;
+  const p = this.player;
   const i = p.position;
   const current = p.positions[i] ?? p.nullPosition;
   const pt = p.addNewPosition(current.length, current.speed, false);
 
-  for (chn = 0; chn < 6; chn++) {
+  for (let chn = 0; chn < 6; chn++) {
     pt.ch[chn].pattern = current.ch[chn].pattern;
     pt.ch[chn].pitch = current.ch[chn].pitch;
   }

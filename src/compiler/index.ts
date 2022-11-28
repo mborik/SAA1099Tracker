@@ -25,7 +25,7 @@
 import pick from 'lodash.pick';
 import { bytesToString, stringToBytes, writeWordLE } from '../commons/binary';
 import { devLog } from '../commons/dev';
-import { abs, toHex } from '../commons/number';
+import { abs, toHex, validateAndClamp } from '../commons/number';
 import constants from '../tracker/constants';
 import CompilerRender from './renderer';
 
@@ -178,10 +178,13 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
   }
 
   private onPlayerAddressChanging(value: string = $('#txPlayerAddress').val()) {
-    const radix = this.hexPlayerAddress ? 16 : 10;
-    const currentValue = Math.max(0, Math.min(65535, parseInt(value, radix) || 0));
-    this.playerAddress = currentValue;
+    this.playerAddress = validateAndClamp({
+      value,
+      radix: this.hexPlayerAddress ? 16 : 10,
+      min: 0, max: 65535
+    });
   }
+
   private onPlayerAddressChanged() {
     const playerAddress = this.playerAddress;
     $('#txPlayerAddress')

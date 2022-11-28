@@ -1206,7 +1206,7 @@ export default class Player {
    * of the previous position to first line of the actual position.
    * @param pos Position number bigger than zero;
    */
-  public storePositionRuntime(pos: number): boolean {
+  public storePositionRuntime(pos: number = this.position): boolean {
     if (pos === undefined || pos <= 0) {
       return false;
     }

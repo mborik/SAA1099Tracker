@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { devLog } from '../commons/dev';
-import { toWidth } from '../commons/number';
+import { toWidth, validateAndClamp } from '../commons/number';
 import { i18n } from './doc';
 import Tracker, { TrackerCanvasPair } from '.';
 
@@ -172,6 +172,13 @@ export default class SmpOrnEditor {
     const cell: JQuery = $('<div class="cell"/>');
     const spin: JQuery = $('<input type="text" class="form-control">');
 
+    const props = {
+      radix: (settings.hexSampleFreq ? 16 : 10),
+      initval: 0,
+      min: -1023,
+      max: 1023
+    };
+
     devLog('Tracker.smporn', 'Creating elements into Pitch-shift tab...');
     for (let i = 0; i < 256; i++) {
       const cloned = spin.clone();
@@ -179,19 +186,19 @@ export default class SmpOrnEditor {
 
       cloned.TouchSpin({
         prefix: toWidth(i, 3),
-        radix: (settings.hexSampleFreq ? 16 : 10),
-        initval: 0,
-        min: -1023,
-        max: 1023
+        ...props
       })
         .change({ index: i }, e => {
           const working = this._parent.workingSample;
           const sample = this._parent.player.samples[working];
           const data = sample.data;
           const el = <HTMLInputElement> e.target;
-          const radix = settings.hexSampleFreq ? 16 : 10;
 
-          data[e.data.index].shift = parseInt(el.value, radix);
+          data[e.data.index].shift = validateAndClamp({
+            ...props,
+            value: el.value,
+            radix: settings.hexSampleFreq ? 16 : 10
+          });
         })
         .prop('tabindex', 9);
     }
@@ -254,16 +261,18 @@ export default class SmpOrnEditor {
       const cloned = spin.clone();
       cell.clone().append(cloned).appendTo(el);
 
+      const props = { initval: 0, min: -60, max: 60 };
+
       cloned.TouchSpin({
-        prefix:  toWidth(i, 3),
-        initval: 0, min: -60, max: 60
+        prefix: toWidth(i, 3),
+        ...props
       })
         .change({ index: i }, e => {
           const working = this._parent.workingOrnament;
           const orn = this._parent.player.ornaments[working];
           const el = <HTMLInputElement> e.target;
 
-          orn.data[e.data.index] = parseInt(el.value, 10);
+          orn.data[e.data.index] = validateAndClamp({ value: el.value, ...props });
         })
         .prop('tabindex', 31);
     }
