@@ -27,7 +27,7 @@ import Compiler from '../compiler';
 import Player from '../player/Player';
 import { SAASound } from '../saa/SAASound';
 import { TrackerDoc } from './doc';
-import { STMFile } from './file';
+import { File } from './file.import';
 import { HotkeyMapType } from './keyboard';
 import Manager from './manager';
 import Settings from './settings';
@@ -83,7 +83,7 @@ export default class Tracker {
   smpornedit: SmpOrnEditor;
 
   player: Player;
-  file: STMFile;
+  file: File;
   compiler: Compiler;
 
   updatePanels: (this: Tracker) => void;
@@ -105,7 +105,7 @@ export default class Tracker {
   onCmdFileNew: (this: Tracker) => void;
   onCmdFileOpen: (this: Tracker) => void;
   onCmdFileSave: (this: Tracker, as?: boolean) => void;
-  onCmdFileImport: (this: Tracker, demosong?: string) => void;
+  onCmdFileImport: (this: Tracker, type?: string) => void;
   onCmdFileExport: (this: Tracker) => void;
   onCmdFileExportText: (this: Tracker) => void;
   onCmdFileCompile: (this: Tracker) => void;
@@ -171,7 +171,7 @@ export default class Tracker {
 
     app.player = new Player(new SAASound(AudioDriver.sampleRate));
     app.settings.init();
-    app.file = new STMFile(app);
+    app.file = new File(app);
     app.compiler = new Compiler(app);
 
     app.populateGUI(app);

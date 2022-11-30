@@ -24,7 +24,8 @@
 import { devLog } from '../commons/dev';
 
 
-declare type multitype = string | Uint8Array;
+export type multitype = string | Uint8Array;
+export type binarytype = { data: Uint8Array; fileName: string };
 
 export class FileSystem {
   private _input: JQuery<HTMLInputElement>;
@@ -35,7 +36,7 @@ export class FileSystem {
     this._link = $('#fsFileSave');
   }
 
-  public load(binary: boolean, fileExt: string): Promise<multitype> {
+  public load(binary: boolean, fileExt: string): Promise<multitype | binarytype> {
     return new Promise((resolve, reject) => {
       devLog('FileSystem',
         `Querying user to select ${binary ? 'binary' : 'text'} file of type "${fileExt}"...`);
@@ -57,9 +58,11 @@ export class FileSystem {
           devLog('FileSystem', 'FileReader loading %o...', file);
 
           reader.onload = () => {
-            resolve(binary ?
-              (new Uint8Array(reader.result as ArrayBuffer)) :
-              (reader.result as string)
+            resolve(
+              binary ? {
+                data: (new Uint8Array(reader.result as ArrayBuffer)),
+                fileName: file.name
+              } : (reader.result as string)
             );
           };
 

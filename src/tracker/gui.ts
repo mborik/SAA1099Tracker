@@ -899,8 +899,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
                 app.onCmdFileImport();
                 break;
 
-              case 'PT2':
               case 'ETrk':
+                app.onCmdFileImport(mode);
+                break;
+
+              case 'PT2':
               default:
                 return;
             }

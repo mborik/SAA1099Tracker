@@ -311,18 +311,27 @@ Tracker.prototype.onCmdFileSave = function(as) {
   }
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdFileImport = function(demosong) {
+Tracker.prototype.onCmdFileImport = function(type) {
   const keys = this.globalKeyState;
   if (this.modePlay || keys.lastPlayMode) {
     return;
   }
 
   let fnToCall: () => void;
-  if (demosong) {
-    fnToCall = this.file.importDemosong.bind(this.file, demosong, `demosongs/${demosong}.json`);
+  if (type === 'ETrk') {
+    fnToCall = () => {
+      this.file.importETracker();
+    };
+  }
+  else if (type) {
+    fnToCall = () => {
+      this.file.importDemosong(type, `demosongs/${type}.json`);
+    };
   }
   else {
-    fnToCall = this.file.importFile.bind(this.file);
+    fnToCall = () => {
+      this.file.importFile();
+    };
   }
 
   if (this.file.modified) {
