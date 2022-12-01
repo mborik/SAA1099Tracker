@@ -107,6 +107,7 @@ export default class Tracker {
   onCmdFileSave: (this: Tracker, as?: boolean) => void;
   onCmdFileImport: (this: Tracker, demosong?: string) => void;
   onCmdFileExport: (this: Tracker) => void;
+  onCmdFileExportText: (this: Tracker) => void;
   onCmdFileCompile: (this: Tracker) => void;
   onCmdPreferences: (this: Tracker) => void;
   onCmdOrnClear: (this: Tracker) => void;

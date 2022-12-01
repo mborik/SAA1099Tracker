@@ -705,4 +705,53 @@ export class STMFile {
 
     this.system.save(data, `${fileName}.STMF`, constants.MIMETYPE);
   }
+
+  exportTextDump() {
+    const player = this._parent.player;
+    const hexa = this._parent.settings.hexTracklines;
+    const fileName = this.getFixedFileName();
+    const empty = ' '.repeat(14);
+
+    const output = `SAA1099Tracker export of song "${
+      this._parent.songTitle
+    }" by "${
+      this._parent.songAuthor
+    }":\n\n${
+      player.positions.flatMap((pp, index) => {
+        const triDigitLine = (!hexa && pp.length > 100);
+
+        const lines = [
+          `Position ${index + 1}, speed: ${pp.speed}`,
+          `    ${
+            pp.ch.map(
+              ({ pitch }) => pitch ?
+                `${`           [ ${pitch}`.substr(-12)} ]` :
+                empty
+            ).join('')}`
+        ];
+        for (let buf = '', line = 0; line < pp.length; line++) {
+          buf = (`00${line.toString(hexa ? 16 : 10)}`).substr(-3);
+          buf = ` ${(triDigitLine || (!hexa && line > 99)) ? buf[0] : ' '}${buf.slice(1)}`;
+
+          for (let channel = 0; channel < 6; channel++) {
+            const pt = player.patterns[pp.ch[channel].pattern];
+            const dat = pt.data[line].tracklist;
+
+            if (line >= pt.end) {
+              buf += empty;
+            }
+            else {
+              buf += `  ${dat.tone} ${dat.column.substr(0, 4)} ${dat.column.substr(4)}`;
+            }
+          }
+
+          lines.push(buf.replace(/\x7f/g, '.').toUpperCase());
+        }
+
+        lines.push('');
+        return lines;
+      }).join('\n')}`;
+
+    this.system.save(output, `${fileName}.txt`, 'text/plain');
+  }
 }

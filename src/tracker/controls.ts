@@ -352,6 +352,10 @@ Tracker.prototype.onCmdFileExport = function() {
   this.file.exportFile();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileExportText = function() {
+  this.file.exportTextDump();
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileCompile = function() {
   this.compiler.show();
 };
