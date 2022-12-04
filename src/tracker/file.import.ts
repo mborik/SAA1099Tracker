@@ -21,13 +21,37 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { bytesToString } from '../commons/binary';
 import { devLog } from '../commons/dev';
+import { MAX_PATTERN_LEN } from '../player/globals';
 import Pattern from '../player/Pattern';
 import Position from '../player/Position';
 import constants from './constants';
 import { STMFile, STMFileFormat } from './file';
 import { binarytype } from './file.system';
 
+
+const calcSoundchipWaveform = (n: number) => {
+  if (n > 0 && n <= 0xC) {
+    let value = (n - 1) % 6;
+    switch (value) {
+      case 0: value = 0xA; break;
+      case 1: value = 0xE; break;
+      case 2: value = 0xC; break;
+      case 3: value = 0x2; break;
+      case 4: value = 0x6; break;
+      case 5: value = 0x4; break;
+    }
+    if (n > 6) {
+      value++;
+    }
+    n = value | 0x10;
+  }
+  else {
+    n = 0xD0;
+  }
+  return n;
+};
 
 export class File extends STMFile {
   private _messageLogger: string = '';
@@ -111,16 +135,18 @@ export class File extends STMFile {
   }
 
   importETracker() {
-    this.system.load(true, '.M,.cop,.bin,application/octet-stream')
+    this.system.load(true, '.M,.cop,.etc,.sng,.bin')
       .then(({ data, fileName }: binarytype) => {
         devLog('Tracker.file', `File "${fileName}" loaded, length ${data.length}...`);
         const title = fileName.slice(0, fileName.lastIndexOf('.')).trim();
         if (data.length === 78626) {
           this._processETrkModule(data, title);
         }
+        else if (data.length < 32768) {
+          this._processETrkCompiled(data, title);
+        }
         else {
-          throw 'File is not a E-Tracker module format!';
-          // TODO Implement compiled E-Tracker format
+          throw 'Unknown file format!';
         }
       })
       .catch((error: string) => {
@@ -254,7 +280,7 @@ export class File extends STMFile {
       const patLen = data[lens++];
       let patSpeed = 6;
 
-      const pt: Pattern[] = [...Array(6)].map(() => new Pattern(64));
+      const pt = [...Array(6)].map(() => new Pattern(64));
       lastorn.fill(-1);
 
       for (let line = 0; line < 64; line++) {
@@ -276,7 +302,7 @@ export class File extends STMFile {
           if (ornament === 31) {
             pt[chn].data[line].orn = 0;
           }
-          else if (ornament >= 16 || !ornNumbering[ornament + 1]) {
+          else if (ornament >= 15 || !ornNumbering[ornament + 1]) {
             if (lastorn[chn]) {
               pt[chn].data[line].orn_release = true;
             }
@@ -298,25 +324,7 @@ export class File extends STMFile {
               break;
             case 0x1: // soundchip waveform function
               c = 0x0E;
-              if (cd > 0 && cd <= 0xC) {
-                let value = (cd - 1) % 6;
-                switch (value) {
-                  case 0: value = 0xA; break;
-                  case 1: value = 0xE; break;
-                  case 2: value = 0xC; break;
-                  case 3: value = 0x2; break;
-                  case 4: value = 0x6; break;
-                  case 5: value = 0x4; break;
-                }
-
-                if (cd > 6) {
-                  value++;
-                }
-                cd = value | 0x10;
-              }
-              else {
-                cd = 0xD0;
-              }
+              cd = calcSoundchipWaveform(cd);
               break;
 
             case 0x2: // exchange stereo of sample
@@ -342,7 +350,7 @@ export class File extends STMFile {
 
             case 0x5: // soundchip noise function
               c = 0x0E;
-              cd = 0x20 | (cd & 1) | ((cd & 1) << 1);
+              cd = (cd & 1) ? 0x23 : 0x24;
               break;
 
             case 0x6: // release
@@ -432,7 +440,364 @@ export class File extends STMFile {
     });
 
     tracker.songTitle = title;
-    tracker.songAuthor = 'E-Tracker module import';
+    tracker.songAuthor = '[E-Tracker module import]';
+
+    this.modified = true;
+    this._updateAll();
+  }
+
+  private _processETrkCompiled(data: Uint8Array, title: string = '') {
+    const tracker = this._parent;
+    const player = tracker.player;
+
+    let [songPtr, patPtr, smpPtr, ornPtr, infoPtr] = new Uint16Array(data.slice(0, 10).buffer);
+    if (
+      songPtr >= data.length ||
+      patPtr >= data.length ||
+      smpPtr >= data.length ||
+      ornPtr >= data.length ||
+      infoPtr >= data.length ||
+      smpPtr >= ornPtr ||
+      ornPtr >= infoPtr ||
+      infoPtr >= songPtr ||
+      songPtr >= patPtr
+    ) {
+      throw 'File is not a E-Tracker compilation format!';
+    }
+
+    const count = { smp: 0, orn: 0, pat: 0, pos: 0 };
+
+    devLog('Tracker.file', 'Converting E-Tracker compilation...');
+    this._openOutputLog();
+    this._log(`E-Tracker compilation: ${title}`);
+
+    this.new(false);
+
+    if (bytesToString(data.slice(10, 30)) !== 'ETracker (C) BY ESI.') {
+      this._log('Missing E-Tracker signature in file header!', true);
+    }
+
+    for (let smp = 1; smpPtr < ornPtr; smp++, smpPtr += 2) {
+      const sample = player.samples[smp];
+
+      let i = 0;
+      let loopPos = -1;
+      let copyTicks = 1;
+      let shift = 0;
+      let lastvol = -1;
+      let noise_value = 0;
+      let enable_freq = false;
+      let enable_noise = false;
+      let ptr = data[smpPtr] + data[smpPtr + 1] * 256;
+
+      do {
+        let d = data[ptr++];
+        const flag = !!(d & 1);
+        d >>= 1;
+        if (flag) {
+          noise_value = d & 0x60;
+          enable_freq = !!(d & 8);
+          enable_noise = !!(d & 16);
+
+          shift = (((d & 7) << 8) | data[ptr++]);
+          if (shift >= 1024) {
+            shift = shift - 2048;
+          }
+        }
+        else {
+          if (d === 0x7f) {
+            loopPos = i;
+            continue;
+          }
+          else if (d === 0x7e) {
+            sample.loop = (loopPos < 0) ? i : loopPos;
+            sample.end = i;
+            break;
+          }
+          copyTicks = d + 2;
+          continue;
+        }
+
+        // TODO FIXME: I don't know what's going on here!
+        // This is kind of pointer somewhere into `infoPtr`
+        // to search in some "volume list" or what...?, but
+        // I don't get a point how it affecting a sample. :/
+        d = data[ptr]; // pointer to infoPtr? :/
+        for (let v = infoPtr + 1; ; v += 2) {
+          if (!data[v]) {
+            if (lastvol < 0) {
+              ptr++;
+            }
+            else {
+              d = lastvol;
+            }
+            break;
+          }
+          else if (d === data[v]) {
+            // data[++v] = count of repeats?
+            lastvol = d = data[++ptr]; // real volume?
+            ptr++;
+            break;
+          }
+        }
+        while (copyTicks--) {
+          sample.data[i].volume.byte = d;
+          sample.data[i].enable_freq = enable_freq;
+          sample.data[i].enable_noise = enable_noise;
+          sample.data[i].noise_value = noise_value;
+          sample.data[i].shift = shift;
+          i++;
+        }
+        copyTicks = 1;
+      } while (true);
+
+      count.smp++;
+    }
+
+    this._log(`Samples imported. Total in use: ${count.smp}`);
+
+    // (re)numbering ornaments
+    const ornNumbering = Array(32).fill(0);
+    for (let orn = 1; ornPtr < infoPtr; orn++, ornPtr += 2) {
+      if (orn >= 16) {
+        this._log(`Ornament-${orn} can't fit our format, out of space!`, true);
+        ornNumbering[orn] = 0;
+        continue;
+      }
+
+      ornNumbering[orn] = orn;
+      const ornament = player.ornaments[orn];
+
+      let i = 0;
+      let loopPos = -1;
+      let copyTicks = 1;
+      let ptr = data[ornPtr] + data[ornPtr + 1] * 256;
+
+      do {
+        const d = data[ptr++];
+        if (d === 0xFF) {
+          if (i === 1 && loopPos < 0 && ornament.data[0] === 0) {
+            ornNumbering[orn] = 0;
+            break;
+          }
+          ornament.loop = (loopPos < 0) ? i : loopPos;
+          ornament.end = i;
+          break;
+        }
+        if (d === 0xFE) {
+          loopPos = i;
+          continue;
+        }
+        if (d >= 0x60) {
+          copyTicks = d - (0x60 - 2);
+          continue;
+        }
+        while (copyTicks--) {
+          ornament.data[i++] = (d >= 24) ? (d - 48) : d;
+        }
+        copyTicks = 1;
+      } while (true);
+
+      count.orn++;
+    }
+
+    this._log(`Ornaments imported. Total in use: ${count.orn}`);
+
+    const positions = [];
+
+    let height = 0;
+    do {
+      const d = data[songPtr++];
+      if (d === 0xFF) {
+        break;
+      }
+      if (d === 0xFE) {
+        player.repeatPosition = count.pos;
+        continue;
+      }
+      if (d >= 60) {
+        height = d - 0x61;
+        continue;
+      }
+      positions.push({
+        height,
+        ePattern: Math.floor(d / 3)
+      });
+
+      count.pos++;
+    } while (true);
+
+    const patCount = positions.reduce((max, { ePattern }) => Math.max(max, ePattern), 0) + 1;
+    this._log(`Found ${patCount} of E-Tracker patterns in ${positions.length} positions`);
+
+    const lastorn = Array(6);
+    const ePatterns = [...Array(patCount)].map(
+      () => {
+        let patSpeed = 6;
+        let patLen = 0;
+
+        const pa = new Position(patLen, patSpeed);
+        const pt = [...Array(6)].map(() => new Pattern());
+        lastorn.fill(-1);
+
+        for (let chn = 0; chn < 6; chn++) {
+          let ptr = data[patPtr] + data[patPtr + 1] * 256;
+          patPtr += 2;
+
+          for (let line = 0, ptLineDat = pt[chn].data[line]; line < MAX_PATTERN_LEN;) {
+            let v = data[ptr++];
+
+            if (v < 15) { // [#00-#0f] set speed
+              v++;
+              if (line === 0) {
+                patSpeed = v;
+              }
+              else {
+                ptLineDat.cmd = 0x0F;
+                ptLineDat.cmd_data = v;
+              }
+              continue;
+            }
+
+            v -= 15;
+            if (v < 2) { // [#0f-#10] soundchip noise function
+              ptLineDat.cmd = 0xE;
+              ptLineDat.cmd_data = v ? 0x23 : 0x24;
+              continue;
+            }
+
+            v -= 2;
+            if (v < 16) { // [#11-#20] set volume
+              v = (v | (v << 4)) ^ 0xff;
+              ptLineDat.volume.byte = v;
+              continue;
+            }
+
+            v -= 16;
+            if (v < 13) { // [#21-#2d] soundchip waveform function
+              ptLineDat.cmd = 0xE;
+              ptLineDat.cmd_data = calcSoundchipWaveform(v);
+              continue;
+            }
+
+            v -= 13;
+            if (v < 2) { // [#2e-#2f] exchange stereo of sample
+              ptLineDat.cmd = 0xC;
+              ptLineDat.cmd_data = v | 0xF0;
+              continue;
+            }
+
+            v -= 2;
+            if (v < 31) { // [#30-#4f] ornament
+              if (v >= 15 || !ornNumbering[v + 1]) {
+                if (lastorn[chn]) {
+                  ptLineDat.orn_release = true;
+                }
+                ptLineDat.orn = lastorn[chn] = 0;
+              }
+              else {
+                ptLineDat.orn = lastorn[chn] = ornNumbering[v + 1];
+              }
+              continue;
+            }
+            else if (v === 31) {
+              ptLineDat.orn = 0;
+              continue;
+            }
+            else if (v === 32) { // [#50] release
+              ptLineDat.release = true;
+              ptLineDat.tone = 0;
+              ptLineDat.smp = 0;
+              ptLineDat.orn = 0;
+              continue;
+            }
+
+            v -= 34;
+            if (v < 0) { // [#51] break channel
+              pt[chn].end = line;
+              patLen = Math.max(patLen, line);
+              break;
+            }
+            else if (v < 31) { // [#52-#71] set sample
+              ptLineDat.smp = v + 1;
+              continue;
+            }
+            else if (v === 31) {
+              ptLineDat.smp = 0;
+              continue;
+            }
+
+            v -= 32;
+            if (v < 96) { // [#72-#d2] set note
+              ptLineDat.tone = v + 1;
+              continue;
+            }
+
+            line += v - 95; // [#d2-#ff] skip lines
+            ptLineDat = pt[chn].data[line];
+          }
+
+          const totalPatterns = player.patterns.length;
+          let newPattern = 0;
+          for (; newPattern < totalPatterns; newPattern++) {
+            if (player.patterns[newPattern].data.every(
+              (lineA, index) => {
+                const lineB = pt[chn].data[index];
+                return (
+                  lineA.tone === lineB.tone &&
+                  lineA.release === lineB.release &&
+                  lineA.smp === lineB.smp &&
+                  lineA.orn === lineB.orn &&
+                  lineA.orn_release === lineB.orn_release &&
+                  lineA.volume.byte === lineB.volume.byte &&
+                  lineA.cmd === lineB.cmd &&
+                  lineA.cmd_data === lineB.cmd_data
+                );
+              }
+            )) {
+              break;
+            }
+          }
+
+          pa.ch[chn].pattern = newPattern;
+          if (newPattern === totalPatterns) {
+            pt[chn].updateTracklist();
+            player.patterns.push(pt[chn]);
+            count.pat++;
+          }
+        }
+
+        pa.length = patLen;
+        pa.speed = patSpeed;
+
+        return pa;
+      }
+    );
+
+    this._log(`Patterns imported to ${count.pat} unique channel-patterns`);
+
+    for (let i = 0; i < positions.length; i++) {
+      const source = ePatterns[positions[i].ePattern];
+      const dest = player.addNewPosition(source.length, source.speed);
+      const pitch = positions[i].height;
+      dest.ch.forEach((ch, index) => {
+        ch.pattern = source.ch[index].pattern;
+        ch.pitch = pitch;
+      });
+    }
+
+    player.countPositionFrames();
+
+    devLog('Tracker.file', 'E-Tracker compilation successfully loaded... %o', {
+      title,
+      samples: count.smp,
+      ornaments: count.orn,
+      patterns: count.pat,
+      positions: count.pos,
+    });
+
+    tracker.songTitle = title;
+    tracker.songAuthor = '[E-Tracker compilation import]';
 
     this.modified = true;
     this._updateAll();
