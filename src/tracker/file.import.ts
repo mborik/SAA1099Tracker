@@ -482,7 +482,8 @@ export class File extends STMFile {
 
       let i = 0;
       let loopPos = -1;
-      let copyTicks = 1;
+      let baseCounter = 1;
+      let volRepeats = 1;
       let shift = 0;
       let lastvol = -1;
       let noise_value = 0;
@@ -490,7 +491,7 @@ export class File extends STMFile {
       let enable_noise = false;
       let ptr = data[smpPtr] + data[smpPtr + 1] * 256;
 
-      do {
+      const readParams = (): boolean => {
         let d = data[ptr++];
         const flag = !!(d & 1);
         d >>= 1;
@@ -507,48 +508,68 @@ export class File extends STMFile {
         else {
           if (d === 0x7f) {
             loopPos = i;
-            continue;
+            return readParams();
           }
           else if (d === 0x7e) {
             sample.loop = (loopPos < 0) ? i : loopPos;
             sample.end = i;
-            break;
+            return false;
           }
-          copyTicks = d + 2;
-          continue;
+          baseCounter = ++d;
+          return readParams();
         }
 
-        // TODO FIXME: I don't know what's going on here!
-        // This is kind of pointer somewhere into `infoPtr`
-        // to search in some "volume list" or what...?, but
-        // I don't get a point how it affecting a sample. :/
-        d = data[ptr]; // pointer to infoPtr? :/
-        for (let v = infoPtr + 1; ; v += 2) {
-          if (!data[v]) {
-            if (lastvol < 0) {
-              ptr++;
-            }
-            else {
-              d = lastvol;
-            }
-            break;
-          }
-          else if (d === data[v]) {
-            // data[++v] = count of repeats?
-            lastvol = d = data[++ptr]; // real volume?
-            ptr++;
-            break;
-          }
-        }
-        while (copyTicks--) {
-          sample.data[i].volume.byte = d;
+        return true;
+      };
+
+      do {
+        if (--baseCounter) {
           sample.data[i].enable_freq = enable_freq;
           sample.data[i].enable_noise = enable_noise;
           sample.data[i].noise_value = noise_value;
           sample.data[i].shift = shift;
-          i++;
+
+          if (--volRepeats) {
+            sample.data[i++].volume.byte = lastvol;
+            continue;
+          }
+          else {
+            const d = data[ptr++];
+            if (d === data[infoPtr]) {
+              volRepeats = data[ptr++];
+              lastvol = data[ptr++];
+              sample.data[i++].volume.byte = lastvol;
+              continue;
+            }
+            else {
+              for (let v = infoPtr + 1; ; v += 2) {
+                if (!data[v]) {
+                  volRepeats = 1;
+                  sample.data[i++].volume.byte = lastvol = d;
+                  if (readParams()) {
+                    baseCounter++;
+                  }
+                  break;
+                }
+                if (d === data[v]) {
+                  volRepeats = data[v + 1];
+                  sample.data[i++].volume.byte = lastvol = data[ptr++];
+                  baseCounter++;
+                  break;
+                }
+              }
+            }
+          }
         }
-        copyTicks = 1;
+        else {
+          baseCounter = 1;
+          if (readParams()) {
+            baseCounter++;
+          }
+          else {
+            break;
+          }
+        }
       } while (true);
 
       count.smp++;
