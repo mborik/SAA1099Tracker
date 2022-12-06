@@ -142,11 +142,17 @@ export class File extends STMFile {
         if (data.length === 78626) {
           this._processETrkModule(data, title);
         }
-        else if (data.length < 32768) {
+        else if (data.length < 16384) {
           this._processETrkCompiled(data, title);
         }
         else {
           throw 'Unknown file format!';
+        }
+
+        const settings = this._parent.settings;
+        if (settings.audioInterrupt !== 50) {
+          settings.audioInterrupt = 50;
+          settings.audioInit();
         }
       })
       .catch((error: string) => {
@@ -424,11 +430,12 @@ export class File extends STMFile {
         ch.pattern = source.ch[index].pattern;
       });
 
+      player.countPositionFrames(i);
+      player.storePositionRuntime(i);
       count.pos++;
     }
 
     player.repeatPosition = data[lens];
-    player.countPositionFrames();
 
     this._log(`Positions imported: Total ${totalPositions}, repeat ${player.repeatPosition}`);
     devLog('Tracker.file', 'E-Tracker module successfully loaded... %o', {
@@ -477,6 +484,13 @@ export class File extends STMFile {
       this._log('Missing E-Tracker signature in file header!', true);
     }
 
+    const volRepeatMapper = {};
+    for (let v = infoPtr + 1; data[v]; v += 2) {
+      if (data[v]) {
+        volRepeatMapper[data[v]] = data[v + 1];
+      }
+    }
+
     for (let smp = 1; smpPtr < ornPtr; smp++, smpPtr += 2) {
       const sample = player.samples[smp];
 
@@ -491,6 +505,30 @@ export class File extends STMFile {
       let enable_noise = false;
       let ptr = data[smpPtr] + data[smpPtr + 1] * 256;
 
+      const volCycle = () => {
+        sample.data[i].enable_freq = enable_freq;
+        sample.data[i].enable_noise = enable_noise;
+        sample.data[i].noise_value = noise_value;
+        sample.data[i].shift = shift;
+
+        if (!(--volRepeats)) {
+          const d = data[ptr++];
+          if (d === data[infoPtr]) {
+            volRepeats = data[ptr++];
+            lastvol = data[ptr++];
+          }
+          else if (volRepeatMapper[d]) {
+            volRepeats = volRepeatMapper[d];
+            lastvol = data[ptr++];
+          }
+          else {
+            volRepeats = 1;
+            lastvol = d;
+          }
+        }
+        sample.data[i++].volume.byte = lastvol;
+      };
+
       const readParams = (): boolean => {
         let d = data[ptr++];
         const flag = !!(d & 1);
@@ -504,69 +542,31 @@ export class File extends STMFile {
           if (shift >= 1024) {
             shift = shift - 2048;
           }
+          volCycle();
+          return true;
         }
         else {
           if (d === 0x7f) {
             loopPos = i;
-            return readParams();
+            return true;
           }
           else if (d === 0x7e) {
             sample.loop = (loopPos < 0) ? i : loopPos;
             sample.end = i;
             return false;
           }
-          baseCounter = ++d;
+          baseCounter = d + 2;
           return readParams();
         }
-
-        return true;
       };
 
       do {
         if (--baseCounter) {
-          sample.data[i].enable_freq = enable_freq;
-          sample.data[i].enable_noise = enable_noise;
-          sample.data[i].noise_value = noise_value;
-          sample.data[i].shift = shift;
-
-          if (--volRepeats) {
-            sample.data[i++].volume.byte = lastvol;
-            continue;
-          }
-          else {
-            const d = data[ptr++];
-            if (d === data[infoPtr]) {
-              volRepeats = data[ptr++];
-              lastvol = data[ptr++];
-              sample.data[i++].volume.byte = lastvol;
-              continue;
-            }
-            else {
-              for (let v = infoPtr + 1; ; v += 2) {
-                if (!data[v]) {
-                  volRepeats = 1;
-                  sample.data[i++].volume.byte = lastvol = d;
-                  if (readParams()) {
-                    baseCounter++;
-                  }
-                  break;
-                }
-                if (d === data[v]) {
-                  volRepeats = data[v + 1];
-                  sample.data[i++].volume.byte = lastvol = data[ptr++];
-                  baseCounter++;
-                  break;
-                }
-              }
-            }
-          }
+          volCycle();
         }
         else {
           baseCounter = 1;
-          if (readParams()) {
-            baseCounter++;
-          }
-          else {
+          if (!readParams()) {
             break;
           }
         }
@@ -644,8 +644,6 @@ export class File extends STMFile {
         height,
         ePattern: Math.floor(d / 3)
       });
-
-      count.pos++;
     } while (true);
 
     const patCount = positions.reduce((max, { ePattern }) => Math.max(max, ePattern), 0) + 1;
@@ -805,9 +803,11 @@ export class File extends STMFile {
         ch.pattern = source.ch[index].pattern;
         ch.pitch = pitch;
       });
-    }
 
-    player.countPositionFrames();
+      player.countPositionFrames(i);
+      player.storePositionRuntime(i);
+      count.pos++;
+    }
 
     devLog('Tracker.file', 'E-Tracker compilation successfully loaded... %o', {
       title,
