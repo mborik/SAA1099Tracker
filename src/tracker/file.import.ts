@@ -636,7 +636,7 @@ export class File extends STMFile {
         player.repeatPosition = count.pos;
         continue;
       }
-      if (d >= 60) {
+      if (d >= 0x60) {
         height = d - 0x61;
         continue;
       }
