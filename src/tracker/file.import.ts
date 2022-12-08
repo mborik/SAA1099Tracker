@@ -149,11 +149,20 @@ export class File extends STMFile {
           throw 'Unknown file format!';
         }
 
-        const settings = this._parent.settings;
-        if (settings.audioInterrupt !== 50) {
-          settings.audioInterrupt = 50;
-          settings.audioInit();
+        const app = this._parent;
+
+        app.player.position = 0;
+        app.player.line = 0;
+        app.workingPattern = 1;
+        app.workingSample = app.workingOrnTestSample = 1;
+        app.workingOrnament = 1;
+
+        if (app.settings.audioInterrupt !== 50) {
+          app.settings.audioInterrupt = 50;
+          app.settings.audioInit();
         }
+
+        this._updateAll();
       })
       .catch((error: string) => {
         $('#dialog').confirm({
@@ -279,7 +288,9 @@ export class File extends STMFile {
     let lens = 0x300;
 
     const lastorn = Array(6);
-    const lastvol = Array(6).fill(0);
+    const lastsmp = Array(6).fill(-1);
+    const lastvol = Array(6).fill(-1);
+    const lasttone = Array(6).fill(-1);
     const ePatterns: Position[] = [];
 
     for (let pat = 0; pat < 32; pat++) {
@@ -295,34 +306,38 @@ export class File extends STMFile {
           const octave = (data[ptr] & 0x70) >> 4;
           const sample = ((data[ptr + 1] & 0xf0) >> 4) | ((data[ptr] & 0x80) >> 3);
           const ornament = ((data[ptr + 2] & 0x80) >> 3) | (data[ptr + 1] & 0x0f);
+          const lineDat = pt[chn].data[line];
 
           if (tone < 12) {
-            pt[chn].data[line].tone = (octave * 12) + tone + 1;
+            lineDat.tone = lasttone[chn] = (octave * 12) + tone + 1;
           }
           else {
-            pt[chn].data[line].tone = 0;
+            lineDat.tone = 0;
           }
 
-          pt[chn].data[line].smp = (sample + 1) % 32;
+          lineDat.smp = (sample + 1) % 32;
+          if (lineDat.smp) {
+            lastsmp[chn] = lineDat.smp;
+          }
 
           if (ornament === 31) {
-            pt[chn].data[line].orn = 0;
+            lineDat.orn = 0;
           }
           else if (ornament >= 15 || !ornNumbering[ornament + 1]) {
             if (lastorn[chn]) {
-              pt[chn].data[line].orn_release = true;
+              lineDat.orn_release = true;
             }
-            pt[chn].data[line].orn = lastorn[chn] = 0;
+            lineDat.orn = lastorn[chn] = 0;
           }
           else {
-            pt[chn].data[line].orn = lastorn[chn] = ornNumbering[ornament + 1];
+            lineDat.orn = lastorn[chn] = ornNumbering[ornament + 1];
           }
 
           let c = (data[ptr + 2] & 0x70) >> 4;
           let cd = data[ptr + 2] & 0x0f;
 
-          if (lastvol[chn] < 0xff && pt[chn].data[line].tone) {
-            pt[chn].data[line].volume.byte = lastvol[chn] = 0xff;
+          if (lastvol[chn] < 0xff && lineDat.tone) {
+            lineDat.volume.byte = lastvol[chn] = 0xff;
           }
 
           switch (c) {
@@ -350,7 +365,27 @@ export class File extends STMFile {
 
             case 0x4: // set volume
               cd = (cd | (cd << 4)) ^ 0xff;
-              pt[chn].data[line].volume.byte = lastvol[chn] = cd;
+              if (cd === 0) {
+                lineDat.release = true;
+                lineDat.tone = 0;
+                lineDat.smp = 0;
+                lineDat.orn = 0;
+                lastvol[chn] = 0;
+              }
+              else if (lastvol[chn] === 0 && lasttone[chn] > 0 && lastsmp[chn] > 0) {
+                lineDat.tone = lasttone[chn];
+                lineDat.smp = lastsmp[chn];
+                if (lastorn[chn] > 0) {
+                  lineDat.orn = lastorn[chn];
+                }
+                if (cd < 0xff) {
+                  lineDat.volume.byte = cd;
+                }
+                lastvol[chn] = cd;
+              }
+              else {
+                lineDat.volume.byte = lastvol[chn] = cd;
+              }
               c = cd = 0;
               break;
 
@@ -360,10 +395,10 @@ export class File extends STMFile {
               break;
 
             case 0x6: // release
-              pt[chn].data[line].release = true;
-              pt[chn].data[line].tone = 0;
-              pt[chn].data[line].smp = 0;
-              pt[chn].data[line].orn = 0;
+              lineDat.release = true;
+              lineDat.tone = 0;
+              lineDat.smp = 0;
+              lineDat.orn = 0;
               c = cd = 0;
               break;
 
@@ -374,8 +409,8 @@ export class File extends STMFile {
               break;
           }
 
-          pt[chn].data[line].cmd = c;
-          pt[chn].data[line].cmd_data = cd;
+          lineDat.cmd = c;
+          lineDat.cmd_data = cd;
         }
       }
 
@@ -534,7 +569,7 @@ export class File extends STMFile {
         const flag = !!(d & 1);
         d >>= 1;
         if (flag) {
-          noise_value = d & 0x60;
+          noise_value = (d & 0x60) >> 5;
           enable_freq = !!(d & 8);
           enable_noise = !!(d & 16);
 
@@ -649,7 +684,6 @@ export class File extends STMFile {
     const patCount = positions.reduce((max, { ePattern }) => Math.max(max, ePattern), 0) + 1;
     this._log(`Found ${patCount} of E-Tracker patterns in ${positions.length} positions`);
 
-    const lastorn = Array(6);
     const ePatterns = [...Array(patCount)].map(
       () => {
         let patSpeed = 6;
@@ -657,11 +691,15 @@ export class File extends STMFile {
 
         const pa = new Position(patLen, patSpeed);
         const pt = [...Array(6)].map(() => new Pattern());
-        lastorn.fill(-1);
 
         for (let chn = 0; chn < 6; chn++) {
           let ptr = data[patPtr] + data[patPtr + 1] * 256;
           patPtr += 2;
+
+          let lastorn = -1;
+          let lastvol = -1;
+          let lastsmp = -1;
+          let lasttone = -1;
 
           for (let line = 0, ptLineDat = pt[chn].data[line]; line < MAX_PATTERN_LEN;) {
             let v = data[ptr++];
@@ -688,7 +726,26 @@ export class File extends STMFile {
             v -= 2;
             if (v < 16) { // [#11-#20] set volume
               v = (v | (v << 4)) ^ 0xff;
-              ptLineDat.volume.byte = v;
+              if (v === 0) { // release
+                ptLineDat.release = true;
+                ptLineDat.tone = 0;
+                ptLineDat.smp = 0;
+                ptLineDat.orn = 0;
+              }
+              else if (lastvol === 0 && lasttone > 0 && lastsmp > 0) {
+                ptLineDat.tone = lasttone;
+                ptLineDat.smp = lastsmp;
+                if (lastorn > 0) {
+                  ptLineDat.orn = lastorn;
+                }
+                if (v < 0xff) {
+                  ptLineDat.volume.byte = v;
+                }
+                lastvol = v;
+              }
+              else {
+                ptLineDat.volume.byte = lastvol = v;
+              }
               continue;
             }
 
@@ -709,13 +766,13 @@ export class File extends STMFile {
             v -= 2;
             if (v < 31) { // [#30-#4f] ornament
               if (v >= 15 || !ornNumbering[v + 1]) {
-                if (lastorn[chn]) {
+                if (lastorn) {
                   ptLineDat.orn_release = true;
                 }
-                ptLineDat.orn = lastorn[chn] = 0;
+                ptLineDat.orn = lastorn = 0;
               }
               else {
-                ptLineDat.orn = lastorn[chn] = ornNumbering[v + 1];
+                ptLineDat.orn = lastorn = ornNumbering[v + 1];
               }
               continue;
             }
@@ -738,17 +795,17 @@ export class File extends STMFile {
               break;
             }
             else if (v < 31) { // [#52-#71] set sample
-              ptLineDat.smp = v + 1;
+              ptLineDat.smp = lastsmp = v + 1;
               continue;
             }
             else if (v === 31) {
-              ptLineDat.smp = 0;
+              ptLineDat.smp = lastsmp = 0;
               continue;
             }
 
             v -= 32;
             if (v < 96) { // [#72-#d2] set note
-              ptLineDat.tone = v + 1;
+              ptLineDat.tone = lasttone = v + 1;
               continue;
             }
 
