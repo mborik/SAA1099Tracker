@@ -91,29 +91,14 @@ export class STMFile {
   private _storageLastId: number = undefined;
   private _storageBytesUsed: number = 0;
 
-  constructor(private _parent: Tracker) {
+  constructor(protected _parent: Tracker) {
     this._reloadStorage();
 
     this.dialog = new FileDialog(_parent, this);
     this.system = new FileSystem;
   }
 
-  private _storageSum(): void {
-    this._storageBytesUsed = 0;
-    this.storageMap.forEach(obj => {
-      this._storageBytesUsed += (obj.length + 40) * 2;
-    }, this);
-  }
-
-  private _storageFind(fn: (obj: StorageItem) => boolean): StorageItem {
-    for (const [, value] of this.storageMap) {
-      if (fn(value)) {
-        return value;
-      }
-    }
-  }
-
-  private _updateAll(): void {
+  protected _updateAll() {
     const tracker: Tracker = this._parent;
     const player: Player = tracker.player;
 
@@ -140,6 +125,22 @@ export class STMFile {
     tracker.smpornedit.updateOrnamentEditor(true);
 
     $('#main-tabpanel a').eq(tracker.activeTab).tab('show');
+  }
+
+
+  private _storageSum(): void {
+    this._storageBytesUsed = 0;
+    this.storageMap.forEach(obj => {
+      this._storageBytesUsed += (obj.length + 40) * 2;
+    }, this);
+  }
+
+  private _storageFind(fn: (obj: StorageItem) => boolean): StorageItem {
+    for (const [, value] of this.storageMap) {
+      if (fn(value)) {
+        return value;
+      }
+    }
   }
 
   /**
@@ -502,7 +503,7 @@ export class STMFile {
       JSON.stringify(output);
   }
 
-  new(): void {
+  new(update = true): void {
     const tracker = this._parent;
     const player = tracker.player;
 
@@ -525,7 +526,9 @@ export class STMFile {
     this.yetSaved = false;
     this.fileName = '';
 
-    this._updateAll();
+    if (update) {
+      this._updateAll();
+    }
   }
 
   loadFile(fileNameOrId: string|number): boolean {
@@ -646,57 +649,6 @@ export class STMFile {
     this._parent.settings.lastLoadedFileNumber = storageItem.id;
     this._reloadStorage();
     return true;
-  }
-
-  importDemosong(songName: string, url: string) {
-    devLog('Tracker.file', 'Loading "%s" demosong...', songName);
-    fetch(url)
-      .then((response) => response.json())
-      .then((data: STMFileFormat) => {
-        if (!this.parseJSON(data)) {
-          devLog('Tracker.file', 'JSON file parsing failed!');
-          throw 'JSON parsing failed!';
-        }
-
-        this.modified = true;
-        this.yetSaved = false;
-        this.fileName = '';
-
-        this._parent.settings.lastLoadedFileNumber = undefined;
-      })
-      .catch((error: string) => {
-        $('#dialog').confirm({
-          title: 'File import error',
-          text: error,
-          buttons: 'ok',
-          style: 'danger'
-        });
-      });
-  }
-
-  importFile() {
-    this.system.load(false, `.STMF,${constants.MIMETYPE}`)
-      .then((data: string) => {
-        devLog('Tracker.file', 'File loaded, trying to parse...');
-        if (!this.parseJSON(data)) {
-          devLog('Tracker.file', 'JSON file parsing failed!');
-          throw 'JSON parsing failed!';
-        }
-
-        this.modified = true;
-        this.yetSaved = false;
-        this.fileName = '';
-
-        this._parent.settings.lastLoadedFileNumber = undefined;
-      })
-      .catch((error: string) => {
-        $('#dialog').confirm({
-          title: 'File import error',
-          text: error,
-          buttons: 'ok',
-          style: 'danger'
-        });
-      });
   }
 
   exportFile() {

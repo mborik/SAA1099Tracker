@@ -286,15 +286,18 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
       'data-dismiss': 'modal'
     }).text('\xd7');
 
-    keys.inDialog = true;
+    dialog.on('shown.bs.modal', () => {
+      keys.inDialog = true;
+    }).on('hidden.bs.modal', () => {
+      $(dialog).off().find('.modal-body').empty();
+      keys.inDialog = false;
+    });
+
     dialog.modal('show')
       .find('.modal-body')
       .html('<pre>\n</pre>')
-      .prepend(button)
-      .on('hidden.bs.modal', () => {
-        keys.inDialog = false;
-        $(this).find('.modal-body').empty();
-      });
+      .scrollTop(0)
+      .prepend(button);
   }
 
   private composeSongData(): void {

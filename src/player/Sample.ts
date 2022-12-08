@@ -61,7 +61,7 @@ export default class Sample {
 
     for (let i = 255; i >= 0; i--) {
       const o = this.data[i];
-      const k = +o.enable_freq | (+o.enable_noise << 1) | (o.noise_value << 2);
+      const k = +o.enable_freq | (+o.enable_noise << 1) | ((o.noise_value & 3) << 2);
 
       if (pack && !arr.length && !k && !o.volume.byte && !o.shift) {
         continue;
@@ -88,7 +88,7 @@ export default class Sample {
 
       o.enable_freq = !!(k & 1);
       o.enable_noise = !!(k & 2);
-      o.noise_value = (k >> 2);
+      o.noise_value = (k >> 2) & 3;
       o.volume.byte = parseInt(s.substr(1, 2), 16) || 0;
 
       o.shift = parseInt(s.substr(3), 16) || 0;
