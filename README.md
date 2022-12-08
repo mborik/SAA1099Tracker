@@ -8,7 +8,7 @@ SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 
 _NOTE: for more info, please [see `doc` folder](doc) or [wiki-pages](https://github.com/mborik/SAA1099Tracker/wiki)..._
 
 ### Version
-2.0.2
+2.0.3
 
 
 ### Tech
