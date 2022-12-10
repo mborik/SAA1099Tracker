@@ -734,6 +734,7 @@ export default class Player {
             this.line--;
             this.chnLineAdd(-1);
 
+            this.position--;
             this.stopChannel();
             return false;
           }

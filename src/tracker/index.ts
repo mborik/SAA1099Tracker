@@ -23,6 +23,7 @@
 
 import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
+import SyncTimer from '../commons/timer';
 import Compiler from '../compiler';
 import Player from '../player/Player';
 import { SAASound } from '../saa/SAASound';
@@ -180,6 +181,11 @@ export default class Tracker {
 
   baseTimer(this: Tracker) {
     if (this.modePlay && this.player.changedLine) {
+      if (!this.player.mode) {
+        SyncTimer.pause();
+        this.modePlay = false;
+        this.globalKeyState.lastPlayMode = 0;
+      }
       if (this.player.changedPosition) {
         this.updatePanelPosition();
       }
