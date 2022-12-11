@@ -38,9 +38,9 @@ import Tracklist from './tracklist';
 
 export interface TrackerGlobalKeyState {
   inDialog: boolean;
-  modsHandled: boolean;
+  isMetaKey: boolean;
+  isShifted: boolean;
   lastPlayMode: number;
-  length: number;
 }
 
 export interface TrackerCanvasPair {
@@ -72,9 +72,9 @@ export default class Tracker {
 
   globalKeyState: TrackerGlobalKeyState = {
     inDialog: false,
-    modsHandled: false,
+    isMetaKey: false,
+    isShifted: false,
     lastPlayMode: 0,
-    length: 0
   };
 
   pixelfont: TrackerCanvasPair = { obj: null, ctx: null };
@@ -152,10 +152,10 @@ export default class Tracker {
   populateGUI: (this: Tracker, instance: Tracker) => void;
   initializeGUI: (this: Tracker, instance: Tracker) => void;
   handleMouseEvent: (this: Tracker, part: string, obj: any, e: JQueryEventObject) => void;
-  hotkeyMap: (this: Tracker, type: HotkeyMapType, group: string, key: number) => (key: number) => void;
-  handleHotkeys: (this: Tracker, type: HotkeyMapType, key: number, isInput: boolean, textInput: boolean) => boolean;
+  hotkeyMap: (this: Tracker, type: HotkeyMapType, group: string, code: string) => (code: string) => void;
+  handleHotkeys: (this: Tracker, type: HotkeyMapType, code: string, isInput: boolean, textInput: boolean) => boolean;
   handleKeyEvent: (this: Tracker, event: KeyboardEvent & { target: HTMLElement }) => void;
-  getKeynote: (this: Tracker, key: number, octave?: number) => number;
+  getKeynote: (this: Tracker, code: string, octave?: number) => number;
 
   constructor(public version: string) {
     devLog('Tracker', 'Inizializing SAA1099Tracker v%s...', version);

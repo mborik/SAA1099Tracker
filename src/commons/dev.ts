@@ -48,13 +48,3 @@ export const devLog = (section: string, ...args: any[]): void => {
   // eslint-disable-next-line
   console.log.apply(console, args);
 };
-
-export const logHotkey = (description: string, ...args: any[]) => {
-  if ((window as any).logHotkeys) {
-    // eslint-disable-next-line
-    console.log.apply(console, [
-      '%cTrackerHotkey: ' + description, 'color:tan',
-      ...args
-    ]);
-  }
-};

@@ -1,50 +1,55 @@
+`Mod` means any key-modifier on left side of keyboard (Ctrl, Cmd, Meta, or Alt)
+
 == GLOBAL HOTKEYS =============================================================
 ===============================================================================
 
-Esc                   | stop / exit current operation / close dialog
-F1                    | about dialog
-F2                    | tracklist editor
-F3                    | sample editor
-F4                    | ornament editor
-F5, Right Ctrl        | play song
-F6                    | play song from start
-F7, Right Shift       | play position
-F8                    | play position from start
-F9                    | toggle loop
-F10                   | preferences
-F11                   | show effect commands
-F12                   | show keyboard and controls
-Ctrl+O                | open
-Ctrl+S                | save
-Ctrl+X                | cut
-Ctrl+C                | copy
-Ctrl+V                | paste
-Ctrl+D                | clear/delete
-Ctrl+Z                | undo
-Ctrl+Y, Ctrl+Shift+Z  | redo
+Esc                     | stop / exit current operation / close dialog
+F1                      | about dialog
+F2                      | tracklist editor
+F3                      | sample editor (then switch to pitch-shift editor)
+F4                      | ornament editor
+F5, Right Ctrl          | play song
+F6                      | play song from start
+F7, Right Shift         | play position
+F8                      | play position from start
+F9                      | toggle loop
+F10                     | preferences
+F11                     | show effect commands
+F12                     | show keyboard and controls
+Mod+O                   | open
+Mod+S                   | save
+Mod+X                   | cut
+Mod+C                   | copy
+Mod+V                   | paste
+Mod+D                   | clear/delete
+Mod+Z                   | undo
+Mod+Y, Mod+Shift+Z      | redo
 
 == TRACKLIST EDITOR ===========================================================
 ===============================================================================
 
-Space                 | toggle edit mode
-Cursor keys           | basic tracklist cursor movement
-PgUp/PgDown, Home/End | fast tracklist cursor movement
-Ctrl+Up/Down          | cursor movement to every 16th line (signature)
-Tab/Shift+Tab         | move cursor to next/previous channel
-Ctrl+1..8             | set base octave
-Ctrl+9                | decrease rowstep
-Ctrl+0                | increase rowstep
-Ctrl+Shift+Left/Right | move to next/previous position
-Ctrl+Num1..Num6       | toggle on/off channels of SAA1099
-Num-/Num+             | transpose block/cursor by halftone up/down
-Ctrl+Shift+Num-/Num+  | transpose block/cursor by octave up/down
-Backspace             | delete trackline from channel-pattern
-Insert                | insert empty trackline to channel-pattern
-Delete                | clear trackline data under cursor
+Space                   | toggle edit mode
+Cursor keys             | basic tracklist cursor movement
+PgUp/PgDown, Home/End   | fast tracklist cursor movement
+Mod+Up/Down             | cursor movement to every 16th line (signature)
+Tab/Shift+Tab           | move cursor to next/previous channel
+Insert, Mod+I           | insert empty trackline to channel-pattern
+Backspace               | delete trackline from channel-pattern
+Delete                  | clear trackline data under cursor
+Mod+1..8                | set base octave
+Mod+9, Mod+0            | decrease/increase rowstep
+Mod+Shift+Left/Right    | move to next/previous position
+Mod+Shift+1..6,         \
+Mod+Num1..Num6          / toggle on/off channels of SAA1099
+Mod+Minus/Equal,        \
+Num-/Num+               / transpose block/cursor by halftone up/down
+Mod+Shift+Minus/Equal,  \
+Mod+Shift+Num-/Num+     / transpose block/cursor by octave up/down
 
 == SAMPLE/ORNAMENT EDITOR =====================================================
 ===============================================================================
 
-Ctrl+Shift+1..9|A..V  | change current sample/ornament
-Ctrl+1..8             | set base octave for sample/ornament editor test tone
-Alphanum keys section | works like 2.5 octave piano keyboard
+Mod+Shift+1..9|A..V     | change current sample/ornament
+Mod+Shift+Minus/Equal   | change previous/next sample/ornament
+Mod+1..8                | set base octave for sample/ornament editor test tone
+Alphanum keys section   | works like 2.5 octave piano keyboard

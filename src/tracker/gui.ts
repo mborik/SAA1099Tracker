@@ -86,19 +86,6 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         return app.handleKeyEvent(e.originalEvent as any);
       }
     }, {
-      global:   'window',
-      method:   'on',
-      param:    'blur',
-      handler:  () => {
-        const o = app.globalKeyState;
-        for (const key in o) {
-          if (+key) {
-            delete o[key];
-            o.length--;
-          }
-        }
-      }
-    }, {
       selector: '[data-tooltip]',
       method:   'each',
       handler:  (_: number, el: HTMLLabelElement & HTMLAnchorElement) => {
