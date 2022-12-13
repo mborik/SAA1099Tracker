@@ -23,6 +23,9 @@
 //---------------------------------------------------------------------------------------
 
 import { equalsByteArrays } from '../commons/binary';
+import Ornament from '../player/Ornament';
+import Pattern from '../player/Pattern';
+import Sample from '../player/Sample';
 
 
 const renumberSet = (set: Set<number>, index: number) =>
@@ -77,6 +80,45 @@ export class CompilerOptimizer {
       },
       new Set<number>()
     );
+  }
+
+  /**
+   * Method finds a real end of the sample, ignoring "empty" ticks.
+   */
+  optimizeSingleSample(sample?: Sample): Nullable<{
+    totalLength: number;
+    sampleLength: number;
+    sampleRepeat: number;
+  }> {
+    let sampleLength = sample?.end;
+    let sampleRepeat = sample?.loop;
+    if (
+      sample === null ||
+      sampleLength === 0 ||
+      (sampleLength === 1 && !sampleRepeat &&
+        !sample.data[0].volume.byte && !sample.data[0].shift && !sample.data[0].noise_value
+      )
+    ) {
+      return null;
+    }
+    let totalLength = (sample.releasable) ? sample.data.length : sampleLength;
+    let i = totalLength - 1;
+    while (sample.releasable ? i > sample.end : (i >= 0 && i < sampleRepeat)) {
+      if (sample.data[i].volume.byte || sample.data[i].shift || sample.data[i].noise_value) {
+        break;
+      }
+      if (!sample.releasable) {
+        sampleLength--;
+        sampleRepeat--;
+      }
+      totalLength--;
+      i--;
+    }
+    return {
+      totalLength,
+      sampleLength,
+      sampleRepeat
+    };
   }
 
   /**
@@ -218,6 +260,34 @@ export class CompilerOptimizer {
         }
       }
     });
+  }
+
+  /**
+   * Method finds a real end of the ornament, ignoring "empty" ticks.
+   */
+  optimizeSingleOrnament(ornament?: Ornament): Nullable<{
+    ornLength: number;
+    ornRepeat: number;
+  }> {
+    let ornLength = ornament?.end;
+    let ornRepeat = ornament?.loop;
+    if (
+      ornament === null ||
+      ornLength === 0 ||
+      (ornLength === 1 && !ornRepeat && !ornament.data[0])
+    ) {
+      return null;
+    }
+    let i = ornLength - 1;
+    while (i >= 0 && i < ornRepeat) {
+      if (ornament.data[i]) {
+        break;
+      }
+      ornLength--;
+      ornRepeat--;
+      i--;
+    }
+    return { ornLength, ornRepeat };
   }
 
   /**
@@ -477,6 +547,85 @@ export class CompilerOptimizer {
           posData[pn] = posData[pn] - 1;
         }
       }
+    });
+  }
+
+  /**
+   * Method convert all Pattern data to plain objects of props and do pre-optimization,
+   * so it removes repeating sample/ornament entries, volume or command changes.
+   */
+  preparePatternsAndPreoptimize(patterns: Pattern[]) {
+    return patterns.map((pattern) => {
+      if (!(pattern && pattern.end)) {
+        return null;
+      }
+      let lastSmp = -1;
+      let lastOrn = -1;
+      let lastVol = -1;
+      let lastCmd = -1;
+      return {
+        end: pattern.end,
+        data: pattern.data.map((line) => {
+          let {
+            tone: ton, smp, orn,
+            volume: { byte: vol },
+            cmd, cmd_data: dat,
+            release, orn_release
+          } = line;
+          if (release) {
+            lastSmp = -1;
+            lastOrn = -1;
+            lastVol = -1;
+            lastCmd = -1;
+          }
+          else {
+            const o = orn_release ? -1 : orn;
+            if (ton) {
+              if (smp === lastSmp) {
+                smp = 0;
+              }
+              else if (smp) {
+                lastSmp = smp;
+              }
+              if (o === lastOrn) {
+                orn = 0;
+              }
+              else if (orn || orn_release) {
+                lastOrn = o;
+              }
+              lastCmd = -1;
+            }
+            else {
+              if (smp) {
+                lastSmp = smp;
+                lastCmd = -1;
+              }
+              if (orn || orn_release) {
+                lastOrn = o;
+              }
+            }
+            if (vol === lastVol) {
+              vol = 0;
+            }
+            else if (vol) {
+              lastVol = vol;
+            }
+            const c = (cmd << 8) | dat;
+            if (c === lastCmd) {
+              cmd = 0;
+              dat = 0;
+            }
+            else if (cmd) {
+              lastCmd = c;
+            }
+          }
+          return {
+            ton, smp, orn,
+            vol, cmd, dat,
+            release, orn_release
+          };
+        })
+      };
     });
   }
 }
