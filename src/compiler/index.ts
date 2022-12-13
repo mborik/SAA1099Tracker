@@ -516,7 +516,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
         throw `Failed to fetch relocation table! [${resourceFileName}.rtb]`;
       });
 
-    this.verbose && this.log(`Relocating of the player to ${this.playerAddress}...`);
+    this.verbose && this.log(`Relocation of the player to ${this.playerAddress}...`);
     relocTable.forEach((offset) => {
       if (offset > 0) {
         writeWordLE(this.playerData, offset,

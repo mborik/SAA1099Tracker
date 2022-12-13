@@ -52,11 +52,8 @@ export default class CompilerRender extends CompilerOptimizer {
 
   prepareSamples(): void {
     this.smpList = this._parent.player.samples.map((sample, sampleNumber) => {
-      let sampleLength = 0;
-      if (sample != null) {
-        sampleLength = sample.end;
-      }
-      if (sample === null || sampleLength === 0) {
+      const { totalLength, sampleLength, sampleRepeat } = this.optimizeSingleSample(sample) ?? {};
+      if (!totalLength) {
         if (sampleNumber === 0) {
           // sample 0 will be empty
           const data = new Uint8Array(1);
@@ -66,12 +63,10 @@ export default class CompilerRender extends CompilerOptimizer {
         return null;
       }
       else {
-        const totalLength = (sample.releasable) ? sample.data.length : sampleLength;
-        const totalDataLength: number =
+        const data = new Uint8Array(
           (3 * sampleLength + 1) +
-          ((sample.releasable) ? 1 + ((totalLength - sampleLength) * 3) + 1 : 0);
-
-        const data = new Uint8Array(totalDataLength);
+          ((sample.releasable) ? 1 + ((totalLength - sampleLength) * 3) + 1 : 0)
+        );
 
         let offset = 0;
         if (sample.releasable) {
@@ -90,7 +85,6 @@ export default class CompilerRender extends CompilerOptimizer {
           data[offset++] = shift & 0xFF;
 
           if (i === sampleLength - 1) {
-            const sampleRepeat = sample.loop;
             data[offset++] = (sampleRepeat === sampleLength) ? 0x80 : sampleRepeat - sampleLength;
           }
         }
@@ -105,11 +99,8 @@ export default class CompilerRender extends CompilerOptimizer {
 
   prepareOrnaments() {
     this.ornList = this._parent.player.ornaments.map((ornament, ornNumber) => {
-      let ornLength = 0;
-      if (ornament != null) {
-        ornLength = ornament.end;
-      }
-      if (ornament === null || ornLength === 0) {
+      const { ornLength, ornRepeat } = this.optimizeSingleOrnament(ornament) ?? {};
+      if (!ornLength) {
         if (ornNumber === 0) {
           const data = new Uint8Array(1);
           data[0] = 0x80;
@@ -121,7 +112,6 @@ export default class CompilerRender extends CompilerOptimizer {
         for (let i = 0; i < ornLength; i++) {
           data[i] = ornament.data[i] & 0x7F;
         }
-        const ornRepeat = ornament.loop;
         data[ornLength] = (ornRepeat === ornLength) ? 0x80 : ornRepeat - ornLength;
         return data;
       }
@@ -133,12 +123,10 @@ export default class CompilerRender extends CompilerOptimizer {
     const usedCmd = new Set<string>();
     const removedCmd = new Set<string>();
 
-    this.patList = this._parent.player.patterns.map((pattern, patNumber) => {
-      let patLen = 0;
-      if (pattern != null) {
-        patLen = pattern.end;
-      }
-      if (pattern === null || patLen === 0) {
+    this.patList = this.preparePatternsAndPreoptimize(
+      this._parent.player.patterns
+    ).map((pattern, patNumber) => {
+      if (pattern === null) {
         if (patNumber === 0) {
           // pattern 0 is always empty
           const emptyPattern = new Uint8Array(1);
@@ -148,16 +136,16 @@ export default class CompilerRender extends CompilerOptimizer {
         return null;
       }
       else {
-        let data = new Uint8Array(5 * patLen + 1);
+        const data = new Uint8Array(5 * pattern.end + 1);
 
         // searching for possible Cmd-B
         let breakToLine = -1;
         let breakToLineOffset = -1;
-        for (let i = 0; i < patLen; i++) {
+        for (let i = 0; i < pattern.end; i++) {
           const patLine = pattern.data[i];
           if (patLine.cmd === 0x0B) {
             // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
-            const line = patLine.cmd_data;
+            const line = patLine.dat;
             if (line >= 0 && line < i) {
               breakToLine = line;
               break;
@@ -169,14 +157,8 @@ export default class CompilerRender extends CompilerOptimizer {
         let lastEmptyLines = 0;
         let lastCmd = 0;
         let lastDat = -1;
-        for (let i = 0; i < patLen; i++) {
-          let {
-            tone: ton, smp, orn,
-            volume: { byte: vol },
-            cmd, cmd_data: dat,
-            release, orn_release
-          } = pattern.data[i];
-
+        for (let i = 0; i < pattern.end; i++) {
+          let { ton, smp, orn, vol, cmd, dat, release, orn_release } = pattern.data[i];
           let cmdStr = `${toHex(cmd, 1)}${toHex(dat, 2)}`.toUpperCase();
 
           // filter invalid commands
@@ -350,11 +332,7 @@ export default class CompilerRender extends CompilerOptimizer {
           data[offY++] = 0xFF;  // end mark
         }
 
-        if (offY < data.length) {
-          data = data.slice(0, offY);
-        }
-
-        return data;
+        return data.slice(0, offY);
       }
     });
 
