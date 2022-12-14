@@ -50,8 +50,7 @@
         [Cxy] - false chord
                 (for example C37 is ornament 0,3,7 - minor)
 
-[Dxx] - DELAY LISTING AFTER CURRENT LINE
-        xx - delay (in ticks)
+[Dxx] - (RESERVED)
 
 [Exy] - SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL
         x: enable/disable envelope control

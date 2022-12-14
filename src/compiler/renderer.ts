@@ -170,8 +170,8 @@ export default class CompilerRender extends CompilerOptimizer {
               case 0xA : // VOLUME SLIDE
                 if (
                   (dat & 0x0F) === 0 || (dat & 0xF0) === 0 || // `period` nor `pitch` cannot be 0
-                    (cmd === 0xA && (dat & 0x0F) === 0x08) ||   // value change for VOLUME SLIDE cannot be 8
-                    (cmd === 0x3 && ton === 0)                  // missing tone for GLISSANDO
+                    (cmd === 0xA && (dat & 0x0F) === 0x08) || // value change for VOLUME SLIDE cannot be 8
+                    (cmd === 0x3 && ton === 0)                // missing tone for GLISSANDO
                 ) {
                   removedCmd.add(cmdStr);
                   cmd = 0;
@@ -190,8 +190,8 @@ export default class CompilerRender extends CompilerOptimizer {
               case 0x7 : // ORNAMENT OFFSET
               case 0x8 : // DELAY SAMPLE
               case 0x9 : // SAMPLE OFFSET
-              case 0xD : // DELAY LISTING ON CURRENT LINE
-                if (dat === 0) { // dat cannot be 0
+              case 0xD : // NOT IMPLEMENTED
+                if (dat === 0 || cmd === 0xD) { // dat cannot be 0
                   removedCmd.add(cmdStr);
                   cmd = 0;
                 }
@@ -219,8 +219,10 @@ export default class CompilerRender extends CompilerOptimizer {
 
               case 0xE : // SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL
                 const d = dat & 0xF0;
-                if ((d > 0x20 && d !== 0xD0) // invalid values for ENVELOPE-CONTROL
-                    || (d === 0x20 && dat > 0x24)) { // invalid values for NOISE-CONTROL
+                if (
+                  (d > 0x20 && d !== 0xD0) || // invalid values for ENVELOPE-CONTROL
+                  (d === 0x20 && dat > 0x24)  // invalid values for NOISE-CONTROL
+                ) {
                   removedCmd.add(cmdStr);
                   cmd = 0;
                 }

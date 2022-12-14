@@ -173,7 +173,7 @@ Tracker.prototype.doc = {
     /* 15 */ 'COMMAND: AXY - volume slide',
     /* 16 */ 'COMMAND: BXX - break current channel-pattern and loop from line',
     /* 17 */ 'COMMAND: CXY - special command',
-    /* 18 */ 'COMMAND: DXX - delay listing on current line',
+    /* 18 */ 'COMMAND: DXX - not implemented',
     /* 19 */ 'COMMAND: EXY - soundchip envelope or noise channel control',
     /* 20 */ 'COMMAND: FXX - change global speed',
     /* 21 */ 'COMMAND 1st parameter: period of change (in ticks)',
@@ -224,7 +224,6 @@ Tracker.prototype.doc = {
           break;
         case 0x6:
         case 0x8:
-        case 0xD:
           i = 23;
           break;
         case 0x7:
