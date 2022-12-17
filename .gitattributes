@@ -8,3 +8,6 @@
 *.ttf binary
 *.eot binary
 *.woff* binary
+
+*.bin binary diff=hex
+*.rtb binary diff=hex
