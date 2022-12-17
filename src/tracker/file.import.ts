@@ -135,15 +135,25 @@ export class File extends STMFile {
   }
 
   importETracker() {
-    this.system.load(true, '.M,.cop,.etc,.sng,.bin')
+    this.system.load(true, '.M,.cop,.etc,.saa,.sng,.bin')
       .then(({ data, fileName }: binarytype) => {
         devLog('Tracker.file', `File "${fileName}" loaded, length ${data.length}...`);
         const title = fileName.slice(0, fileName.lastIndexOf('.')).trim();
         if (data.length === 78626) {
           this._processETrkModule(data, title);
         }
-        else if (data.length < 16384) {
-          this._processETrkCompiled(data, title);
+        else if (data.length < 32768) {
+          let foundAtOffset: number;
+          for (let i = 0; i < 1280; i++) {
+            if (bytesToString(data.slice(i + 10, i + 30)) === 'ETracker (C) BY ESI.') {
+              foundAtOffset = i;
+              break;
+            }
+          }
+          if (foundAtOffset == null) {
+            throw 'Not a E-Tracker compilation! Missing E-Tracker signature in file header.';
+          }
+          this._processETrkCompiled(data.slice(foundAtOffset), title);
         }
         else {
           throw 'Unknown file format!';
@@ -515,10 +525,6 @@ export class File extends STMFile {
 
     this.new(false);
 
-    if (bytesToString(data.slice(10, 30)) !== 'ETracker (C) BY ESI.') {
-      this._log('Missing E-Tracker signature in file header!', true);
-    }
-
     const volRepeatMapper = {};
     for (let v = infoPtr + 1; data[v]; v += 2) {
       if (data[v]) {
@@ -731,6 +737,7 @@ export class File extends STMFile {
                 ptLineDat.tone = 0;
                 ptLineDat.smp = 0;
                 ptLineDat.orn = 0;
+                lastvol = 0;
               }
               else if (lastvol === 0 && lasttone > 0 && lastsmp > 0) {
                 ptLineDat.tone = lasttone;
