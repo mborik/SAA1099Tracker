@@ -23,7 +23,7 @@
 
 import pako from 'pako';
 import { devLog } from '../commons/dev';
-import { abs, toHex } from '../commons/number';
+import { abs, toHex, validateAndClamp } from '../commons/number';
 import Player from '../player/Player';
 import constants from './constants';
 import { i18n } from './doc';
@@ -317,30 +317,82 @@ export class STMFile {
     if (typeof data.current === 'object') {
       const o: any = data.current;
 
-      player.repeatPosition = data.repeatPos || 0;
-      player.position = o.position || 0;
-      player.line = o.line || 0;
+      player.repeatPosition = validateAndClamp({
+        value: data.repeatPos as any,
+        initval: 0,
+        min: 0, max: data.positions.length - 1
+      });
+      player.position = validateAndClamp({
+        value: o.position,
+        initval: 0,
+        min: 0, max: data.positions.length - 1
+      });
 
-      tracker.workingPattern = o.pattern || 0;
-      tracker.workingSample = o.sample || 1;
-      tracker.workingOrnament = o.ornament || 1;
-      tracker.workingOrnTestSample = o.ornSample || 1;
-      tracker.workingSampleTone = o.smpornTone || 37;
+      tracker.workingPattern = validateAndClamp({
+        value: o.pattern,
+        initval: 0,
+        min: 0, max: 255
+      });
+      tracker.workingSample = validateAndClamp({
+        value: o.sample,
+        initval: 1,
+        min: 1, max: 31
+      });
+      tracker.workingOrnament = validateAndClamp({
+        value: o.ornament,
+        initval: 1,
+        min: 1, max: 15
+      });
+      tracker.workingOrnTestSample = validateAndClamp({
+        value: o.ornSample,
+        initval: 1,
+        min: 1, max: 31
+      });
+      tracker.workingSampleTone = validateAndClamp({
+        value: o.sampleTone,
+        initval: 37,
+        min: 1, max: 96
+      });
+
+      player.line = o.line || 0;
       tracker.modeEditChannel = o.channel || 0;
       tracker.modeEditColumn = o.column || 0;
 
-      const c: any = Object.assign({}, data.ctrl, data.config);
+      const c: any = {
+        ...data.ctrl,
+        ...data.config
+      };
 
-      player.loopMode = c.loopMode || true;
+      tracker.ctrlOctave = validateAndClamp({
+        value: c.octave,
+        initval: 2,
+        min: 1, max: 8
+      });
+      tracker.ctrlSample = validateAndClamp({
+        value: c.sample,
+        initval: 0,
+        min: 0, max: 31
+      });
+      tracker.ctrlOrnament = validateAndClamp({
+        value: c.ornament,
+        initval: 0,
+        min: 0, max: 15
+      });
+      tracker.ctrlRowStep = validateAndClamp({
+        value: c.rowStep,
+        initval: 0,
+        min: 0, max: 8
+      });
+      tracker.activeTab = validateAndClamp({
+        value: c.activeTab,
+        initval: 0,
+        min: 0, max: 2
+      });
 
-      tracker.ctrlOctave = c.octave || 2;
-      tracker.ctrlSample = c.sample || 0;
-      tracker.ctrlOrnament = c.ornament || 0;
-      tracker.ctrlRowStep = c.rowStep || 0;
-      tracker.activeTab = c.activeTab || 0;
-      tracker.modeEdit = c.editMode || false;
+      player.loopMode = c.loopMode ?? true;
+      tracker.modeEdit = c.editMode ?? false;
 
-      const int = c.interrupt || 50;
+      const int = c.interrupt === 32 ? 32 : 50;
       if (settings.audioInterrupt !== int) {
         settings.audioInterrupt = int;
         settings.audioInit();
@@ -521,6 +573,9 @@ export class STMFile {
     tracker.modeEditChannel = 0;
     tracker.modeEditColumn = 0;
     tracker.workingPattern = 0;
+    tracker.workingSample = 1;
+    tracker.workingOrnament = 1;
+    tracker.workingOrnTestSample = 1;
 
     this.modified = false;
     this.yetSaved = false;

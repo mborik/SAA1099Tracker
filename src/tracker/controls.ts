@@ -517,6 +517,8 @@ Tracker.prototype.onCmdToggleLoop = function(newState) {
 
   el.removeClass(icon1 + ' ' + icon2);
   el.addClass(glyph).css({ 'color': color });
+
+  $('#chPlayerRepeat').prop('checked', (this.compiler.playerRepeat = state));
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdToggleEditMode = function(newState) {
