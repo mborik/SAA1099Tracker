@@ -21,7 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { toHex, toWidth } from '../commons/number';
+import { toWidth } from '../commons/number';
 import { MAX_PATTERN_LEN } from './globals';
 import PlayerRuntime from './PlayerRuntime';
 
@@ -71,7 +71,7 @@ export default class Position {
       let s = toWidth(chn.pattern, 3);
 
       if (k) {
-        s += ((k < 0) ? '-' : '+') + toHex(k, 2);
+        s += ((k < 0) ? '-' : '+') + toWidth(k);
       }
 
       arr.push(s);
