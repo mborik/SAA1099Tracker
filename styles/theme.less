@@ -63,6 +63,27 @@
     margin-top: -6px;
     margin-left: -1px;
     border-radius: 0 @border-radius-base @border-radius-base @border-radius-base;
+
+    &.multi-column {
+      min-width: 500px;
+      overflow-x: hidden;
+
+      .multi-column-dropdown {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        li a {
+          &:extend(.dropdown-menu > li > a);
+          &:hover,
+          &:focus {
+            color: @dropdown-link-hover-color;
+            text-decoration: none;
+            background-color: @dropdown-link-hover-bg;
+          }
+        }
+      }
+    }
   }
 
   &:hover {
