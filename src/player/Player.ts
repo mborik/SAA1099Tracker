@@ -820,12 +820,12 @@ export default class Player {
           continue;
         }
         else {
-          pp.cmd = pl.cmd;
-          pp.cmdValue = pl.cmd_data;
-
           if (pl.cmd !== pp.cmd) {
             pp.cmdPhase = 0;
           }
+
+          pp.cmd = pl.cmd;
+          pp.cmdValue = pl.cmd_data;
         }
       }
       else if (pl.tone || pl.smp) {
