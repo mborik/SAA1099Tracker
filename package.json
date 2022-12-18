@@ -5,7 +5,7 @@
   "license": "MIT",
   "private": true,
   "homepage": "https://saa1099tracker.borik.net",
-  "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
+  "description": "SAA1099Tracker is a progressive web application of chiptune music tracker for Philips SAA 1099 soundchip",
   "author": {
     "name": "Martin Borik",
     "email": "martin@borik.net"

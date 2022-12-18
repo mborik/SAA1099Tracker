@@ -13,7 +13,7 @@
   "orientation": "landscape",
   "background_color": "#ffffff",
   "theme_color": "#3388cc",
-  "description": "SAA1099Tracker is a progressive web chiptune music tracker for Philips SAA 1099 soundchip",
+  "description": "SAA1099Tracker is a progressive web application of chiptune music tracker for Philips SAA 1099 soundchip",
   "lang": "en-US",
   "dir": "ltr",
   "icons": [
