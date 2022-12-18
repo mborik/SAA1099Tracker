@@ -107,6 +107,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           html: true,
           sanitize: false,
           animation: false,
+          container: 'body',
           delay: { 'show': delay, 'hide': 0 },
           placement: 'auto top' as any,
           trigger: 'hover',
