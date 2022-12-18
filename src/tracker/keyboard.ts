@@ -46,7 +46,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
   const app = this;
   const cursors = /^Arrow/.test(code);
   const keydown = type === 'keydown' || type === 'test';
-  const [, letter] = /^(?:Digit|Key)([0-9A-Z])/.exec(code) ?? [];
+  const [, letter] = /^(?:Digit|Key|Numpad)([0-9A-Z])/.exec(code) ?? [];
   const hex = parseInt(letter ?? (-1 as any), 36);
 
   // Insert trackline into pattern
@@ -585,13 +585,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
           }
           app.updateEditorCombo(1);
         },
-        'NumpadAdd': () => {
+        'NumpadSubtract': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('NumMinus - Transpose half-tone down');
           }
           doTranspose(-1);
         },
-        'NumpadSubtract': () => {
+        'NumpadAdd': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('NumPlus - Transpose half-tone down');
           }
@@ -999,7 +999,7 @@ Tracker.prototype.handleKeyEvent = function(e) {
           !o.inDialog && this.activeTab === 0
         ) {
           // ENTER (hold to play position at current line)
-          if (canPlay && !this.modePlay && !o.lastPlayMode) {
+          if (canPlay && !isInput && !this.modePlay && !o.lastPlayMode) {
             this.modePlay = this.player.playPosition(false, false, false);
             o.lastPlayMode = 3;
 
@@ -1023,7 +1023,7 @@ Tracker.prototype.handleKeyEvent = function(e) {
     }
 
     if (!o.inDialog) {
-      if (canPlay) {
+      if (canPlay && !textInput) {
         // RIGHT SHIFT (play position)
         if (code === 'ShiftRight') {
           if (this.modePlay && o.lastPlayMode === 1) {
