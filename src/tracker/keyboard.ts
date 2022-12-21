@@ -387,6 +387,12 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
       }
 
       return {
+        'KeyC': () => {
+          if (process.env.NODE_ENV === 'development') {
+            logHotkey('Ctrl+Shift+C - Copy as tracklist');
+          }
+          app.onCmdEditCopyAsTracklist();
+        },
         'ArrowLeft': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+Shift+Left - Previous position');

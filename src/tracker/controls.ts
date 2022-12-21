@@ -406,6 +406,12 @@ Tracker.prototype.onCmdEditCopy = async function() {
   }
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditCopyAsTracklist = async function() {
+  if (this.activeTab === 0 && this.modeEdit) {
+    await this.manager.copyAsPlainTracklist();
+  }
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditPaste = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     this.manager.pasteToTracklist().then((done) => {

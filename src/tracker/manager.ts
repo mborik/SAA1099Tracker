@@ -71,6 +71,16 @@ export default class Manager {
     block.pp.parse([], block.line, block.len);
   }
 
+  public copyAsPlainTracklist(): Promise<void> {
+    const block = this._getBlock(1);
+    const data = block.pp.tracklist.slice(block.line, block.line + block.len).map((row) => {
+      const col = row.column.replace(/\x7f/g, '.').toUpperCase();
+      return `${row.tone} ${col.slice(0, 4)} ${col.slice(4)}`;
+    });
+
+    return this._clipboard.writeText(data.join('\n'));
+  }
+
   public copyFromTracklist(): Promise<void> {
     const block = this._getBlock(1);
     const data = block.pp.export(block.line, block.len, false);

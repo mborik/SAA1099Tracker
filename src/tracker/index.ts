@@ -100,7 +100,8 @@ export default class Tracker {
   onCmdAppExit: (this: Tracker) => void;
   onCmdAbout: (this: Tracker) => void;
   onCmdEditClear: (this: Tracker) => void;
-  onCmdEditCopy: (this: Tracker) => void;
+  onCmdEditCopy: (this: Tracker) => Promise<void>;
+  onCmdEditCopyAsTracklist: (this: Tracker) => Promise<void>;
   onCmdEditCut: (this: Tracker) => void;
   onCmdEditPaste: (this: Tracker) => void;
   onCmdFileNew: (this: Tracker) => void;
