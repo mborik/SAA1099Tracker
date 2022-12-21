@@ -21,16 +21,34 @@
  */
 //---------------------------------------------------------------------------------------
 
+import Pattern from '../player/Pattern';
 import { TracklistSelection } from './tracklist';
 import Tracker from '.';
 
 
 export default class Manager {
-  constructor(private _parent: Tracker) {}
+  private _clipboard: Clipboard;
 
-  private _clipboard: string = '';
+  constructor(private _parent: Tracker) {
+    this._clipboard = window?.navigator?.clipboard;
+    if (!this._clipboard) {
+      console.error('Error: Clipboard API is not supported!');
 
-  private _getBlock() {
+      // polyfill
+      this._clipboard = (() => {
+        let content = '';
+        return {
+          readText: () => Promise.resolve(content),
+          writeText: (text: string) => new Promise<void>((resolve) => {
+            content = text;
+            resolve();
+          })
+        };
+      })() as Clipboard;
+    }
+  }
+
+  private _getBlock(lengthFallback?: number): { pp: Pattern; line: number; len: number } {
     const p = this._parent.player;
     const sel: TracklistSelection = this._parent.tracklist.selection;
     const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
@@ -43,35 +61,32 @@ export default class Manager {
     return {
       pp: p.patterns[patt],
       line: line,
-      len: length
+      len: length || lengthFallback
     };
   }
 
   //---------------------------------------------------------------------------------------
   public clearFromTracklist() {
-    const o = this._getBlock();
-    o.pp.parse([], o.line, o.len || 1);
+    const block = this._getBlock(1);
+    block.pp.parse([], block.line, block.len);
   }
 
-  public copyFromTracklist() {
-    const o = this._getBlock();
-    const data = o.pp.export(o.line, o.len || 1, false);
+  public copyFromTracklist(): Promise<void> {
+    const block = this._getBlock(1);
+    const data = block.pp.export(block.line, block.len, false);
 
-    this._clipboard = 'STMF.trk:' + JSON.stringify(data, null, '\t');
+    return this._clipboard.writeText('STMF.trk:' + JSON.stringify(data, null, '\t'));
   }
 
-  public pasteToTracklist(): boolean {
-    if (this._clipboard.indexOf('STMF.trk:[') !== 0) {
+  public async pasteToTracklist(): Promise<boolean> {
+    const content = await this._clipboard.readText();
+    if (!content.startsWith('STMF.trk:[')) {
       return false;
     }
 
-    const o = this._getBlock();
     let data: string[];
-
     try {
-      const json = this._clipboard.substr(9);
-      data = JSON.parse(json);
-
+      data = JSON.parse(content.slice(9));
       if (!(data instanceof Array && data.length > 0)) {
         return false;
       }
@@ -80,7 +95,8 @@ export default class Manager {
       return false;
     }
 
-    o.pp.parse(data, o.line, o.len || data.length);
+    const block = this._getBlock(data.length);
+    block.pp.parse(data, block.line, block.len);
     return true;
   }
 
@@ -96,7 +112,7 @@ export default class Manager {
     smp.parse([]);
   }
 
-  public copySample() {
+  public copySample(): Promise<void> {
     const app = this._parent;
     const smp = app.player.samples[app.workingSample];
     const obj = {
@@ -107,11 +123,12 @@ export default class Manager {
       data: smp.export(false)
     };
 
-    this._clipboard = 'STMF.smp:' + JSON.stringify(obj, null, '\t');
+    return this._clipboard.writeText('STMF.smp:' + JSON.stringify(obj, null, '\t'));
   }
 
-  public pasteSample() {
-    if (this._clipboard.indexOf('STMF.smp:{') !== 0) {
+  public async pasteSample(): Promise<boolean> {
+    const content = await this._clipboard.readText();
+    if (!content.startsWith('STMF.smp:{')) {
       return false;
     }
 
@@ -120,9 +137,7 @@ export default class Manager {
     let obj: any;
 
     try {
-      const json = this._clipboard.substr(9);
-      obj = JSON.parse(json);
-
+      obj = JSON.parse(content.slice(9));
       if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
         return false;
       }
@@ -149,7 +164,7 @@ export default class Manager {
     orn.loop = orn.end = 0;
   }
 
-  public copyOrnament() {
+  public copyOrnament(): Promise<void> {
     const app = this._parent;
     const orn = app.player.ornaments[app.workingOrnament];
     const obj = {
@@ -159,11 +174,12 @@ export default class Manager {
       data: orn.export(false)
     };
 
-    this._clipboard = 'STMF.orn:' + JSON.stringify(obj, null, '\t');
+    return this._clipboard.writeText('STMF.orn:' + JSON.stringify(obj, null, '\t'));
   }
 
-  public pasteOrnament() {
-    if (this._clipboard.indexOf('STMF.orn:{') !== 0) {
+  public async pasteOrnament(): Promise<boolean> {
+    const content = await this._clipboard.readText();
+    if (!content.startsWith('STMF.orn:{')) {
       return false;
     }
 
@@ -172,9 +188,7 @@ export default class Manager {
     let obj: any;
 
     try {
-      const json = this._clipboard.substr(9);
-      obj = JSON.parse(json);
-
+      obj = JSON.parse(content.slice(9));
       if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
         return false;
       }

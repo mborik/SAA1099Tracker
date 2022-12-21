@@ -371,52 +371,64 @@ Tracker.prototype.onCmdFileCompile = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function() {
   if (this.activeTab === 0 && this.modeEdit) {
-    this.manager.copyFromTracklist();
-    this.manager.clearFromTracklist();
+    this.manager.copyFromTracklist().then(() => {
+      this.manager.clearFromTracklist();
 
-    this.player.countPositionFrames(this.player.position);
-    this.updateEditorCombo(0);
+      this.player.countPositionFrames(this.player.position);
+      this.updateEditorCombo(0);
+    });
   }
   else if (this.activeTab === 1) {
-    this.manager.copySample();
-    this.manager.clearSample();
-    this.updateSampleEditor(true);
-    this.smpornedit.updateSamplePitchShift();
+    this.manager.copySample().then(() => {
+      this.manager.clearSample();
+
+      this.updateSampleEditor(true);
+      this.smpornedit.updateSamplePitchShift();
+    });
   }
   else if (this.activeTab === 2) {
-    this.manager.copyOrnament();
-    this.manager.clearOrnament();
-    this.smpornedit.updateOrnamentEditor(true);
+    this.manager.copyOrnament().then(() => {
+      this.manager.clearOrnament();
+      this.smpornedit.updateOrnamentEditor(true);
+    });
   }
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdEditCopy = function() {
+Tracker.prototype.onCmdEditCopy = async function() {
   if (this.activeTab === 0 && this.modeEdit) {
-    this.manager.copyFromTracklist();
+    await this.manager.copyFromTracklist();
   }
   else if (this.activeTab === 1) {
-    this.manager.copySample();
+    await this.manager.copySample();
   }
   else if (this.activeTab === 2) {
-    this.manager.copyOrnament();
+    await this.manager.copyOrnament();
   }
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditPaste = function() {
   if (this.activeTab === 0 && this.modeEdit) {
-    if (this.manager.pasteToTracklist()) {
-      this.player.countPositionFrames(this.player.position);
-      this.updateEditorCombo(this.ctrlRowStep);
-    }
+    this.manager.pasteToTracklist().then((done) => {
+      if (done) {
+        this.player.countPositionFrames(this.player.position);
+        this.updateEditorCombo(this.ctrlRowStep);
+      }
+    });
   }
   else if (this.activeTab === 1) {
-    this.manager.pasteSample();
-    this.updateSampleEditor(true);
-    this.smpornedit.updateSamplePitchShift();
+    this.manager.pasteSample().then((done) => {
+      if (done) {
+        this.updateSampleEditor(true);
+        this.smpornedit.updateSamplePitchShift();
+      }
+    });
   }
   else if (this.activeTab === 2) {
-    this.manager.pasteOrnament();
-    this.smpornedit.updateOrnamentEditor(true);
+    this.manager.pasteOrnament().then((done) => {
+      if (done) {
+        this.smpornedit.updateOrnamentEditor(true);
+      }
+    });
   }
 };
 //---------------------------------------------------------------------------------------

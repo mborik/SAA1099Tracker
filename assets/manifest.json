@@ -7,6 +7,11 @@
     "name": "Martin Borik",
     "url": "https://github.com/mborik"
   },
+  "permissions" : [
+    "clipboardRead",
+    "clipboardWrite",
+    "storage"
+  ],
   "scope": "/",
   "start_url": ".",
   "display": "standalone",
