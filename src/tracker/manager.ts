@@ -164,6 +164,8 @@ export default class Manager {
         destData.cmd_data = srcData.cmd_data;
       }
     }
+
+    block.pp.updateTracklist(block.line, block.len);
     return true;
   }
 
