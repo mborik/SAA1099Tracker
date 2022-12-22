@@ -583,7 +583,7 @@
 	}
 }
 
-#dialog {
+#dialog, #paste {
 	.modal-dialog {
 		margin-top: @dialog-top-margin;
 
@@ -603,14 +603,21 @@
 	.modal-body {
 		font-size: 13px;
 		text-align: justify;
+
+		pre {
+			font-size: 13px;
+			font-weight: 600;
+			margin-bottom: -1rem;
+		}
 	}
 	.modal-footer {
 		text-align: center;
+		padding: 15px 20px;
 
 		button {
 			font-size: 13px;
 			padding: 6px 12px;
-			width: 16%;
+			width: 9rem;
 
 			&:focus {
 				outline-color: @blue-effect;

@@ -438,6 +438,69 @@ Tracker.prototype.onCmdEditPaste = function() {
   }
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditPasteSpecial = function() {
+  if (this.activeTab === 0 && this.modeEdit) {
+    this.manager.pasteSpecialCheckContent().then((pasteAsPatt) => {
+      if (!pasteAsPatt) {
+        return;
+      }
+
+      const dialog = $('#paste');
+      const keys = this.globalKeyState;
+
+      dialog.on('show.bs.modal', () => {
+        keys.inDialog = true;
+
+        dialog.find('.modal-body pre').text(
+          pasteAsPatt.tracklist
+            .slice(0, Math.min(8, pasteAsPatt.end))
+            .map((line) =>
+              `${line.tone}  ${line.column[0]}  ${line.column[1]}  ${
+                line.column.slice(2, 4)}   ${line.column[4]} ${line.column.slice(5)} `
+            )
+            .join('\n')
+            .replace(/\x7f/g, '.')
+            .toUpperCase()
+        );
+
+        dialog.find('.btn-success').on('click', () => {
+          let validParts = false;
+          const parts = Array.from(dialog.find('.modal-body input[type=checkbox]'))
+            .map((el: HTMLInputElement) => {
+              return { name: el.id, value: el.checked };
+            })
+            .reduce(
+              (acc, { name, value }) => {
+                acc[name.slice(7).toLowerCase()] = value;
+                validParts ||= value;
+                return acc;
+              }, {}
+            );
+          if (!validParts) {
+            return;
+          }
+          this.manager.pasteSpecialToTracklist(pasteAsPatt, parts).then((done) => {
+            if (done) {
+              this.player.countPositionFrames(this.player.position);
+              this.updateEditorCombo(0);
+            }
+          }).finally(() => {
+            dialog.modal('hide');
+          });
+        });
+
+      }).on('hide.bs.modal', () => {
+        dialog.find('.modal-footer>.btn').off();
+        keys.inDialog = false;
+
+      }).modal({
+        show: true,
+        backdrop: true
+      });
+    });
+  }
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditClear = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     this.manager.clearFromTracklist();

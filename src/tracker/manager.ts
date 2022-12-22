@@ -110,6 +110,63 @@ export default class Manager {
     return true;
   }
 
+  public async pasteSpecialCheckContent(): Promise<Pattern> {
+    const content = await this._clipboard.readText();
+    if (!content.startsWith('STMF.trk:[')) {
+      return null;
+    }
+
+    let data: string[];
+    try {
+      data = JSON.parse(content.slice(9));
+      if (!(data instanceof Array && data.length > 0)) {
+        return null;
+      }
+    }
+    catch (e) {
+      return null;
+    }
+
+    const mockPattern = new Pattern(data.length);
+    mockPattern.parse(data, 0, data.length);
+    mockPattern.updateTracklist();
+
+    return mockPattern;
+  }
+
+  public async pasteSpecialToTracklist(
+    pattern: Pattern,
+    parts: { [key: string]: boolean }
+  ): Promise<boolean> {
+    if (!pattern?.end) {
+      return false;
+    }
+    const block = this._getBlock(pattern.end);
+    for (let src = 0, dest = block.line; src < block.len; src++, dest++) {
+      const srcData = pattern.data[src];
+      const destData = block.pp.data[dest];
+      if (parts.tone) {
+        destData.tone = srcData.tone;
+      }
+      if (parts.smp) {
+        destData.smp = srcData.smp;
+      }
+      if (parts.orn) {
+        destData.orn = srcData.orn;
+      }
+      if (parts.vol) {
+        destData.volume.byte = srcData.volume.byte;
+      }
+      if (parts.cmd) {
+        destData.cmd = srcData.cmd;
+      }
+      if (parts.data) {
+        destData.cmd_data = srcData.cmd_data;
+      }
+    }
+    return true;
+  }
+
   //---------------------------------------------------------------------------------------
   public clearSample() {
     const app = this._parent;

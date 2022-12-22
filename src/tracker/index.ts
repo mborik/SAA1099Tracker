@@ -104,6 +104,7 @@ export default class Tracker {
   onCmdEditCopyAsTracklist: (this: Tracker) => Promise<void>;
   onCmdEditCut: (this: Tracker) => void;
   onCmdEditPaste: (this: Tracker) => void;
+  onCmdEditPasteSpecial: (this: Tracker) => void;
   onCmdFileNew: (this: Tracker) => void;
   onCmdFileOpen: (this: Tracker) => void;
   onCmdFileSave: (this: Tracker, as?: boolean) => void;

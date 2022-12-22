@@ -393,6 +393,12 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
           }
           app.onCmdEditCopyAsTracklist();
         },
+        'KeyV': () => {
+          if (process.env.NODE_ENV === 'development') {
+            logHotkey('Ctrl+Shift+P - Paste special');
+          }
+          app.onCmdEditPasteSpecial();
+        },
         'ArrowLeft': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+Shift+Left - Previous position');
@@ -1133,8 +1139,8 @@ Tracker.prototype.handleHotkeys = function(type, code, isInput, textInput) {
     fn = this.hotkeyMap(type, 'editorShift', code);
   }
   else {
-    if (o.inDialog && /^F([1-9]|1[0-2])$/.test(code)) {
-      fn = true; // disable F1-F12 keys in dialogs
+    if (o.inDialog) {
+      fn = true; // restrict all hotkeys in dialogs
       type = 'test';
     }
     else {
