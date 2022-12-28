@@ -371,52 +371,133 @@ Tracker.prototype.onCmdFileCompile = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function() {
   if (this.activeTab === 0 && this.modeEdit) {
-    this.manager.copyFromTracklist();
-    this.manager.clearFromTracklist();
+    this.manager.copyFromTracklist().then(() => {
+      this.manager.clearFromTracklist();
 
-    this.player.countPositionFrames(this.player.position);
-    this.updateEditorCombo(0);
+      this.player.countPositionFrames(this.player.position);
+      this.updateEditorCombo(0);
+    });
   }
   else if (this.activeTab === 1) {
-    this.manager.copySample();
-    this.manager.clearSample();
-    this.updateSampleEditor(true);
-    this.smpornedit.updateSamplePitchShift();
+    this.manager.copySample().then(() => {
+      this.manager.clearSample();
+
+      this.updateSampleEditor(true);
+      this.smpornedit.updateSamplePitchShift();
+    });
   }
   else if (this.activeTab === 2) {
-    this.manager.copyOrnament();
-    this.manager.clearOrnament();
-    this.smpornedit.updateOrnamentEditor(true);
+    this.manager.copyOrnament().then(() => {
+      this.manager.clearOrnament();
+      this.smpornedit.updateOrnamentEditor(true);
+    });
   }
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdEditCopy = function() {
+Tracker.prototype.onCmdEditCopy = async function() {
   if (this.activeTab === 0 && this.modeEdit) {
-    this.manager.copyFromTracklist();
+    await this.manager.copyFromTracklist();
   }
   else if (this.activeTab === 1) {
-    this.manager.copySample();
+    await this.manager.copySample();
   }
   else if (this.activeTab === 2) {
-    this.manager.copyOrnament();
+    await this.manager.copyOrnament();
+  }
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditCopyAsTracklist = async function() {
+  if (this.activeTab === 0 && this.modeEdit) {
+    await this.manager.copyAsPlainTracklist();
   }
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditPaste = function() {
   if (this.activeTab === 0 && this.modeEdit) {
-    if (this.manager.pasteToTracklist()) {
-      this.player.countPositionFrames(this.player.position);
-      this.updateEditorCombo(this.ctrlRowStep);
-    }
+    this.manager.pasteToTracklist().then((done) => {
+      if (done) {
+        this.player.countPositionFrames(this.player.position);
+        this.updateEditorCombo(this.ctrlRowStep);
+      }
+    });
   }
   else if (this.activeTab === 1) {
-    this.manager.pasteSample();
-    this.updateSampleEditor(true);
-    this.smpornedit.updateSamplePitchShift();
+    this.manager.pasteSample().then((done) => {
+      if (done) {
+        this.updateSampleEditor(true);
+        this.smpornedit.updateSamplePitchShift();
+      }
+    });
   }
   else if (this.activeTab === 2) {
-    this.manager.pasteOrnament();
-    this.smpornedit.updateOrnamentEditor(true);
+    this.manager.pasteOrnament().then((done) => {
+      if (done) {
+        this.smpornedit.updateOrnamentEditor(true);
+      }
+    });
+  }
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditPasteSpecial = function() {
+  if (this.activeTab === 0 && this.modeEdit) {
+    this.manager.pasteSpecialCheckContent().then((pasteAsPatt) => {
+      if (!pasteAsPatt) {
+        return;
+      }
+
+      const dialog = $('#paste');
+      const keys = this.globalKeyState;
+
+      dialog.on('show.bs.modal', () => {
+        keys.inDialog = true;
+
+        dialog.find('.modal-body pre').text(
+          pasteAsPatt.tracklist
+            .slice(0, Math.min(8, pasteAsPatt.end))
+            .map((line) =>
+              `${line.tone}  ${line.column[0]}  ${line.column[1]}  ${
+                line.column.slice(2, 4)}   ${line.column[4]} ${line.column.slice(5)} `
+            )
+            .join('\n')
+            .replace(/\x7f/g, '.')
+            .toUpperCase()
+        );
+
+        dialog.find('.btn-success').on('click', () => {
+          let validParts = false;
+          const parts = Array.from(dialog.find('.modal-body input[type=checkbox]'))
+            .map((el: HTMLInputElement) => {
+              return { name: el.id, value: el.checked };
+            })
+            .reduce(
+              (acc, { name, value }) => {
+                acc[name.slice(7).toLowerCase()] = value;
+                validParts ||= value;
+                return acc;
+              }, {}
+            );
+          if (!validParts) {
+            return;
+          }
+          this.manager.pasteSpecialToTracklist(pasteAsPatt, parts).then((done) => {
+            if (done) {
+              this.player.countPositionFrames(this.player.position);
+              this.updateEditorCombo(0);
+            }
+          }).finally(() => {
+            dialog.modal('hide');
+          });
+        });
+
+      }).on('hide.bs.modal', () => {
+        dialog.find('.modal-footer>.btn').off();
+        keys.inDialog = false;
+
+      }).modal({
+        show: true,
+        backdrop: true
+      });
+    });
   }
 };
 //---------------------------------------------------------------------------------------

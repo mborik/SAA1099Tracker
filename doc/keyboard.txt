@@ -36,6 +36,8 @@ Tab/Shift+Tab           | move cursor to next/previous channel
 Insert, Mod+I           | insert empty trackline to channel-pattern
 Backspace               | delete trackline from channel-pattern
 Delete                  | clear trackline data under cursor
+Mod+Shift+C             | copy block as tracklist plain text
+Mod+Shift+V             | paste special (portion of selection)
 Mod+1..8                | set base octave
 Mod+9, Mod+0            | decrease/increase rowstep
 Mod+Shift+Left/Right    | move to next/previous position

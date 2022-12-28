@@ -17,3 +17,46 @@
 		</div>
 	</div>
 </div>
+<div class="modal" id="paste" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-sm" role="document">
+		<div class="modal-content info">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">Paste special&hellip;</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="form-horizontal row">
+						<div class="col-sm-5 text-right">
+							<label>Note<br><input id="chPasteNote" type="checkbox"></label>
+						</div>
+						<div class="col-sm-2 text-center">
+							<label>Smp<br><input id="chPasteSmp" type="checkbox"></label>
+						</div>
+						<div class="col-sm-2 text-center">
+							<label>Orn<br><input id="chPasteOrn" type="checkbox"></label>
+						</div>
+						<div class="col-sm-2 text-center">
+							<label>Vol<br><input id="chPasteVol" type="checkbox"></label>
+						</div>
+						<div class="col-sm-2 text-right">
+							<label>Cmd<br><input id="chPasteCmd" type="checkbox"></label>
+						</div>
+						<div class="col-sm-5">
+							<label>Data<br><input id="chPasteData" type="checkbox"></label>
+						</div>
+					</div>
+					<div class="row tracklist">
+						<div class="col-sm-18 text-center">
+							<pre></pre>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-default cancel" type="button" data-dismiss="modal" tabindex="20">Cancel</button>
+				<button class="btn btn-success apply" type="button" tabindex="21">Paste</button>
+			</div>
+		</div>
+	</div>
+</div>
