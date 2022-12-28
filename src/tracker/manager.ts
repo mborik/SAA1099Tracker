@@ -21,10 +21,80 @@
  */
 //---------------------------------------------------------------------------------------
 
+import Ornament from '../player/Ornament';
 import Pattern from '../player/Pattern';
+import Position from '../player/Position';
+import Sample from '../player/Sample';
 import { TracklistSelection } from './tracklist';
 import Tracker from '.';
 
+
+interface UndoIndex {
+  index: number;
+}
+interface UndoSampleData {
+  data: Sample['data'];
+  from?: number;
+}
+interface UndoSampleProps {
+  name?: string;
+  loop?: number;
+  end?: number;
+  releasable?: boolean;
+}
+interface UndoSample {
+  sample: (UndoSampleData | UndoSampleProps) & UndoIndex;
+}
+
+interface UndoOrnamentData {
+  data: Ornament['data'];
+  from?: number;
+}
+interface UndoOrnamentProps {
+  name?: string;
+  loop?: number;
+  end?: number;
+}
+interface UndoOrnament {
+  ornament: (UndoOrnamentData | UndoOrnamentProps) & UndoIndex;
+}
+
+interface UndoPatternData {
+  data: Omit<Pattern['data'][number], 'tracklist'>[];
+  from?: number;
+}
+interface UndoPatternProps {
+  end?: number;
+  new?: boolean;
+}
+interface UndoPattPosRemoved {
+  remove: boolean;
+}
+interface UndoPattern {
+  pattern: (UndoPatternData | UndoPatternProps | UndoPattPosRemoved) & UndoIndex;
+}
+
+interface UndoPositionData {
+  data: Position['ch'];
+}
+interface UndoPositionProps {
+  length?: number;
+  speed?: number;
+}
+interface UndoPositionMoved {
+  from: number;
+  to?: number;
+}
+interface UndoPositionAdded {
+  to: number;
+}
+interface UndoPosition {
+  position: (
+    (UndoPositionData | UndoPositionProps | UndoPattPosRemoved) & UndoIndex) |
+      (UndoPositionMoved | UndoPositionAdded);
+}
+
+export type UndoState = UndoSample | UndoOrnament | UndoPattern | UndoPosition;
 
 export default class Manager {
   private _clipboard: Clipboard;
@@ -65,7 +135,7 @@ export default class Manager {
     };
   }
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   public clearFromTracklist() {
     const block = this._getBlock(1);
     block.pp.parse([], block.line, block.len);
@@ -169,7 +239,7 @@ export default class Manager {
     return true;
   }
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   public clearSample() {
     const app = this._parent;
     const smp = app.player.samples[app.workingSample];
@@ -223,7 +293,7 @@ export default class Manager {
     return true;
   }
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   public clearOrnament() {
     const app = this._parent;
     const orn = app.player.ornaments[app.workingOrnament];
