@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import { MAX_PATTERN_LEN } from '../player/globals';
 import Ornament from '../player/Ornament';
 import Pattern from '../player/Pattern';
 import Position from '../player/Position';
@@ -29,75 +30,87 @@ import { TracklistSelection } from './tracklist';
 import Tracker from '.';
 
 
-interface UndoIndex {
-  index: number;
-}
 interface UndoSampleData {
+  type: 'data';
   data: Sample['data'];
   from?: number;
 }
 interface UndoSampleProps {
+  type: 'props';
   name?: string;
   loop?: number;
   end?: number;
   releasable?: boolean;
 }
-interface UndoSample {
-  sample: (UndoSampleData | UndoSampleProps) & UndoIndex;
-}
 
 interface UndoOrnamentData {
+  type: 'data';
   data: Ornament['data'];
   from?: number;
 }
 interface UndoOrnamentProps {
+  type: 'props';
   name?: string;
   loop?: number;
   end?: number;
 }
-interface UndoOrnament {
-  ornament: (UndoOrnamentData | UndoOrnamentProps) & UndoIndex;
-}
 
 interface UndoPatternData {
+  type: 'data';
   data: Omit<Pattern['data'][number], 'tracklist'>[];
   from?: number;
 }
-interface UndoPatternProps {
-  end?: number;
-  new?: boolean;
+interface UndoPatternLength {
+  type: 'length';
+  end: number;
 }
-interface UndoPattPosRemoved {
-  remove: boolean;
+interface UndoPatternCreate {
+  type: 'create';
+  end: number;
 }
-interface UndoPattern {
-  pattern: (UndoPatternData | UndoPatternProps | UndoPattPosRemoved) & UndoIndex;
+interface UndoPatternRemove {
+  type: 'remove';
+  data: UndoPatternData['data'];
+  end: number;
 }
 
 interface UndoPositionData {
+  type: 'data';
   data: Position['ch'];
 }
 interface UndoPositionProps {
+  type: 'props';
   length?: number;
   speed?: number;
 }
-interface UndoPositionMoved {
-  from: number;
-  to?: number;
-}
-interface UndoPositionAdded {
+interface UndoPositionMove {
+  type: 'move';
   to: number;
 }
-interface UndoPosition {
-  position: (
-    (UndoPositionData | UndoPositionProps | UndoPattPosRemoved) & UndoIndex) |
-      (UndoPositionMoved | UndoPositionAdded);
+interface UndoPositionCreate {
+  type: 'create';
+  to: number;
+}
+interface UndoPositionRemove {
+  type: 'remove';
+  data: UndoPositionData['data'];
+  length: number;
+  speed: number;
 }
 
-export type UndoState = UndoSample | UndoOrnament | UndoPattern | UndoPosition;
+type UndoIndex = { index: number };
+export interface UndoState {
+  sample?: (UndoSampleData | UndoSampleProps) & UndoIndex;
+  ornament?: (UndoOrnamentData | UndoOrnamentProps) & UndoIndex;
+  pattern?: (UndoPatternData | UndoPatternLength | UndoPatternCreate | UndoPatternRemove) & UndoIndex;
+  position?: (UndoPositionData | UndoPositionProps | UndoPositionRemove | UndoPositionMove | UndoPositionCreate) & UndoIndex;
+}
 
 export default class Manager {
   private _clipboard: Clipboard;
+
+  private _history: UndoState[] = [null];
+  private _historyIndex = 0;
 
   constructor(private _parent: Tracker) {
     this._clipboard = window?.navigator?.clipboard;
@@ -341,5 +354,130 @@ export default class Manager {
     orn.loop = obj.loop;
     orn.end = obj.end;
     return true;
+  }
+
+  //-------------------------------------------------------------------------------------
+  public historyPush(state: UndoState) {
+    if (this._history.length >= this._historyIndex) {
+      this._history.splice(this._historyIndex);
+    }
+    this._history.push(state);
+    this._historyIndex++;
+  }
+
+  public historyClear() {
+    this._history.splice(1);
+    this._historyIndex = 0;
+  }
+
+  public isUndoAvailable(): boolean {
+    return this._historyIndex > 0;
+  }
+
+  public isRedoAvailable(): boolean {
+    return this._historyIndex < this._history.length;
+  }
+
+  public undo() {
+    if (this._historyIndex > 0) {
+      const state = this._history[--this._historyIndex];
+      if (!state) {
+        return false;
+      }
+
+      const app = this._parent;
+      const player = app.player;
+
+      if (state.pattern) {
+        const p = player.patterns[state.pattern.index];
+        if (state.pattern.type === 'data') {
+          const d = state.pattern.data;
+          for (let len = d.length, i = state.pattern.from || 0; len >= 0; i++, len--) {
+            p.data[i].tone = d[i].tone;
+            p.data[i].smp = d[i].smp;
+            p.data[i].orn = d[i].orn;
+            p.data[i].volume.byte = d[i].volume.byte;
+            p.data[i].cmd = d[i].cmd;
+            p.data[i].cmd_data = d[i].cmd_data;
+          }
+          p.updateTracklist();
+        }
+        else if (state.pattern.type === 'length') {
+          p.end = state.pattern.end;
+        }
+        else if (state.pattern.type === 'create') {
+          player.patterns.splice(state.pattern.index, 1);
+        }
+        else if (state.pattern.type === 'remove') {
+          if (state.pattern.index !== player.patterns.length) {
+            console.error('Manager: Undo of removing pattern - index is invalid (not last)!');
+          }
+          const d = state.pattern.data;
+          const p = new Pattern(state.pattern.end);
+          for (let i = 0; i < MAX_PATTERN_LEN; i++) {
+            p.data[i].tone = d[i].tone;
+            p.data[i].smp = d[i].smp;
+            p.data[i].orn = d[i].orn;
+            p.data[i].volume.byte = d[i].volume.byte;
+            p.data[i].cmd = d[i].cmd;
+            p.data[i].cmd_data = d[i].cmd_data;
+          }
+          p.updateTracklist();
+        }
+
+        app.updateEditorCombo();
+      }
+      else if (state.sample) {
+        const s = player.samples[state.sample.index];
+        if (state.sample.type === 'data') {
+          const d = state.sample.data;
+          for (let len = d.length, i = state.sample.from || 0; len >= 0; i++, len--) {
+            s.data[i].volume.byte = d[i].volume.byte;
+            s.data[i].enable_freq = d[i].enable_freq;
+            s.data[i].enable_noise = d[i].enable_noise;
+            s.data[i].noise_value = d[i].noise_value;
+            s.data[i].shift = d[i].shift;
+          }
+        }
+        else if (state.sample.type === 'props') {
+          if (state.sample.name !== undefined) {
+            s.name = state.sample.name;
+          }
+          if (state.sample.loop !== undefined) {
+            s.loop = state.sample.loop;
+          }
+          if (state.sample.end !== undefined) {
+            s.end = state.sample.end;
+          }
+          if (state.sample.releasable !== undefined) {
+            s.releasable = state.sample.releasable;
+          }
+        }
+      }
+      else if (state.ornament) {
+        const o = player.ornaments[state.ornament.index];
+        if (state.ornament.type === 'data') {
+          const d = state.ornament.data;
+          for (let len = d.length, i = state.ornament.from || 0; len >= 0; i++, len--) {
+            o.data[i] = d[i];
+          }
+        }
+        else if (state.ornament.type === 'props') {
+          if (state.ornament.name !== undefined) {
+            o.name = state.ornament.name;
+          }
+          if (state.ornament.loop !== undefined) {
+            o.loop = state.ornament.loop;
+          }
+          if (state.ornament.end !== undefined) {
+            o.end = state.ornament.end;
+          }
+        }
+      }
+
+      return true;
+    }
+
+    return false;
   }
 }
