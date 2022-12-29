@@ -30,9 +30,12 @@ import { TracklistSelection } from './tracklist';
 import Tracker from '.';
 
 
+type SampleSimplified = Omit<Sample['data'][number], 'volume'> & { volume: number };
+type PatternSimplified = Omit<Pattern['data'][number], 'tracklist' | 'volume'> & { volume: number };
+
 interface UndoSampleData {
   type: 'data';
-  data: Sample['data'];
+  data: SampleSimplified[];
   from?: number;
 }
 interface UndoSampleProps {
@@ -57,7 +60,7 @@ interface UndoOrnamentProps {
 
 interface UndoPatternData {
   type: 'data';
-  data: Omit<Pattern['data'][number], 'tracklist'>[];
+  data: PatternSimplified[];
   from?: number;
 }
 interface UndoPatternLength {
@@ -396,7 +399,7 @@ export default class Manager {
             p.data[i].tone = d[i].tone;
             p.data[i].smp = d[i].smp;
             p.data[i].orn = d[i].orn;
-            p.data[i].volume.byte = d[i].volume.byte;
+            p.data[i].volume.byte = d[i].volume;
             p.data[i].cmd = d[i].cmd;
             p.data[i].cmd_data = d[i].cmd_data;
           }
@@ -418,7 +421,7 @@ export default class Manager {
             p.data[i].tone = d[i].tone;
             p.data[i].smp = d[i].smp;
             p.data[i].orn = d[i].orn;
-            p.data[i].volume.byte = d[i].volume.byte;
+            p.data[i].volume.byte = d[i].volume;
             p.data[i].cmd = d[i].cmd;
             p.data[i].cmd_data = d[i].cmd_data;
           }
@@ -432,7 +435,7 @@ export default class Manager {
         if (state.sample.type === 'data') {
           const d = state.sample.data;
           for (let len = d.length, i = state.sample.from || 0; len >= 0; i++, len--) {
-            s.data[i].volume.byte = d[i].volume.byte;
+            s.data[i].volume.byte = d[i].volume;
             s.data[i].enable_freq = d[i].enable_freq;
             s.data[i].enable_noise = d[i].enable_noise;
             s.data[i].noise_value = d[i].noise_value;
