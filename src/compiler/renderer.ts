@@ -310,20 +310,27 @@ export default class CompilerRender extends CompilerOptimizer {
             else {
               lastEmptyLines = 0;
               data[offY++] = b1;
-              data[offY++] = b2;
-              data[offY++] = b3;
-              if (vol > 0) {
-                data[offY++] = vol;
-              }
-              if (cmd > 0) {
-                if (cmd === 0xB) { // Cmd-B
-                  const backOffset = offY - breakToLineOffset + 2;
-                  writeWordLE(data, offY, -backOffset);
-                  offY += 2;
-                  break;
-                }
 
-                data[offY++] = dat;
+              if (b2 > 0 || b3 > 0) {
+                data[offY++] = b2;
+                data[offY++] = b3;
+                if (vol > 0) {
+                  data[offY++] = vol;
+                }
+                if (cmd > 0) {
+                  if (cmd === 0xB) { // Cmd-B
+                    const backOffset = offY - breakToLineOffset + 2;
+                    writeWordLE(data, offY, -backOffset);
+                    offY += 2;
+                    break;
+                  }
+
+                  data[offY++] = dat;
+                }
+              }
+              else {
+                // optimization for only note changed
+                data[offY++] = 0x20;
               }
             }
           }
