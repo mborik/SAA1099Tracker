@@ -47,20 +47,6 @@
 	border-right: 1px solid @border-soft;
 	margin-right: @grid-gutter-width;
 }
-.flexbox(@flow, @justify: initial, @flex: none) {
-	display: -webkit-flex;
-	-webkit-flex: @flex;
-	-webkit-flex-flow: @flow;
-	-webkit-justify-content: @justify;
-	display: -moz-flex;
-	-moz-box-flex:  @flex;
-	-moz-flex-flow:  @flow;
-	-moz-justify-content: @justify;
-	display: flex;
-	flex: @flex;
-	flex-flow: @flow;
-	justify-content: @justify;
-}
 .confirm-gradient(@inner-color, @outer-color) {
 	background-image: -webkit-radial-gradient(ellipse, @inner-color, @outer-color);
 	background-image: radial-gradient(ellipse, @inner-color, @outer-color);
@@ -433,7 +419,9 @@
 	}
 }
 #fxSampleShift, #fxOrnEditor {
-	.flexbox(column wrap, space-between);
+	display: flex;
+	flex-flow: column wrap;
+	justify-content: space-between;
 	box-sizing: border-box;
 	padding: 0;
 	margin: 0;
@@ -728,7 +716,10 @@
 		}
 
 		> .file-list {
-			.flexbox(column wrap, flex-start);
+			display: flex;
+			flex-flow: column wrap;
+			justify-content: flex-start;
+			align-content: flex-start;
 			box-sizing: border-box;
 			padding: (@grid-gutter-width * 2);
 			margin: 0;
