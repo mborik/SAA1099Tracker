@@ -185,11 +185,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
         'KeyY': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+Y - Redo');
+            this.manager.redo();
           }
         },
         'KeyZ': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+Z - Undo');
+            this.manager.undo();
           }
         }
       }[code];

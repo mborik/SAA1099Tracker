@@ -109,10 +109,32 @@ export interface UndoState {
   position?: (UndoPositionData | UndoPositionProps | UndoPositionRemove | UndoPositionMove | UndoPositionCreate) & UndoIndex;
 }
 
+interface UndoStateWithContext extends UndoState {
+  context: {
+    activeTab: number;
+    smpeditShiftShown: boolean;
+    modeEdit: boolean;
+    modeEditChannel: number;
+    modeEditColumn: number;
+    currentPosition: number;
+    currentLine: number;
+    workingPattern: number;
+    workingSample: number;
+    workingOrnament: number;
+  };
+}
+
+interface SelectedBlock {
+  pt: number;
+  pp: Pattern;
+  line: number;
+  len: number;
+}
+
 export default class Manager {
   private _clipboard: Clipboard;
 
-  private _history: UndoState[] = [null];
+  private _history: UndoStateWithContext[] = [null];
   private _historyIndex = 0;
 
   constructor(private _parent: Tracker) {
@@ -134,7 +156,7 @@ export default class Manager {
     }
   }
 
-  private _getBlock(lengthFallback?: number): { pp: Pattern; line: number; len: number } {
+  private _getBlock(lengthFallback?: number): SelectedBlock {
     const p = this._parent.player;
     const sel: TracklistSelection = this._parent.tracklist.selection;
     const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
@@ -142,10 +164,11 @@ export default class Manager {
     const length = sel.len ? (sel.len + 1) : undefined;
     const pos = p.positions[p.position] ?? p.nullPosition;
     const chn = pos.ch[ch];
-    const patt = chn.pattern;
+    const pt = chn.pattern;
 
     return {
-      pp: p.patterns[patt],
+      pt,
+      pp: p.patterns[pt],
       line: line,
       len: length || lengthFallback
     };
@@ -154,6 +177,18 @@ export default class Manager {
   //-------------------------------------------------------------------------------------
   public clearFromTracklist() {
     const block = this._getBlock(1);
+    this.historyPush({
+      pattern: {
+        type: 'data',
+        index: block.pt,
+        data: block.pp.data.slice(block.line, block.line + block.len).map((row) => ({
+          ...row,
+          volume: row.volume.byte
+        })),
+        from: block.line
+      }
+    });
+
     block.pp.parse([], block.line, block.len);
   }
 
@@ -360,11 +395,26 @@ export default class Manager {
   }
 
   //-------------------------------------------------------------------------------------
-  public historyPush(state: UndoState) {
-    if (this._history.length >= this._historyIndex) {
-      this._history.splice(this._historyIndex);
+  public historyPush(state: UndoState = {}) {
+    if (this._historyIndex < this._history.length - 1) {
+      this._history.splice(this._historyIndex + 1);
     }
-    this._history.push(state);
+    this._history.push({
+      ...state,
+      context: {
+        activeTab: this._parent.activeTab,
+        smpeditShiftShown: this._parent.smpornedit.smpeditShiftShown,
+        modeEdit: this._parent.modeEdit,
+        modeEditChannel: this._parent.modeEditChannel,
+        modeEditColumn: this._parent.modeEditColumn,
+        currentPosition: this._parent.player.position,
+        currentLine: this._parent.player.line,
+        workingPattern: this._parent.workingPattern,
+        workingSample: this._parent.workingSample,
+        workingOrnament: this._parent.workingOrnament,
+      }
+    });
+
     this._historyIndex++;
   }
 
@@ -378,12 +428,14 @@ export default class Manager {
   }
 
   public isRedoAvailable(): boolean {
-    return this._historyIndex < this._history.length;
+    return this._historyIndex < this._history.length - 1;
   }
 
   public undo() {
     if (this._historyIndex > 0) {
-      const state = this._history[--this._historyIndex];
+      const state = this._history[this._historyIndex];
+      this._historyIndex--;
+
       if (!state) {
         return false;
       }
@@ -395,13 +447,13 @@ export default class Manager {
         const p = player.patterns[state.pattern.index];
         if (state.pattern.type === 'data') {
           const d = state.pattern.data;
-          for (let len = d.length, i = state.pattern.from || 0; len >= 0; i++, len--) {
-            p.data[i].tone = d[i].tone;
-            p.data[i].smp = d[i].smp;
-            p.data[i].orn = d[i].orn;
-            p.data[i].volume.byte = d[i].volume;
-            p.data[i].cmd = d[i].cmd;
-            p.data[i].cmd_data = d[i].cmd_data;
+          for (let src = 0, dst = state.pattern.from || 0; src < d.length; src++, dst++) {
+            p.data[dst].tone = d[src].tone;
+            p.data[dst].smp = d[src].smp;
+            p.data[dst].orn = d[src].orn;
+            p.data[dst].volume.byte = d[src].volume;
+            p.data[dst].cmd = d[src].cmd;
+            p.data[dst].cmd_data = d[src].cmd_data;
           }
           p.updateTracklist();
         }
@@ -427,19 +479,17 @@ export default class Manager {
           }
           p.updateTracklist();
         }
-
-        app.updateEditorCombo();
       }
       else if (state.sample) {
         const s = player.samples[state.sample.index];
         if (state.sample.type === 'data') {
           const d = state.sample.data;
-          for (let len = d.length, i = state.sample.from || 0; len >= 0; i++, len--) {
-            s.data[i].volume.byte = d[i].volume;
-            s.data[i].enable_freq = d[i].enable_freq;
-            s.data[i].enable_noise = d[i].enable_noise;
-            s.data[i].noise_value = d[i].noise_value;
-            s.data[i].shift = d[i].shift;
+          for (let src = 0, dst = state.sample.from || 0; src < d.length; src++, dst++) {
+            s.data[dst].volume.byte = d[src].volume;
+            s.data[dst].enable_freq = d[src].enable_freq;
+            s.data[dst].enable_noise = d[src].enable_noise;
+            s.data[dst].noise_value = d[src].noise_value;
+            s.data[dst].shift = d[src].shift;
           }
         }
         else if (state.sample.type === 'props') {
@@ -461,8 +511,8 @@ export default class Manager {
         const o = player.ornaments[state.ornament.index];
         if (state.ornament.type === 'data') {
           const d = state.ornament.data;
-          for (let len = d.length, i = state.ornament.from || 0; len >= 0; i++, len--) {
-            o.data[i] = d[i];
+          for (let src = 0, dst = state.ornament.from || 0; src < d.length; src++, dst++) {
+            o.data[dst] = d[src];
           }
         }
         else if (state.ornament.type === 'props') {
@@ -478,9 +528,70 @@ export default class Manager {
         }
       }
 
+      this._applyHistoryStateContext(state);
       return true;
     }
 
     return false;
+  }
+
+  public redo() {
+  }
+
+  private _applyHistoryStateContext({ context, pattern }: UndoStateWithContext) {
+    const app = this._parent;
+    if (context.activeTab !== app.activeTab) {
+      app.activeTab = context.activeTab || 0;
+      $('#main-tabpanel a').eq(app.activeTab).tab('show');
+    }
+
+    if (app.activeTab === 1) {
+      if (context.smpeditShiftShown !== app.smpornedit.smpeditShiftShown) {
+        app.smpornedit.smpeditShiftShown = context.smpeditShiftShown || false;
+        $(`#tab-${
+          app.smpornedit.smpeditShiftShown ? 'sampledata' : 'pitchshift'
+        }`).tab('show');
+      }
+      if (context.workingSample !== app.workingSample) {
+        app.workingSample = context.workingSample ?? 1;
+        $('#scSampleNumber').val(app.workingSample.toString(32).toUpperCase());
+      }
+
+      app.updateSampleEditor(true);
+    }
+    else if (app.activeTab === 2) {
+      if (context.workingOrnament !== app.workingOrnament) {
+        app.workingOrnament = context.workingOrnament ?? 1;
+        $('#scOrnNumber').val(app.workingOrnament.toString(16).toUpperCase());
+      }
+      app.smpornedit.updateOrnamentEditor(true);
+    }
+
+    let shouldUpdatePanels = false;
+    if (context.workingPattern !== app.workingPattern) {
+      app.workingPattern = context.workingPattern || 0;
+      $('#scPattern').val(app.workingPattern.toString());
+      shouldUpdatePanels = true;
+    }
+    if (context.currentPosition !== app.player.position) {
+      app.player.position = context.currentPosition || 0;
+      $('#scPosCurrent').val((app.player.position + 1).toString());
+      shouldUpdatePanels = true;
+    }
+
+    if (shouldUpdatePanels) {
+      app.updatePanels();
+    }
+
+    if (context.currentLine !== app.player.line) {
+      app.player.line = context.currentLine || 0;
+    }
+    if (pattern) {
+      app.updateEditorCombo(0);
+    }
+
+    app.modeEditChannel = context.modeEditChannel;
+    app.modeEditColumn = context.modeEditColumn;
+    app.onCmdToggleEditMode(context.modeEdit);
   }
 }

@@ -103,6 +103,9 @@ Tracker.prototype.updatePanelInfo = function() {
 
   elBPM.textContent = bpm.toString();
   elFreq.textContent = int.toString();
+
+  $('#miEditUndo').parent().toggleClass('disabled', !this.manager.isUndoAvailable());
+  $('#miEditRedo').parent().toggleClass('disabled', !this.manager.isRedoAvailable());
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {
@@ -369,6 +372,20 @@ Tracker.prototype.onCmdFileCompile = function() {
   this.compiler.show();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditClear = function() {
+  if (this.activeTab === 0 && this.modeEdit) {
+    this.manager.clearFromTracklist();
+    this.player.countPositionFrames(this.player.position);
+    this.updateEditorCombo(0);
+  }
+  else if (this.activeTab === 1) {
+    this.onCmdSmpClear();
+  }
+  else if (this.activeTab === 2) {
+    this.onCmdOrnClear();
+  }
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdEditCut = function() {
   if (this.activeTab === 0 && this.modeEdit) {
     this.manager.copyFromTracklist().then(() => {
@@ -501,18 +518,12 @@ Tracker.prototype.onCmdEditPasteSpecial = function() {
   }
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdEditClear = function() {
-  if (this.activeTab === 0 && this.modeEdit) {
-    this.manager.clearFromTracklist();
-    this.player.countPositionFrames(this.player.position);
-    this.updateEditorCombo(0);
-  }
-  else if (this.activeTab === 1) {
-    this.onCmdSmpClear();
-  }
-  else if (this.activeTab === 2) {
-    this.onCmdOrnClear();
-  }
+Tracker.prototype.onCmdEditUndo = function() {
+  this.manager.undo();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdEditRedo = function() {
+  this.manager.redo();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdStop = function() {

@@ -105,6 +105,8 @@ export default class Tracker {
   onCmdEditCut: (this: Tracker) => void;
   onCmdEditPaste: (this: Tracker) => void;
   onCmdEditPasteSpecial: (this: Tracker) => void;
+  onCmdEditUndo: (this: Tracker) => void;
+  onCmdEditRedo: (this: Tracker) => void;
   onCmdFileNew: (this: Tracker) => void;
   onCmdFileOpen: (this: Tracker) => void;
   onCmdFileSave: (this: Tracker, as?: boolean) => void;
