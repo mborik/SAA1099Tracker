@@ -297,6 +297,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
+        app.manager.historyPush({
+          pattern: {
+            type: 'length',
+            index: app.workingPattern,
+            end: pp.end
+          }
+        }, {
+          dataType: 'pattern',
+          prop: 'end'
+        });
+
         pp.end = +(el.val());
         pp.updateTracklist();
         app.player.countPositionFrames();
@@ -351,6 +362,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
+        app.manager.historyPush({
+          position: {
+            type: 'props',
+            index: pp,
+            length: pos.length
+          }
+        }, {
+          dataType: 'position',
+          prop: 'length'
+        });
+
         pos.length = validateAndClamp({
           value: el.value,
           initval: 64,
@@ -388,6 +410,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           el.value = pos.speed.toString();
           return false;
         }
+
+        app.manager.historyPush({
+          position: {
+            type: 'props',
+            index: pp,
+            speed: pos.speed
+          }
+        }, {
+          dataType: 'position',
+          prop: 'speed'
+        });
 
         pos.speed = validateAndClamp({
           value: el.value,
@@ -653,6 +686,14 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryInputEventObject) => {
         const sample = app.player.samples[app.workingSample];
         if (sample.end !== sample.loop) {
+          app.manager.historyPush({
+            sample: {
+              type: 'props',
+              index: app.workingSample,
+              releasable: sample.releasable
+            }
+          });
+
           sample.releasable = e.currentTarget.checked;
         }
         app.updateSampleEditor(true);
@@ -670,6 +711,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const offset = value - sample.end;
         const looper = (sample.loop += offset);
 
+        app.manager.historyPush({
+          sample: {
+            type: 'props',
+            index: app.workingSample,
+            end: sample.end,
+            loop: sample.loop
+          }
+        }, {
+          dataType: 'sample',
+          prop: 'end'
+        });
+
         sample.end += offset;
         sample.loop = ((sample.end - looper) < 0) ? 0 : looper;
 
@@ -684,6 +737,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const value = validateAndClamp({
           value: e.currentTarget.value,
           min: 0, max: sample.end
+        });
+
+        app.manager.historyPush({
+          sample: {
+            type: 'props',
+            index: app.workingSample,
+            loop: sample.loop
+          }
+        }, {
+          dataType: 'sample',
+          prop: 'loop'
         });
 
         sample.loop = sample.end - value;
@@ -734,6 +798,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const offset = value - orn.end;
         const looper = (orn.loop += offset);
 
+        app.manager.historyPush({
+          ornament: {
+            type: 'props',
+            index: app.workingOrnament,
+            end: orn.end,
+            loop: orn.loop
+          }
+        }, {
+          dataType: 'ornament',
+          prop: 'end'
+        });
+
         orn.end += offset;
         orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
 
@@ -748,6 +824,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const value = validateAndClamp({
           value: e.currentTarget.value,
           min: 0, max: orn.end
+        });
+
+        app.manager.historyPush({
+          ornament: {
+            type: 'props',
+            index: app.workingOrnament,
+            loop: orn.loop
+          }
+        }, {
+          dataType: 'ornament',
+          prop: 'loop'
         });
 
         orn.loop = orn.end - value;

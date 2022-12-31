@@ -110,6 +110,7 @@ export interface UndoState {
 }
 
 interface UndoStateWithContext extends UndoState {
+  timestamp: number;
   context: {
     activeTab: number;
     smpeditShiftShown: boolean;
@@ -395,12 +396,28 @@ export default class Manager {
   }
 
   //-------------------------------------------------------------------------------------
-  public historyPush(state: UndoState = {}) {
+  public historyPush(
+    state: UndoState = {},
+    debounceOn?: { dataType: 'sample' | 'ornament' | 'pattern' | 'position'; prop: string }
+  ) {
     if (this._historyIndex < this._history.length - 1) {
       this._history.splice(this._historyIndex + 1);
     }
+    if (this._historyIndex > 0 && debounceOn) {
+      const last = this._history[this._historyIndex];
+      const { dataType, prop } = debounceOn;
+      if (
+        last.timestamp + 1000 > Date.now() &&
+        last[dataType] && last[dataType].type === state[dataType]?.type &&
+        last[dataType].hasOwnProperty(prop)
+      ) {
+        return;
+      }
+    }
+
     this._history.push({
       ...state,
+      timestamp: Date.now(),
       context: {
         activeTab: this._parent.activeTab,
         smpeditShiftShown: this._parent.smpornedit.smpeditShiftShown,
@@ -442,6 +459,7 @@ export default class Manager {
 
       const app = this._parent;
       const player = app.player;
+      let shouldUpdatePanels;
 
       if (state.pattern) {
         const p = player.patterns[state.pattern.index];
@@ -459,6 +477,8 @@ export default class Manager {
         }
         else if (state.pattern.type === 'length') {
           p.end = state.pattern.end;
+          p.updateTracklist();
+          shouldUpdatePanels = true;
         }
         else if (state.pattern.type === 'create') {
           player.patterns.splice(state.pattern.index, 1);
@@ -528,7 +548,7 @@ export default class Manager {
         }
       }
 
-      this._applyHistoryStateContext(state);
+      this._applyHistoryStateContext(state, shouldUpdatePanels);
       return true;
     }
 
@@ -538,7 +558,10 @@ export default class Manager {
   public redo() {
   }
 
-  private _applyHistoryStateContext({ context, pattern }: UndoStateWithContext) {
+  private _applyHistoryStateContext(
+    { context, pattern }: UndoStateWithContext,
+    shouldUpdatePanels: boolean = false
+  ) {
     const app = this._parent;
     if (context.activeTab !== app.activeTab) {
       app.activeTab = context.activeTab || 0;
@@ -567,7 +590,6 @@ export default class Manager {
       app.smpornedit.updateOrnamentEditor(true);
     }
 
-    let shouldUpdatePanels = false;
     if (context.workingPattern !== app.workingPattern) {
       app.workingPattern = context.workingPattern || 0;
       $('#scPattern').val(app.workingPattern.toString());
