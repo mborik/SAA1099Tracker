@@ -474,6 +474,19 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
+        app.manager.historyPush({
+          position: {
+            type: 'data',
+            index: pp,
+            channel: chn,
+            pattern: prev
+          }
+        }, {
+          dataType: 'position',
+          checkProps: { channel: chn },
+          prop: 'pattern'
+        });
+
         const val = validateAndClamp({
           value: el.value,
           min: 0, max: app.player.patterns.length - 1
@@ -500,17 +513,31 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         $(el).TouchSpin(props).change((e: JQueryInputEventObject) => {
           const el = e.currentTarget;
           const chn = parseInt(el.id.substr(-1)) - 1;
-          const pos = app.player.positions[app.player.position];
+          const pos = app.player.positions[app.player.position] ?? app.player.nullPosition;
+          const pch = pos.ch[chn];
 
           if (!app.player.positions.length) {
             return false;
           }
           else if (app.modePlay) {
-            el.value = pos.ch[chn].pitch.toString();
+            el.value = pch.pitch.toString();
             return false;
           }
           else {
-            pos.ch[chn].pitch = validateAndClamp({
+            app.manager.historyPush({
+              position: {
+                type: 'data',
+                index: app.player.position,
+                channel: chn,
+                pitch: pch.pitch
+              }
+            }, {
+              dataType: 'position',
+              checkProps: { channel: chn },
+              prop: 'pattern'
+            });
+
+            pch.pitch = validateAndClamp({
               value: el.value,
               ...props
             });

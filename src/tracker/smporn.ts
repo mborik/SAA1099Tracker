@@ -191,10 +191,27 @@ export default class SmpOrnEditor {
         .change({ index: i }, e => {
           const working = this._parent.workingSample;
           const sample = this._parent.player.samples[working];
-          const data = sample.data;
+          const from = e.data.index;
+          const data = sample.data[from];
           const el = <HTMLInputElement> e.target;
 
-          data[e.data.index].shift = validateAndClamp({
+          this._parent.manager.historyPush({
+            sample: {
+              type: 'data',
+              index: working,
+              data: [{
+                ...data,
+                volume: data.volume.byte
+              }],
+              from
+            }
+          }, {
+            dataType: 'sample',
+            checkProps: { from, 'data.length': 1 },
+            prop: 'data'
+          });
+
+          data.shift = validateAndClamp({
             ...props,
             value: el.value,
             radix: settings.hexSampleFreq ? 16 : 10
@@ -270,9 +287,24 @@ export default class SmpOrnEditor {
         .change({ index: i }, e => {
           const working = this._parent.workingOrnament;
           const orn = this._parent.player.ornaments[working];
+          const from = e.data.index;
+          const data = orn.data;
           const el = <HTMLInputElement> e.target;
 
-          orn.data[e.data.index] = validateAndClamp({ value: el.value, ...props });
+          this._parent.manager.historyPush({
+            ornament: {
+              type: 'data',
+              index: working,
+              data: data.slice(from, from + 1),
+              from
+            }
+          }, {
+            dataType: 'ornament',
+            checkProps: { from, 'data.length': 1 },
+            prop: 'data'
+          });
+
+          data[from] = validateAndClamp({ value: el.value, ...props });
         })
         .prop('tabindex', 31);
     }

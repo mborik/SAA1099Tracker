@@ -21,6 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
+import getProp from 'lodash.get';
 import { MAX_PATTERN_LEN } from '../player/globals';
 import Ornament from '../player/Ornament';
 import Pattern from '../player/Pattern';
@@ -79,7 +80,9 @@ interface UndoPatternRemove {
 
 interface UndoPositionData {
   type: 'data';
-  data: Position['ch'];
+  channel: number;
+  pattern?: number;
+  pitch?: number;
 }
 interface UndoPositionProps {
   type: 'props';
@@ -96,7 +99,7 @@ interface UndoPositionCreate {
 }
 interface UndoPositionRemove {
   type: 'remove';
-  data: UndoPositionData['data'];
+  data: Position['ch'];
   length: number;
   speed: number;
 }
@@ -398,18 +401,28 @@ export default class Manager {
   //-------------------------------------------------------------------------------------
   public historyPush(
     state: UndoState = {},
-    debounceOn?: { dataType: 'sample' | 'ornament' | 'pattern' | 'position'; prop: string }
+    debounceOn?: {
+      dataType: 'sample' | 'ornament' | 'pattern' | 'position';
+      prop: string | (string | number)[];
+      checkProps?: { [key: string]: any };
+    }
   ) {
     if (this._historyIndex < this._history.length - 1) {
       this._history.splice(this._historyIndex + 1);
     }
     if (this._historyIndex > 0 && debounceOn) {
-      const last = this._history[this._historyIndex];
-      const { dataType, prop } = debounceOn;
+      const lastEntry = this._history[this._historyIndex];
+      const { dataType, prop, checkProps } = debounceOn;
+      const last = lastEntry[dataType];
       if (
-        last.timestamp + 1000 > Date.now() &&
-        last[dataType] && last[dataType].type === state[dataType]?.type &&
-        last[dataType].hasOwnProperty(prop)
+        lastEntry.timestamp + 1000 > Date.now() &&
+        last && last.type === state[dataType]?.type &&
+        getProp(last, prop) && (
+          !checkProps ||
+          Object.entries(checkProps).every(
+            ([key, value]) => getProp(last, key) === value
+          )
+        )
       ) {
         return;
       }
@@ -559,7 +572,7 @@ export default class Manager {
   }
 
   private _applyHistoryStateContext(
-    { context, pattern }: UndoStateWithContext,
+    { context, pattern, sample, ornament }: UndoStateWithContext,
     shouldUpdatePanels: boolean = false
   ) {
     const app = this._parent;
@@ -610,6 +623,12 @@ export default class Manager {
     }
     if (pattern) {
       app.updateEditorCombo(0);
+    }
+    if (sample) {
+      app.smpornedit.updateSamplePitchShift();
+    }
+    if (ornament) {
+      app.smpornedit.updateOrnamentEditor();
     }
 
     app.modeEditChannel = context.modeEditChannel;
