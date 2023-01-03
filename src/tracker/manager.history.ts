@@ -115,15 +115,15 @@ interface UndoStateWithContext extends UndoState {
   timestamp: number;
   context: {
     activeTab: number;
-    smpeditShiftShown: boolean;
-    modeEdit: boolean;
-    modeEditChannel: number;
-    modeEditColumn: number;
-    currentPosition: number;
-    currentLine: number;
-    workingPattern: number;
-    workingSample: number;
-    workingOrnament: number;
+    modeEdit?: boolean;
+    modeEditChannel?: number;
+    modeEditColumn?: number;
+    currentPosition?: number;
+    currentLine?: number;
+    workingPattern?: number;
+    workingSample?: number;
+    workingOrnament?: number;
+    smpeditShiftShown?: boolean;
   };
 }
 
@@ -234,7 +234,7 @@ export default class ManagerHistory {
         const p = player.patterns[state.pattern.index];
         if (state.pattern.type === 'data') {
           const d = state.pattern.data;
-          for (let src = 0, dst = state.pattern.from || 0; src < d.length; src++, dst++) {
+          for (let src = 0, dst = state.pattern.from ?? 0; src < d.length; src++, dst++) {
             p.data[dst].tone = d[src].tone;
             p.data[dst].smp = d[src].smp;
             p.data[dst].orn = d[src].orn;
@@ -273,7 +273,7 @@ export default class ManagerHistory {
         const s = player.samples[state.sample.index];
         if (state.sample.type === 'data') {
           const d = state.sample.data;
-          for (let src = 0, dst = state.sample.from || 0; src < d.length; src++, dst++) {
+          for (let src = 0, dst = state.sample.from ?? 0; src < d.length; src++, dst++) {
             s.data[dst].volume.byte = d[src].volume;
             s.data[dst].enable_freq = d[src].enable_freq;
             s.data[dst].enable_noise = d[src].enable_noise;
@@ -300,7 +300,7 @@ export default class ManagerHistory {
         const o = player.ornaments[state.ornament.index];
         if (state.ornament.type === 'data') {
           const d = state.ornament.data;
-          for (let src = 0, dst = state.ornament.from || 0; src < d.length; src++, dst++) {
+          for (let src = 0, dst = state.ornament.from ?? 0; src < d.length; src++, dst++) {
             o.data[dst] = d[src];
           }
         }
@@ -360,12 +360,18 @@ export default class ManagerHistory {
       app.smpornedit.updateOrnamentEditor(true);
     }
 
-    if (context.workingPattern !== app.workingPattern) {
+    if (
+      context.workingPattern !== undefined &&
+      context.workingPattern !== app.workingPattern
+    ) {
       app.workingPattern = context.workingPattern || 0;
       $('#scPattern').val(app.workingPattern.toString());
       shouldUpdatePanels = true;
     }
-    if (context.currentPosition !== app.player.position) {
+    if (
+      context.currentPosition !== undefined &&
+      context.currentPosition !== app.player.position
+    ) {
       app.player.position = context.currentPosition || 0;
       $('#scPosCurrent').val((app.player.position + 1).toString());
       shouldUpdatePanels = true;
@@ -375,7 +381,10 @@ export default class ManagerHistory {
       app.updatePanels();
     }
 
-    if (context.currentLine !== app.player.line) {
+    if (
+      context.currentLine !== undefined &&
+      context.currentLine !== app.player.line
+    ) {
       app.player.line = context.currentLine || 0;
     }
     if (pattern) {
@@ -388,9 +397,15 @@ export default class ManagerHistory {
       app.smpornedit.updateOrnamentEditor();
     }
 
-    app.modeEditChannel = context.modeEditChannel;
-    app.modeEditColumn = context.modeEditColumn;
-    app.onCmdToggleEditMode(context.modeEdit);
+    if (context.modeEditChannel !== undefined) {
+      app.modeEditChannel = context.modeEditChannel;
+    }
+    if (context.modeEditColumn !== undefined) {
+      app.modeEditColumn = context.modeEditColumn;
+    }
+    if (context.modeEdit !== undefined) {
+      app.onCmdToggleEditMode(context.modeEdit);
+    }
   }
 
   private _updateHistoryGUI() {
