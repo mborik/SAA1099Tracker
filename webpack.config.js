@@ -152,6 +152,7 @@ module.exports = {
       './src/tracker/file.ts',
       './src/tracker/tracklist.ts',
       './src/tracker/smporn.ts',
+      './src/tracker/manager.history.ts',
       './src/tracker/manager.ts',
       './src/tracker/settings.ts',
       './src/tracker/controls.ts',
