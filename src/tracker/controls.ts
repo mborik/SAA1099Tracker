@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: All handlers and control function prototypes.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -969,6 +969,7 @@ Tracker.prototype.onCmdSmpClear = function() {
         return;
       }
 
+      app.manager.historyPushSampleDebounced();
       smp.data.forEach(tick => {
         if (mask & 1) {
           tick.volume.byte = 0;
@@ -1004,6 +1005,7 @@ Tracker.prototype.onCmdSmpClear = function() {
 Tracker.prototype.onCmdSmpSwap = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => {
     const swap = tick.volume.L;
     tick.volume.L = tick.volume.R;
@@ -1017,6 +1019,7 @@ Tracker.prototype.onCmdSmpSwap = function() {
 Tracker.prototype.onCmdSmpLVolUp = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach((tick, i) => {
     if ((i < smp.end && tick.volume.L < 15) ||
 			(i >= smp.end && tick.volume.L > 0 && tick.volume.L < 15)) {
@@ -1032,6 +1035,7 @@ Tracker.prototype.onCmdSmpLVolUp = function() {
 Tracker.prototype.onCmdSmpLVolDown = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => {
     if (tick.volume.L > 0) {
       tick.volume.L--;
@@ -1045,6 +1049,7 @@ Tracker.prototype.onCmdSmpLVolDown = function() {
 Tracker.prototype.onCmdSmpRVolUp = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach((tick, i) => {
     if ((i < smp.end && tick.volume.R < 15) ||
 			(i >= smp.end && tick.volume.R > 0 && tick.volume.R < 15)) {
@@ -1060,6 +1065,7 @@ Tracker.prototype.onCmdSmpRVolUp = function() {
 Tracker.prototype.onCmdSmpRVolDown = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => {
     if (tick.volume.R > 0) {
       tick.volume.R--;
@@ -1073,6 +1079,7 @@ Tracker.prototype.onCmdSmpRVolDown = function() {
 Tracker.prototype.onCmdSmpCopyLR = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => (tick.volume.R = tick.volume.L));
 
   this.updateSampleEditor();
@@ -1082,6 +1089,7 @@ Tracker.prototype.onCmdSmpCopyLR = function() {
 Tracker.prototype.onCmdSmpCopyRL = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => (tick.volume.L = tick.volume.R));
 
   this.updateSampleEditor();
@@ -1091,6 +1099,8 @@ Tracker.prototype.onCmdSmpCopyRL = function() {
 Tracker.prototype.onCmdSmpRotL = function() {
   const smp = this.player.samples[this.workingSample];
   const data = smp.data;
+
+  this.manager.historyPushSampleDebounced();
 
   let i = 0;
   const backup = $.extend(true, {}, data[i]);
@@ -1113,6 +1123,8 @@ Tracker.prototype.onCmdSmpRotR = function() {
   const smp = this.player.samples[this.workingSample];
   const data = smp.data;
 
+  this.manager.historyPushSampleDebounced();
+
   let i = 255;
   const backup = $.extend(true, {}, data[i]);
 
@@ -1133,6 +1145,7 @@ Tracker.prototype.onCmdSmpRotR = function() {
 Tracker.prototype.onCmdSmpEnable = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => {
     if (tick.volume.byte) {
       tick.enable_freq = true;
@@ -1146,6 +1159,7 @@ Tracker.prototype.onCmdSmpEnable = function() {
 Tracker.prototype.onCmdSmpDisable = function() {
   const smp = this.player.samples[this.workingSample];
 
+  this.manager.historyPushSampleDebounced();
   smp.data.forEach(tick => {
     tick.enable_freq = false;
   });
@@ -1176,6 +1190,8 @@ Tracker.prototype.onCmdOrnClear = function() {
         return;
       }
 
+      app.manager.historyPushOrnamentDebounced();
+
       orn.name = '';
       orn.data.fill(0);
       orn.loop = orn.end = 0;
@@ -1190,6 +1206,7 @@ Tracker.prototype.onCmdOrnShiftLeft = function() {
   const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
 
+  this.manager.historyPushOrnamentDebounced();
   for (let i = 0, ref = data[i]; i < 256; i++) {
     data[i] = (i < 255) ? data[i + 1] : ref;
   }
@@ -1202,6 +1219,7 @@ Tracker.prototype.onCmdOrnShiftRight = function() {
   const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
 
+  this.manager.historyPushOrnamentDebounced();
   for (let i = 255, ref = data[i]; i >= 0; i--) {
     data[i] = (i > 0) ? data[i - 1] : ref;
   }
@@ -1213,6 +1231,7 @@ Tracker.prototype.onCmdOrnShiftRight = function() {
 Tracker.prototype.onCmdOrnTransUp = function() {
   const orn = this.player.ornaments[this.workingOrnament];
 
+  this.manager.historyPushOrnamentDebounced();
   for (let i = 0, l = orn.end; i < l; i++) {
     orn.data[i]++;
   }
@@ -1224,6 +1243,7 @@ Tracker.prototype.onCmdOrnTransUp = function() {
 Tracker.prototype.onCmdOrnTransDown = function() {
   const orn = this.player.ornaments[this.workingOrnament];
 
+  this.manager.historyPushOrnamentDebounced();
   for (let i = 0, l = orn.end; i < l; i++) {
     orn.data[i]--;
   }
@@ -1237,6 +1257,7 @@ Tracker.prototype.onCmdOrnCompress = function() {
   const data = orn.data;
   let i = 0;
 
+  this.manager.historyPushOrnamentDebounced();
   for (let k = 0; k < 256; i++, k += 2) {
     data[i] = data[k];
   }
@@ -1253,6 +1274,7 @@ Tracker.prototype.onCmdOrnExpand = function() {
   const orn = this.player.ornaments[this.workingOrnament];
   const data = orn.data;
 
+  this.manager.historyPushOrnamentDebounced();
   for (let i = 127, k = 256; k > 0; i--) {
     data[--k] = data[i];
     data[--k] = data[i];

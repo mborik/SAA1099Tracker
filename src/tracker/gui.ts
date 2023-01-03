@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: User interface initializer and element populator
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -655,14 +655,40 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#txSampleName',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.player.samples[app.workingSample].name = e.currentTarget.value;
+        const sample = app.player.samples[app.workingSample];
+        app.manager.historyPush({
+          sample: {
+            type: 'props',
+            index: app.workingSample,
+            name: sample.name
+          }
+        }, {
+          dataType: 'sample',
+          checkProps: { index: app.workingSample },
+          prop: 'name'
+        });
+
+        sample.name = e.currentTarget.value;
         app.file.modified = true;
       }
     }, {
       selector: '#txOrnName',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.player.ornaments[app.workingOrnament].name = e.currentTarget.value;
+        const ornament = app.player.ornaments[app.workingOrnament];
+        app.manager.historyPush({
+          ornament: {
+            type: 'props',
+            index: app.workingOrnament,
+            name: ornament.name
+          }
+        }, {
+          dataType: 'ornament',
+          checkProps: { index: app.workingOrnament },
+          prop: 'name'
+        });
+
+        ornament.name = e.currentTarget.value;
         app.file.modified = true;
       }
     }, {
@@ -770,6 +796,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           sample: {
             type: 'props',
             index: app.workingSample,
+            end: sample.end,
             loop: sample.loop
           }
         }, {
@@ -799,6 +826,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         }).click(() => {
           const orn = app.player.ornaments[app.workingOrnament];
           const l = chord.sequence.length;
+
+          app.manager.historyPushOrnamentDebounced();
 
           orn.data.fill(0);
           orn.name = chord.name;
@@ -857,6 +886,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           ornament: {
             type: 'props',
             index: app.workingOrnament,
+            end: orn.end,
             loop: orn.loop
           }
         }, {

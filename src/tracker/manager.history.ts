@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: History manager class and dependent interfaces.
- * Copyright (c) 2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2022-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -30,8 +30,8 @@ import Sample from '../player/Sample';
 import Tracker from '.';
 
 
-type SampleSimplified = Omit<Sample['data'][number], 'volume'> & { volume: number };
-type PatternSimplified = Omit<Pattern['data'][number], 'tracklist' | 'volume'> & { volume: number };
+export type SampleSimplified = Omit<Sample['data'][number], 'volume'> & { volume: number };
+export type PatternSimplified = Omit<Pattern['data'][number], 'tracklist' | 'volume'> & { volume: number };
 
 interface UndoSampleData {
   type: 'data';
@@ -201,6 +201,44 @@ export default class ManagerHistory {
     this._updateHistoryGUI();
   }
 
+  public historyPushSampleDebounced(index: number = this._parent.workingSample) {
+    const data = this._parent.player.samples[index]?.data ?? [];
+    this.historyPush({
+      sample: {
+        type: 'data',
+        index,
+        from: 0,
+        data: data.map((v) => ({
+          ...v,
+          volume: v.volume.byte,
+        }))
+      }
+    }, {
+      dataType: 'sample',
+      checkProps: { index, from: 0, 'data.length': data.length },
+      prop: 'data'
+    });
+  }
+
+  public historyPushOrnamentDebounced(index: number = this._parent.workingOrnament) {
+    const data = this._parent.player.ornaments[index]?.data;
+    if (!data) {
+      return;
+    }
+    this.historyPush({
+      ornament: {
+        type: 'data',
+        index,
+        from: 0,
+        data
+      }
+    }, {
+      dataType: 'ornament',
+      checkProps: { index, from: 0, 'data.length': data.length },
+      prop: 'data'
+    });
+  }
+
   public isUndoAvailable(): boolean {
     return this._historyIndex > 0;
   }
@@ -328,6 +366,7 @@ export default class ManagerHistory {
   public redo() {
   }
 
+  //-------------------------------------------------------------------------------------
   private _applyHistoryStateContext(
     { context, pattern, sample, ornament }: UndoStateWithContext,
     shouldUpdatePanels: boolean = false
