@@ -103,9 +103,6 @@ Tracker.prototype.updatePanelInfo = function() {
 
   elBPM.textContent = bpm.toString();
   elFreq.textContent = int.toString();
-
-  $('#miEditUndo').parent().toggleClass('disabled', !this.manager.isUndoAvailable());
-  $('#miEditRedo').parent().toggleClass('disabled', !this.manager.isRedoAvailable());
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {

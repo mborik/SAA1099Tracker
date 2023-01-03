@@ -133,6 +133,13 @@ export default class ManagerHistory {
 
   constructor(public _parent: Tracker) {}
 
+  public historyClear() {
+    this._history.splice(1);
+    this._historyIndex = 0;
+
+    this._updateHistoryGUI();
+  }
+
   public historyPush(
     state: UndoState = {},
     debounceOn?: {
@@ -162,29 +169,36 @@ export default class ManagerHistory {
       }
     }
 
+    const context = {
+      activeTab: this._parent.activeTab,
+      smpeditShiftShown: this._parent.smpornedit.smpeditShiftShown,
+      modeEdit: this._parent.modeEdit,
+      modeEditChannel: this._parent.modeEditChannel,
+      modeEditColumn: this._parent.modeEditColumn,
+      currentPosition: this._parent.player.position,
+      currentLine: this._parent.player.line,
+      workingPattern: this._parent.workingPattern,
+      workingSample: this._parent.workingSample,
+      workingOrnament: this._parent.workingOrnament,
+    };
+
+    if (process.env.NODE_ENV === 'development') {
+      const [dataType] = Object.keys(state);
+      // eslint-disable-next-line
+      console.info.apply(console, [
+        `%c[History]%c ${debounceOn ? 'Debounced' : 'New'} ${dataType} entry:`, 'color:rosybrown', 'color:inherit',
+        { ...state[dataType], context }
+      ]);
+    }
+
     this._history.push({
       ...state,
       timestamp: Date.now(),
-      context: {
-        activeTab: this._parent.activeTab,
-        smpeditShiftShown: this._parent.smpornedit.smpeditShiftShown,
-        modeEdit: this._parent.modeEdit,
-        modeEditChannel: this._parent.modeEditChannel,
-        modeEditColumn: this._parent.modeEditColumn,
-        currentPosition: this._parent.player.position,
-        currentLine: this._parent.player.line,
-        workingPattern: this._parent.workingPattern,
-        workingSample: this._parent.workingSample,
-        workingOrnament: this._parent.workingOrnament,
-      }
+      context
     });
 
     this._historyIndex++;
-  }
-
-  public historyClear() {
-    this._history.splice(1);
-    this._historyIndex = 0;
+    this._updateHistoryGUI();
   }
 
   public isUndoAvailable(): boolean {
@@ -202,6 +216,14 @@ export default class ManagerHistory {
 
       if (!state) {
         return false;
+      }
+      if (process.env.NODE_ENV === 'development') {
+        const [dataType] = Object.keys(state);
+        // eslint-disable-next-line
+        console.info.apply(console, [
+          `%c[History]%c Undoing ${dataType} entry:`, 'color:rosybrown', 'color:inherit',
+          { ...state[dataType], context: state.context }
+        ]);
       }
 
       const app = this._parent;
@@ -296,6 +318,7 @@ export default class ManagerHistory {
       }
 
       this._applyHistoryStateContext(state, shouldUpdatePanels);
+      this._updateHistoryGUI();
       return true;
     }
 
@@ -368,5 +391,10 @@ export default class ManagerHistory {
     app.modeEditChannel = context.modeEditChannel;
     app.modeEditColumn = context.modeEditColumn;
     app.onCmdToggleEditMode(context.modeEdit);
+  }
+
+  private _updateHistoryGUI() {
+    $('#miEditUndo').parent().toggleClass('disabled', !this.isUndoAvailable());
+    $('#miEditRedo').parent().toggleClass('disabled', !this.isRedoAvailable());
   }
 }

@@ -534,7 +534,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
             }, {
               dataType: 'position',
               checkProps: { channel: chn },
-              prop: 'pattern'
+              prop: 'pitch'
             });
 
             pch.pitch = validateAndClamp({
@@ -1084,22 +1084,22 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.initializeGUI = function(app: Tracker) {
   const initSteps = [
-    function() {
-      const pixelfont = $('img.pixelfont')[0];
+    function(this: Tracker) {
+      const pixelfont = $('img.pixelfont')[0] as HTMLImageElement;
       this.initPixelFont(pixelfont);
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.smpornedit.initialized || this.activeTab === 1) {
         return false;
       }
 
       devLog('Tracker.gui', 'Force initialization of Sample/Ornament editors...');
-      this.smpornedit.img = $('img.smpedit')[0];
+      this.smpornedit.img = $('img.smpedit')[0] as HTMLImageElement;
       $('#tab-smpedit').tab('show');
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.smpornedit.initialized || !this.smpornedit.img || this.activeTab !== 1) {
         return false;
       }
@@ -1108,7 +1108,7 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       $('#tab-ornedit').tab('show');
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.tracklist.initialized || !this.pixelfont.ctx || this.activeTab === 0) {
         return false;
       }
@@ -1118,7 +1118,7 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       $(window).trigger('resize', [ true ]);
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.tracklist.initialized || !this.pixelfont.ctx || this.activeTab) {
         return false;
       }
@@ -1126,15 +1126,16 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       devLog('Tracker.gui', 'Redrawing all tracklist elements and canvas...');
       this.updatePanels();
       this.updateTracklist(true);
+      this.manager.historyClear();
       this.tracklist.initialized = true;
       return true;
     },
-    function() {
+    function(this: Tracker) {
       devLog('Tracker.gui', 'Starting audio playback and initializing screen refresh timer...');
       SyncTimer.start(this.baseTimer.bind(this));
       return true;
     },
-    function() {
+    function(this: Tracker) {
       devLog('Tracker.gui', 'Initialization done, everything is ready!');
       if (this.settings.lastLoadedFileNumber !== undefined) {
         this.file.loadFile(this.settings.lastLoadedFileNumber);
