@@ -699,9 +699,17 @@ Tracker.prototype.onCmdPatCreate = function() {
 
   const id = this.player.addNewPattern();
   const pt = this.player.patterns[id];
-  const len = (this.workingPattern && this.player.patterns[this.workingPattern].end) || 64;
+  const end = (this.workingPattern && this.player.patterns[this.workingPattern].end) || 64;
 
-  pt.end = len;
+  this.manager.historyPush({
+    pattern: {
+      type: 'create',
+      index: id,
+      end
+    }
+  });
+
+  pt.end = end;
   this.workingPattern = id;
   this.updatePanelPattern();
   this.file.modified = true;
@@ -720,6 +728,7 @@ Tracker.prototype.onCmdPatDelete = function() {
   const keys = this.globalKeyState;
   const len = p.patterns.length - 1;
   let msg = null;
+  let undoableOperation = false;
 
   if (p.countPatternUsage(pt) > 0) {
     msg = i18n.dialog.pattern.delete.msg.used;
@@ -729,18 +738,37 @@ Tracker.prototype.onCmdPatDelete = function() {
   }
   if (!msg) {
     msg = i18n.dialog.pattern.delete.msg.sure;
+    undoableOperation = true;
   }
 
   keys.inDialog = true;
   $('#dialog').confirm({
     title: i18n.dialog.pattern.delete.title,
-    text: msg,
+    html: msg,
     buttons: 'yesno',
-    style: (pt !== len) ? 'warning' : 'info',
+    style: undoableOperation ? 'info' : 'warning',
     callback: (btn) => {
       keys.inDialog = false;
       if (btn !== 'yes') {
         return;
+      }
+
+      if (undoableOperation) {
+        const patt = p.patterns[pt];
+        this.manager.historyPush({
+          pattern: {
+            type: 'remove',
+            index: pt,
+            data: patt.data.map((v) => ({
+              ...v,
+              volume: v.volume.byte,
+            })),
+            end: patt.end
+          }
+        });
+      }
+      else {
+        this.manager.historyClear();
       }
 
       for (let i = 0, l = p.positions.length, pos, chn; i < l; i++) {
@@ -789,6 +817,17 @@ Tracker.prototype.onCmdPatClean = function() {
       if (btn !== 'yes') {
         return;
       }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.data.map((v) => ({
+            ...v,
+            volume: v.volume.byte,
+          })),
+        }
+      });
 
       pt.data.forEach(line => {
         line.tone = 0;
