@@ -161,10 +161,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
 
     if (e.type === 'mousedown') {
       obj.historyEntry = {
-        data: sample.data.map((v) => ({
-          ...v,
-          volume: v.volume.byte,
-        })),
+        data: sample.simplify(),
         dataFrom: Infinity,
         dataTo: -Infinity,
         loop: sample.loop,

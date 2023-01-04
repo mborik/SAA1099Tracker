@@ -23,8 +23,8 @@
 
 import { devLog } from '../commons/dev';
 import { toWidth, validateAndClamp } from '../commons/number';
+import { SampleSimplified } from '../player/Sample';
 import { i18n } from './doc';
-import { SampleSimplified } from './manager.history';
 import Tracker, { TrackerCanvasPair } from '.';
 
 

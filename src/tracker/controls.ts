@@ -779,16 +779,13 @@ Tracker.prototype.onCmdPatDelete = function() {
         }
       }
 
-      const { data, end } = p.patterns[pt];
+      const pattern = p.patterns[pt];
       this.manager.historyPush({
         pattern: {
           type: 'remove',
           index: pt,
-          data: data.map((v) => ({
-            ...v,
-            volume: v.volume.byte,
-          })),
-          end
+          data: pattern.simplify(),
+          end: pattern.end
         }
       });
 
@@ -832,10 +829,7 @@ Tracker.prototype.onCmdPatClean = function() {
         pattern: {
           type: 'data',
           index: this.workingPattern,
-          data: pt.data.map((v) => ({
-            ...v,
-            volume: v.volume.byte,
-          })),
+          data: pt.simplify(),
         }
       });
 

@@ -24,14 +24,11 @@
 import getProp from 'lodash.get';
 import { MAX_PATTERN_LEN } from '../player/globals';
 import Ornament from '../player/Ornament';
-import Pattern from '../player/Pattern';
+import Pattern, { PatternSimplified } from '../player/Pattern';
 import Position from '../player/Position';
-import Sample from '../player/Sample';
+import { SampleSimplified } from '../player/Sample';
 import Tracker from '.';
 
-
-export type SampleSimplified = Omit<Sample['data'][number], 'volume'> & { volume: number };
-export type PatternSimplified = Omit<Pattern['data'][number], 'tracklist' | 'volume'> & { volume: number };
 
 interface UndoSampleData {
   type: 'data';
@@ -202,20 +199,19 @@ export default class ManagerHistory {
   }
 
   public historyPushSampleDebounced(index: number = this._parent.workingSample) {
-    const data = this._parent.player.samples[index]?.data ?? [];
+    const data = this._parent.player.samples[index]?.simplify() ?? [];
+    const from = 0;
+
     this.historyPush({
       sample: {
         type: 'data',
         index,
-        from: 0,
-        data: data.map((v) => ({
-          ...v,
-          volume: v.volume.byte,
-        }))
+        from,
+        data
       }
     }, {
       dataType: 'sample',
-      checkProps: { index, from: 0, 'data.length': data.length },
+      checkProps: { index, from, 'data.length': data.length },
       prop: 'data'
     });
   }
@@ -292,7 +288,7 @@ export default class ManagerHistory {
         }
         else if (state.pattern.type === 'remove') {
           if (state.pattern.index !== player.patterns.length) {
-            console.error('Manager: Undo of removing pattern - index is invalid (not last)!');
+            console.error('Manager: Undo of removing pattern - invalid index (not last)!');
           }
           const d = state.pattern.data;
           const p = new Pattern(state.pattern.end);

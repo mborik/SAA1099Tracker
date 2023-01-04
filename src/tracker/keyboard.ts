@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Keyboard events handler prototype.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -54,19 +54,16 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
     let A = MAX_PATTERN_LEN - 2;
     let B = MAX_PATTERN_LEN - 1;
 
-    const data = pt.data;
     app.manager.historyPush({
       pattern: {
         index,
         type: 'data',
         from: cl,
-        data: data.slice(cl).map((v) => ({
-          ...v,
-          volume: v.volume.byte,
-        }))
+        data: pt.simplify(cl)
       }
     });
 
+    const data = pt.data;
     for (; A >= cl; A--, B--) {
       data[B].tone = data[A].tone;
       data[B].release = data[A].release;
@@ -108,10 +105,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
         type: 'data',
         index: pt,
         from: line,
-        data: pp.data.slice(line, end).map((v) => ({
-          ...v,
-          volume: v.volume.byte,
-        }))
+        data: pp.simplify(line, end)
       }
     });
 
@@ -674,22 +668,19 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                 logHotkey('Backspace - Delete trackline from pattern');
               }
 
-              const data = pt.data;
               app.manager.historyPush({
                 pattern: {
                   type: 'data',
                   index: cp,
                   from: cl,
-                  data: data.slice(cl).map((v) => ({
-                    ...v,
-                    volume: v.volume.byte,
-                  }))
+                  data: pt.simplify(cl)
                 }
               });
 
               let A = cl + 1;
               let B = cl;
 
+              const data = pt.data;
               for (; A < MAX_PATTERN_LEN - 1; A++, B++) {
                 data[B].tone = data[A].tone;
                 data[B].release = data[A].release;
