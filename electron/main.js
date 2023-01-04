@@ -46,7 +46,7 @@ if (squirrel(cli.flags, app.quit)) {
     applicationName: title,
     applicationVersion: cli.pkg.version,
     website: cli.pkg.homepage,
-    copyright: 'Copyright (c) 2012-2022 Martin Bórik',
+    copyright: 'Copyright (c) 2012-2023 Martin Bórik',
     iconPath: icon
   });
 

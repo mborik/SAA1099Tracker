@@ -1,7 +1,7 @@
 {
   "asar": true,
   "appId": "com.rmteam.saa1099tracker",
-  "copyright": "Copyright (c) 2017-2022 RM-TEAM",
+  "copyright": "Copyright (c) 2017-2023 RM-TEAM",
   "productName": "SAA1099Tracker",
   "directories": {
     "buildResources": "assets/resources",
