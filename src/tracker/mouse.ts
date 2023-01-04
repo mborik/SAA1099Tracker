@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Mouse events handler prototype.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -159,9 +159,24 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
       return;
     }
 
+    if (e.type === 'mousedown') {
+      obj.historyEntry = {
+        data: sample.simplify(),
+        dataFrom: Infinity,
+        dataTo: -Infinity,
+        loop: sample.loop,
+        end: sample.end
+      };
+    }
+
     x = Math.min(0 | (x / obj.columnWidth), 63) + obj.smpeditScroll;
     let limitFrom = x, limitTo = x;
     const data = sample.data[x];
+
+    if (obj.historyEntry) {
+      obj.historyEntry.dataFrom = Math.min(obj.historyEntry.dataFrom, x);
+      obj.historyEntry.dataTo = Math.max(obj.historyEntry.dataTo, x);
+    }
 
     if (part === 'amp') {
       y -= obj.smpeditOffset.top.amp;
@@ -191,6 +206,22 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
         }
       }
       else if (e.type === 'mousewheel') {
+        this.manager.historyPush({
+          sample: {
+            type: 'data',
+            index: this.workingSample,
+            data: [{
+              ...data,
+              volume: data.volume.byte
+            }],
+            from: x,
+          }
+        }, {
+          dataType: 'sample',
+          checkProps: { from: x, 'data.length': 1 },
+          prop: 'data'
+        });
+
         const delta = e.delta / Math.abs(e.delta);
 
         if (ampLeftChn) {
@@ -218,6 +249,22 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
       y -= obj.smpeditOffset.top.noise;
 
       if (e.type === 'mousewheel') {
+        this.manager.historyPush({
+          sample: {
+            type: 'data',
+            index: this.workingSample,
+            data: [{
+              ...data,
+              volume: data.volume.byte
+            }],
+            from: x,
+          }
+        }, {
+          dataType: 'sample',
+          checkProps: { from: x, 'data.length': 1 },
+          prop: 'data'
+        });
+
         noise += e.delta / Math.abs(e.delta);
         update = true;
       }
@@ -280,6 +327,21 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
       }
     }
 
+    if (e.type === 'mouseup' && leftButton) {
+      this.manager.historyPush({
+        sample: (part === 'range') ? {
+          type: 'props',
+          index: this.workingSample,
+          loop: obj.historyEntry.loop,
+          end: obj.historyEntry.end
+        } : {
+          type: 'data',
+          index: this.workingSample,
+          from: obj.historyEntry.dataFrom,
+          data: obj.historyEntry.data.slice(obj.historyEntry.dataFrom, obj.historyEntry.dataTo + 1)
+        }
+      });
+    }
     if (update) {
       this.updateSampleEditor(redrawAll, limitFrom, limitTo);
       this.file.modified = true;

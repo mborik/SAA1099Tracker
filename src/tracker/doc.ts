@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Text resources & i18n.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -52,8 +52,8 @@ Tracker.prototype.doc = {
     'dialog.file.remove.title': 'Remove file...',
     'dialog.file.remove.msg': 'Do you really want to remove this file from storage?',
     'dialog.pattern.delete.title': 'Delete pattern...',
-    'dialog.pattern.delete.msg.used': 'This pattern is used in some positions!\nAre you sure you want to delete it?',
-    'dialog.pattern.delete.msg.notlast': 'This is not the last pattern in a row and there is necessary to renumber all of the next patterns in the positions!\n\nPlease note that all of your undo history will be lost because of pattern/position data inconsistency that occurs with this irreversible operation.\n\nDo you really want to continue?',
+    'dialog.pattern.delete.msg.used': 'This pattern is used in some positions! It would be replaced by zero patterns.\b\bPlease note that undo history will contains all needed position changes.\b\bAre you sure you want to delete the pattern?',
+    'dialog.pattern.delete.msg.notlast': 'This is not the last pattern in a row and there is necessary to renumber all of the further patterns accross all positions!\b\b⚠️ Please note that all of your undo history will be lost after this irreversible operation.\b\bDo you really want to continue?',
     'dialog.pattern.delete.msg.sure': 'Are you sure you want to delete this pattern?',
     'dialog.pattern.clean.title': 'Clean pattern...',
     'dialog.pattern.clean.msg': 'Are you sure you want to clean a content of this pattern?',
@@ -271,7 +271,7 @@ Tracker.prototype.doc = {
       }
 
       if (typeof value === 'string') {
-        value = value.replace('...', '\u2026').replace('\b', '<br />');
+        value = value.replace('...', '\u2026').replaceAll('\b', '<br>');
       }
 
       deepIn[p] = value;

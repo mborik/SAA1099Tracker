@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker Player: Samples class a interface definition.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,8 @@ interface SampleData {
   noise_value: number;
   shift: number;
 }
+
+export type SampleSimplified = Omit<SampleData, 'volume'> & { volume: number };
 
 /** Single sample definition */
 export default class Sample {
@@ -93,5 +95,15 @@ export default class Sample {
 
       o.shift = parseInt(s.substr(3), 16) || 0;
     });
+  }
+
+  /**
+   * Simplify sample data to array of objects with flatten data to simple numbers.
+   */
+  simplify(start?: number, end?: number): SampleSimplified[] {
+    return this.data.slice(start, end).map(({ volume, ...rest }) => ({
+      ...rest,
+      volume: volume.byte,
+    }));
   }
 }

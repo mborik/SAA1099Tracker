@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Sample and Ornament editor class and dependent interfaces.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -23,9 +23,18 @@
 
 import { devLog } from '../commons/dev';
 import { toWidth, validateAndClamp } from '../commons/number';
+import { SampleSimplified } from '../player/Sample';
 import { i18n } from './doc';
 import Tracker, { TrackerCanvasPair } from '.';
 
+
+interface SampleEditorHistoryEntry {
+  data: SampleSimplified[];
+  dataFrom: number;
+  dataTo: number;
+  loop: number;
+  end: number;
+}
 
 interface SmpOrnEditorDragStatus {
   isDragging: boolean | number;
@@ -67,6 +76,7 @@ export default class SmpOrnEditor {
   centering: number = 0;
   radix: number = 10;
 
+  historyEntry: Nullable<SampleEditorHistoryEntry> = null;
   drag: SmpOrnEditorDragStatus = {
     isDragging: false,
     freqEnableState: false,
@@ -191,10 +201,27 @@ export default class SmpOrnEditor {
         .change({ index: i }, e => {
           const working = this._parent.workingSample;
           const sample = this._parent.player.samples[working];
-          const data = sample.data;
+          const from = e.data.index;
+          const data = sample.data[from];
           const el = <HTMLInputElement> e.target;
 
-          data[e.data.index].shift = validateAndClamp({
+          this._parent.manager.historyPush({
+            sample: {
+              type: 'data',
+              index: working,
+              data: [{
+                ...data,
+                volume: data.volume.byte
+              }],
+              from
+            }
+          }, {
+            dataType: 'sample',
+            checkProps: { from, 'data.length': 1 },
+            prop: 'data'
+          });
+
+          data.shift = validateAndClamp({
             ...props,
             value: el.value,
             radix: settings.hexSampleFreq ? 16 : 10
@@ -245,8 +272,8 @@ export default class SmpOrnEditor {
       $('#txOrnName').val(orn.name);
       $('#fxOrnEditor').parent().scrollLeft(0);
 
-      $('#scOrnLength').val('' + orn.end);
-      $('#scOrnRepeat').val('' + (orn.end - orn.loop))
+      $('#scOrnLength').val(`${orn.end}`);
+      $('#scOrnRepeat').val(`${orn.end - orn.loop}`)
         .trigger('touchspin.updatesettings', { min: 0, max: orn.end });
     }
   }
@@ -270,9 +297,24 @@ export default class SmpOrnEditor {
         .change({ index: i }, e => {
           const working = this._parent.workingOrnament;
           const orn = this._parent.player.ornaments[working];
+          const from = e.data.index;
+          const data = orn.data;
           const el = <HTMLInputElement> e.target;
 
-          orn.data[e.data.index] = validateAndClamp({ value: el.value, ...props });
+          this._parent.manager.historyPush({
+            ornament: {
+              type: 'data',
+              index: working,
+              data: data.slice(from, from + 1),
+              from
+            }
+          }, {
+            dataType: 'ornament',
+            checkProps: { from, 'data.length': 1 },
+            prop: 'data'
+          });
+
+          data[from] = validateAndClamp({ value: el.value, ...props });
         })
         .prop('tabindex', 31);
     }

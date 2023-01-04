@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Keyboard events handler prototype.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -50,9 +50,18 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
   const hex = parseInt(letter ?? (-1 as any), 36);
 
   // Insert trackline into pattern
-  const doInsert = (cl: number, pt: Pattern) => {
+  const doInsert = (cl: number, pt: Pattern, index: number) => {
     let A = MAX_PATTERN_LEN - 2;
     let B = MAX_PATTERN_LEN - 1;
+
+    app.manager.historyPush({
+      pattern: {
+        index,
+        type: 'data',
+        from: cl,
+        data: pt.simplify(cl)
+      }
+    });
 
     const data = pt.data;
     for (; A >= cl; A--, B--) {
@@ -88,7 +97,17 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
 
     const end = line + sel.len;
     const pos = p.positions[p.position] ?? p.nullPosition;
-    const pp = p.patterns[pos.ch[ch].pattern];
+    const pt = pos.ch[ch].pattern;
+    const pp = p.patterns[pt];
+
+    app.manager.historyPush({
+      pattern: {
+        type: 'data',
+        index: pt,
+        from: line,
+        data: pp.simplify(line, end)
+      }
+    });
 
     for (let t; line <= end; line++) {
       if (line >= pp.end) {
@@ -160,11 +179,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
         'KeyY': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+Y - Redo');
+            this.manager.redo();
           }
         },
         'KeyZ': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+Z - Undo');
+            this.manager.undo();
           }
         }
       }[code];
@@ -305,7 +326,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
           const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
           const cp = pp.ch[app.modeEditChannel].pattern;
           const pt = app.player.patterns[cp];
-          doInsert(cl, pt);
+          doInsert(cl, pt, cp);
         },
         'ArrowUp': () => {
           if (process.env.NODE_ENV === 'development') {
@@ -624,6 +645,21 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
       const pt = app.player.patterns[cp];
       const pl = pt.data[cl];
 
+      // Push current pattern line into history
+      const pushLineToHistory = () => {
+        app.manager.historyPush({
+          pattern: {
+            type: 'data',
+            index: cp,
+            from: cl,
+            data: [{
+              ...pl,
+              volume: pl.volume.byte,
+            }]
+          }
+        });
+      };
+
       if (cl < pt.end && pl.tracklist.active) {
         switch (code) {
           case 'Backspace':
@@ -632,10 +668,19 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                 logHotkey('Backspace - Delete trackline from pattern');
               }
 
+              app.manager.historyPush({
+                pattern: {
+                  type: 'data',
+                  index: cp,
+                  from: cl,
+                  data: pt.simplify(cl)
+                }
+              });
+
               let A = cl + 1;
               let B = cl;
-              const data = pt.data;
 
+              const data = pt.data;
               for (; A < MAX_PATTERN_LEN - 1; A++, B++) {
                 data[B].tone = data[A].tone;
                 data[B].release = data[A].release;
@@ -661,7 +706,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
               if (process.env.NODE_ENV === 'development') {
                 logHotkey('Insert - New trackline into pattern');
               }
-              doInsert(cl, pt);
+              doInsert(cl, pt, cp);
             };
 
           case 'Delete':
@@ -669,6 +714,8 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
               if (process.env.NODE_ENV === 'development') {
                 logHotkey('Delete - Clear trackline data');
               }
+
+              pushLineToHistory();
 
               switch (app.modeEditColumn) {
                 default: case 0: // NOTE column
@@ -715,6 +762,8 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                   return true;
                 }
                 else if (tone > 0) {
+                  pushLineToHistory();
+
                   pl.release = false;
                   pl.tone = tone;
                   if (app.ctrlSample && !pl.smp) {
@@ -726,6 +775,8 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                   }
                 }
                 else {
+                  pushLineToHistory();
+
                   pl.release = true;
                   pl.tone = 0;
                   pl.smp = 0;
@@ -743,6 +794,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                     return true;
                   }
 
+                  pushLineToHistory();
                   pl.smp = hex;
                 }
                 else {
@@ -759,6 +811,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                     return true;
                   }
 
+                  pushLineToHistory();
                   pl.orn_release = false;
                   pl.orn = hex;
                 }
@@ -767,6 +820,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                     return true;
                   }
 
+                  pushLineToHistory();
                   pl.orn_release = true;
                   pl.orn = 0;
                 }
@@ -784,6 +838,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                     return true;
                   }
 
+                  pushLineToHistory();
                   pl.volume.L = hex;
                 }
                 else {
@@ -800,6 +855,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                     return true;
                   }
 
+                  pushLineToHistory();
                   pl.volume.R = hex;
                 }
                 else {
@@ -816,6 +872,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                     return true;
                   }
 
+                  pushLineToHistory();
                   pl.cmd = hex;
 
                   // recalculate position frames if we changing speed
@@ -835,10 +892,11 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                 if (hex > 0 && hex >= 16) { // 0 - F
                   return false;
                 }
-
                 if (test) {
                   return true;
                 }
+
+                pushLineToHistory();
 
                 pl.cmd_data &= 0x0F;
                 pl.cmd_data |= hex << 4;
@@ -856,10 +914,11 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                 if (hex < 0 && hex >= 16) { // 0 - F
                   return false;
                 }
-
                 if (test) {
                   return true;
                 }
+
+                pushLineToHistory();
 
                 pl.cmd_data &= 0xF0;
                 pl.cmd_data |= hex;

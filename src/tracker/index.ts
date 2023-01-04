@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Entry point
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -105,6 +105,8 @@ export default class Tracker {
   onCmdEditCut: (this: Tracker) => void;
   onCmdEditPaste: (this: Tracker) => void;
   onCmdEditPasteSpecial: (this: Tracker) => void;
+  onCmdEditUndo: (this: Tracker) => void;
+  onCmdEditRedo: (this: Tracker) => void;
   onCmdFileNew: (this: Tracker) => void;
   onCmdFileOpen: (this: Tracker) => void;
   onCmdFileSave: (this: Tracker, as?: boolean) => void;

@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Clipboard and tracklist manager class and dependent interfaces.
- * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2015-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -22,14 +22,24 @@
 //---------------------------------------------------------------------------------------
 
 import Pattern from '../player/Pattern';
+import ManagerHistory from './manager.history';
 import { TracklistSelection } from './tracklist';
 import Tracker from '.';
 
 
-export default class Manager {
+interface SelectedBlock {
+  pt: number;
+  pp: Pattern;
+  line: number;
+  len: number;
+}
+
+export default class Manager extends ManagerHistory {
   private _clipboard: Clipboard;
 
-  constructor(private _parent: Tracker) {
+  constructor(_parent: Tracker) {
+    super(_parent);
+
     this._clipboard = window?.navigator?.clipboard;
     if (!this._clipboard) {
       console.error('Error: Clipboard API is not supported!');
@@ -48,7 +58,7 @@ export default class Manager {
     }
   }
 
-  private _getBlock(lengthFallback?: number): { pp: Pattern; line: number; len: number } {
+  private _getBlock(lengthFallback?: number): SelectedBlock {
     const p = this._parent.player;
     const sel: TracklistSelection = this._parent.tracklist.selection;
     const ch = sel.len ? sel.channel : this._parent.modeEditChannel;
@@ -56,18 +66,31 @@ export default class Manager {
     const length = sel.len ? (sel.len + 1) : undefined;
     const pos = p.positions[p.position] ?? p.nullPosition;
     const chn = pos.ch[ch];
-    const patt = chn.pattern;
+    const pt = chn.pattern;
 
     return {
-      pp: p.patterns[patt],
+      pt,
+      pp: p.patterns[pt],
       line: line,
       len: length || lengthFallback
     };
   }
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   public clearFromTracklist() {
     const block = this._getBlock(1);
+    this.historyPush({
+      pattern: {
+        type: 'data',
+        index: block.pt,
+        data: block.pp.data.slice(block.line, block.line + block.len).map((row) => ({
+          ...row,
+          volume: row.volume.byte
+        })),
+        from: block.line
+      }
+    });
+
     block.pp.parse([], block.line, block.len);
   }
 
@@ -169,7 +192,7 @@ export default class Manager {
     return true;
   }
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   public clearSample() {
     const app = this._parent;
     const smp = app.player.samples[app.workingSample];
@@ -223,7 +246,7 @@ export default class Manager {
     return true;
   }
 
-  //---------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
   public clearOrnament() {
     const app = this._parent;
     const orn = app.player.ornaments[app.workingOrnament];

@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker Player: Patterns class a interface definition.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -44,6 +44,8 @@ interface PatternLine {
 
   get tracklist(): TracklineData;
 }
+
+export type PatternSimplified = Omit<PatternLine, 'tracklist' | 'volume'> & { volume: number };
 
 /** Definition of channel-pattern containing its pattern-lines */
 export default class Pattern {
@@ -170,5 +172,15 @@ export default class Pattern {
     }
 
     this.updateTracklist(start, length);
+  }
+
+  /**
+   * Simplify pattern data to array of objects with flatten data to simple numbers.
+   */
+  simplify(start?: number, end?: number): PatternSimplified[] {
+    return this.data.slice(start, end).map(({ tracklist: _, volume, ...rest }) => ({
+      ...rest,
+      volume: volume.byte,
+    }));
   }
 }

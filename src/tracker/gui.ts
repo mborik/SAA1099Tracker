@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: User interface initializer and element populator
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -297,6 +297,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
+        app.manager.historyPush({
+          pattern: {
+            type: 'length',
+            index: app.workingPattern,
+            end: pp.end
+          }
+        }, {
+          dataType: 'pattern',
+          prop: 'end'
+        });
+
         pp.end = +(el.val());
         pp.updateTracklist();
         app.player.countPositionFrames();
@@ -351,6 +362,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
+        app.manager.historyPush({
+          position: {
+            type: 'props',
+            index: pp,
+            length: pos.length
+          }
+        }, {
+          dataType: 'position',
+          prop: 'length'
+        });
+
         pos.length = validateAndClamp({
           value: el.value,
           initval: 64,
@@ -388,6 +410,17 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           el.value = pos.speed.toString();
           return false;
         }
+
+        app.manager.historyPush({
+          position: {
+            type: 'props',
+            index: pp,
+            speed: pos.speed
+          }
+        }, {
+          dataType: 'position',
+          prop: 'speed'
+        });
 
         pos.speed = validateAndClamp({
           value: el.value,
@@ -441,6 +474,19 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           return false;
         }
 
+        app.manager.historyPush({
+          position: {
+            type: 'data',
+            index: pp,
+            channel: chn,
+            pattern: prev
+          }
+        }, {
+          dataType: 'position',
+          checkProps: { channel: chn },
+          prop: 'pattern'
+        });
+
         const val = validateAndClamp({
           value: el.value,
           min: 0, max: app.player.patterns.length - 1
@@ -467,17 +513,31 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         $(el).TouchSpin(props).change((e: JQueryInputEventObject) => {
           const el = e.currentTarget;
           const chn = parseInt(el.id.substr(-1)) - 1;
-          const pos = app.player.positions[app.player.position];
+          const pos = app.player.positions[app.player.position] ?? app.player.nullPosition;
+          const pch = pos.ch[chn];
 
           if (!app.player.positions.length) {
             return false;
           }
           else if (app.modePlay) {
-            el.value = pos.ch[chn].pitch.toString();
+            el.value = pch.pitch.toString();
             return false;
           }
           else {
-            pos.ch[chn].pitch = validateAndClamp({
+            app.manager.historyPush({
+              position: {
+                type: 'data',
+                index: app.player.position,
+                channel: chn,
+                pitch: pch.pitch
+              }
+            }, {
+              dataType: 'position',
+              checkProps: { channel: chn },
+              prop: 'pitch'
+            });
+
+            pch.pitch = validateAndClamp({
               value: el.value,
               ...props
             });
@@ -595,14 +655,40 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#txSampleName',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.player.samples[app.workingSample].name = e.currentTarget.value;
+        const sample = app.player.samples[app.workingSample];
+        app.manager.historyPush({
+          sample: {
+            type: 'props',
+            index: app.workingSample,
+            name: sample.name
+          }
+        }, {
+          dataType: 'sample',
+          checkProps: { index: app.workingSample },
+          prop: 'name'
+        });
+
+        sample.name = e.currentTarget.value;
         app.file.modified = true;
       }
     }, {
       selector: '#txOrnName',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        app.player.ornaments[app.workingOrnament].name = e.currentTarget.value;
+        const ornament = app.player.ornaments[app.workingOrnament];
+        app.manager.historyPush({
+          ornament: {
+            type: 'props',
+            index: app.workingOrnament,
+            name: ornament.name
+          }
+        }, {
+          dataType: 'ornament',
+          checkProps: { index: app.workingOrnament },
+          prop: 'name'
+        });
+
+        ornament.name = e.currentTarget.value;
         app.file.modified = true;
       }
     }, {
@@ -653,6 +739,14 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryInputEventObject) => {
         const sample = app.player.samples[app.workingSample];
         if (sample.end !== sample.loop) {
+          app.manager.historyPush({
+            sample: {
+              type: 'props',
+              index: app.workingSample,
+              releasable: sample.releasable
+            }
+          });
+
           sample.releasable = e.currentTarget.checked;
         }
         app.updateSampleEditor(true);
@@ -670,6 +764,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const offset = value - sample.end;
         const looper = (sample.loop += offset);
 
+        app.manager.historyPush({
+          sample: {
+            type: 'props',
+            index: app.workingSample,
+            end: sample.end,
+            loop: sample.loop
+          }
+        }, {
+          dataType: 'sample',
+          prop: 'end'
+        });
+
         sample.end += offset;
         sample.loop = ((sample.end - looper) < 0) ? 0 : looper;
 
@@ -684,6 +790,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const value = validateAndClamp({
           value: e.currentTarget.value,
           min: 0, max: sample.end
+        });
+
+        app.manager.historyPush({
+          sample: {
+            type: 'props',
+            index: app.workingSample,
+            end: sample.end,
+            loop: sample.loop
+          }
+        }, {
+          dataType: 'sample',
+          prop: 'loop'
         });
 
         sample.loop = sample.end - value;
@@ -708,6 +826,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         }).click(() => {
           const orn = app.player.ornaments[app.workingOrnament];
           const l = chord.sequence.length;
+
+          app.manager.historyPushOrnamentDebounced();
 
           orn.data.fill(0);
           orn.name = chord.name;
@@ -734,6 +854,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const offset = value - orn.end;
         const looper = (orn.loop += offset);
 
+        app.manager.historyPush({
+          ornament: {
+            type: 'props',
+            index: app.workingOrnament,
+            end: orn.end,
+            loop: orn.loop
+          }
+        }, {
+          dataType: 'ornament',
+          prop: 'end'
+        });
+
         orn.end += offset;
         orn.loop = ((orn.end - looper) < 0) ? 0 : looper;
 
@@ -748,6 +880,18 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         const value = validateAndClamp({
           value: e.currentTarget.value,
           min: 0, max: orn.end
+        });
+
+        app.manager.historyPush({
+          ornament: {
+            type: 'props',
+            index: app.workingOrnament,
+            end: orn.end,
+            loop: orn.loop
+          }
+        }, {
+          dataType: 'ornament',
+          prop: 'loop'
         });
 
         orn.loop = orn.end - value;
@@ -970,22 +1114,22 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.initializeGUI = function(app: Tracker) {
   const initSteps = [
-    function() {
-      const pixelfont = $('img.pixelfont')[0];
+    function(this: Tracker) {
+      const pixelfont = $('img.pixelfont')[0] as HTMLImageElement;
       this.initPixelFont(pixelfont);
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.smpornedit.initialized || this.activeTab === 1) {
         return false;
       }
 
       devLog('Tracker.gui', 'Force initialization of Sample/Ornament editors...');
-      this.smpornedit.img = $('img.smpedit')[0];
+      this.smpornedit.img = $('img.smpedit')[0] as HTMLImageElement;
       $('#tab-smpedit').tab('show');
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.smpornedit.initialized || !this.smpornedit.img || this.activeTab !== 1) {
         return false;
       }
@@ -994,7 +1138,7 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       $('#tab-ornedit').tab('show');
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.tracklist.initialized || !this.pixelfont.ctx || this.activeTab === 0) {
         return false;
       }
@@ -1004,7 +1148,7 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       $(window).trigger('resize', [ true ]);
       return true;
     },
-    function() {
+    function(this: Tracker) {
       if (this.tracklist.initialized || !this.pixelfont.ctx || this.activeTab) {
         return false;
       }
@@ -1012,15 +1156,16 @@ Tracker.prototype.initializeGUI = function(app: Tracker) {
       devLog('Tracker.gui', 'Redrawing all tracklist elements and canvas...');
       this.updatePanels();
       this.updateTracklist(true);
+      this.manager.historyClear();
       this.tracklist.initialized = true;
       return true;
     },
-    function() {
+    function(this: Tracker) {
       devLog('Tracker.gui', 'Starting audio playback and initializing screen refresh timer...');
       SyncTimer.start(this.baseTimer.bind(this));
       return true;
     },
-    function() {
+    function(this: Tracker) {
       devLog('Tracker.gui', 'Initialization done, everything is ready!');
       if (this.settings.lastLoadedFileNumber !== undefined) {
         this.file.loadFile(this.settings.lastLoadedFileNumber);
