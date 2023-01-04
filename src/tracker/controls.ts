@@ -704,8 +704,7 @@ Tracker.prototype.onCmdPatCreate = function() {
   this.manager.historyPush({
     pattern: {
       type: 'create',
-      index: id,
-      end
+      index: id
     }
   });
 
@@ -865,6 +864,13 @@ Tracker.prototype.onCmdPosCreate = function() {
   const total = p.positions.length;
   const current = p.positions[p.position] ?? p.nullPosition;
 
+  this.manager.historyPush({
+    position: {
+      type: 'create',
+      index: total
+    }
+  });
+
   p.addNewPosition(current.length, current.speed);
   p.position = total;
   p.line = 0;
@@ -892,6 +898,13 @@ Tracker.prototype.onCmdPosInsert = function() {
     pt.ch[chn].pattern = current.ch[chn].pattern;
     pt.ch[chn].pitch = current.ch[chn].pitch;
   }
+
+  this.manager.historyPush({
+    position: {
+      type: 'create',
+      index: i
+    }
+  });
 
   p.positions.splice(i, 0, pt);
   p.countPositionFrames(i);
@@ -926,6 +939,17 @@ Tracker.prototype.onCmdPosDelete = function() {
         return;
       }
 
+      const { ch, length, speed } = app.player.positions[pos];
+      app.manager.historyPush({
+        position: {
+          type: 'remove',
+          index: pos,
+          data: ch,
+          length,
+          speed,
+        }
+      });
+
       app.player.line = 0;
       app.player.positions.splice(pos, 1);
       if (pos >= app.player.positions.length) {
@@ -950,6 +974,14 @@ Tracker.prototype.onCmdPosMoveUp = function() {
     return;
   }
 
+  this.manager.historyPush({
+    position: {
+      type: 'move',
+      index: i,
+      to: i - 1,
+    }
+  });
+
   p.positions[i] = p.positions[--i];
   p.positions[i] = swap;
 
@@ -971,6 +1003,14 @@ Tracker.prototype.onCmdPosMoveDown = function() {
   if (this.modePlay || !total || i === (total - 1)) {
     return;
   }
+
+  this.manager.historyPush({
+    position: {
+      type: 'move',
+      index: i,
+      to: i + 1,
+    }
+  });
 
   p.positions[i] = p.positions[++i];
   p.positions[i] = swap;

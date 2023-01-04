@@ -66,7 +66,6 @@ interface UndoPatternLength {
 }
 interface UndoPatternCreate {
   type: 'create';
-  end: number;
 }
 interface UndoPatternRemove {
   type: 'remove';
@@ -91,7 +90,6 @@ interface UndoPositionMove {
 }
 interface UndoPositionCreate {
   type: 'create';
-  to: number;
 }
 interface UndoPositionRemove {
   type: 'remove';
@@ -262,7 +260,6 @@ export default class ManagerHistory {
 
       const app = this._parent;
       const player = app.player;
-      let shouldUpdatePanels;
 
       if (state.pattern) {
         const p = player.patterns[state.pattern.index];
@@ -281,7 +278,6 @@ export default class ManagerHistory {
         else if (state.pattern.type === 'length') {
           p.end = state.pattern.end;
           p.updateTracklist();
-          shouldUpdatePanels = true;
         }
         else if (state.pattern.type === 'create') {
           player.patterns.splice(state.pattern.index, 1);
@@ -350,8 +346,51 @@ export default class ManagerHistory {
           }
         }
       }
+      else if (state.position) {
+        const p = player.positions[state.position.index];
+        const d = state.position;
+        if (d.type === 'data') {
+          const ch = p.ch[d.channel];
+          if (d.pattern !== undefined) {
+            ch.pattern = d.pattern;
+          }
+          if (d.pitch !== undefined) {
+            ch.pitch = d.pitch;
+          }
+        }
+        else if (d.type === 'props') {
+          if (d.length !== undefined) {
+            p.length = d.length;
+          }
+          if (d.speed !== undefined) {
+            p.speed = d.speed;
+          }
+        }
+        else if (d.type === 'create') {
+          player.positions.splice(state.position.index, 1);
+        }
+        else if (d.type === 'remove') {
+          const p = this._parent.player;
+          const pos = p.addNewPosition(d.length, d.speed, false);
 
-      this._applyHistoryStateContext(state, shouldUpdatePanels);
+          for (let chn = 0; chn < 6; chn++) {
+            pos.ch[chn].pattern = d.data[chn].pattern;
+            pos.ch[chn].pitch = d.data[chn].pitch;
+          }
+
+          p.positions.splice(d.index, 0, pos);
+          p.countPositionFrames(d.index);
+          p.storePositionRuntime(d.index);
+        }
+        else if (d.type === 'move') {
+          const p = this._parent.player;
+          const swap = p.positions[d.to];
+          p.positions[d.to] = p.positions[d.index];
+          p.positions[d.index] = swap;
+        }
+      }
+
+      this._applyHistoryStateContext(state);
       this._updateHistoryGUI();
       return true;
     }
@@ -364,9 +403,12 @@ export default class ManagerHistory {
 
   //-------------------------------------------------------------------------------------
   private _applyHistoryStateContext(
-    { context, pattern, sample, ornament }: UndoStateWithContext,
-    shouldUpdatePanels: boolean = false
+    { context, pattern, position, sample, ornament }: UndoStateWithContext,
   ) {
+    let shouldUpdateTracker = !!pattern || !!position;
+    let shouldUpdateSmpEdit = !!sample;
+    let shouldUpdateOrnEdit = !!ornament;
+
     const app = this._parent;
     if (context.activeTab !== app.activeTab) {
       app.activeTab = context.activeTab || 0;
@@ -386,6 +428,7 @@ export default class ManagerHistory {
       }
 
       app.updateSampleEditor(true);
+      shouldUpdateSmpEdit = false;
     }
     else if (app.activeTab === 2) {
       if (context.workingOrnament !== app.workingOrnament) {
@@ -393,33 +436,33 @@ export default class ManagerHistory {
         $('#scOrnNumber').val(app.workingOrnament.toString(16).toUpperCase());
       }
       app.smpornedit.updateOrnamentEditor(true);
+      shouldUpdateOrnEdit = false;
     }
 
     if (context.workingPattern !== app.workingPattern) {
       app.workingPattern = context.workingPattern || 0;
       $('#scPattern').val(app.workingPattern.toString());
-      shouldUpdatePanels = true;
+      shouldUpdateTracker = true;
     }
     if (context.currentPosition !== app.player.position) {
       app.player.position = context.currentPosition || 0;
       $('#scPosCurrent').val((app.player.position + 1).toString());
-      shouldUpdatePanels = true;
+      shouldUpdateTracker = true;
     }
 
-    if (shouldUpdatePanels) {
+    if (shouldUpdateTracker) {
       app.updatePanels();
     }
-
     if (context.currentLine !== app.player.line) {
       app.player.line = context.currentLine || 0;
     }
-    if (pattern) {
+    if (shouldUpdateTracker) {
       app.updateEditorCombo(0);
     }
-    if (sample) {
+    if (shouldUpdateSmpEdit) {
       app.smpornedit.updateSamplePitchShift();
     }
-    if (ornament) {
+    if (shouldUpdateOrnEdit) {
       app.smpornedit.updateOrnamentEditor();
     }
 
