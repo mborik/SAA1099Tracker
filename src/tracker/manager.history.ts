@@ -115,15 +115,15 @@ interface UndoStateWithContext extends UndoState {
   timestamp: number;
   context: {
     activeTab: number;
-    modeEdit?: boolean;
-    modeEditChannel?: number;
-    modeEditColumn?: number;
-    currentPosition?: number;
-    currentLine?: number;
-    workingPattern?: number;
-    workingSample?: number;
-    workingOrnament?: number;
-    smpeditShiftShown?: boolean;
+    modeEdit: boolean;
+    modeEditChannel: number;
+    modeEditColumn: number;
+    currentPosition: number;
+    currentLine: number;
+    workingPattern: number;
+    workingSample: number;
+    workingOrnament: number;
+    smpeditShiftShown: boolean;
   };
 }
 
@@ -399,18 +399,12 @@ export default class ManagerHistory {
       app.smpornedit.updateOrnamentEditor(true);
     }
 
-    if (
-      context.workingPattern !== undefined &&
-      context.workingPattern !== app.workingPattern
-    ) {
+    if (context.workingPattern !== app.workingPattern) {
       app.workingPattern = context.workingPattern || 0;
       $('#scPattern').val(app.workingPattern.toString());
       shouldUpdatePanels = true;
     }
-    if (
-      context.currentPosition !== undefined &&
-      context.currentPosition !== app.player.position
-    ) {
+    if (context.currentPosition !== app.player.position) {
       app.player.position = context.currentPosition || 0;
       $('#scPosCurrent').val((app.player.position + 1).toString());
       shouldUpdatePanels = true;
@@ -420,10 +414,7 @@ export default class ManagerHistory {
       app.updatePanels();
     }
 
-    if (
-      context.currentLine !== undefined &&
-      context.currentLine !== app.player.line
-    ) {
+    if (context.currentLine !== app.player.line) {
       app.player.line = context.currentLine || 0;
     }
     if (pattern) {
@@ -436,15 +427,9 @@ export default class ManagerHistory {
       app.smpornedit.updateOrnamentEditor();
     }
 
-    if (context.modeEditChannel !== undefined) {
-      app.modeEditChannel = context.modeEditChannel;
-    }
-    if (context.modeEditColumn !== undefined) {
-      app.modeEditColumn = context.modeEditColumn;
-    }
-    if (context.modeEdit !== undefined) {
-      app.onCmdToggleEditMode(context.modeEdit);
-    }
+    app.modeEditChannel = context.modeEditChannel;
+    app.modeEditColumn = context.modeEditColumn;
+    app.onCmdToggleEditMode(context.modeEdit);
   }
 
   private _updateHistoryGUI() {
