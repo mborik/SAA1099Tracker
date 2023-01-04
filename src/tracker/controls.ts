@@ -728,17 +728,17 @@ Tracker.prototype.onCmdPatDelete = function() {
   const keys = this.globalKeyState;
   const len = p.patterns.length - 1;
   let msg = null;
-  let undoableOperation = false;
+  let undoableOperation = true;
 
   if (p.countPatternUsage(pt) > 0) {
     msg = i18n.dialog.pattern.delete.msg.used;
   }
   if (pt !== len) {
     msg = i18n.dialog.pattern.delete.msg.notlast;
+    undoableOperation = false;
   }
   if (!msg) {
     msg = i18n.dialog.pattern.delete.msg.sure;
-    undoableOperation = true;
   }
 
   keys.inDialog = true;
@@ -753,27 +753,24 @@ Tracker.prototype.onCmdPatDelete = function() {
         return;
       }
 
-      if (undoableOperation) {
-        const patt = p.patterns[pt];
-        this.manager.historyPush({
-          pattern: {
-            type: 'remove',
-            index: pt,
-            data: patt.data.map((v) => ({
-              ...v,
-              volume: v.volume.byte,
-            })),
-            end: patt.end
-          }
-        });
-      }
-      else {
+      if (!undoableOperation) {
         this.manager.historyClear();
       }
 
       for (let i = 0, l = p.positions.length, pos, chn; i < l; i++) {
         for (pos = p.positions[i], chn = 0; chn < 6; chn++) {
           if (pos.ch[chn].pattern === pt) {
+            if (undoableOperation) {
+              this.manager.historyPush({
+                position: {
+                  type: 'data',
+                  index: i,
+                  channel: chn,
+                  pattern: pt
+                }
+              });
+            }
+
             pos.ch[chn].pattern = 0;
           }
           else if (pos.ch[chn].pattern > pt) {
@@ -781,6 +778,19 @@ Tracker.prototype.onCmdPatDelete = function() {
           }
         }
       }
+
+      const { data, end } = p.patterns[pt];
+      this.manager.historyPush({
+        pattern: {
+          type: 'remove',
+          index: pt,
+          data: data.map((v) => ({
+            ...v,
+            volume: v.volume.byte,
+          })),
+          end
+        }
+      });
 
       p.patterns.splice(pt, 1);
       if (pt === len) {
