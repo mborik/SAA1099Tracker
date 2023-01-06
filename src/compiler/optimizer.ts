@@ -47,11 +47,16 @@ export class CompilerOptimizer {
     return this.patList.reduce<Set<number>>(
       (set, patData) => {
         for (let i = 0; i < patData.length; i++) {
-          const v = patData[i];
-          if ((v & 0x80) > 0) {
+          const t = patData[i];
+          if ((t & 0x80) > 0) {
+            // omit empty lines
             continue;
           }
           let s = patData[++i];
+          if ((s & 0x20) > 0) {
+            // omit only tone changes
+            continue;
+          }
           let o = patData[++i];
           if ((s & 0x80) > 0) {
             i++;
@@ -208,11 +213,16 @@ export class CompilerOptimizer {
   private replaceSampleInPatterns(oldSmpNum: number, newSmpNum: number) {
     this.patList?.forEach(patData => {
       for (let i = 0; i < patData.length; i++) {
-        const v = patData[i];
-        if ((v & 0x80) > 0) {
+        const t = patData[i];
+        if ((t & 0x80) > 0) {
+          // omit empty lines
           continue;
         }
         const s = patData[++i];
+        if ((s & 0x20) > 0) {
+          // omit only tone changes
+          continue;
+        }
         const si = i;
         const o = patData[++i];
         if ((s & 0x80) > 0) {
@@ -238,11 +248,16 @@ export class CompilerOptimizer {
   private renumberSamplesInPatterns(smpNum: number): void {
     this.patList?.forEach(patData => {
       for (let i = 0; i < patData.length; i++) {
-        const v = patData[i];
-        if ((v & 0x80) > 0) {
+        const t = patData[i];
+        if ((t & 0x80) > 0) {
+          // omit empty lines
           continue;
         }
         const s = patData[++i];
+        if ((s & 0x20) > 0) {
+          // omit only tone changes
+          continue;
+        }
         const si = i;
         const o = patData[++i];
         if ((s & 0x80) > 0) {
@@ -377,11 +392,16 @@ export class CompilerOptimizer {
   private replaceOrnamentInPatterns(oldOrnNum: number, newOrnNum: number): void {
     this.patList?.forEach(patData => {
       for (let i = 0; i < patData.length; i++) {
-        const v = patData[i];
-        if ((v & 0x80) > 0) {
+        const t = patData[i];
+        if ((t & 0x80) > 0) {
+          // omit empty lines
           continue;
         }
         const s = patData[++i];
+        if ((s & 0x20) > 0) {
+          // omit only tone changes
+          continue;
+        }
         const o = patData[++i];
         const oi = i;
         if ((s & 0x80) > 0) {
@@ -407,11 +427,16 @@ export class CompilerOptimizer {
   private renumberOrnamentsInPatterns(ornNum: number): void {
     this.patList?.forEach(patData => {
       for (let i = 0; i < patData.length; i++) {
-        const v = patData[i];
-        if ((v & 0x80) > 0) {
+        const t = patData[i];
+        if ((t & 0x80) > 0) {
+          // omit empty lines
           continue;
         }
         const s = patData[++i];
+        if ((s & 0x20) > 0) {
+          // omit only tone changes
+          continue;
+        }
         const o = patData[++i];
         const oi = i;
         if ((s & 0x80) > 0) {
