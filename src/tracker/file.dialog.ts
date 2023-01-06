@@ -53,7 +53,7 @@ export class FileDialog {
     const selectedItem = dlg._selectedItem;
 
     if (dlg._saveFlag) {
-      const fileName = dlg._obj.find('.file-name>input').val();
+      const fileName = dlg._obj.find('#txFileName').val();
       const duration = $('#stInfoPanel u:eq(3)').text();
 
       file.saveFile(fileName, duration,
@@ -91,7 +91,7 @@ export class FileDialog {
     }
     if (dlg._saveFlag) {
       if (selectedItem) {
-        dlg._obj.find('.file-name>input').val(selectedItem.fileName);
+        dlg._obj.find('#txFileName').val(selectedItem.fileName);
       }
 
       dlg._obj.find('.file-remove').prop('disabled', !(selectedItem?.id > 0));
@@ -157,21 +157,21 @@ export class FileDialog {
       return false;
     }
 
-    this._obj.on('show.bs.modal', $.proxy(() => {
+    const dialog = this._obj;
+    dialog.on('show.bs.modal', () => {
       const { bytes, percent } = this._parent.storagetUsageSummary();
 
-      keys.inDialog = true;
-      this._obj.addClass(mode)
+      dialog.addClass(mode)
         .before($('<div/>')
           .addClass('modal-backdrop in').css('z-index', '1030'));
 
-      this._obj.find('.modal-title').text(titles[mode] + '\u2026');
-      this._obj.find('.file-name>input').val(file.getFixedFileName());
-      this._obj.find('.storage-usage i').text(bytes + ' bytes used');
-      this._obj.find('.storage-usage .progress-bar').css('width', percent + '%');
-      this._obj.find('.btn-success').on('click', handleArgs, this._defaultHandler);
+      dialog.find('.modal-title').text(titles[mode] + '\u2026');
+      dialog.find('#txFileName').val(file.getFixedFileName());
+      dialog.find('.storage-usage i').text(bytes + ' bytes used');
+      dialog.find('.storage-usage .progress-bar').css('width', percent + '%');
+      dialog.find('.btn-success').on('click', handleArgs, this._defaultHandler);
 
-      const el = this._obj.find('.file-list').empty();
+      const el = dialog.find('.file-list').empty();
       const span = $('<span/>');
       const cell = $('<button class="cell"/>');
 
@@ -187,26 +187,27 @@ export class FileDialog {
           .appendTo(el)
           .on('click focus', Object.assign({ id: i }, handleArgs), this._itemClickHandler)
           .on('dblclick', handleArgs, this._defaultHandler);
-      }, this);
+      });
 
-      this._obj.find('.file-open,.file-save').on('click', handleArgs, this._defaultHandler);
+      dialog.find('.file-open,.file-save').on('click', handleArgs, this._defaultHandler);
 
       if (this._saveFlag) {
-        this._obj.find('.file-list').on('click', handleArgs, this._itemClickHandler);
-        this._obj.find('.file-remove').on('click', handleArgs, this._removeHandler);
+        dialog.find('.file-list').on('click', handleArgs, this._itemClickHandler);
+        dialog.find('.file-remove').on('click', handleArgs, this._removeHandler);
       }
-    }, this)).on('shown.bs.modal', $.proxy(() => {
-      this._obj.find(this._saveFlag
-        ? '.file-name>input'
+    }).on('shown.bs.modal', () => {
+      keys.inDialog = true;
+      dialog.find(this._saveFlag
+        ? '#txFileName'
         : '.file-list>button:first-child').focus();
 
-    }, this)).on('hide.bs.modal', $.proxy(() => {
-      this._obj.removeClass(mode).prev('.modal-backdrop').remove();
-      this._obj.off().find('.file-list').off().empty();
-      this._obj.find('.modal-footer>.btn').off();
+    }).on('hide.bs.modal', () => {
+      dialog.removeClass(mode).prev('.modal-backdrop').remove();
+      dialog.off().find('.file-list').off().empty();
+      dialog.find('.modal-footer>.btn').off();
       keys.inDialog = false;
 
-    }, this)).modal({
+    }).modal({
       show: true,
       backdrop: false
     });

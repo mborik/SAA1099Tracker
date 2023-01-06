@@ -174,26 +174,28 @@ export default class Settings implements SettingsOptions {
 
     const tracker = this._parent;
     const keys = tracker.globalKeyState;
-    this._obj.on('show.bs.modal', $.proxy(() => {
+    const dialog = this._obj;
+
+    dialog.on('show.bs.modal', () => {
       keys.inDialog = true;
 
-      this._obj
+      dialog
         .before($('<div/>')
           .addClass('modal-backdrop in').css('z-index', '1030'));
 
       $('#chSetTrkAutosize').trigger('change');
-      this._obj.find('.apply').click((() => {
+      dialog.find('.apply').click((() => {
         wasApplied = true;
         setTimeout(fnApply, 0, currentOptionsBackup);
 
-        this._obj.modal('hide');
+        dialog.modal('hide');
         return true;
       }).bind(this));
 
-    }, this)).on('hide.bs.modal', $.proxy(() => {
-      this._obj.prev('.modal-backdrop').remove();
-      this._obj.find('.modal-footer>.btn').off();
-      this._obj.off();
+    }).on('hide.bs.modal', () => {
+      dialog.prev('.modal-backdrop').remove();
+      dialog.find('.modal-footer>.btn').off();
+      dialog.off();
 
       if (!wasApplied) {
         // restore previous options
@@ -204,7 +206,7 @@ export default class Settings implements SettingsOptions {
       AudioDriver.volume = this.audioGain;
       keys.inDialog = false;
 
-    }, this)).modal({
+    }).modal({
       show: true,
       backdrop: false
     });

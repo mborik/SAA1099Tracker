@@ -210,7 +210,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     const tracker = this._parent;
     tracker.globalKeyState.inDialog = true;
 
-    this.dialog.on('show.bs.modal', $.proxy(() => {
+    this.dialog.on('show.bs.modal', () => {
       this.dialog
         .before($('<div/>')
           .addClass('modal-backdrop in').css('z-index', '1030'));
@@ -221,7 +221,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
         return true;
       });
 
-    }, this)).on('hide.bs.modal', () => {
+    }).on('hide.bs.modal', () => {
       this.dialog.prev('.modal-backdrop').remove();
       this.dialog.find('.modal-footer>.btn').off();
       this.dialog.off();

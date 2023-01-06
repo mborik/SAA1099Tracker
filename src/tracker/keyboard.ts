@@ -1185,6 +1185,9 @@ Tracker.prototype.handleHotkeys = function(type, code, isInput, textInput) {
         }
       }
     }
+    else if (isInput) {
+      return false;
+    }
     else if (!fn) {
       fn = true; // restrict all ctrl hotkeys in dialogs
       type = 'test';
@@ -1199,6 +1202,10 @@ Tracker.prototype.handleHotkeys = function(type, code, isInput, textInput) {
   }
   else {
     if (o.inDialog) {
+      if (textInput) {
+        return false;
+      }
+
       fn = true; // restrict all hotkeys in dialogs
       type = 'test';
     }
