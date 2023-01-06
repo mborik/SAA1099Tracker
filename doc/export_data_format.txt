@@ -64,13 +64,13 @@ focusing on shortest data length. All pointers in header are offsets from the
     |---|---|---|---|---|---|---|---|
  1. | 0 | T | T | T | T | T | T | T |  # bit.7 not set for pattern data
     |---|---|---|---|---|---|---|---|
- 2. | V | P |   | S | S | S | S | S |
-    |---|---|---|---|---|---|---|---|
- 3. | C | C | C | C | O | O | O | O |
+ 2. | V | P | N | S | S | S | S | S |
     |---|---|---|---|---|---|---|---|
 ...
     |---|---|---|---|---|---|---|---|
-(4) | L | L | L | L | R | R | R | R |
+(3) | C | C | C | C | O | O | O | O |
+    |---|---|---|---|---|---|---|---|
+(4) | R | R | R | R | L | L | L | L |
     |---|---|---|---|---|---|---|---|
 (5) | D | D | D | D | D | D | D | D |
     |---|---|---|---|---|---|---|---|
@@ -87,6 +87,9 @@ T - tone number:
 S - sample number:
     [0] - no change
     [1 - 31] - samples (1 - V)
+
+N - no changing sample/ornament/command:
+    [1] - nothing more than note was changed (S = 0)
 
 O - ornament number:
     [0] - no change
