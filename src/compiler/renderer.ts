@@ -167,11 +167,9 @@ export default class CompilerRender extends CompilerOptimizer {
               case 0x1 : // PORTAMENTO UP
               case 0x2 : // PORTAMENTO DOWN
               case 0x3 : // GLISSANDO TO GIVEN NOTE
-              case 0xA : // VOLUME SLIDE
                 if (
                   (dat & 0x0F) === 0 || (dat & 0xF0) === 0 || // `period` nor `pitch` cannot be 0
-                    (cmd === 0xA && (dat & 0x0F) === 0x08) || // value change for VOLUME SLIDE cannot be 8
-                    (cmd === 0x3 && ton === 0)                // missing tone for GLISSANDO
+                  (cmd === 0x3 && ton === 0)                  // missing tone for GLISSANDO
                 ) {
                   removedCmd.add(cmdStr);
                   cmd = 0;
@@ -195,6 +193,9 @@ export default class CompilerRender extends CompilerOptimizer {
                   removedCmd.add(cmdStr);
                   cmd = 0;
                 }
+                break;
+
+              case 0xA : // VOLUME SLIDE
                 break;
 
               case 0xB : // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
@@ -349,12 +350,12 @@ export default class CompilerRender extends CompilerOptimizer {
       // vX.3 - 123+45+6789ABCDEF
       this.playerTypeByData = 3;
     }
-    else if (usedCmdId.has(6) || usedCmdId.has(7) || usedCmdId.has(8) || usedCmdId.has(9)) {
-      // vX.2 - 123+6789+ABCDEF
+    else if (usedCmdId.has(3) || usedCmdId.has(6) || usedCmdId.has(7) || usedCmdId.has(8) || usedCmdId.has(9)) {
+      // vX.2 - 12+36789+ABCDEF
       this.playerTypeByData = 2;
     }
-    else if (usedCmdId.has(1) || usedCmdId.has(2) || usedCmdId.has(3) || usedCmdId.has(10)) {
-      // vX.1 - 123A+BCDEF
+    else if (usedCmdId.has(1) || usedCmdId.has(2) || usedCmdId.has(10)) {
+      // vX.1 - 12A+BCDEF
       this.playerTypeByData = 1;
     }
     else {

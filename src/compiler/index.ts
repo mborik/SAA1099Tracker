@@ -473,15 +473,37 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
   }
 
   private async preparePlayer() {
-    const playerTypeResult =
+    let playerTypeResult =
       (this.playerType < 0) ?
         this.playerTypeByData :
         Math.max(this.playerType, this.playerTypeByData);
 
+    if (this.songData != null) {
+      this.log(`Song data length: ${this.songData.length} bytes`);
+      this.log(`Minimal player version by song data: ${constants.CURRENT_PLAYER_MAJOR_VERSION}.${this.playerTypeByData}`);
+    }
+
     if (this.playerType >= 0 && playerTypeResult !== this.playerType) {
-      this.log(`Requested player type (${this.playerType}) is ${
+      this.log(`WARNING: Requested player version (1.${this.playerType}) is ${
         (this.playerType > playerTypeResult) ? 'higher' : 'lower'
-      } than is needed for song data (${playerTypeResult})`, true);
+      } than is needed for song data (1.${playerTypeResult})!`);
+
+      if (this.verbose && this.playerType < playerTypeResult) {
+        this.log('All unsupported commands by selected version of player will be ignored.');
+      }
+    }
+
+    /*
+     * FIXME Temporary solution for unfinished player versions 2 and 3
+     * (https://github.com/mborik/SAA1099Tracker/issues/28)
+     */
+    if (playerTypeResult > 1) {
+      if (this.playerType >= 0 && this.playerType < 2) {
+        playerTypeResult = this.playerType;
+      }
+      else {
+        throw 'Players of version 1.2 and 1.3 are not yet supported!';
+      }
     }
 
     const resourceFileName = `assets/data/saa-player-${
@@ -527,14 +549,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
   }
 
   private finalizeOutputBinary() {
-    let totalLen = 0;
-
-    if (this.songData != null) {
-      totalLen += this.songData.length;
-
-      this.log(`Song data length: ${this.songData.length} bytes`);
-      this.log(`Minimal player type by song data: ${constants.CURRENT_PLAYER_MAJOR_VERSION}.${this.playerTypeByData}`);
-    }
+    let totalLen = this.songData?.length ?? 0;
 
     if (this.playerData != null) {
       totalLen += this.playerData.length;
