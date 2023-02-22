@@ -156,19 +156,33 @@ export default class Pattern {
     const l = Math.min(MAX_PATTERN_LEN, start + length);
 
     for (let i = start, j = 0; i < l; i++, j++) {
-      const s = arr[j] || '000000000';
+      const s = arr[j] ?? '000000000';
       const o = this.data[i];
 
-      let k = parseInt(s.substr(0, 2), 10);
-      o.tone = isNaN(k) ? ((o.release = true) && 0) : k;
+      const sample = parseInt(s.slice(0, 2), 10);
+      if (isNaN(sample)) {
+        o.tone = 0;
+        o.release = true;
+      }
+      else {
+        o.tone = sample;
+        o.release = false;
+      }
 
-      k = parseInt(s[3], 16);
-      o.orn = isNaN(k) ? ((o.orn_release = true) && 0) : k;
+      const ornament = parseInt(s[3], 16);
+      if (isNaN(ornament)) {
+        o.orn = 0;
+        o.orn_release = true;
+      }
+      else {
+        o.orn = ornament;
+        o.orn_release = false;
+      }
 
       o.smp = parseInt(s[2], 32) || 0;
-      o.volume.byte = parseInt(s.substr(4, 2), 16) || 0;
+      o.volume.byte = parseInt(s.slice(4, 2), 16) || 0;
       o.cmd = parseInt(s[6], 16) || 0;
-      o.cmd_data = parseInt(s.substr(7), 16) || 0;
+      o.cmd_data = parseInt(s.slice(7), 16) || 0;
     }
 
     this.updateTracklist(start, length);

@@ -120,6 +120,8 @@ interface UndoStateWithContext extends UndoState {
     workingOrnament: number;
     smpeditShiftShown: boolean;
   };
+
+  doRedo?: () => void;
 }
 
 export default class ManagerHistory {
@@ -257,6 +259,8 @@ export default class ManagerHistory {
           { ...state[dataType], context: state.context }
         ]);
       }
+
+      this._createRedoStateFunction(state);
 
       const app = this._parent;
       const player = app.player;
@@ -399,10 +403,209 @@ export default class ManagerHistory {
   }
 
   public redo() {
-    // TODO
+    if (this._historyIndex >= this._history.length - 1) {
+      const state = this._history[this._historyIndex];
+      if (!state?.doRedo) {
+        return false;
+      }
+
+      state.doRedo();
+      this._historyIndex++;
+    }
+
+    return false;
   }
 
   //-------------------------------------------------------------------------------------
+  private _createRedoStateFunction(state: UndoStateWithContext) {
+    const player = this._parent.player;
+
+    if (state.pattern) {
+      const p = player.patterns[state.pattern.index];
+      if (state.pattern.type === 'data') {
+        const from = state.pattern.from ?? 0;
+        const backup = p.simplify(from, from + state.pattern.data.length);
+        state.doRedo = () => {
+          for (let src = 0, dst = from; src < backup.length; src++, dst++) {
+            p.data[dst].tone = backup[src].tone;
+            p.data[dst].smp = backup[src].smp;
+            p.data[dst].orn = backup[src].orn;
+            p.data[dst].volume.byte = backup[src].volume;
+            p.data[dst].cmd = backup[src].cmd;
+            p.data[dst].cmd_data = backup[src].cmd_data;
+          }
+          p.updateTracklist();
+        };
+      }
+      else if (state.pattern.type === 'length') {
+        const backupEnd = p.end;
+        state.doRedo = () => {
+          p.end = backupEnd;
+          p.updateTracklist();
+        };
+      }
+      else if (state.pattern.type === 'create') {
+        const backup = p.simplify();
+        const backupEnd = p.end;
+        state.doRedo = () => {
+          const p = new Pattern(backupEnd);
+          for (let i = 0; i < MAX_PATTERN_LEN; i++) {
+            p.data[i].tone = backup[i].tone;
+            p.data[i].smp = backup[i].smp;
+            p.data[i].orn = backup[i].orn;
+            p.data[i].volume.byte = backup[i].volume;
+            p.data[i].cmd = backup[i].cmd;
+            p.data[i].cmd_data = backup[i].cmd_data;
+          }
+          p.updateTracklist();
+        };
+      }
+      else if (state.pattern.type === 'remove') {
+        if (state.pattern.index !== player.patterns.length) {
+          console.error('Manager: Undo of removing pattern - invalid index (not last)!');
+        }
+        const backupIndex = state.pattern.index;
+        state.doRedo = () => {
+          player.patterns.splice(backupIndex, 1);
+        };
+      }
+    }
+    else if (state.sample) {
+      const s = player.samples[state.sample.index];
+      if (state.sample.type === 'data') {
+        const from = state.sample.from ?? 0;
+        const backup = s.simplify(from, from + state.sample.data.length);
+        state.doRedo = () => {
+          for (let src = 0, dst = from; src < backup.length; src++, dst++) {
+            s.data[dst].volume.byte = backup[src].volume;
+            s.data[dst].enable_freq = backup[src].enable_freq;
+            s.data[dst].enable_noise = backup[src].enable_noise;
+            s.data[dst].noise_value = backup[src].noise_value;
+            s.data[dst].shift = backup[src].shift;
+          }
+        };
+      }
+      else if (state.sample.type === 'props') {
+        const backup = {
+          name: (state.sample.name !== undefined ? s.name : undefined),
+          loop: (state.sample.loop !== undefined ? s.loop : undefined),
+          end: (state.sample.end !== undefined ? s.end : undefined),
+          releasable: (state.sample.name !== undefined ? s.releasable : undefined),
+        };
+        state.doRedo = () => {
+          if (backup.name !== undefined) {
+            s.name = backup.name;
+          }
+          if (backup.loop !== undefined) {
+            s.loop = backup.loop;
+          }
+          if (backup.end !== undefined) {
+            s.end = backup.end;
+          }
+          if (backup.releasable !== undefined) {
+            s.releasable = backup.releasable;
+          }
+        };
+      }
+    }
+    else if (state.ornament) {
+      const o = player.ornaments[state.ornament.index];
+      if (state.ornament.type === 'data') {
+        const from = state.ornament.from ?? 0;
+        const backup = o.data.slice(from, from + state.ornament.data.length);
+        state.doRedo = () => {
+          for (let src = 0, dst = from; src < backup.length; src++, dst++) {
+            o.data[dst] = backup[src];
+          }
+        };
+      }
+      else if (state.ornament.type === 'props') {
+        const backup = {
+          name: (state.ornament.name !== undefined ? o.name : undefined),
+          loop: (state.ornament.loop !== undefined ? o.loop : undefined),
+          end: (state.ornament.end !== undefined ? o.end : undefined),
+        };
+        state.doRedo = () => {
+          if (backup.name !== undefined) {
+            o.name = backup.name;
+          }
+          if (backup.loop !== undefined) {
+            o.loop = backup.loop;
+          }
+          if (backup.end !== undefined) {
+            o.end = backup.end;
+          }
+        };
+      }
+    }
+    else if (state.position) {
+      const p = player.positions[state.position.index];
+      if (state.position.type === 'data') {
+        const ch = p.ch[state.position.channel];
+        const backup = {
+          pattern: (state.position.pattern !== undefined ? ch.pattern : undefined),
+          pitch: (state.position.pitch !== undefined ? ch.pitch : undefined),
+        };
+        state.doRedo = () => {
+          if (backup.pattern !== undefined) {
+            ch.pattern = backup.pattern;
+          }
+          if (backup.pitch !== undefined) {
+            ch.pitch = backup.pitch;
+          }
+        };
+      }
+      else if (state.position.type === 'props') {
+        const backup = {
+          length: (state.position.length !== undefined ? p.length : undefined),
+          speed: (state.position.speed !== undefined ? p.speed : undefined),
+        };
+        state.doRedo = () => {
+          if (backup.length !== undefined) {
+            p.length = backup.length;
+          }
+          if (backup.speed !== undefined) {
+            p.speed = backup.speed;
+          }
+        };
+      }
+      else if (state.position.type === 'create') {
+        const backup = {
+          ch: p.ch.map(ch => ({ pattern: ch.pattern, pitch: ch.pitch })),
+          length: p.length,
+          speed: p.speed
+        };
+        state.doRedo = () => {
+          const pos = player.addNewPosition(backup.length, backup.speed, false);
+
+          for (let chn = 0; chn < 6; chn++) {
+            pos.ch[chn].pattern = backup.ch[chn].pattern;
+            pos.ch[chn].pitch = backup.ch[chn].pitch;
+          }
+
+          player.positions.splice(state.position.index, 0, pos);
+          player.countPositionFrames(state.position.index);
+          player.storePositionRuntime(state.position.index);
+        };
+      }
+      else if (state.position.type === 'remove') {
+        const backupIndex = state.position.index;
+        state.doRedo = () => {
+          player.positions.splice(backupIndex, 1);
+        };
+      }
+      else if (state.position.type === 'move') {
+        const backupFrom = state.position.index;
+        const backupTo = state.position.to;
+        state.doRedo = () => {
+          const swap = player.positions[backupFrom];
+          player.positions[backupFrom] = player.positions[backupTo];
+          player.positions[backupTo] = swap;
+        };
+      }
+    }
+  }
+
   private _applyHistoryStateContext(
     { context, pattern, position, sample, ornament }: UndoStateWithContext,
   ) {

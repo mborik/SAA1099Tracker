@@ -83,10 +83,7 @@ export default class Manager extends ManagerHistory {
       pattern: {
         type: 'data',
         index: block.pt,
-        data: block.pp.data.slice(block.line, block.line + block.len).map((row) => ({
-          ...row,
-          volume: row.volume.byte
-        })),
+        data: block.pp.simplify(block.line, block.line + block.len),
         from: block.line
       }
     });
