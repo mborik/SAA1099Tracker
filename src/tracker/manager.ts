@@ -167,12 +167,14 @@ export default class Manager extends ManagerHistory {
       const destData = block.pp.data[dest];
       if (parts.tone) {
         destData.tone = srcData.tone;
+        destData.release = srcData.release;
       }
       if (parts.smp) {
         destData.smp = srcData.smp;
       }
       if (parts.orn) {
         destData.orn = srcData.orn;
+        destData.orn_release = srcData.orn_release;
       }
       if (parts.vol) {
         destData.volume.byte = srcData.volume.byte;
