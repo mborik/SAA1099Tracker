@@ -740,6 +740,8 @@ Tracker.prototype.onCmdPatCreate = function() {
   });
 
   pt.end = end;
+  pt.updateTracklist();
+
   this.workingPattern = id;
   this.updatePanelPattern();
   this.file.modified = true;
