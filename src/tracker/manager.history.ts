@@ -145,7 +145,7 @@ export default class ManagerHistory {
       checkProps?: { [key: string]: any };
     }
   ) {
-    if (this._historyIndex < this._history.length - 1) {
+    if (this.isRedoAvailable()) {
       this._history.splice(this._historyIndex + 1);
     }
     if (this._historyIndex > 0 && debounceOn) {
@@ -240,11 +240,11 @@ export default class ManagerHistory {
   }
 
   public isRedoAvailable(): boolean {
-    return this._historyIndex < this._history.length - 1;
+    return this._historyIndex < (this._history.length - 1);
   }
 
   public undo() {
-    if (this._historyIndex > 0) {
+    if (this.isUndoAvailable()) {
       const state = this._history[this._historyIndex];
       this._historyIndex--;
 
@@ -403,14 +403,17 @@ export default class ManagerHistory {
   }
 
   public redo() {
-    if (this._historyIndex >= this._history.length - 1) {
+    if (this.isRedoAvailable()) {
+      this._historyIndex++;
       const state = this._history[this._historyIndex];
       if (!state?.doRedo) {
         return false;
       }
 
       state.doRedo();
-      this._historyIndex++;
+      this._applyHistoryStateContext(state);
+      this._updateHistoryGUI();
+      return true;
     }
 
     return false;
