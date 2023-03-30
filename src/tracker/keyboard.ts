@@ -86,7 +86,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
 
   // Transposition +/-
   const doTranspose = (plus: number) => {
-    if (!app.modeEdit) {
+    if (!app.player.positions.length || !app.modeEdit) {
       return;
     }
 
@@ -318,9 +318,33 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
       }
 
       return {
+        'KeyA': () => {
+          if (process.env.NODE_ENV === 'development') {
+            logHotkey('Ctrl+A - Select all in channel');
+          }
+          if (!app.player.positions.length || !app.modeEdit || app.modePlay) {
+            return;
+          }
+          const sel = app.tracklist.selection;
+          const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
+          if (sel.line === 0 && sel.channel === this.modeEditChannel && sel.len === pp.length) {
+            sel.len = 0;
+          }
+          else {
+            sel.len = pp.length;
+          }
+          sel.line = 0;
+          sel.channel = this.modeEditChannel;
+          sel.isDragging = false;
+
+          app.updateEditorCombo(0);
+        },
         'KeyI': () => {
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Ctrl+I - New trackline into pattern');
+          }
+          if (!app.player.positions.length || !app.modeEdit || app.modePlay) {
+            return;
           }
           const cl = app.player.line;
           const pp = app.player.positions[app.player.position] ?? app.player.nullPosition;
