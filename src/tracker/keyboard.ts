@@ -204,7 +204,15 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
             app.onCmdStop();
           }
           else if (app.modeEdit) {
-            app.onCmdToggleEditMode();
+            const sel = this.tracklist.selection;
+            if (sel.len > 0) {
+              sel.len = 0;
+              sel.isDragging = false;
+              app.updateTracklist();
+            }
+            else {
+              app.onCmdToggleEditMode();
+            }
           }
         },
         'F1': () => {
