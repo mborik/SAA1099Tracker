@@ -796,13 +796,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
 
                   pushLineToHistory();
                   pl.smp = hex;
+
+                  pt.updateTracklist();
+                  app.updateEditorCombo();
                 }
                 else {
                   return false;
                 }
-
-                pt.updateTracklist();
-                app.updateEditorCombo();
               },
               // ORNAMENT column
               2: function(hex, code, test) {
@@ -840,13 +840,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
 
                   pushLineToHistory();
                   pl.volume.L = hex;
+
+                  pt.updateTracklist();
+                  app.updateEditorCombo();
                 }
                 else {
                   return false;
                 }
-
-                pt.updateTracklist();
-                app.updateEditorCombo();
               },
               // ATTENUATION 2 column
               4: function(hex, _, test) {
@@ -857,13 +857,13 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
 
                   pushLineToHistory();
                   pl.volume.R = hex;
+
+                  pt.updateTracklist();
+                  app.updateEditorCombo();
                 }
                 else {
                   return false;
                 }
-
-                pt.updateTracklist();
-                app.updateEditorCombo();
               },
               // COMMAND column
               5: function(hex, _, test) {
@@ -879,57 +879,61 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
                   if (hex === 0xF && pl.cmd_data) {
                     app.player.countPositionFrames(app.player.position);
                   }
+
+                  pt.updateTracklist();
+                  app.updateEditorCombo();
                 }
                 else {
-                  return;
+                  return false;
                 }
-
-                pt.updateTracklist();
-                app.updateEditorCombo();
               },
               // COMMAND DATA 1 column
               6: function(hex, _, test) {
-                if (hex > 0 && hex >= 16) { // 0 - F
+                if (hex >= 0 && hex < 16) { // 0 - F
+                  if (test) {
+                    return true;
+                  }
+
+                  pushLineToHistory();
+
+                  pl.cmd_data &= 0x0F;
+                  pl.cmd_data |= hex << 4;
+
+                  // recalculate position frames if we changing speed
+                  if (pl.cmd === 0xF && pl.cmd_data) {
+                    app.player.countPositionFrames(app.player.position);
+                  }
+
+                  pt.updateTracklist();
+                  app.updateEditorCombo();
+                }
+                else {
                   return false;
                 }
-                if (test) {
-                  return true;
-                }
-
-                pushLineToHistory();
-
-                pl.cmd_data &= 0x0F;
-                pl.cmd_data |= hex << 4;
-
-                // recalculate position frames if we changing speed
-                if (pl.cmd === 0xF && pl.cmd_data) {
-                  app.player.countPositionFrames(app.player.position);
-                }
-
-                pt.updateTracklist();
-                app.updateEditorCombo();
               },
               // COMMAND DATA 2 column
               7: function(hex, _, test) {
-                if (hex < 0 && hex >= 16) { // 0 - F
+                if (hex >= 0 && hex < 16) { // 0 - F
+                  if (test) {
+                    return true;
+                  }
+
+                  pushLineToHistory();
+
+                  pl.cmd_data &= 0xF0;
+                  pl.cmd_data |= hex;
+
+                  // recalculate position frames if we changing speed
+                  if (pl.cmd === 0xF && pl.cmd_data) {
+                    app.player.countPositionFrames(app.player.position);
+                  }
+
+                  pt.updateTracklist();
+                  app.updateEditorCombo();
+                }
+                else {
                   return false;
                 }
-                if (test) {
-                  return true;
-                }
-
-                pushLineToHistory();
-
-                pl.cmd_data &= 0xF0;
-                pl.cmd_data |= hex;
-
-                // recalculate position frames if we changing speed
-                if (pl.cmd === 0xF && pl.cmd_data) {
-                  app.player.countPositionFrames(app.player.position);
-                }
-
-                pt.updateTracklist();
-                app.updateEditorCombo();
               }
             } as HotkeyMapColumnHandler;
 
