@@ -432,21 +432,52 @@ Tracker.prototype.onCmdEditPaste = function() {
       if (done) {
         this.player.countPositionFrames(this.player.position);
         this.updateEditorCombo(this.ctrlRowStep);
+        this.file.modified = true;
       }
     });
   }
   else if (this.activeTab === 1) {
-    this.manager.pasteSample().then((done) => {
-      if (done) {
-        this.updateSampleEditor(true);
-        this.smpornedit.updateSamplePitchShift();
+    this.manager.pasteSampleCheckContent().then((smp) => {
+      if (!smp) {
+        return;
       }
+      const keys = this.globalKeyState;
+      keys.inDialog = true;
+      $('#dialog').confirm({
+        title: i18n.dialog.sample.paste.title,
+        text: i18n.dialog.sample.paste.msg,
+        style: 'warning',
+        buttons: [
+          { caption: i18n.dialog.sample.options[0], id: 7 },
+          { caption: i18n.dialog.sample.options[1], id: 1 },
+          { caption: i18n.dialog.sample.options[2], id: 2 },
+          { caption: i18n.dialog.sample.options[3], id: 4 },
+          { caption: i18n.dialog.sample.options[4], id: 'cancel' }
+        ],
+        callback: (mask) => {
+          keys.inDialog = false;
+          if (mask === 'cancel' || typeof mask === 'string') {
+            return;
+          }
+          this.manager.pasteSample(smp, mask).then((done) => {
+            if (!done) {
+              return;
+            }
+            this.updateSampleEditor(mask === 7);
+            if (mask & 4) {
+              this.smpornedit.updateSamplePitchShift();
+            }
+            this.file.modified = true;
+          });
+        }
+      });
     });
   }
   else if (this.activeTab === 2) {
     this.manager.pasteOrnament().then((done) => {
       if (done) {
         this.smpornedit.updateOrnamentEditor(true);
+        this.file.modified = true;
       }
     });
   }
@@ -1040,11 +1071,11 @@ Tracker.prototype.onCmdSmpClear = function() {
     text: i18n.dialog.sample.clear.msg,
     style: 'warning',
     buttons: [
-      { caption: i18n.dialog.sample.clear.options[0], id: 7 },
-      { caption: i18n.dialog.sample.clear.options[1], id: 1 },
-      { caption: i18n.dialog.sample.clear.options[2], id: 2 },
-      { caption: i18n.dialog.sample.clear.options[3], id: 4 },
-      { caption: i18n.dialog.sample.clear.options[4], id: 'cancel' }
+      { caption: i18n.dialog.sample.options[0], id: 7 },
+      { caption: i18n.dialog.sample.options[1], id: 1 },
+      { caption: i18n.dialog.sample.options[2], id: 2 },
+      { caption: i18n.dialog.sample.options[3], id: 4 },
+      { caption: i18n.dialog.sample.options[4], id: 'cancel' }
     ],
     callback: (mask) => {
       keys.inDialog = false;

@@ -22,6 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import Pattern from '../player/Pattern';
+import Sample from '../player/Sample';
 import ManagerHistory from './manager.history';
 import { TracklistSelection } from './tracklist';
 import Tracker from '.';
@@ -217,31 +218,67 @@ export default class Manager extends ManagerHistory {
     return this._clipboard.writeText('STMF.smp:' + JSON.stringify(obj, null, '\t'));
   }
 
-  public async pasteSample(): Promise<boolean> {
+  public async pasteSampleCheckContent(): Promise<Sample> {
     const content = await this._clipboard.readText();
     if (!content.startsWith('STMF.smp:{')) {
-      return false;
+      return null;
     }
 
-    const app = this._parent;
-    const smp = app.player.samples[app.workingSample];
     let obj: any;
-
     try {
       obj = JSON.parse(content.slice(9));
-      if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
-        return false;
+      if (!(
+        typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0 &&
+        typeof obj.loop === 'number' && typeof obj.end === 'number' &&
+        typeof obj.releasable === 'boolean'
+      )) {
+        return null;
       }
     }
     catch (e) {
-      return false;
+      return null;
     }
 
+    const smp = new Sample();
     smp.parse(obj.data);
     smp.name = obj.name;
     smp.loop = obj.loop;
     smp.end = obj.end;
     smp.releasable = obj.releasable;
+    return smp;
+  }
+
+  public async pasteSample(src: Sample, mask: number = 7): Promise<boolean> {
+    if (!(src && src.data instanceof Array && src.data.length > 0)) {
+      return false;
+    }
+
+    const app = this._parent;
+    const dst = app.player.samples[app.workingSample];
+
+    this.historyPushSampleDebounced();
+    dst.data.forEach((tick, idx) => {
+      const dat = src.data[idx];
+      if (mask & 1) {
+        tick.volume.byte = dat.volume.byte;
+        tick.enable_freq = dat.enable_freq;
+      }
+      if (mask & 2) {
+        tick.enable_noise = dat.enable_noise;
+        tick.noise_value = dat.noise_value;
+      }
+      if (mask & 4) {
+        tick.shift = dat.shift;
+      }
+    });
+
+    const all = (mask === 7);
+    if (all) {
+      dst.name = src.name;
+      dst.loop = src.loop;
+      dst.end = src.end;
+      dst.releasable = src.releasable;
+    }
     return true;
   }
 
