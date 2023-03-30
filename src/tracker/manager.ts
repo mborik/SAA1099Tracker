@@ -77,9 +77,7 @@ export default class Manager extends ManagerHistory {
     };
   }
 
-  //-------------------------------------------------------------------------------------
-  public clearFromTracklist() {
-    const block = this._getBlock(1);
+  private _historyPushPatternBlock(block: SelectedBlock) {
     this.historyPush({
       pattern: {
         type: 'data',
@@ -88,6 +86,12 @@ export default class Manager extends ManagerHistory {
         from: block.line
       }
     });
+  }
+
+  //-------------------------------------------------------------------------------------
+  public clearFromTracklist() {
+    const block = this._getBlock(1);
+    this._historyPushPatternBlock(block);
 
     block.pp.parse([], block.line, block.len);
   }
@@ -127,6 +131,8 @@ export default class Manager extends ManagerHistory {
     }
 
     const block = this._getBlock(data.length);
+    this._historyPushPatternBlock(block);
+
     block.pp.parse(data, block.line, block.len);
     return true;
   }
@@ -163,6 +169,8 @@ export default class Manager extends ManagerHistory {
       return false;
     }
     const block = this._getBlock(pattern.end);
+    this._historyPushPatternBlock(block);
+
     for (let src = 0, dest = block.line; src < block.len; src++, dest++) {
       const srcData = pattern.data[src];
       const destData = block.pp.data[dest];
@@ -254,11 +262,12 @@ export default class Manager extends ManagerHistory {
     }
 
     const app = this._parent;
-    const dst = app.player.samples[app.workingSample];
+    const idx = app.workingSample;
+    const dst = app.player.samples[idx];
 
-    this.historyPushSampleDebounced();
-    dst.data.forEach((tick, idx) => {
-      const dat = src.data[idx];
+    this.historyPushSampleDebounced(idx);
+    dst.data.forEach((tick, index) => {
+      const dat = src.data[index];
       if (mask & 1) {
         tick.volume.byte = dat.volume.byte;
         tick.enable_freq = dat.enable_freq;
@@ -312,9 +321,10 @@ export default class Manager extends ManagerHistory {
     }
 
     const app = this._parent;
-    const orn = app.player.ornaments[app.workingOrnament];
-    let obj: any;
+    const idx = app.workingOrnament;
+    const orn = app.player.ornaments[idx];
 
+    let obj: any;
     try {
       obj = JSON.parse(content.slice(9));
       if (!(typeof obj === 'object' && obj.data instanceof Array && obj.data.length > 0)) {
@@ -325,6 +335,7 @@ export default class Manager extends ManagerHistory {
       return false;
     }
 
+    this.historyPushOrnamentDebounced(idx);
     orn.parse(obj.data);
     orn.name = obj.name;
     orn.loop = obj.loop;
