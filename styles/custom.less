@@ -274,6 +274,14 @@
 	float: left;
 	width: 935px;
 	padding: 0;
+
+	.col-type-label {
+		line-height: 24px;
+		vertical-align: middle;
+		text-align: right;
+
+		> label { margin: 0; }
+	}
 }
 .col-ornedit {
 	position: relative;
@@ -289,7 +297,9 @@
 	border-left: 1px solid @border-soft;
 	margin: -8px 0;
 
-	button { height: 24px }
+	button:not([class*="bootstrap-touchspin"]) {
+		height: 24px;
+	}
 
 	.actions-amp, .actions-orn {
 		position: relative;
