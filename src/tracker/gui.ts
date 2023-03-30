@@ -562,6 +562,21 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           const el = e.currentTarget;
           app.player.rtSong.muted[(+el.value - 1)] = !el.checked;
         });
+        $(el).next().contextmenu((e: JQueryInputEventObject) => {
+          const rt = app.player.rtSong;
+          const chn = +cc - 1;
+          const defaultState = !rt.muted.reduce((acc, state, idx) => {
+            acc = acc && ((idx === chn) ? true : !state);
+            return acc;
+          }, !rt.muted[chn]);
+          rt.muted.forEach((_, idx) => {
+            const state = (idx === chn) ? false : !defaultState;
+            rt.muted[idx] = state;
+            $(`#scChnButton${idx + 1}`).bootstrapToggle(state ? 'off' : 'on');
+          });
+          e.preventDefault();
+          return false;
+        });
       }
     }, {
       selector: '#sample-tabpanel a[data-toggle="tab"]',
