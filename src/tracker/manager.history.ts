@@ -116,6 +116,7 @@ interface UndoStateWithContext extends UndoState {
     currentPosition: number;
     currentLine: number;
     workingPattern: number;
+    workingPatternTarget: number;
     workingSample: number;
     workingOrnament: number;
     smpeditShiftShown: boolean;
@@ -175,6 +176,7 @@ export default class ManagerHistory {
       currentPosition: this._parent.player.position,
       currentLine: this._parent.player.line,
       workingPattern: this._parent.workingPattern,
+      workingPatternTarget: this._parent.workingPatternTarget,
       workingSample: this._parent.workingSample,
       workingOrnament: this._parent.workingOrnament,
     };
@@ -649,6 +651,11 @@ export default class ManagerHistory {
     if (context.workingPattern !== app.workingPattern) {
       app.workingPattern = context.workingPattern || 0;
       $('#scPattern').val(app.workingPattern.toString());
+      shouldUpdateTracker = true;
+    }
+    if (context.workingPatternTarget !== app.workingPatternTarget) {
+      app.workingPatternTarget = context.workingPatternTarget || 0;
+      $('#scPattern').val(app.workingPatternTarget.toString());
       shouldUpdateTracker = true;
     }
     if (context.currentPosition !== app.player.position) {

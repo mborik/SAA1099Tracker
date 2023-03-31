@@ -108,6 +108,8 @@ export class STMFile {
     tracker.onCmdToggleLoop(player.loopMode);
 
     $('#scPattern').val(tracker.workingPattern.toString());
+    $('#scPatternTarget').val(tracker.workingPatternTarget.toString());
+    $('#scPatPanelSwitch').bootstrapToggle('on');
     $('#scPosRepeat').val((player.repeatPosition + 1).toString());
     $('#scPosCurrent').val((player.position + 1).toString());
 
@@ -333,6 +335,7 @@ export class STMFile {
         initval: 0,
         min: 0, max: 255
       });
+      tracker.workingPatternTarget = tracker.workingPattern ? 1 : 0;
       tracker.workingSample = validateAndClamp({
         value: o.sample,
         initval: 1,
@@ -573,6 +576,7 @@ export class STMFile {
     tracker.modeEditChannel = 0;
     tracker.modeEditColumn = 0;
     tracker.workingPattern = 0;
+    tracker.workingPatternTarget = 0;
     tracker.workingSample = 1;
     tracker.workingOrnament = 1;
     tracker.workingOrnTestSample = 1;

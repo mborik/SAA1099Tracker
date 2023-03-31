@@ -24,6 +24,8 @@
 import AudioDriver from '../commons/audio';
 import { toTimeString, toWidth } from '../commons/number';
 import SyncTimer from '../commons/timer';
+import { optimizePatternProcessor } from '../compiler/optimizer';
+import { MAX_PATTERN_LEN } from '../player/globals';
 import constants from './constants';
 import { i18n } from './doc';
 import Tracker from '.';
@@ -41,6 +43,14 @@ Tracker.prototype.updatePanels = function() {
   this.updatePanelInfo();
   this.updatePanelPosition();
   this.updatePanelPattern();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.updateAfterActionButton = function() {
+  this.updatePanelInfo();
+  this.updatePanelPosition();
+  this.updatePanelPattern();
+  this.updateTracklist();
+  this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updateEditorCombo = function(step) {
@@ -106,7 +116,19 @@ Tracker.prototype.updatePanelInfo = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {
-  const a = [ '#scPattern', '#scPatternLen', '#btPatternDelete', '#btPatternClean', '#btPatternInfo'];
+  const a = [
+    '#scPattern',
+    '#scPatternLen',
+    '#scPatternTarget',
+    '#btPatternDup',
+    '#btPatternDelete',
+    '#btPatternSwap',
+    '#btPatternProcess',
+    '#btPatternClean',
+    '#btPatternCompress',
+    '#btPatternExpand',
+    '#btPatternOptimize'
+  ];
   const lastState = $(a[0]).prop('disabled');
   let pat = this.workingPattern;
   let len = this.player.patterns.length;
@@ -137,6 +159,8 @@ Tracker.prototype.updatePanelPattern = function() {
 
   this.workingPattern = pat;
   $(a[0]).trigger('touchspin.updatesettings', { min: min, max: max, initval: pat }).val(pat);
+  const target = len ? Math.max(Math.min(this.workingPatternTarget, max), min) : 0;
+  $(a[2]).trigger('touchspin.updatesettings', { min: min, max: max, initval: target }).val(target);
 
   $('#txPatternUsed').val(this.player.countPatternUsage(pat));
   $('#txPatternTotal').val(len);
@@ -490,58 +514,15 @@ Tracker.prototype.onCmdEditPasteSpecial = function() {
         return;
       }
 
-      const dialog = $('#paste');
-      const keys = this.globalKeyState;
-
-      dialog.on('show.bs.modal', () => {
-        keys.inDialog = true;
-
-        dialog.find('.modal-body pre').text(
-          pasteAsPatt.tracklist
-            .slice(0, Math.min(8, pasteAsPatt.end))
-            .map((line) =>
-              `${line.tone}  ${line.column[0]}  ${line.column[1]}  ${
-                line.column.slice(2, 4)}   ${line.column[4]} ${line.column.slice(5)} `
-            )
-            .join('\n')
-            .replace(/\x7f/g, '.')
-            .toUpperCase()
-        );
-
-        dialog.find('.btn-success').on('click', () => {
-          let validParts = false;
-          const parts = Array.from(dialog.find('.modal-body input[type=checkbox]'))
-            .map((el: HTMLInputElement) => {
-              return { name: el.id, value: el.checked };
-            })
-            .reduce(
-              (acc, { name, value }) => {
-                acc[name.slice(7).toLowerCase()] = value;
-                validParts ||= value;
-                return acc;
-              }, {}
-            );
-          if (!validParts) {
-            return;
+      this.manager.pasteSpecialDialog(
+        pasteAsPatt,
+        this.manager.pasteSpecialToTracklist.bind(this.manager),
+        (done) => {
+          if (done) {
+            this.player.countPositionFrames(this.player.position);
+            this.updateEditorCombo(0);
           }
-          this.manager.pasteSpecialToTracklist(pasteAsPatt, parts).then((done) => {
-            if (done) {
-              this.player.countPositionFrames(this.player.position);
-              this.updateEditorCombo(0);
-            }
-          }).finally(() => {
-            dialog.modal('hide');
-          });
         });
-
-      }).on('hide.bs.modal', () => {
-        dialog.find('.modal-footer>.btn').off();
-        keys.inDialog = false;
-
-      }).modal({
-        show: true,
-        backdrop: true
-      });
     });
   }
 };
@@ -740,11 +721,49 @@ Tracker.prototype.onCmdPatCreate = function() {
   });
 
   pt.end = end;
+  pt.updateTracklist();
+
   this.workingPattern = id;
   this.updatePanelPattern();
   this.file.modified = true;
 
   $('#scPatternLen').focus();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatDup = function() {
+  if (this.modePlay) {
+    return;
+  }
+
+  const id = this.player.addNewPattern();
+  const dest = this.player.patterns[id];
+  const src = (this.workingPattern && this.player.patterns[this.workingPattern]);
+
+  this.manager.historyPush({
+    pattern: {
+      type: 'create',
+      index: id
+    }
+  });
+
+  dest.end = src.end;
+  dest.data.forEach((line, i) => {
+    const srcData = src.data[i];
+    line.tone = srcData.tone;
+    line.release = srcData.release;
+    line.smp = srcData.smp;
+    line.orn = srcData.orn;
+    line.orn_release = srcData.orn_release;
+    line.volume.byte = srcData.volume.byte;
+    line.cmd = srcData.cmd;
+    line.cmd_data = srcData.cmd_data;
+  });
+
+  dest.updateTracklist();
+
+  this.workingPattern = id;
+  this.updatePanelPattern();
+  this.file.modified = true;
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatDelete = function() {
@@ -825,13 +844,104 @@ Tracker.prototype.onCmdPatDelete = function() {
       }
 
       app.workingPattern = pt;
-      app.updatePanelInfo();
-      app.updatePanelPattern();
-      app.updatePanelPosition();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatSwap = function() {
+  if (
+    this.modePlay ||
+    !this.workingPattern || !this.workingPatternTarget ||
+    this.workingPattern === this.workingPatternTarget
+  ) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.swap.title,
+    html: i18n.dialog.pattern.swap.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      const src = this.player.patterns[this.workingPattern];
+      const dst = this.player.patterns[this.workingPatternTarget];
+      this.player.patterns[this.workingPattern] = dst;
+      this.player.patterns[this.workingPatternTarget] = src;
+
+      src.updateTracklist();
+      dst.updateTracklist();
+      app.updateAfterActionButton();
+    }
+  });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatProcess = function() {
+  if (
+    this.modePlay ||
+    !this.workingPattern || !this.workingPatternTarget ||
+    this.workingPattern === this.workingPatternTarget
+  ) {
+    return;
+  }
+
+  this.manager.pasteSpecialDialog(
+    this.player.patterns[this.workingPattern],
+    async (pattern, parts) => {
+      if (!pattern?.end) {
+        return false;
+      }
+
+      const dst = this.player.patterns[this.workingPatternTarget];
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPatternTarget,
+          data: dst.simplify(),
+        }
+      });
+
+      for (let i = 0; i < Math.min(pattern.end, dst.end); i++) {
+        const srcData = pattern.data[i];
+        const destData = dst.data[i];
+        if (parts.tone) {
+          destData.tone = srcData.tone;
+          destData.release = srcData.release;
+        }
+        if (parts.smp) {
+          destData.smp = srcData.smp;
+        }
+        if (parts.orn) {
+          destData.orn = srcData.orn;
+          destData.orn_release = srcData.orn_release;
+        }
+        if (parts.vol) {
+          destData.volume.byte = srcData.volume.byte;
+        }
+        if (parts.cmd) {
+          destData.cmd = srcData.cmd;
+        }
+        if (parts.data) {
+          destData.cmd_data = srcData.cmd_data;
+        }
+      }
+
+      dst.updateTracklist();
+      return true;
+    },
+    (done) => done && this.updateAfterActionButton(),
+    i18n.dialog.pattern.process.title,
+    i18n.dialog.pattern.process.btn
+  );
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatClean = function() {
@@ -875,15 +985,179 @@ Tracker.prototype.onCmdPatClean = function() {
       });
 
       pt.updateTracklist();
-      app.updatePanelInfo();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdPatInfo = function() {
-  // TODO
+Tracker.prototype.onCmdPatCompress = function() {
+  if (this.modePlay || !this.workingPattern) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+  const pt = this.player.patterns[this.workingPattern];
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.compress.title,
+    html: i18n.dialog.pattern.compress.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.simplify(),
+        }
+      });
+
+      for (let src = 2, dst = 1; src < pt.data.length; src += 2, dst++) {
+        const dstData = pt.data[dst];
+        const srcData = pt.data[src];
+
+        dstData.tone = srcData.tone;
+        dstData.release = srcData.release;
+        dstData.smp = srcData.smp;
+        dstData.orn = srcData.orn;
+        dstData.orn_release = srcData.orn_release;
+        dstData.volume.byte = srcData.volume.byte;
+        dstData.cmd = srcData.cmd;
+        dstData.cmd_data = srcData.cmd_data;
+      }
+
+      pt.end = Math.ceil(pt.end / 2);
+      pt.updateTracklist();
+      app.updateAfterActionButton();
+    }
+  });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatExpand = function() {
+  if (this.modePlay || !this.workingPattern) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+  const pt = this.player.patterns[this.workingPattern];
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.expand.title,
+    html: i18n.dialog.pattern.expand.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.simplify(),
+        }
+      });
+
+      for (let dst = MAX_PATTERN_LEN - 1, src = dst >> 1; src >= 0; src--, dst--) {
+        let line = pt.data[dst--];
+        line.tone = 0;
+        line.release = false;
+        line.smp = 0;
+        line.orn = 0;
+        line.orn_release = false;
+        line.volume.byte = 0;
+        line.cmd = 0;
+        line.cmd_data = 0;
+
+        const srcData = pt.data[src];
+        line = pt.data[dst];
+        line.tone = srcData.tone;
+        line.release = srcData.release;
+        line.smp = srcData.smp;
+        line.orn = srcData.orn;
+        line.orn_release = srcData.orn_release;
+        line.volume.byte = srcData.volume.byte;
+        line.cmd = srcData.cmd;
+        line.cmd_data = srcData.cmd_data;
+      }
+
+      pt.end = pt.end * 2;
+      pt.updateTracklist();
+      app.updateAfterActionButton();
+    }
+  });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatOptimize = function() {
+  if (this.modePlay || !this.workingPattern) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+  const pt = this.player.patterns[this.workingPattern];
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.optimize.title,
+    html: i18n.dialog.pattern.optimize.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.simplify(),
+        }
+      });
+
+      const optimizeLine = optimizePatternProcessor(true);
+      pt.data.forEach((line, idx) => {
+        const { ton, release, smp, orn, orn_release, vol, cmd, dat } = optimizeLine(line, idx);
+
+        line.tone = ton;
+        line.release = release;
+        line.smp = smp;
+        line.orn = orn;
+        line.orn_release = orn_release;
+        line.volume.byte = vol;
+        line.cmd = cmd;
+        line.cmd_data = dat;
+      });
+
+      for (let i = MAX_PATTERN_LEN - 1; i >= 0; i--) {
+        const {
+          tone: ton, smp, orn,
+          volume: { byte: vol },
+          cmd, release, orn_release
+        } = pt.data[i];
+        if (ton || release || smp || orn || orn_release || vol || cmd) {
+          pt.end = i + 1;
+          break;
+        }
+      }
+
+      pt.updateTracklist();
+      app.updateAfterActionButton();
+    }
+  });
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosCreate = function() {
@@ -906,10 +1180,7 @@ Tracker.prototype.onCmdPosCreate = function() {
   p.position = total;
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosInsert = function() {
@@ -942,11 +1213,7 @@ Tracker.prototype.onCmdPosInsert = function() {
   p.storePositionRuntime(i);
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPattern();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosDelete = function() {
@@ -987,11 +1254,7 @@ Tracker.prototype.onCmdPosDelete = function() {
         app.player.position--;
       }
 
-      app.updatePanelInfo();
-      app.updatePanelPattern();
-      app.updatePanelPosition();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -1019,10 +1282,7 @@ Tracker.prototype.onCmdPosMoveUp = function() {
   p.position = i;
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveDown = function() {
@@ -1049,10 +1309,7 @@ Tracker.prototype.onCmdPosMoveDown = function() {
   p.position = i;
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpPlay = function() {

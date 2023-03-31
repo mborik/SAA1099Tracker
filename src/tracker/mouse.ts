@@ -104,6 +104,9 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
         sel.line = point.line;
         sel.channel = point.channel;
         sel.isDragging = false;
+
+        this.workingPattern = pp.ch[point.channel].pattern;
+        this.updatePanelPattern();
       }
 
       if (!this.modeEdit) {

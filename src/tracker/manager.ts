@@ -23,6 +23,7 @@
 
 import Pattern from '../player/Pattern';
 import Sample from '../player/Sample';
+import { i18n } from './doc';
 import ManagerHistory from './manager.history';
 import { TracklistSelection } from './tracklist';
 import Tracker from '.';
@@ -159,6 +160,63 @@ export default class Manager extends ManagerHistory {
     mockPattern.updateTracklist();
 
     return mockPattern;
+  }
+
+  public async pasteSpecialDialog(
+    pattern: Pattern,
+    processor: typeof Manager.prototype.pasteSpecialToTracklist,
+    callback: (done: boolean) => unknown = () => {},
+    title = i18n.dialog.paste.title,
+    buttonTitle = i18n.dialog.paste.btn
+  ): Promise<void> {
+    const dialog = $('#paste');
+    const keys = this._parent.globalKeyState;
+
+    dialog.on('show.bs.modal', () => {
+      keys.inDialog = true;
+
+      dialog.find('.modal-title').text(title);
+      dialog.find('.modal-body pre').text(
+        pattern.tracklist
+          .slice(0, Math.min(8, pattern.end))
+          .map((line) =>
+            `${line.tone}  ${line.column[0]}  ${line.column[1]}  ${
+              line.column.slice(2, 4)}   ${line.column[4]} ${line.column.slice(5)} `
+          )
+          .join('\n')
+          .replace(/\x7f/g, '.')
+          .toUpperCase()
+      );
+
+      dialog.find('.btn-success').text(buttonTitle).on('click', () => {
+        let validParts = false;
+        const parts = Array.from(dialog.find('.modal-body input[type=checkbox]'))
+          .map((el: HTMLInputElement) => {
+            return { name: el.id, value: el.checked };
+          })
+          .reduce(
+            (acc, { name, value }) => {
+              acc[name.slice(7).toLowerCase()] = value;
+              validParts ||= value;
+              return acc;
+            }, {}
+          );
+        if (!validParts) {
+          return;
+        }
+        processor(pattern, parts).then(callback).finally(() => {
+          dialog.modal('hide');
+        });
+      });
+
+    }).on('hide.bs.modal', () => {
+      dialog.find('.modal-footer>.btn').off();
+      keys.inDialog = false;
+
+    }).modal({
+      show: true,
+      backdrop: true
+    });
   }
 
   public async pasteSpecialToTracklist(

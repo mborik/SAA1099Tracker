@@ -59,6 +59,7 @@ export default class Tracker {
   modeEditChannel: number = 0;
   modeEditColumn: number = 0;
   workingPattern: number = 0;
+  workingPatternTarget: number = 0;
   workingSample: number = 1;
   workingSampleTone: number = 37;
   workingOrnament: number = 1;
@@ -88,6 +89,7 @@ export default class Tracker {
   compiler: Compiler;
 
   updatePanels: (this: Tracker) => void;
+  updateAfterActionButton: (this: Tracker) => void;
   updatePanelInfo: (this: Tracker) => void;
   updatePanelPattern: (this: Tracker) => void;
   updatePanelPosition: (this: Tracker) => void;
@@ -123,10 +125,15 @@ export default class Tracker {
   onCmdOrnShiftRight: (this: Tracker) => void;
   onCmdOrnTransDown: (this: Tracker) => void;
   onCmdOrnTransUp: (this: Tracker) => void;
-  onCmdPatClean: (this: Tracker) => void;
   onCmdPatCreate: (this: Tracker) => void;
+  onCmdPatDup: (this: Tracker) => void;
   onCmdPatDelete: (this: Tracker) => void;
-  onCmdPatInfo: (this: Tracker) => void;
+  onCmdPatSwap: (this: Tracker) => void;
+  onCmdPatProcess: (this: Tracker) => void;
+  onCmdPatClean: (this: Tracker) => void;
+  onCmdPatCompress: (this: Tracker) => void;
+  onCmdPatExpand: (this: Tracker) => void;
+  onCmdPatOptimize: (this: Tracker) => void;
   onCmdPosCreate: (this: Tracker) => void;
   onCmdPosDelete: (this: Tracker) => void;
   onCmdPosInsert: (this: Tracker) => void;
