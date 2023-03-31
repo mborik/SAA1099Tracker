@@ -24,6 +24,7 @@
 import AudioDriver from '../commons/audio';
 import { toTimeString, toWidth } from '../commons/number';
 import SyncTimer from '../commons/timer';
+import { MAX_PATTERN_LEN } from '../player/globals';
 import constants from './constants';
 import { i18n } from './doc';
 import Tracker from '.';
@@ -929,6 +930,120 @@ Tracker.prototype.onCmdPatClean = function() {
   });
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatCompress = function() {
+  if (this.modePlay || !this.workingPattern) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+  const pt = this.player.patterns[this.workingPattern];
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.compress.title,
+    html: i18n.dialog.pattern.compress.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.simplify(),
+        }
+      });
+
+      for (let src = 2, dst = 1; src < pt.data.length; src += 2, dst++) {
+        const dstData = pt.data[dst];
+        const srcData = pt.data[src];
+
+        dstData.tone = srcData.tone;
+        dstData.release = srcData.release;
+        dstData.smp = srcData.smp;
+        dstData.orn = srcData.orn;
+        dstData.orn_release = srcData.orn_release;
+        dstData.volume.byte = srcData.volume.byte;
+        dstData.cmd = srcData.cmd;
+        dstData.cmd_data = srcData.cmd_data;
+      }
+
+      pt.end = Math.ceil(pt.end / 2);
+      pt.updateTracklist();
+      app.updatePanelPattern();
+      app.updatePanelInfo();
+      app.updateTracklist();
+      app.file.modified = true;
+    }
+  });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatExpand = function() {
+  if (this.modePlay || !this.workingPattern) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+  const pt = this.player.patterns[this.workingPattern];
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.expand.title,
+    html: i18n.dialog.pattern.expand.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.simplify(),
+        }
+      });
+
+      for (let dst = MAX_PATTERN_LEN - 1, src = dst >> 1; src >= 0; src--, dst--) {
+        let line = pt.data[dst--];
+        line.tone = 0;
+        line.release = false;
+        line.smp = 0;
+        line.orn = 0;
+        line.orn_release = false;
+        line.volume.byte = 0;
+        line.cmd = 0;
+        line.cmd_data = 0;
+
+        const srcData = pt.data[src];
+        line = pt.data[dst];
+        line.tone = srcData.tone;
+        line.release = srcData.release;
+        line.smp = srcData.smp;
+        line.orn = srcData.orn;
+        line.orn_release = srcData.orn_release;
+        line.volume.byte = srcData.volume.byte;
+        line.cmd = srcData.cmd;
+        line.cmd_data = srcData.cmd_data;
+      }
+
+      pt.end = pt.end * 2;
+      pt.updateTracklist();
+      app.updatePanelPattern();
+      app.updatePanelInfo();
+      app.updateTracklist();
+      app.file.modified = true;
+    }
+  });
+};
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosCreate = function() {
   if (this.modePlay) {
