@@ -1183,7 +1183,7 @@ Tracker.prototype.onCmdPosCreate = function() {
   this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdPosInsert = function() {
+Tracker.prototype.onCmdPosDuplicate = function() {
   if (this.modePlay) {
     return;
   }

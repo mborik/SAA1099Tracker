@@ -136,7 +136,7 @@ export default class Tracker {
   onCmdPatOptimize: (this: Tracker) => void;
   onCmdPosCreate: (this: Tracker) => void;
   onCmdPosDelete: (this: Tracker) => void;
-  onCmdPosInsert: (this: Tracker) => void;
+  onCmdPosDuplicate: (this: Tracker) => void;
   onCmdPosMoveDown: (this: Tracker) => void;
   onCmdPosMoveUp: (this: Tracker) => void;
   onCmdPosPlay: (this: Tracker) => void;

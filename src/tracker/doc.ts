@@ -116,7 +116,7 @@ Tracker.prototype.doc = {
     'txPatternUsed'   : 'How many times is the pattern used',
     'txPatternTotal'  : 'Total number of patterns',
     'btPosCreate'     : 'Create an empty position\nat the end of song',
-    'btPosInsert'     : 'Create a copy of current position\nand insert before it',
+    'btPosDuplicate'  : 'Create a copy of current position\nand insert before it',
     'btPosDelete'     : 'Delete the current position',
     'btPosMoveUp'     : 'Move the current position\nbefore the previous',
     'btPosMoveDown'   : 'Move the current position\nafter the next one',
