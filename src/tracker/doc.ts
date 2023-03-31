@@ -125,7 +125,7 @@ Tracker.prototype.doc = {
     'scPosSpeed'      : 'Initial speed of current position',
     'scPosRepeat'     : 'Position number to repeat from',
     'txPosTotal'      : 'Total number of positions',
-    'scChnButton'     : 'Mute/Unmute channels [Mod+Shift+1...6]',
+    'scChnButton'     : 'Mute/Unmute channels\n(right click to Solo) [Mod+Shift+1...6]',
     'scChnPattern'    : 'Assigned pattern for specific\nchannel in current position',
     'scChnTrans'      : 'Transposition of notes\nin specific channel-pattern',
     'scSampleNumber'  : 'Current sample ID',
