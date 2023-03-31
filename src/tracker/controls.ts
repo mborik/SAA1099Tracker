@@ -106,7 +106,14 @@ Tracker.prototype.updatePanelInfo = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {
-  const a = [ '#scPattern', '#scPatternLen', '#btPatternDelete', '#btPatternClean', '#btPatternInfo'];
+  const a = [
+    '#scPattern',
+    '#scPatternLen',
+    '#btPatternDelete',
+    '#btPatternClean',
+    '#btPatternInfo',
+    '#scPatternTarget',
+  ];
   const lastState = $(a[0]).prop('disabled');
   let pat = this.workingPattern;
   let len = this.player.patterns.length;
@@ -137,6 +144,8 @@ Tracker.prototype.updatePanelPattern = function() {
 
   this.workingPattern = pat;
   $(a[0]).trigger('touchspin.updatesettings', { min: min, max: max, initval: pat }).val(pat);
+  const target = len ? Math.max(Math.min(this.workingPatternTarget, max), min) : 0;
+  $(a[5]).trigger('touchspin.updatesettings', { min: min, max: max, initval: target }).val(target);
 
   $('#txPatternUsed').val(this.player.countPatternUsage(pat));
   $('#txPatternTotal').val(len);
@@ -882,10 +891,6 @@ Tracker.prototype.onCmdPatClean = function() {
       app.file.modified = true;
     }
   });
-};
-//---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdPatInfo = function() {
-  // TODO
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosCreate = function() {

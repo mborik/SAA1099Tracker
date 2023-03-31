@@ -167,6 +167,17 @@
 	.border-my-column();
 	button { height: 24px }
 }
+.col-buttons-right {
+	.make-my-column(128px, 28);
+	padding: 0;
+	float: right;
+	button {
+		height: 24px;
+		&.thin {
+			padding: @grid-gutter-width;
+		}
+	}
+}
 .col-label-input {
 	display: block;
 	position: relative;
@@ -466,6 +477,16 @@
 
 #fxOrnEditor > .cell { width: 112px; }
 #fxOrnChords > .row { padding: (@grid-gutter-width / 2) 0; }
+
+#fxPanelPattern {
+	.show-on-pg2 {
+		display: none;
+	}
+	&.panel-functions {
+		.show-on-pg1 { display: none; }
+		.show-on-pg2 { display: block !important; }
+	}
+}
 
 // modal windows ------------------------------------------------------------------------
 #documodal .modal-body {

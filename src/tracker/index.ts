@@ -59,6 +59,7 @@ export default class Tracker {
   modeEditChannel: number = 0;
   modeEditColumn: number = 0;
   workingPattern: number = 0;
+  workingPatternTarget: number = 0;
   workingSample: number = 1;
   workingSampleTone: number = 37;
   workingOrnament: number = 1;
@@ -126,7 +127,6 @@ export default class Tracker {
   onCmdPatClean: (this: Tracker) => void;
   onCmdPatCreate: (this: Tracker) => void;
   onCmdPatDelete: (this: Tracker) => void;
-  onCmdPatInfo: (this: Tracker) => void;
   onCmdPosCreate: (this: Tracker) => void;
   onCmdPosDelete: (this: Tracker) => void;
   onCmdPosInsert: (this: Tracker) => void;

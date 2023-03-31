@@ -255,7 +255,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         });
       }
     }, {
-      selector: '#scPattern,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
+      selector: '#scPattern,#scPatternTarget,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
       method:   'TouchSpin',
       data: {
         initval: '0',
@@ -272,13 +272,27 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#scPattern',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
-        if (app.player.patterns.length <= 1) {
+        const len = app.player.patterns.length;
+        if (len <= 1) {
           return false;
         }
         app.workingPattern = validateAndClamp({
           value: e.currentTarget.value,
-          initval: 64,
-          min: 1, max: MAX_PATTERN_LEN
+          min: 1, max: len - 1
+        });
+        app.updatePanelPattern();
+      }
+    }, {
+      selector: '#scPatternTarget',
+      method:   'change',
+      handler:  (e: JQueryInputEventObject) => {
+        const len = app.player.patterns.length;
+        if (len <= 1) {
+          return false;
+        }
+        app.workingPatternTarget = validateAndClamp({
+          value: e.currentTarget.value,
+          min: 1, max: len - 1
         });
         app.updatePanelPattern();
       }
@@ -317,6 +331,23 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         app.file.modified = true;
       }
     }, {
+      selector: '#scPatPanelSwitch',
+      method:   'each',
+      handler:  (_: number, el: HTMLInputElement) => {
+        $(el).bootstrapToggle({
+          on: 'Functions',
+          off: 'Functions',
+          onstyle: 'default',
+          offstyle: 'default',
+          size: 'mini',
+          width: 79,
+          height: 24
+        }).change((e: JQueryInputEventObject) => {
+          const el = e.currentTarget;
+          $('#fxPanelPattern').toggleClass('panel-functions', !el.checked);
+        });
+      }
+    }, {
       selector: '#scPosCurrent',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
@@ -333,7 +364,6 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 
         const pos = validateAndClamp({
           value: el.value,
-          initval: 64,
           min: 1, max: positions
         });
 
