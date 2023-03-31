@@ -89,6 +89,7 @@ export default class Tracker {
   compiler: Compiler;
 
   updatePanels: (this: Tracker) => void;
+  updateAfterActionButton: (this: Tracker) => void;
   updatePanelInfo: (this: Tracker) => void;
   updatePanelPattern: (this: Tracker) => void;
   updatePanelPosition: (this: Tracker) => void;

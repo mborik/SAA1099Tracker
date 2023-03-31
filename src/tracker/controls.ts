@@ -45,6 +45,14 @@ Tracker.prototype.updatePanels = function() {
   this.updatePanelPattern();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.updateAfterActionButton = function() {
+  this.updatePanelInfo();
+  this.updatePanelPosition();
+  this.updatePanelPattern();
+  this.updateTracklist();
+  this.file.modified = true;
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.updateEditorCombo = function(step) {
   if (step === undefined) {
     this.player.playLine();
@@ -836,11 +844,7 @@ Tracker.prototype.onCmdPatDelete = function() {
       }
 
       app.workingPattern = pt;
-      app.updatePanelInfo();
-      app.updatePanelPosition();
-      app.updatePanelPattern();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -876,11 +880,7 @@ Tracker.prototype.onCmdPatSwap = function() {
 
       src.updateTracklist();
       dst.updateTracklist();
-
-      app.updatePanelPattern();
-      app.updatePanelInfo();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -938,14 +938,7 @@ Tracker.prototype.onCmdPatProcess = function() {
       dst.updateTracklist();
       return true;
     },
-    (done) => {
-      if (done) {
-        this.updatePanelPattern();
-        this.updatePanelInfo();
-        this.updateTracklist();
-        this.file.modified = true;
-      }
-    },
+    (done) => done && this.updateAfterActionButton(),
     i18n.dialog.pattern.process.title,
     i18n.dialog.pattern.process.btn
   );
@@ -992,9 +985,7 @@ Tracker.prototype.onCmdPatClean = function() {
       });
 
       pt.updateTracklist();
-      app.updatePanelInfo();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -1044,10 +1035,7 @@ Tracker.prototype.onCmdPatCompress = function() {
 
       pt.end = Math.ceil(pt.end / 2);
       pt.updateTracklist();
-      app.updatePanelPattern();
-      app.updatePanelInfo();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -1106,10 +1094,7 @@ Tracker.prototype.onCmdPatExpand = function() {
 
       pt.end = pt.end * 2;
       pt.updateTracklist();
-      app.updatePanelPattern();
-      app.updatePanelInfo();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -1170,10 +1155,7 @@ Tracker.prototype.onCmdPatOptimize = function() {
       }
 
       pt.updateTracklist();
-      app.updatePanelPattern();
-      app.updatePanelInfo();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -1198,10 +1180,7 @@ Tracker.prototype.onCmdPosCreate = function() {
   p.position = total;
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosInsert = function() {
@@ -1234,11 +1213,7 @@ Tracker.prototype.onCmdPosInsert = function() {
   p.storePositionRuntime(i);
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPattern();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosDelete = function() {
@@ -1279,11 +1254,7 @@ Tracker.prototype.onCmdPosDelete = function() {
         app.player.position--;
       }
 
-      app.updatePanelInfo();
-      app.updatePanelPattern();
-      app.updatePanelPosition();
-      app.updateTracklist();
-      app.file.modified = true;
+      app.updateAfterActionButton();
     }
   });
 };
@@ -1311,10 +1282,7 @@ Tracker.prototype.onCmdPosMoveUp = function() {
   p.position = i;
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosMoveDown = function() {
@@ -1341,10 +1309,7 @@ Tracker.prototype.onCmdPosMoveDown = function() {
   p.position = i;
   p.line = 0;
 
-  this.updatePanelInfo();
-  this.updatePanelPosition();
-  this.updateTracklist();
-  this.file.modified = true;
+  this.updateAfterActionButton();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdSmpPlay = function() {
