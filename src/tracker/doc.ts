@@ -112,6 +112,7 @@ Tracker.prototype.doc = {
     'btPatDelete'     : 'Delete the current pattern\n(and renumber others if it isn\'t last one)',
     'btPatInfo'       : 'View summary dialog of patterns',
     'scPatCurrent'    : 'Current pattern number',
+    'scPatTarget'     : 'Target pattern for\nSwap and Process operations',
     'scPatLen'        : 'Current pattern length',
     'txPatternUsed'   : 'How many times is the pattern used',
     'txPatternTotal'  : 'Total number of patterns',
