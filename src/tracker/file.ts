@@ -109,6 +109,7 @@ export class STMFile {
 
     $('#scPattern').val(tracker.workingPattern.toString());
     $('#scPatternTarget').val(tracker.workingPatternTarget.toString());
+    $('#scPatPanelSwitch').bootstrapToggle('on');
     $('#scPosRepeat').val((player.repeatPosition + 1).toString());
     $('#scPosCurrent').val((player.position + 1).toString());
 

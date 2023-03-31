@@ -111,10 +111,15 @@ Tracker.prototype.updatePanelPattern = function() {
   const a = [
     '#scPattern',
     '#scPatternLen',
-    '#btPatternDelete',
-    '#btPatternClean',
-    '#btPatternInfo',
     '#scPatternTarget',
+    '#btPatternDup',
+    '#btPatternDelete',
+    '#btPatternSwap',
+    '#btPatternProcess',
+    '#btPatternClean',
+    '#btPatternCompress',
+    '#btPatternExpand',
+    '#btPatternOptimize'
   ];
   const lastState = $(a[0]).prop('disabled');
   let pat = this.workingPattern;
@@ -147,7 +152,7 @@ Tracker.prototype.updatePanelPattern = function() {
   this.workingPattern = pat;
   $(a[0]).trigger('touchspin.updatesettings', { min: min, max: max, initval: pat }).val(pat);
   const target = len ? Math.max(Math.min(this.workingPatternTarget, max), min) : 0;
-  $(a[5]).trigger('touchspin.updatesettings', { min: min, max: max, initval: target }).val(target);
+  $(a[2]).trigger('touchspin.updatesettings', { min: min, max: max, initval: target }).val(target);
 
   $('#txPatternUsed').val(this.player.countPatternUsage(pat));
   $('#txPatternTotal').val(len);
