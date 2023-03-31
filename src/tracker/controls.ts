@@ -500,58 +500,15 @@ Tracker.prototype.onCmdEditPasteSpecial = function() {
         return;
       }
 
-      const dialog = $('#paste');
-      const keys = this.globalKeyState;
-
-      dialog.on('show.bs.modal', () => {
-        keys.inDialog = true;
-
-        dialog.find('.modal-body pre').text(
-          pasteAsPatt.tracklist
-            .slice(0, Math.min(8, pasteAsPatt.end))
-            .map((line) =>
-              `${line.tone}  ${line.column[0]}  ${line.column[1]}  ${
-                line.column.slice(2, 4)}   ${line.column[4]} ${line.column.slice(5)} `
-            )
-            .join('\n')
-            .replace(/\x7f/g, '.')
-            .toUpperCase()
-        );
-
-        dialog.find('.btn-success').on('click', () => {
-          let validParts = false;
-          const parts = Array.from(dialog.find('.modal-body input[type=checkbox]'))
-            .map((el: HTMLInputElement) => {
-              return { name: el.id, value: el.checked };
-            })
-            .reduce(
-              (acc, { name, value }) => {
-                acc[name.slice(7).toLowerCase()] = value;
-                validParts ||= value;
-                return acc;
-              }, {}
-            );
-          if (!validParts) {
-            return;
+      this.manager.pasteSpecialDialog(
+        pasteAsPatt,
+        this.manager.pasteSpecialToTracklist.bind(this.manager),
+        (done) => {
+          if (done) {
+            this.player.countPositionFrames(this.player.position);
+            this.updateEditorCombo(0);
           }
-          this.manager.pasteSpecialToTracklist(pasteAsPatt, parts).then((done) => {
-            if (done) {
-              this.player.countPositionFrames(this.player.position);
-              this.updateEditorCombo(0);
-            }
-          }).finally(() => {
-            dialog.modal('hide');
-          });
         });
-
-      }).on('hide.bs.modal', () => {
-        dialog.find('.modal-footer>.btn').off();
-        keys.inDialog = false;
-
-      }).modal({
-        show: true,
-        backdrop: true
-      });
     });
   }
 };
@@ -1083,6 +1040,72 @@ Tracker.prototype.onCmdPatSwap = function() {
       app.file.modified = true;
     }
   });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatProcess = function() {
+  if (
+    this.modePlay ||
+    !this.workingPattern || !this.workingPatternTarget ||
+    this.workingPattern === this.workingPatternTarget
+  ) {
+    return;
+  }
+
+  this.manager.pasteSpecialDialog(
+    this.player.patterns[this.workingPattern],
+    async (pattern, parts) => {
+      if (!pattern?.end) {
+        return false;
+      }
+
+      const dst = this.player.patterns[this.workingPatternTarget];
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPatternTarget,
+          data: dst.simplify(),
+        }
+      });
+
+      for (let i = 0; i < Math.min(pattern.end, dst.end); i++) {
+        const srcData = pattern.data[i];
+        const destData = dst.data[i];
+        if (parts.tone) {
+          destData.tone = srcData.tone;
+          destData.release = srcData.release;
+        }
+        if (parts.smp) {
+          destData.smp = srcData.smp;
+        }
+        if (parts.orn) {
+          destData.orn = srcData.orn;
+          destData.orn_release = srcData.orn_release;
+        }
+        if (parts.vol) {
+          destData.volume.byte = srcData.volume.byte;
+        }
+        if (parts.cmd) {
+          destData.cmd = srcData.cmd;
+        }
+        if (parts.data) {
+          destData.cmd_data = srcData.cmd_data;
+        }
+      }
+
+      dst.updateTracklist();
+      return true;
+    },
+    (done) => {
+      if (done) {
+        this.updatePanelPattern();
+        this.updatePanelInfo();
+        this.updateTracklist();
+        this.file.modified = true;
+      }
+    },
+    i18n.dialog.pattern.process.title,
+    i18n.dialog.pattern.process.btn
+  );
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosCreate = function() {
