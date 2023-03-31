@@ -873,8 +873,8 @@ Tracker.prototype.onCmdPatDelete = function() {
 
       app.workingPattern = pt;
       app.updatePanelInfo();
-      app.updatePanelPattern();
       app.updatePanelPosition();
+      app.updatePanelPattern();
       app.updateTracklist();
       app.file.modified = true;
     }
