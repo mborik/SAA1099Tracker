@@ -584,73 +584,166 @@ export class CompilerOptimizer {
       if (!(pattern && pattern.end)) {
         return null;
       }
-      let lastSmp = -1;
-      let lastOrn = -1;
-      let lastVol = -1;
-      let lastCmd = -1;
+      const processor = optimizePatternProcessor();
       return {
         end: pattern.end,
-        data: pattern.data.map((line) => {
-          let {
-            tone: ton, smp, orn,
-            volume: { byte: vol },
-            cmd, cmd_data: dat,
-            release, orn_release
-          } = line;
-          if (release) {
-            lastSmp = -1;
-            lastOrn = -1;
-            lastVol = -1;
-            lastCmd = -1;
-          }
-          else {
-            const o = orn_release ? -1 : orn;
-            if (ton) {
-              if (smp === lastSmp) {
-                smp = 0;
-              }
-              else if (smp) {
-                lastSmp = smp;
-              }
-              if (o === lastOrn) {
-                orn = 0;
-              }
-              else if (orn || orn_release) {
-                lastOrn = o;
-              }
-              lastCmd = -1;
-            }
-            else {
-              if (smp) {
-                lastSmp = smp;
-                lastCmd = -1;
-              }
-              if (orn || orn_release) {
-                lastOrn = o;
-              }
-            }
-            if (vol === lastVol) {
-              vol = 0;
-            }
-            else if (vol) {
-              lastVol = vol;
-            }
-            const c = (cmd << 8) | dat;
-            if (c === lastCmd) {
-              cmd = 0;
-              dat = 0;
-            }
-            else if (cmd) {
-              lastCmd = c;
-            }
-          }
-          return {
-            ton, smp, orn,
-            vol, cmd, dat,
-            release, orn_release
-          };
-        })
+        data: pattern.data.map(processor)
       };
     });
   }
 }
+
+export const optimizePatternProcessor = (optimizeCommands: boolean = false) => {
+  let lastSmp = -1;
+  let lastOrn = -1;
+  let lastVol = -1;
+  let lastCmd = -1;
+
+  return (line: Pattern['data'][0], idx: number) => {
+    let {
+      tone: ton, smp, orn,
+      volume: { byte: vol },
+      cmd, cmd_data: dat,
+      release, orn_release
+    } = line;
+    if (release) {
+      lastSmp = -1;
+      lastOrn = -1;
+      lastVol = -1;
+      lastCmd = -1;
+    }
+    else {
+      const o = orn_release ? -1 : orn;
+      if (ton) {
+        if (smp === lastSmp) {
+          smp = 0;
+        }
+        else if (smp) {
+          lastSmp = smp;
+        }
+        if (o === lastOrn) {
+          orn = 0;
+        }
+        else if (orn || orn_release) {
+          lastOrn = o;
+        }
+        lastCmd = -1;
+      }
+      else {
+        if (smp) {
+          lastSmp = smp;
+          lastCmd = -1;
+        }
+        if (orn || orn_release) {
+          lastOrn = o;
+        }
+      }
+      if (vol === lastVol) {
+        vol = 0;
+      }
+      else if (vol) {
+        lastVol = vol;
+      }
+      const c = (cmd << 8) | dat;
+      if (c === lastCmd) {
+        cmd = 0;
+        dat = 0;
+      }
+      else if (cmd) {
+        lastCmd = c;
+      }
+    }
+    // filter invalid commands
+    if (optimizeCommands && cmd > 0) {
+      switch (cmd) {
+        case 0x1 : // PORTAMENTO UP
+        case 0x2 : // PORTAMENTO DOWN
+        case 0x3 : // GLISSANDO TO GIVEN NOTE
+          if (
+            (dat & 0x0F) === 0 || (dat & 0xF0) === 0 || // `period` nor `pitch` cannot be 0
+            (cmd === 0x3 && ton === 0)                  // missing tone for GLISSANDO
+          ) {
+            cmd = 0;
+          }
+          break;
+
+        case 0x4 : // VIBRATO ON CURRENT NOTE
+        case 0x5 : // TREMOLO ON CURRENT NOTE
+          if ((dat & 0x0F) === 0 || (dat & 0xF0) === 0) { // `period` or `pitch` cannot be 0
+            cmd = 0;
+          }
+          break;
+
+        case 0x6 : // DELAY ORNAMENT
+        case 0x7 : // ORNAMENT OFFSET
+        case 0x8 : // DELAY SAMPLE
+        case 0x9 : // SAMPLE OFFSET
+        case 0xD : // NOT IMPLEMENTED
+          if (dat === 0 || cmd === 0xD) { // dat cannot be 0
+            cmd = 0;
+            dat = 0;
+          }
+          break;
+
+        case 0xA : // VOLUME SLIDE
+          break;
+
+        case 0xB : // BREAK CURRENT CHANNEL-PATTERN AND LOOP FROM LINE
+          if (dat >= idx) { // line number cannot be >= actual line number
+            cmd = 0;
+            dat = 0;
+          }
+          break;
+
+        case 0xC : // SPECIAL COMMAND
+          if (dat > 0) {
+            if (dat >= 0xF0) {
+              dat &= 0xF1; // currently all Fx values behaves as STEREO-SWAP - 0. bit
+            }
+            if (dat >= 0xF2) {
+              cmd = 0;
+            }
+          }
+          break;
+
+        case 0xE : // SOUNDCHIP ENVELOPE OR NOISE CHANNEL CONTROL
+          const d = dat & 0xF0;
+          if (
+            (d > 0x20 && d !== 0xD0) || // invalid values for ENVELOPE-CONTROL
+            (d === 0x20 && dat > 0x24)  // invalid values for NOISE-CONTROL
+          ) {
+            cmd = 0;
+          }
+          break;
+
+        case 0xF : // CHANGE GLOBAL SPEED
+          // 0 value is not allowed
+          if (dat === 0) {
+            cmd = 0;
+          }
+          else if (dat > 0x1F) {
+            // invalid value for SWING MODE
+            if ((dat & 0x0F) < 2) {
+              cmd = 0;
+            }
+            // equal SWING values will be changed to normal speed
+            else if ((dat & 0x0F) === ((dat & 0xF0) >> 4)) {
+              dat &= 0x0F;
+            }
+          }
+          break;
+      }
+
+      // release is meaningful only for CMD A to F
+      if (release && cmd > 0 && cmd < 0xA) {
+        cmd = 0;
+        dat = 0;
+      }
+    }
+    return {
+      ton, smp, orn,
+      vol, cmd, dat,
+      release, orn_release
+    };
+  };
+};

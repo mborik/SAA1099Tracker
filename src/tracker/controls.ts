@@ -24,6 +24,7 @@
 import AudioDriver from '../commons/audio';
 import { toTimeString, toWidth } from '../commons/number';
 import SyncTimer from '../commons/timer';
+import { optimizePatternProcessor } from '../compiler/optimizer';
 import { MAX_PATTERN_LEN } from '../player/globals';
 import constants from './constants';
 import { i18n } from './doc';
@@ -1101,6 +1102,57 @@ Tracker.prototype.onCmdPatExpand = function() {
       pt.end = pt.end * 2;
       pt.updateTracklist();
       app.updatePanelPattern();
+      app.updatePanelInfo();
+      app.updateTracklist();
+      app.file.modified = true;
+    }
+  });
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatOptimize = function() {
+  if (this.modePlay || !this.workingPattern) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+  const pt = this.player.patterns[this.workingPattern];
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.optimize.title,
+    html: i18n.dialog.pattern.optimize.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      this.manager.historyPush({
+        pattern: {
+          type: 'data',
+          index: this.workingPattern,
+          data: pt.simplify(),
+        }
+      });
+
+      const optimizeLine = optimizePatternProcessor(true);
+      pt.data.forEach((line, idx) => {
+        const { ton, release, smp, orn, orn_release, vol, cmd, dat } = optimizeLine(line, idx);
+
+        line.tone = ton;
+        line.release = release;
+        line.smp = smp;
+        line.orn = orn;
+        line.orn_release = orn_release;
+        line.volume.byte = vol;
+        line.cmd = cmd;
+        line.cmd_data = dat;
+      });
+
+      pt.updateTracklist();
       app.updatePanelInfo();
       app.updateTracklist();
       app.file.modified = true;
