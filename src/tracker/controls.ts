@@ -758,6 +758,42 @@ Tracker.prototype.onCmdPatCreate = function() {
   $('#scPatternLen').focus();
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatDup = function() {
+  if (this.modePlay) {
+    return;
+  }
+
+  const id = this.player.addNewPattern();
+  const dest = this.player.patterns[id];
+  const src = (this.workingPattern && this.player.patterns[this.workingPattern]);
+
+  this.manager.historyPush({
+    pattern: {
+      type: 'create',
+      index: id
+    }
+  });
+
+  dest.end = src.end;
+  dest.data.forEach((line, i) => {
+    const srcData = src.data[i];
+    line.tone = srcData.tone;
+    line.release = srcData.release;
+    line.smp = srcData.smp;
+    line.orn = srcData.orn;
+    line.orn_release = srcData.orn_release;
+    line.volume.byte = srcData.volume.byte;
+    line.cmd = srcData.cmd;
+    line.cmd_data = srcData.cmd_data;
+  });
+
+  dest.updateTracklist();
+
+  this.workingPattern = id;
+  this.updatePanelPattern();
+  this.file.modified = true;
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPatDelete = function() {
   if (this.modePlay || !this.workingPattern) {
     return;
@@ -892,6 +928,7 @@ Tracker.prototype.onCmdPatClean = function() {
     }
   });
 };
+//---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosCreate = function() {
   if (this.modePlay) {
