@@ -1157,7 +1157,20 @@ Tracker.prototype.onCmdPatOptimize = function() {
         line.cmd_data = dat;
       });
 
+      for (let i = MAX_PATTERN_LEN - 1; i >= 0; i--) {
+        const {
+          tone: ton, smp, orn,
+          volume: { byte: vol },
+          cmd, release, orn_release
+        } = pt.data[i];
+        if (ton || release || smp || orn || orn_release || vol || cmd) {
+          pt.end = i + 1;
+          break;
+        }
+      }
+
       pt.updateTracklist();
+      app.updatePanelPattern();
       app.updatePanelInfo();
       app.updateTracklist();
       app.file.modified = true;
