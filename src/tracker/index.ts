@@ -127,11 +127,11 @@ export default class Tracker {
   onCmdPatCreate: (this: Tracker) => void;
   onCmdPatDup: (this: Tracker) => void;
   onCmdPatDelete: (this: Tracker) => void;
+  onCmdPatSwap: (this: Tracker) => void;
+  onCmdPatProcess: (this: Tracker) => void;
   onCmdPatClean: (this: Tracker) => void;
   onCmdPatCompress: (this: Tracker) => void;
   onCmdPatExpand: (this: Tracker) => void;
-  onCmdPatSwap: (this: Tracker) => void;
-  onCmdPatProcess: (this: Tracker) => void;
   onCmdPosCreate: (this: Tracker) => void;
   onCmdPosDelete: (this: Tracker) => void;
   onCmdPosInsert: (this: Tracker) => void;
