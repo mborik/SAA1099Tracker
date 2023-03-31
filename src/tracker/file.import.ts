@@ -163,7 +163,7 @@ export class File extends STMFile {
 
         app.player.position = 0;
         app.player.line = 0;
-        app.workingPattern = 1;
+        app.workingPattern = app.workingPatternTarget = 1;
         app.workingSample = app.workingOrnTestSample = 1;
         app.workingOrnament = 1;
 
