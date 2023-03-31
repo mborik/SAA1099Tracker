@@ -1045,6 +1045,46 @@ Tracker.prototype.onCmdPatExpand = function() {
   });
 };
 //---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdPatSwap = function() {
+  if (
+    this.modePlay ||
+    !this.workingPattern || !this.workingPatternTarget ||
+    this.workingPattern === this.workingPatternTarget
+  ) {
+    return;
+  }
+
+  const app = this;
+  const keys = this.globalKeyState;
+
+  keys.inDialog = true;
+  $('#dialog').confirm({
+    title: i18n.dialog.pattern.swap.title,
+    html: i18n.dialog.pattern.swap.msg,
+    buttons: 'yesno',
+    style: 'info',
+    callback: (btn) => {
+      keys.inDialog = false;
+      if (btn !== 'yes') {
+        return;
+      }
+
+      const src = this.player.patterns[this.workingPattern];
+      const dst = this.player.patterns[this.workingPatternTarget];
+      this.player.patterns[this.workingPattern] = dst;
+      this.player.patterns[this.workingPatternTarget] = src;
+
+      src.updateTracklist();
+      dst.updateTracklist();
+
+      app.updatePanelPattern();
+      app.updatePanelInfo();
+      app.updateTracklist();
+      app.file.modified = true;
+    }
+  });
+};
+//---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdPosCreate = function() {
   if (this.modePlay) {
     return;

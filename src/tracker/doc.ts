@@ -61,6 +61,8 @@ Tracker.prototype.doc = {
     'dialog.pattern.compress.msg': 'Pattern will be narrowed by discarding every even trackline and length of pattern will halven.\b\bDo you really want to continue?',
     'dialog.pattern.expand.title': 'Expand pattern...',
     'dialog.pattern.expand.msg': 'Pattern will be doubled by inserting one empty line after every trackline of current pattern.\bPlease note that if current pattern is too long, it may be truncated.\b\bDo you really want to continue?',
+    'dialog.pattern.swap.title': 'Swap source pattern with target...',
+    'dialog.pattern.swap.msg': 'This is inverse operation. Undo snapshot will not be generated.\b\bDo you really want to continue?',
     'dialog.position.delete.title': 'Delete position...',
     'dialog.position.delete.msg': 'Are you sure you want to delete this position?',
     'dialog.sample.options': [ 'All', 'Amplitude', 'Noise', 'Pitch-shift', 'Cancel' ],
