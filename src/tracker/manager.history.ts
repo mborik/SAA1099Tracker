@@ -650,12 +650,12 @@ export default class ManagerHistory {
 
     if (context.workingPattern !== app.workingPattern) {
       app.workingPattern = context.workingPattern || 0;
-      $('#scPattern').val(app.workingPattern.toString());
+      $('#scPatCurrent').val(app.workingPattern.toString());
       shouldUpdateTracker = true;
     }
     if (context.workingPatternTarget !== app.workingPatternTarget) {
       app.workingPatternTarget = context.workingPatternTarget || 0;
-      $('#scPattern').val(app.workingPatternTarget.toString());
+      $('#scPatCurrent').val(app.workingPatternTarget.toString());
       shouldUpdateTracker = true;
     }
     if (context.currentPosition !== app.player.position) {

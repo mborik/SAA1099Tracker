@@ -107,8 +107,8 @@ export class STMFile {
     tracker.onCmdToggleEditMode(tracker.modeEdit);
     tracker.onCmdToggleLoop(player.loopMode);
 
-    $('#scPattern').val(tracker.workingPattern.toString());
-    $('#scPatternTarget').val(tracker.workingPatternTarget.toString());
+    $('#scPatCurrent').val(tracker.workingPattern.toString());
+    $('#scPatTarget').val(tracker.workingPatternTarget.toString());
     $('#scPatPanelSwitch').bootstrapToggle('on');
     $('#scPosRepeat').val((player.repeatPosition + 1).toString());
     $('#scPosCurrent').val((player.position + 1).toString());

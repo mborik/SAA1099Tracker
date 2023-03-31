@@ -117,17 +117,17 @@ Tracker.prototype.updatePanelInfo = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.updatePanelPattern = function() {
   const a = [
-    '#scPattern',
-    '#scPatternLen',
-    '#scPatternTarget',
-    '#btPatternDup',
-    '#btPatternDelete',
-    '#btPatternSwap',
-    '#btPatternProcess',
-    '#btPatternClean',
-    '#btPatternCompress',
-    '#btPatternExpand',
-    '#btPatternOptimize'
+    '#scPatCurrent',
+    '#scPatLen',
+    '#scPatTarget',
+    '#btPatDuplicate',
+    '#btPatDelete',
+    '#btPatSwap',
+    '#btPatProcess',
+    '#btPatClean',
+    '#btPatCompress',
+    '#btPatExpand',
+    '#btPatOptimize'
   ];
   const lastState = $(a[0]).prop('disabled');
   let pat = this.workingPattern;
@@ -727,10 +727,10 @@ Tracker.prototype.onCmdPatCreate = function() {
   this.updatePanelPattern();
   this.file.modified = true;
 
-  $('#scPatternLen').focus();
+  $('#scPatLen').focus();
 };
 //---------------------------------------------------------------------------------------
-Tracker.prototype.onCmdPatDup = function() {
+Tracker.prototype.onCmdPatDuplicate = function() {
   if (this.modePlay) {
     return;
   }

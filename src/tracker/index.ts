@@ -126,7 +126,7 @@ export default class Tracker {
   onCmdOrnTransDown: (this: Tracker) => void;
   onCmdOrnTransUp: (this: Tracker) => void;
   onCmdPatCreate: (this: Tracker) => void;
-  onCmdPatDup: (this: Tracker) => void;
+  onCmdPatDuplicate: (this: Tracker) => void;
   onCmdPatDelete: (this: Tracker) => void;
   onCmdPatSwap: (this: Tracker) => void;
   onCmdPatProcess: (this: Tracker) => void;

@@ -255,21 +255,21 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         });
       }
     }, {
-      selector: '#scPattern,#scPatternTarget,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
+      selector: '#scPatCurrent,#scPatTarget,#scPosCurrent,#scPosRepeat,input[id^="scChnPattern"]',
       method:   'TouchSpin',
       data: {
         initval: '0',
         min: 0, max: 0
       }
     }, {
-      selector: '#scPatternLen,#scPosLength',
+      selector: '#scPatLen,#scPosLength',
       method:   'TouchSpin',
       data: {
         initval: '64',
         min: 1, max: MAX_PATTERN_LEN
       }
     }, {
-      selector: '#scPattern',
+      selector: '#scPatCurrent',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const len = app.player.patterns.length;
@@ -283,7 +283,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         app.updatePanelPattern();
       }
     }, {
-      selector: '#scPatternTarget',
+      selector: '#scPatTarget',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const len = app.player.patterns.length;
@@ -297,7 +297,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         app.updatePanelPattern();
       }
     }, {
-      selector: '#scPatternLen',
+      selector: '#scPatLen',
       method:   'change',
       handler:  (e: JQueryInputEventObject) => {
         const el = $(e.currentTarget);
@@ -1091,17 +1091,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         }
       }
     }, {
-      selector: 'button[id^="btPattern"]',
-      method:   'click',
-      handler:  (e: JQueryMouseEventObject) => {
-        const id = e.currentTarget.id;
-        const name = id.replace(/^btPattern/, 'onCmdPat');
-        if (app[name]) {
-          app[name]();
-        }
-      }
-    }, {
-      selector: 'button[id^="btPos"]',
+      selector: 'button[id^="btPos"],button[id^="btPat"]',
       method:   'click',
       handler:  (e: JQueryMouseEventObject) => {
         const id = e.currentTarget.id;
