@@ -180,7 +180,7 @@ export default class Pattern {
       }
 
       o.smp = parseInt(s[2], 32) || 0;
-      o.volume.byte = parseInt(s.slice(4, 2), 16) || 0;
+      o.volume.byte = parseInt(s.slice(4, 6), 16) || 0;
       o.cmd = parseInt(s[6], 16) || 0;
       o.cmd_data = parseInt(s.slice(7), 16) || 0;
     }
