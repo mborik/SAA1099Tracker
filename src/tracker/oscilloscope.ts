@@ -70,8 +70,6 @@ export default class Oscilloscope {
   };
 
   private _update(): void {
-    requestAnimationFrame(this._update.bind(this));
-
     if (!this._buffer?.length) {
       return;
     }
@@ -90,18 +88,18 @@ export default class Oscilloscope {
 
         ctx.clearRect(0, 0, width, height);
         ctx.save();
-        ctx.textBaseline = 'bottom';
+        ctx.textBaseline = 'top';
         ctx.fillStyle = '#888';
         if (lr) {
           ctx.textAlign = 'left';
-          ctx.fillText('R', 0, height);
+          ctx.fillText('R', 0, 0);
         }
         else {
           ctx.textAlign = 'right';
-          ctx.fillText('L', width, height);
+          ctx.fillText('L', width, 0);
         }
+        ctx.fillStyle = '#38c';
         const chnText = `CH${chn + 1}`;
-        ctx.textBaseline = 'top';
         if (lr) {
           ctx.textAlign = 'right';
           ctx.fillText(chnText, width, 0);
@@ -118,17 +116,15 @@ export default class Oscilloscope {
 
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
+        ctx.lineCap = 'square';
+        ctx.lineJoin = 'bevel';
         ctx.beginPath();
 
         mid >>= 1;
         if (this._parent.modePlay) {
-          for (
-            let i = 0, y = lr ? width - 1 : 0;
-            lr ? (y >= 0) : (y < width);
-            y += lr ? -iterator : iterator, i++
-          ) {
-            const value = mid + buffer[i] * multiplier;
-            ctx[i ? 'lineTo' : 'moveTo'](y, value);
+          for (let i = 0, x = 0; x < width; x += iterator, i++) {
+            const y = mid + buffer[i] * multiplier;
+            ctx[i ? 'lineTo' : 'moveTo'](x, y);
           }
         }
         else {
@@ -139,5 +135,7 @@ export default class Oscilloscope {
         ctx.stroke();
       }
     }
+
+    requestAnimationFrame(this._update.bind(this));
   }
 }
