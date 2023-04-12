@@ -127,11 +127,12 @@ export class SAAAmp {
     }
   }
 
-  public output(last: Float32Array) {
+  public output() {
     this.tick();
 
+    const MUTEOUT = [0, 0];
     if (this.mute) {
-      return;
+      return MUTEOUT;
     }
 
     // now calculate the returned amplitude for this sample:
@@ -139,29 +140,31 @@ export class SAAAmp {
 
     switch (this._out) {
       case 0:
-        if (this._envGen != null && this._envGen.enabled) {
-          last[0] += levels[this._envGen.left * this._lefta0Ex2];
-          last[1] += levels[this._envGen.right * this._righta0Ex2];
-        }
-        break;
+        return (this._envGen != null && this._envGen.enabled) ?
+          [
+            levels[this._envGen.left * this._lefta0Ex2],
+            levels[this._envGen.right * this._righta0Ex2],
+          ]
+          : MUTEOUT;
 
       case 1:
-        if (this._envGen != null && this._envGen.enabled) {
-          last[0] += levels[this._envGen.left * this._lefta0E];
-          last[1] += levels[this._envGen.right * this._righta0E];
-        }
-        else {
-          last[0] += levels[this._leftx16];
-          last[1] += levels[this._rightx16];
-        }
-        break;
+        return (this._envGen != null && this._envGen.enabled) ?
+          [
+            levels[this._envGen.left * this._lefta0E],
+            levels[this._envGen.right * this._righta0E],
+          ] :
+          [
+            levels[this._leftx16],
+            levels[this._rightx16],
+          ];
 
       case 2:
-        if (!(this._envGen != null && this._envGen.enabled)) {
-          last[0] += levels[this._leftx32];
-          last[1] += levels[this._rightx32];
-        }
-        break;
+        return (!(this._envGen != null && this._envGen.enabled)) ?
+          [
+            levels[this._leftx32],
+            levels[this._rightx32],
+          ]
+          : MUTEOUT;
     }
   }
 }

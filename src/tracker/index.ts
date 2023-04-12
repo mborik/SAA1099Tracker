@@ -31,6 +31,7 @@ import { TrackerDoc } from './doc';
 import { File } from './file.import';
 import { HotkeyMapType } from './keyboard';
 import Manager from './manager';
+import Oscilloscope from './oscilloscope';
 import Settings from './settings';
 import SmpOrnEditor from './smporn';
 import Tracklist from './tracklist';
@@ -83,6 +84,7 @@ export default class Tracker {
   manager: Manager;
   tracklist: Tracklist;
   smpornedit: SmpOrnEditor;
+  oscilloscope: Oscilloscope;
 
   player: Player;
   file: File;
@@ -180,14 +182,22 @@ export default class Tracker {
     app.manager = new Manager(app);
     app.tracklist = new Tracklist(app);
     app.smpornedit = new SmpOrnEditor(app);
+    app.oscilloscope = new Oscilloscope(app);
 
-    app.player = new Player(new SAASound(AudioDriver.sampleRate));
+    const SAASoundInstance = new SAASound(
+      AudioDriver.sampleRate,
+      app.oscilloscope.consume.bind(app.oscilloscope)
+    );
+
+    app.player = new Player(SAASoundInstance);
     app.settings.init();
     app.file = new File(app);
     app.compiler = new Compiler(app);
 
     app.populateGUI(app);
     app.initializeGUI(app);
+
+    app.oscilloscope.init();
   }
 
   baseTimer(this: Tracker) {

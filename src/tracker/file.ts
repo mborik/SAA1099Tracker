@@ -387,7 +387,7 @@ export class STMFile {
         min: 0, max: 8
       });
       tracker.activeTab = validateAndClamp({
-        value: c.activeTab,
+        value: c.activeTab === 9 ? 0 : c.activeTab,
         initval: 0,
         min: 0, max: 2
       });

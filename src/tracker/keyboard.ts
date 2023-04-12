@@ -200,7 +200,7 @@ Tracker.prototype.hotkeyMap = function(type: HotkeyMapType, group: string, code:
           if (process.env.NODE_ENV === 'development') {
             logHotkey('Esc - Stop');
           }
-          if (app.modePlay || app.activeTab > 0) {
+          if (app.modePlay || app.activeTab === 1 || app.activeTab === 2) {
             app.onCmdStop();
           }
           else if (app.modeEdit) {

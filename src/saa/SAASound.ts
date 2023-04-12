@@ -47,6 +47,9 @@ export class SAASoundRegData {
   public muted: boolean[] = [ false, false, false, false, false, false ];
 }
 
+/** Type of callback function to be called when monitor is enabled */
+export type SAASoundMonitorCallback = (chn: number, left: number, right: number) => void;
+
 /**
  * SAASound: Phillips SAA 1099 sound chip emulator core class.
  */
@@ -61,7 +64,7 @@ export class SAASound {
   private _freq: SAAFreq[];
   private _amp: SAAAmp[];
 
-  constructor(sampleRate: number) {
+  constructor(sampleRate: number, private _monitorCallback?: SAASoundMonitorCallback) {
     devLog('SAASound', 'Initializing emulation based on samplerate %dHz...', sampleRate);
     SAASound.sampleRate = sampleRate;
 
@@ -289,17 +292,22 @@ export class SAASound {
   public output(leftBuf: Float32Array, rightBuf: Float32Array, length: number, offset: number = 0) {
     let ptr: number = offset;
     const len: number = length + ptr;
-    const val: Float32Array = new Float32Array([0, 0]);
 
     for (; ptr < len; ptr++) {
       this._noise[0].tick();
       this._noise[1].tick();
 
-      val[0] = val[1] = 0;
-      this._amp.forEach(amp => amp.output(val));
+      let left = 0, right = 0;
+      this._amp.forEach((amp, chn) => {
+        const [L, R] = amp.output();
+        this._monitorCallback?.(chn, L, R);
 
-      leftBuf[ptr] = val[0];
-      rightBuf[ptr] = val[1];
+        left += L;
+        right += R;
+      });
+
+      leftBuf[ptr] = left;
+      rightBuf[ptr] = right;
     }
   }
 }

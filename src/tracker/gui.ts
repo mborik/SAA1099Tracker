@@ -121,7 +121,15 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         let name = el.className;
         const o = app[name];
 
-        if (name === 'tracklist') {
+        if (name === 'oscilloscope') {
+          const ch = parseInt(el.id.slice(-2, -1));
+          const lr = parseInt(el.id.slice(-1));
+
+          o['canvas'][ch][lr].obj = el;
+          o['canvas'][ch][lr].ctx = el.getContext('2d');
+          return;
+        }
+        else if (name === 'tracklist') {
           o.obj = el;
           o.ctx = el.getContext('2d');
           o.ctx.imageSmoothingEnabled = false;

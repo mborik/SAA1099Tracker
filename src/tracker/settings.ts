@@ -98,6 +98,7 @@ export default class Settings implements SettingsOptions {
       backup.audioInterrupt !== this.audioInterrupt
     ) {
       this.audioInit();
+      this._parent.oscilloscope.init();
     }
     if (
       backup.tracklistAutosize !== this.tracklistAutosize ||
@@ -141,7 +142,8 @@ export default class Settings implements SettingsOptions {
 
   updateLatencyInfo() {
     const smpRate = AudioDriver.sampleRate;
-    const samples = AudioDriver.getAdjustedSamples(smpRate,
+    const samples = AudioDriver.getAdjustedSamples(
+      smpRate,
       this.audioBuffers,
       this.audioInterrupt
     );

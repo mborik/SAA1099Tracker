@@ -272,8 +272,15 @@ label.disabled {
 
 // Bottom tabs extension ================================================================
 
-.nav-tabs > li > a {
-  font-weight: bold;
+.nav-tabs > li {
+  &.nav-tab-right {
+    float: right;
+    margin-right: -2px;
+  }
+
+  > a {
+    font-weight: bold;
+  }
 }
 
 .tabs-bottom > .nav-tabs {
