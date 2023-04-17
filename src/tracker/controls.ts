@@ -1472,14 +1472,12 @@ Tracker.prototype.onCmdSmpRotL = function() {
   const data = smp.data;
 
   this.manager.historyPushSampleDebounced();
+  const backup = smp.simplify();
 
-  let i = 0;
-  const backup = $.extend(true, {}, data[i]);
+  for (let i = 0; i < 256; i++) {
+    const ref = backup[(i < 255) ? i + 1 : 0];
 
-  for (; i < 256; i++) {
-    const ref = (i < 255) ? data[i + 1] : backup;
-
-    data[i].volume.byte = ref.volume.byte;
+    data[i].volume.byte = ref.volume;
     data[i].enable_freq = ref.enable_freq;
     data[i].enable_noise = ref.enable_noise;
     data[i].noise_value = ref.noise_value;
@@ -1495,14 +1493,12 @@ Tracker.prototype.onCmdSmpRotR = function() {
   const data = smp.data;
 
   this.manager.historyPushSampleDebounced();
+  const backup = smp.simplify();
 
-  let i = 255;
-  const backup = $.extend(true, {}, data[i]);
+  for (let i = 255; i >= 0; i--) {
+    const ref = backup[(i > 0) ? i - 1 : 255];
 
-  for (; i >= 0; i--) {
-    const ref = (i > 0) ? data[i - 1] : backup;
-
-    data[i].volume.byte = ref.volume.byte;
+    data[i].volume.byte = ref.volume;
     data[i].enable_freq = ref.enable_freq;
     data[i].enable_noise = ref.enable_noise;
     data[i].noise_value = ref.noise_value;

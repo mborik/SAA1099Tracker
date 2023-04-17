@@ -776,7 +776,9 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#sbSampleScroll',
       method:   'scroll',
       handler:  (e: JQueryMouseEventObject) => {
-        app.smpornedit.smpeditScroll = abs((e.target.scrollLeft / 1000) * 64);
+        app.smpornedit.smpeditScroll = Math.max(0, Math.min(192,
+          abs((e.target.scrollLeft / 1000) * 64)
+        ));
         app.updateSampleEditor();
       }
     }, {
