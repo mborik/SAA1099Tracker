@@ -249,7 +249,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
     }
     else if (part === 'noise') {
       let noise = (+data.enable_noise) * (data.noise_value + 1);
-      y -= obj.smpeditOffset.top.noise;
+      y -= obj.smpeditOffset.top.noise + 5;
 
       if (e.type === 'mousewheel') {
         this.manager.historyPush({
@@ -272,7 +272,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
         update = true;
       }
       else if (dragging && leftButton) {
-        noise = 4 - (0 | (y / 9));
+        noise = 4 - Math.floor(y / 9);
         update = true;
       }
 
@@ -330,7 +330,7 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
       }
     }
 
-    if (e.type === 'mouseup' && leftButton) {
+    if (e.type === 'mouseup' && leftButton && obj.historyEntry) {
       this.manager.historyPush({
         sample: (part === 'range') ? {
           type: 'props',
