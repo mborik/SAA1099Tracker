@@ -33,7 +33,6 @@
     "strict": false,
     "strictNullChecks": false,
     "stripInternal": true,
-    "suppressImplicitAnyIndexErrors": true,
     "target": "esnext",
     "typeRoots": [
       "./node_modules/@types"

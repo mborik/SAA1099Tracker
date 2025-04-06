@@ -525,7 +525,7 @@ export class File extends STMFile {
 
     this.new(false);
 
-    const volRepeatMapper = {};
+    const volRepeatMapper: { [key: number]: number } = {};
     for (let v = infoPtr + 1; data[v]; v += 2) {
       if (data[v]) {
         volRepeatMapper[data[v]] = data[v + 1];

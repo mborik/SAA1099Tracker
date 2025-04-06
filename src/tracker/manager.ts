@@ -199,7 +199,7 @@ export default class Manager extends ManagerHistory {
               acc[name.slice(7).toLowerCase()] = value;
               validParts ||= value;
               return acc;
-            }, {}
+            }, {} as { [key: string]: boolean }
           );
         if (!validParts) {
           return;

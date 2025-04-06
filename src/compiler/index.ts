@@ -22,10 +22,10 @@
  */
 //---------------------------------------------------------------------------------------
 
-import pick from 'lodash.pick';
 import { bytesToString, stringToBytes, writeWordLE } from '../commons/binary';
 import { devLog } from '../commons/dev';
 import { abs, toHex, validateAndClamp } from '../commons/number';
+import { pick } from '../commons/pick';
 import constants from '../tracker/constants';
 import CompilerRender from './renderer';
 

@@ -1,3 +1,4 @@
+//@ts-nocheck
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
@@ -71,13 +72,16 @@ if (IS_PRODUCTION) {
   );
 }
 else {
+  const notifierDefaults = (postfix) => ({
+    title: `${PACKAGE_NAME}: ${postfix}`,
+    excludeWarnings: true,
+    skipFirstNotification: true,
+    skipSuccessful: true,
+  });
   plugins.push(
     new ReactRefreshPlugin(),
-    new ForkTsCheckerNotifierPlugin({
-      title: `${PACKAGE_NAME}: typescript`,
-      excludeWarnings: false,
-    }),
-    new WebpackNotifierPlugin({ title: `${PACKAGE_NAME}: webpack` }),
+    new ForkTsCheckerNotifierPlugin(notifierDefaults('typescript')),
+    new WebpackNotifierPlugin(notifierDefaults('webpack'))
   );
 }
 
@@ -172,8 +176,8 @@ module.exports = {
     allowedHosts: 'all',
     client: {
       overlay: {
-        warnings: true,
-        errors: true,
+        warnings: false,
+        errors: false,
       },
       progress: true,
     },
@@ -185,6 +189,7 @@ module.exports = {
     https: false,
     host: '0.0.0.0',
     hot: true,
+    liveReload: false,
     open: false,
     port: DEV_PORT,
     static: path.resolve(__dirname),

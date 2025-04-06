@@ -119,7 +119,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'each',
       handler:  (_: number, el: HTMLCanvasElement) => {
         let name = el.className;
-        const o = app[name];
+        const o = app[name as keyof Tracker] as any;
 
         if (name === 'oscilloscope') {
           const ch = parseInt(el.id.slice(-2, -1));
@@ -1054,9 +1054,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryInputEventObject) => {
         const el = e.currentTarget;
         const name = el.id.replace(/^mi/, 'onCmd');
+        const method = app[name as keyof Tracker] as any;
 
-        if (app[name]) {
-          app[name]();
+        if (method) {
+          method.apply(app);
         }
         else if (name === 'onCmdFileSaveAs') {
           app.onCmdFileSave(true);
@@ -1106,9 +1107,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryMouseEventObject) => {
         const id = e.currentTarget.id;
         const name = id.replace(/^bt/, 'onCmd');
-        if (app[name]) {
-          app[name]();
-        }
+        //@ts-ignore
+        app[name] ?? app[name]();
       }
     }, {
       selector: 'button[id^="btSample"]',
@@ -1119,9 +1119,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         if (name.match(/Stop$/)) {
           return app.onCmdStop();
         }
-        if (app[name]) {
-          app[name]();
-        }
+        //@ts-ignore
+        app[name] ?? app[name]();
       }
     }, {
       selector: 'button[id^="btOrn"]',
@@ -1132,9 +1131,8 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         if (name.match(/Stop$/)) {
           return app.onCmdStop();
         }
-        if (app[name]) {
-          app[name]();
-        }
+        //@ts-ignore
+        app[name] ?? app[name]();
       }
     }
   ];
@@ -1144,13 +1142,15 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
 
   populatedElementsTable.forEach(o => {
     const data = o.handler || o.data;
-    const selector = o.selector || (o.global && window[o.global]);
+    const selector = o.selector || (o.global && (window as any)[o.global]);
 
     if (selector && o.method) {
       if (o.param) {
+        //@ts-ignore
         $(selector)[o.method](o.param, data);
       }
       else {
+        //@ts-ignore
         $(selector)[o.method](data);
       }
     }

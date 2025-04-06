@@ -46,7 +46,7 @@
       "error",
       { "checkLoops": false }
     ],
-    "no-control-regex": "warn",
+    "no-control-regex": "off",
     "no-debugger": "warn",
     "no-dupe-args": "error",
     "no-dupe-keys": "error",

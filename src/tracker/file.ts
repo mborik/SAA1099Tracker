@@ -417,7 +417,7 @@ export class STMFile {
   }
 
   private _fixFileName(fileName: string): string {
-    return fileName.replace(/[\.\\\/\":*?%<>|\0-\37]+/g, '').trim();
+    return fileName.replace(/[\.\\\/\":*?%<>|\x00-\x1f]+/g, '').trim();
   }
 
   //---------------------------------------------------------------------------------------
@@ -688,7 +688,7 @@ export class STMFile {
         length: packed.length
       };
 
-      this.storageMap[id] = storageItem;
+      this.storageMap.set(id, storageItem);
     }
 
     this._storageSum();

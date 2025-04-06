@@ -88,6 +88,7 @@ export default class SmpOrnEditor {
 
     devLog('Tracker.smporn', 'Initial drawing of Sample editor canvases...');
     [ 'amp', 'noise', 'range' ].forEach((part: string, i: number) => {
+      //@ts-ignore
       const o: TrackerCanvasPair = this[part];
 
       const ctx = o.ctx;

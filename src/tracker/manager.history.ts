@@ -21,7 +21,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import getProp from 'lodash.get';
+import dashGet from 'dash-get';
 import { MAX_PATTERN_LEN } from '../player/globals';
 import Ornament from '../player/Ornament';
 import Pattern, { PatternSimplified } from '../player/Pattern';
@@ -156,10 +156,10 @@ export default class ManagerHistory {
       if (
         lastEntry.timestamp + 1000 > Date.now() &&
         last && last.type === state[dataType]?.type &&
-        getProp(last, prop) && (
+        dashGet(last, prop as string) && (
           !checkProps ||
           Object.entries(checkProps).every(
-            ([key, value]) => getProp(last, key) === value
+            ([key, value]) => dashGet(last, key) === value
           )
         )
       ) {
@@ -186,7 +186,7 @@ export default class ManagerHistory {
       // eslint-disable-next-line
       console.info.apply(console, [
         `%c[History]%c ${debounceOn ? 'Debounced' : 'New'} ${dataType} entry:`, 'color:rosybrown', 'color:inherit',
-        { ...state[dataType], context }
+        { ...state[dataType as keyof UndoState], context }
       ]);
     }
 
@@ -258,7 +258,7 @@ export default class ManagerHistory {
         // eslint-disable-next-line
         console.info.apply(console, [
           `%c[History]%c Undoing ${dataType} entry:`, 'color:rosybrown', 'color:inherit',
-          { ...state[dataType], context: state.context }
+          { ...state[dataType as keyof UndoState], context: state.context }
         ]);
       }
 

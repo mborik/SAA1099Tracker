@@ -21,10 +21,10 @@
  */
 //---------------------------------------------------------------------------------------
 
-import pick from 'lodash.pick';
 import AudioDriver from '../commons/audio';
 import { devLog } from '../commons/dev';
 import { abs } from '../commons/number';
+import { pick } from '../commons/pick';
 import constants from './constants';
 import Tracker from '.';
 
