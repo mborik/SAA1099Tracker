@@ -31,6 +31,7 @@ export default class Oscilloscope {
 
   public canvas: TrackerCanvasPair[][] =
     [...Array(6)].map(() => ([
+      //@ts-ignore
       { obj: null, ctx: null },
       { obj: null, ctx: null }
     ]));
@@ -52,7 +53,7 @@ export default class Oscilloscope {
       for (let lr = 0; lr < 2; lr++) {
         const { ctx } = this.canvas[chn][lr];
         ctx.font = 'monotype 8px';
-        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingEnabled = false;
       }
     }
 
@@ -70,69 +71,68 @@ export default class Oscilloscope {
   };
 
   private _update(): void {
-    if (!this._buffer?.length) {
-      return;
-    }
+    if (this._buffer?.length && this._parent?.activeTab === 9) {
+      for (let chn = 0; chn < 6; chn++) {
+        for (let lr = 0; lr < 2; lr++) {
+          const { obj, ctx } = this.canvas[chn][lr];
+          const buffer = this._buffer[chn][lr];
 
-    for (let chn = 0; chn < 6; chn++) {
-      for (let lr = 0; lr < 2; lr++) {
-        const { obj, ctx } = this.canvas[chn][lr];
-        const buffer = this._buffer[chn][lr];
-
-        if (!buffer) {
-          continue;
-        }
-
-        const width = Math.floor(obj.width);
-        const height = Math.floor(obj.height);
-
-        ctx.clearRect(0, 0, width, height);
-        ctx.save();
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = '#888';
-        if (lr) {
-          ctx.textAlign = 'left';
-          ctx.fillText('R', 0, 0);
-        }
-        else {
-          ctx.textAlign = 'right';
-          ctx.fillText('L', width, 0);
-        }
-        ctx.fillStyle = '#38c';
-        const chnText = `CH${chn + 1}`;
-        if (lr) {
-          ctx.textAlign = 'right';
-          ctx.fillText(chnText, width, 0);
-        }
-        else {
-          ctx.textAlign = 'left';
-          ctx.fillText(chnText, 0, 0);
-        }
-        ctx.restore();
-
-        let mid = height >> 1;
-        const multiplier = mid / (512 / 2880);
-        const iterator = width / buffer.length;
-
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'square';
-        ctx.lineJoin = 'bevel';
-        ctx.beginPath();
-
-        mid >>= 1;
-        if (this._parent.modePlay) {
-          for (let i = 0, x = 0; x < width; x += iterator, i++) {
-            const y = mid + buffer[i] * multiplier;
-            ctx[i ? 'lineTo' : 'moveTo'](x, y);
+          if (!buffer) {
+            continue;
           }
-        }
-        else {
-          ctx.moveTo(0, mid);
-          ctx.lineTo(width, mid);
-        }
 
-        ctx.stroke();
+          const width = Math.floor(obj.width);
+          const height = Math.floor(obj.height);
+
+          ctx.clearRect(0, 0, width, height);
+          ctx.save();
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = '#888';
+          if (lr) {
+            ctx.textAlign = 'left';
+            ctx.fillText('R', 0, 0);
+          }
+          else {
+            ctx.textAlign = 'right';
+            ctx.fillText('L', width, 0);
+          }
+          ctx.fillStyle = '#38c';
+          const chnText = `CH${chn + 1}`;
+          if (lr) {
+            ctx.textAlign = 'right';
+            ctx.fillText(chnText, width, 0);
+          }
+          else {
+            ctx.textAlign = 'left';
+            ctx.fillText(chnText, 0, 0);
+          }
+          ctx.restore();
+
+          let mid = height >> 1;
+          const multiplier = -(mid * 9);
+          const iterator = (width / buffer.length) * 2;
+
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 1.5;
+          ctx.lineCap = 'square';
+          ctx.beginPath();
+
+          mid = Math.floor(mid * 1.9);
+          if (this._parent.modePlay) {
+            let y = mid + buffer[0] * multiplier;
+            ctx.moveTo(0, y);
+            for (let i = 2, x = iterator; x < width; x += iterator, i += 2) {
+              y = mid + buffer[i] * multiplier;
+              ctx.lineTo(x, y);
+            }
+          }
+          else {
+            ctx.moveTo(0, mid);
+            ctx.lineTo(width, mid);
+          }
+
+          ctx.stroke();
+        }
       }
     }
 
