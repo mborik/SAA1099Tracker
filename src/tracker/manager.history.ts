@@ -273,8 +273,10 @@ export default class ManagerHistory {
           const d = state.pattern.data;
           for (let src = 0, dst = state.pattern.from ?? 0; src < d.length; src++, dst++) {
             p.data[dst].tone = d[src].tone;
+            p.data[dst].release = d[src].release;
             p.data[dst].smp = d[src].smp;
             p.data[dst].orn = d[src].orn;
+            p.data[dst].orn_release = d[src].orn_release;
             p.data[dst].volume.byte = d[src].volume;
             p.data[dst].cmd = d[src].cmd;
             p.data[dst].cmd_data = d[src].cmd_data;
@@ -296,8 +298,10 @@ export default class ManagerHistory {
           const p = new Pattern(state.pattern.end);
           for (let i = 0; i < MAX_PATTERN_LEN; i++) {
             p.data[i].tone = d[i].tone;
+            p.data[i].release = d[i].release;
             p.data[i].smp = d[i].smp;
             p.data[i].orn = d[i].orn;
+            p.data[i].orn_release = d[i].orn_release;
             p.data[i].volume.byte = d[i].volume;
             p.data[i].cmd = d[i].cmd;
             p.data[i].cmd_data = d[i].cmd_data;
@@ -433,8 +437,10 @@ export default class ManagerHistory {
         state.doRedo = () => {
           for (let src = 0, dst = from; src < backup.length; src++, dst++) {
             p.data[dst].tone = backup[src].tone;
+            p.data[dst].release = backup[src].release;
             p.data[dst].smp = backup[src].smp;
             p.data[dst].orn = backup[src].orn;
+            p.data[dst].orn_release = backup[src].orn_release;
             p.data[dst].volume.byte = backup[src].volume;
             p.data[dst].cmd = backup[src].cmd;
             p.data[dst].cmd_data = backup[src].cmd_data;
@@ -456,8 +462,10 @@ export default class ManagerHistory {
           const p = new Pattern(backupEnd);
           for (let i = 0; i < MAX_PATTERN_LEN; i++) {
             p.data[i].tone = backup[i].tone;
+            p.data[i].release = backup[i].release;
             p.data[i].smp = backup[i].smp;
             p.data[i].orn = backup[i].orn;
+            p.data[i].orn_release = backup[i].orn_release;
             p.data[i].volume.byte = backup[i].volume;
             p.data[i].cmd = backup[i].cmd;
             p.data[i].cmd_data = backup[i].cmd_data;
