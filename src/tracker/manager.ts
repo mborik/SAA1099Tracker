@@ -134,6 +134,13 @@ export default class Manager extends ManagerHistory {
     const block = this._getBlock(data.length);
     this._historyPushPatternBlock(block);
 
+    const sel = this._parent.tracklist.selection;
+    this._parent.player.line = block.line + block.len;
+    if (sel.len > 0) {
+      sel.len = 0;
+      this._parent.modeEditChannel = sel.channel;
+    }
+
     block.pp.parse(data, block.line, block.len);
     return true;
   }

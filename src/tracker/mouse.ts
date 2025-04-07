@@ -87,36 +87,31 @@ Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQ
         if (!this.modeEdit) {
           e.target.focus();
         }
-
-        if (point.line === line) {
-          this.modeEditChannel = sel.start.channel;
-          this.modeEditColumn = sel.start.column;
-          redraw = true;
+        if (sel.channel !== point.channel ||
+          point.line < sel.line ||
+          point.line > sel.line + sel.len
+        ) {
+          sel.len = 0;
+          sel.line = point.line;
+          sel.channel = point.channel;
         }
+
+        this.modeEditChannel = point.channel;
+        this.modeEditColumn = point.column;
+        p.line = point.line;
+        redraw = true;
       }
     }
     else if (e.type === 'dblclick' && leftButton) {
-      if (sel.len === 0 ||
-        sel.channel !== point.channel ||
-        (sel.line + sel.len) !== point.line) {
-
+      if (point.line === line) {
         sel.len = 0;
         sel.line = point.line;
         sel.channel = point.channel;
-        sel.isDragging = false;
+        redraw = true;
 
         this.workingPattern = pp.ch[point.channel].pattern;
         this.updatePanelPattern();
       }
-
-      if (!this.modeEdit) {
-        e.target.focus();
-      }
-
-      this.modeEditChannel = sel.start.channel;
-      this.modeEditColumn = sel.start.column;
-      p.line = point.line;
-      redraw = true;
     }
     else if (e.type === 'mousemove' && leftButton && !point.compare(sel.start)) {
       if (len > 0) {

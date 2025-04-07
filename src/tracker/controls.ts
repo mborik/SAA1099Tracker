@@ -435,6 +435,8 @@ Tracker.prototype.onCmdEditCut = function() {
 Tracker.prototype.onCmdEditCopy = async function() {
   if (this.activeTab === 0 && this.modeEdit) {
     await this.manager.copyFromTracklist();
+    this.tracklist.selection.len = 0;
+    this.updateTracklist();
   }
   else if (this.activeTab === 1) {
     await this.manager.copySample();
@@ -455,7 +457,7 @@ Tracker.prototype.onCmdEditPaste = function() {
     this.manager.pasteToTracklist().then((done) => {
       if (done) {
         this.player.countPositionFrames(this.player.position);
-        this.updateEditorCombo(this.ctrlRowStep);
+        this.updateEditorCombo(0);
         this.file.modified = true;
       }
     });
