@@ -1010,6 +1010,10 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       method:   'change',
       handler:  (e: JQueryInputEventObject) => (app.settings.showAutosaveInFileDialog = !!e.currentTarget.checked)
     }, {
+      selector: '#chHandleRShiftRCtrlAsPlay',
+      method:   'change',
+      handler:  (e: JQueryInputEventObject) => (app.settings.handleRShiftRCtrlAsPlay = !!e.currentTarget.checked)
+    }, {
       selector: '#rgSetAudioVolume',
       method:   'on',
       param:    'input change',

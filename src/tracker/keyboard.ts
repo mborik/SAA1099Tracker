@@ -1130,7 +1130,7 @@ Tracker.prototype.handleKeyEvent = function(e) {
     }
 
     if (!o.inDialog) {
-      if (canPlay && !textInput) {
+      if (canPlay && this.settings.handleRShiftRCtrlAsPlay && !textInput) {
         // RIGHT SHIFT (play position)
         if (code === 'ShiftRight') {
           if (this.modePlay && o.lastPlayMode === 1) {
@@ -1229,7 +1229,8 @@ Tracker.prototype.handleHotkeys = function(type, code, isInput, textInput) {
       type = 'test';
     }
   }
-  else if (code === 'ControlRight') { // handle Right Ctrl
+  // handle Right Ctrl
+  else if (code === 'ControlRight' && this.settings.handleRShiftRCtrlAsPlay) {
     fn = true; // restrict all right ctrl hotkeys
     type = 'test';
   }

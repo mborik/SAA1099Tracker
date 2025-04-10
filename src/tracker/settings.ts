@@ -30,6 +30,7 @@ import Tracker from '.';
 
 interface SettingsOptions {
   showAutosaveInFileDialog: boolean;
+  handleRShiftRCtrlAsPlay: boolean;
   lastLoadedFileNumber: number;
   tracklistAutosize: boolean;
   tracklistLines: number;
@@ -44,6 +45,7 @@ interface SettingsOptions {
 
 const getConfigProps = (obj: any) => pick(obj, [
   'showAutosaveInFileDialog',
+  'handleRShiftRCtrlAsPlay',
   'lastLoadedFileNumber',
   'tracklistAutosize',
   'tracklistLines',
@@ -59,6 +61,7 @@ export default class Settings implements SettingsOptions {
   private _obj: JQuery = null;
 
   showAutosaveInFileDialog: boolean = false;
+  handleRShiftRCtrlAsPlay: boolean = false;
   lastLoadedFileNumber: number = undefined;
   tracklistAutosize: boolean = true;
   tracklistLines: number = 17;
@@ -83,6 +86,7 @@ export default class Settings implements SettingsOptions {
     $('#chSetHexTracklist').prop('checked', this.hexTracklines);
     $('#chSetHexFreqShifts').prop('checked', this.hexSampleFreq);
     $('#chShowAutosaveFile').prop('checked', this.showAutosaveInFileDialog);
+    $('#chHandleRShiftRCtrlAsPlay').prop('checked', this.handleRShiftRCtrlAsPlay);
     $('#rgSetAudioVolume').val(this.audioGain * 100);
     $('#rgSetAudioBuffers').val(this.audioBuffers);
     $('#rdSetAudioInt' + this.audioInterrupt).prop('checked', true);
