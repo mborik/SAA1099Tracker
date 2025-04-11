@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: User interface initializer and element populator
- * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),

@@ -26,8 +26,8 @@ export default {
   COMPILER_SETTINGS_KEY: 'saa1099-compiler-settings',
 
   MIMETYPE_STMF: 'text/x-saa1099tracker',
-  MIMETYPE_VGM: 'audio/x-vgz',
   MIMETYPE_TEXT: 'text/plain',
+  MIMETYPE_VGM: 'audio/x-vgz',
 
   AUTOSAVE_FILENAME: 'AUTOSAVE',
   LOCALSTORAGE_ASSUMED_SIZE: 2 ** 21,
