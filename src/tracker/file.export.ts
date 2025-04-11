@@ -22,6 +22,7 @@
 
 import pako from 'pako';
 import { toWidth } from '../commons/number';
+import constants from './constants';
 import { STMFile } from './file';
 import Tracker from '.';
 
@@ -31,10 +32,85 @@ export class FileExport {
     private _app: Tracker,
     private _parent: STMFile) {}
 
-  public vgm(): boolean {
-    const intRate = this._app.settings.audioInterrupt;
+  /**
+   * Export song to STMF format (SAA1099Tracker Module File).
+   * Which is a JSON format, tracker's native format for saving and loading the song.
+   */
+  public stmf(): void {
+    const file = this._parent;
+    const data = file.createJSON(true);
+    const fileName = file.getFixedFileName();
+
+    file.system.save(data, `${fileName}.STMF`, constants.MIMETYPE_STMF);
+  }
+
+  /**
+   * Export song to plain-text format in a human-readable format.
+   */
+  public textDump(): void {
+    const file = this._parent;
+    const fileName = file.getFixedFileName();
+
     const player = this._app.player;
-    if (!player.positions.length) {
+    const hexa = this._app.settings.hexTracklines;
+    const empty = ' '.repeat(14);
+
+    const output = `SAA1099Tracker export of song "${
+      this._app.songTitle
+    }" by "${
+      this._app.songAuthor
+    }":\n\n${
+      player.positions.flatMap((pp, index) => {
+        const triDigitLine = (!hexa && pp.length > 100);
+
+        const lines = [
+          `Position ${index + 1}, speed: ${pp.speed}`,
+          `    ${
+            pp.ch.map(
+              ({ pitch }) => pitch ?
+                `${`           [ ${pitch}`.substr(-12)} ]` :
+                empty
+            ).join('')}`
+        ];
+        for (let buf = '', line = 0; line < pp.length; line++) {
+          buf = (`00${line.toString(hexa ? 16 : 10)}`).substr(-3);
+          buf = ` ${(triDigitLine || (!hexa && line > 99)) ? buf[0] : ' '}${buf.slice(1)}`;
+
+          for (let channel = 0; channel < 6; channel++) {
+            const pt = player.patterns[pp.ch[channel].pattern];
+            const dat = pt.data[line].tracklist;
+
+            if (line >= pt.end) {
+              buf += empty;
+            }
+            else {
+              buf += `  ${dat.tone} ${dat.column.substr(0, 4)} ${dat.column.substr(4)}`;
+            }
+          }
+
+          lines.push(buf.replace(/\x7f/g, '.').toUpperCase());
+        }
+
+        lines.push('');
+        return lines;
+      }).join('\n')}`;
+
+    file.system.save(output, `${fileName}.txt`, constants.MIMETYPE_TEXT);
+  }
+
+  /**
+   * Render SAA1099 soundchip data, export to Video Game Music (VGM) format v1.71
+   * and compress with gzip (.vgz).
+   */
+  public vgm(): boolean {
+    const app = this._app;
+    const player = this._app.player;
+
+    if (
+      app.modePlay ||
+      player.positions.length === 0 ||
+      app.globalKeyState.lastPlayMode !== 0
+    ) {
       return false;
     }
 
@@ -43,9 +119,9 @@ export class FileExport {
 
     const date = new Date();
     const gd3tag = `${
-      this._app.songTitle
+      app.songTitle
     }\0\0\0\0\0\0${
-      this._app.songAuthor
+      app.songAuthor
     }\0\0${
       date.getUTCFullYear()
     }/${
@@ -66,7 +142,7 @@ export class FileExport {
 
     data.setUint32(0x00, 0x56676D20, false);  // "Vgm " signature
     data.setUint32(0x08, 0x00000171, true);   // Version number
-    data.setUint32(0x24, intRate, true);      // Rate
+    data.setUint32(0x24, app.settings.audioInterrupt, true); // Rate
     data.setUint32(0x34, ptr - 0x34, true);   // VGM data offset
     data.setUint32(0xC8, 8000000, true);      // SAA1099 clock
 
@@ -129,7 +205,7 @@ export class FileExport {
     }
 
     const packed = pako.gzip(buffer.slice(0, ptr));
-    file.system.save(packed, `${fileName}.vgz`, 'application/octet-stream');
+    file.system.save(packed, `${fileName}.vgz`, constants.MIMETYPE_VGM);
     return true;
   }
 }

@@ -385,14 +385,15 @@ Tracker.prototype.onCmdFileImport = function(type) {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileExport = function() {
-  this.file.exportFile();
+  this.file.export.stmf();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileExportText = function() {
-  this.file.exportTextDump();
+  this.file.export.textDump();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileExportVGM = function() {
+  this.onCmdStop();
   this.file.export.vgm();
 };
 //---------------------------------------------------------------------------------------

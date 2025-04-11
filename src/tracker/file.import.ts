@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: File base class with all imports of various file formats.
- * Copyright (c) 2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2022-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -115,7 +115,7 @@ export class File extends STMFile {
   }
 
   importFile() {
-    this.system.load(false, `.STMF,${constants.MIMETYPE}`)
+    this.system.load(false, `.STMF,${constants.MIMETYPE_STMF}`)
       .then((data: string) => {
         devLog('Tracker.file', 'File loaded, trying to parse...');
         if (!this.parseJSON(data)) {
