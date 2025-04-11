@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker Player core: data-effecient channel-pattern tracker format.
- * Copyright (c) 2012-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -231,12 +231,47 @@ export default class Player {
   }
 
   /**
+   * This method do a simulation of playback of whole song.
+   * @param callback Callback function to be called while simulation;
+   */
+  public simulatePlayback(
+    chipDataCallback: (rt: PlayerRuntime) => void,
+    loopControlCallback?: () => void,
+  ): void {
+    this.position = 0;
+    this.line = 0;
+    this.chnLine.fill(0);
+
+    this.stopChannel();
+    this.mixer.index = 0;
+
+    for (let i = 0; i < this.positions.length; i++) {
+      const ps = this.positions[i];
+      if (ps.initParams) {
+        this.rtSong.replace(ps.initParams);
+      }
+
+      if (i === this.repeatPosition) {
+        loopControlCallback?.();
+      }
+
+      this.simulation(ps.length, i, chipDataCallback);
+    }
+  }
+
+  /**
    * This method do a simulation of playback in position for given number of lines.
    * @param lines Number of lines to simulate;
    * @param pos Optional position number in which do a simulation;
+   * @param callback Optional callback function to be called while simulation;
    * @param rt Simulate over the custom runtime parameters;
    */
-  private simulation(lines: number, pos: number = this.position, rt: PlayerRuntime = this.rtSong): boolean {
+  private simulation(
+    lines: number,
+    pos: number = this.position,
+    callback?: (rt: PlayerRuntime) => void,
+    rt: PlayerRuntime = this.rtSong,
+  ): boolean {
     if (lines <= 0) {
       return false;
     }
@@ -278,6 +313,7 @@ export default class Player {
 
     while (lines > 0) {
       this.prepareFrame(rt);
+      callback?.(rt);
 
       if (this.changedLine) {
         this.changedLine = false;
@@ -1222,7 +1258,7 @@ export default class Player {
       return false;
     }
 
-    return this.simulation(prev.length, pos - 1, current.initParams);
+    return this.simulation(prev.length, pos - 1, null, current.initParams);
   }
 
   //---------------------------------------------------------------------------------------

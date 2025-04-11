@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Tracker file dialog sub-class.
- * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2015-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -54,10 +54,12 @@ export class FileDialog {
 
     if (dlg._saveFlag) {
       const fileName = dlg._obj.find('#txFileName').val();
-      const duration = $('#stInfoPanel u:eq(3)').text();
 
-      file.saveFile(fileName, duration,
-        (selectedItem && selectedItem.id) || undefined);
+      file.saveFile(
+        fileName,
+        file.duration,
+        (selectedItem && selectedItem.id) || undefined
+      );
     }
     else {
       if (!selectedItem) {

@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: Native file format handler class and dependent interfaces.
- * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2015-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -28,6 +28,7 @@ import Player from '../player/Player';
 import constants from './constants';
 import { i18n } from './doc';
 import { FileDialog } from './file.dialog';
+import { FileExport } from './file.export';
 import { FileSystem } from './file.system';
 import Tracker from '.';
 
@@ -84,7 +85,11 @@ export class STMFile {
   modified: boolean = false;
   fileName: string = '';
 
+  duration: string = '';
+  durationInFrames: number = 0;
+
   dialog: FileDialog;
+  export: FileExport;
   system: FileSystem;
   storageMap: Map<number, StorageItem> = new Map();
 
@@ -95,6 +100,7 @@ export class STMFile {
     this._reloadStorage();
 
     this.dialog = new FileDialog(_parent, this);
+    this.export = new FileExport(_parent, this);
     this.system = new FileSystem;
   }
 

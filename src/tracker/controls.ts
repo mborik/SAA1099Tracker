@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: All handlers and control function prototypes.
- * Copyright (c) 2012-2023 Martin Borik <martin@borik.net>
+ * Copyright (c) 2012-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -100,14 +100,18 @@ Tracker.prototype.updatePanelInfo = function() {
     i = total.toString().length;
     elTicksCurrent.textContent = toWidth(current, i);
     elTicksTotal.textContent = toWidth(total, i);
+    this.file.durationInFrames = total;
 
     elTimeCurrent.textContent = toTimeString(current / int);
-    elTimeTotal.textContent = toTimeString(total / int);
+    elTimeTotal.textContent = this.file.duration = toTimeString(total / int);
   }
   else {
     bpm = (i / this.player.speed) >> 2;
 
-    elTimeCurrent.textContent = elTimeTotal.textContent = toTimeString(0);
+    const zero = toTimeString(0);
+    this.file.durationInFrames = 0;
+
+    elTimeCurrent.textContent = elTimeTotal.textContent = this.file.duration = zero;
     elTicksCurrent.textContent = elTicksTotal.textContent = '0';
   }
 
@@ -253,12 +257,11 @@ Tracker.prototype.onCmdAppExit = function() {
     return;
   }
   if (file.modified) {
-    const duration = $('#stInfoPanel u:eq(3)').text();
     if (this.settings.lastLoadedFileNumber !== undefined && file.fileName) {
-      file.saveFile(file.fileName, duration, this.settings.lastLoadedFileNumber);
+      file.saveFile(file.fileName, file.duration, this.settings.lastLoadedFileNumber);
     }
     else {
-      file.saveFile(constants.AUTOSAVE_FILENAME, duration, 0);
+      file.saveFile(constants.AUTOSAVE_FILENAME, file.duration, 0);
       this.settings.lastLoadedFileNumber = 0;
     }
   }
@@ -331,7 +334,7 @@ Tracker.prototype.onCmdFileSave = function(as) {
     file.dialog.save();
   }
   else if (!as && (file.yetSaved || file.modified) && file.fileName) {
-    file.saveFile(file.fileName, $('#stInfoPanel u:eq(3)').text());
+    file.saveFile(file.fileName, file.duration);
   }
 };
 //---------------------------------------------------------------------------------------
@@ -387,6 +390,10 @@ Tracker.prototype.onCmdFileExport = function() {
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileExportText = function() {
   this.file.exportTextDump();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileExportVGM = function() {
+  this.file.export.vgm();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileCompile = function() {
