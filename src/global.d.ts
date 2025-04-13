@@ -11,6 +11,9 @@ declare interface JQueryEventObject {
   delta: number;
   target: HTMLElement;
 }
+declare interface JQueryInputEventTarget extends JQueryInputEventObject {
+  currentTarget: HTMLInputElement;
+}
 //---------------------------------------------------------------------------------------
 /**
  * Include `null` to T

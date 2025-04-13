@@ -1,0 +1,68 @@
+<div class="modal" id="export" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-sm" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" tabindex="-1">&times;</button>
+				<h4 class="modal-title">Export to Waveform Audio</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="form-horizontal row">
+						<div class="col-sm-9">
+							<div class="panel panel-audio">
+								<div class="panel-heading"><h2 class="panel-title text-left">Frequency:</h2></div>
+								<div class="panel-body">
+									<div class="form-group row">
+										<div class="col-sm-18">
+											<div class="radio"><label class="control-label"><input id="rdWaveFrequency22050" name="rdWaveFrequency" type="radio" value="22050" tabindex="1">22050 Hz</label></div>
+											<div class="radio"><label class="control-label"><input id="rdWaveFrequency44100" name="rdWaveFrequency" type="radio" value="44100" tabindex="2">44100 Hz</label></div>
+											<div class="radio"><label class="control-label"><input id="rdWaveFrequency48000" name="rdWaveFrequency" type="radio" value="48000" tabindex="3">48000 Hz</label></div>
+											<div class="radio"><label class="control-label"><input id="rdWaveFrequency96000" name="rdWaveFrequency" type="radio" value="96000" tabindex="4">96000 Hz</label></div>
+										</div>
+									</div>
+								</div>
+								<div class="panel-footer">
+									<fieldset class="form-group">
+										<label>Repeat:</label>
+										<div class="radio"><label class="control-label"><input id="rdWaveRepeat0" name="rdWaveRepeat" type="radio" value="0" tabindex="9">Don't repeat</label></div>
+										<div class="radio"><label class="control-label"><input id="rdWaveRepeat1" name="rdWaveRepeat" type="radio" value="1" tabindex="10">Repeat once</label></div>
+									</fieldset>
+								</div>
+							</div>
+						</div>
+						<div class="col-sm-9">
+							<div class="panel panel-audio">
+								<div class="panel-heading"><h2 class="panel-title text-left">Bit depth:</h2></div>
+								<div class="panel-body">
+									<div class="form-group row">
+										<div class="col-sm-18">
+											<div class="radio"><label class="control-label"><input id="rdWaveBitDepth8" name="rdWaveBitDepth" type="radio" value="8" tabindex="5">8 bit</label></div>
+											<div class="radio"><label class="control-label"><input id="rdWaveBitDepth16" name="rdWaveBitDepth" type="radio" value="16" tabindex="6">16 bit</label></div>
+											<div class="radio"><label class="control-label"><input id="rdWaveBitDepth24" name="rdWaveBitDepth" type="radio" value="24" tabindex="7">24 bit</label></div>
+											<div class="radio"><label class="control-label"><input id="rdWaveBitDepth32" name="rdWaveBitDepth" type="radio" value="32" tabindex="8">32 bit float</label></div>
+										</div>
+									</div>
+								</div>
+								<div class="panel-footer">
+									<fieldset class="form-group">
+										<label>Channels:</label>
+										<div class="radio" title="Take into account that stereo hardware envelopes dies in mono sound.">
+											<label class="control-label"><input id="rdWaveChannels1" name="rdWaveChannels" type="radio" value="1" tabindex="11">Mono
+												<span id="txWaveMonoInfo" class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+											</label>
+										</div>
+										<div class="radio"><label class="control-label"><input id="rdWaveChannels2" name="rdWaveChannels" type="radio" value="2" tabindex="12">Stereo</label></div>
+									</fieldset>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-default cancel" type="button" data-dismiss="modal" tabindex="13">Close</button>
+				<button class="btn btn-success apply" type="button" tabindex="14">Export WAV</button>
+			</div>
+		</div>
+	</div>
+</div>

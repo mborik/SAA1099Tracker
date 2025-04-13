@@ -24,10 +24,12 @@
 export default {
   TRACKER_SETTINGS_KEY: 'saa1099-tracker-settings',
   COMPILER_SETTINGS_KEY: 'saa1099-compiler-settings',
+  EXPORT_SETTINGS_KEY: 'saa1099-export-settings',
 
   MIMETYPE_STMF: 'text/x-saa1099tracker',
   MIMETYPE_TEXT: 'text/plain',
   MIMETYPE_VGM: 'audio/x-vgz',
+  MIMETYPE_WAV: 'audio/x-wav',
 
   AUTOSAVE_FILENAME: 'AUTOSAVE',
   LOCALSTORAGE_ASSUMED_SIZE: 2 ** 21,

@@ -27,7 +27,6 @@ import SyncTimer from '../commons/timer';
 import { MAX_PATTERN_LEN } from '../player/globals';
 import Tracker from '.';
 
-type JQueryInputEventObject = JQueryEventObject & { currentTarget: HTMLInputElement };
 
 /* eslint-disable key-spacing */
 //---------------------------------------------------------------------------------------
@@ -188,11 +187,11 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#txHeaderTitle',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.songTitle = e.currentTarget.value.trim())
+      handler:  (e: JQueryInputEventTarget) => (app.songTitle = e.currentTarget.value.trim())
     }, {
       selector: '#txHeaderAuthor',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.songAuthor = e.currentTarget.value.trim())
+      handler:  (e: JQueryInputEventTarget) => (app.songAuthor = e.currentTarget.value.trim())
     }, {
       selector: '#scOctave',
       method:   'TouchSpin',
@@ -203,7 +202,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scOctave',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.ctrlOctave = validateAndClamp({
           value: e.currentTarget.value,
           initval: 2,
@@ -221,7 +220,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scAutoSmp',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.ctrlSample = validateAndClamp({
           value: e.currentTarget.value,
           radix: 32,
@@ -239,7 +238,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scAutoOrn',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.ctrlOrnament = validateAndClamp({
           value: e.currentTarget.value,
           radix: 16,
@@ -256,7 +255,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scRowStep',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.ctrlRowStep = validateAndClamp({
           value: e.currentTarget.value,
           min: 0, max: 8
@@ -279,7 +278,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPatCurrent',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const len = app.player.patterns.length;
         if (len <= 1) {
           return false;
@@ -293,7 +292,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPatTarget',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const len = app.player.patterns.length;
         if (len <= 1) {
           return false;
@@ -307,7 +306,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPatLen',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = $(e.currentTarget);
         const pp = app.player.patterns[app.workingPattern];
 
@@ -350,7 +349,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           size: 'mini',
           width: 79,
           height: 24
-        }).change((e: JQueryInputEventObject) => {
+        }).change((e: JQueryInputEventTarget) => {
           const el = e.currentTarget;
           $('#fxPanelPattern').toggleClass('panel-functions', !el.checked);
         });
@@ -358,7 +357,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPosCurrent',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         const positions = app.player.positions.length;
 
@@ -387,7 +386,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPosLength',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         const pp = app.player.position;
         const pos = app.player.positions[pp];
@@ -436,7 +435,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPosSpeed',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         const pp = app.player.position;
         const pos = app.player.positions[pp];
@@ -474,7 +473,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scPosRepeat',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         const value = validateAndClamp({
           value: el.value,
@@ -497,7 +496,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: 'input[id^="scChnPattern"]',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         const pp = app.player.position;
         const chn = parseInt(el.id.substr(-1)) - 1;
@@ -548,7 +547,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           initval: 0,
           min: -24, max: 24
         };
-        $(el).TouchSpin(props).change((e: JQueryInputEventObject) => {
+        $(el).TouchSpin(props).change((e: JQueryInputEventTarget) => {
           const el = e.currentTarget;
           const chn = parseInt(el.id.substr(-1)) - 1;
           const pos = app.player.positions[app.player.position] ?? app.player.nullPosition;
@@ -596,7 +595,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           offstyle: 'default',
           size: 'mini',
           width: 58
-        }).change((e: JQueryInputEventObject) => {
+        }).change((e: JQueryInputEventTarget) => {
           const el = e.currentTarget;
           app.player.rtSong.muted[(+el.value - 1)] = !el.checked;
         });
@@ -620,7 +619,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#sample-tabpanel a[data-toggle="tab"]',
       method:   'on',
       param:    'shown.bs.tab',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const smpedit = app.smpornedit;
         const shiftShown = (e.currentTarget.id === 'tab-pitchshift');
 
@@ -645,7 +644,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSampleNumber',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.workingSample = app.workingOrnTestSample = validateAndClamp({
           value: e.currentTarget.value,
           radix: 32,
@@ -670,7 +669,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scOrnTestSample',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.workingOrnTestSample = validateAndClamp({
           value: e.currentTarget.value,
           radix: 32,
@@ -689,7 +688,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scOrnNumber',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.workingOrnament = validateAndClamp({
           value: e.currentTarget.value,
           radix: 16,
@@ -707,7 +706,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#txSampleName',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const sample = app.player.samples[app.workingSample];
         app.manager.historyPush({
           sample: {
@@ -727,7 +726,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#txOrnName',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const ornament = app.player.ornaments[app.workingOrnament];
         app.manager.historyPush({
           ornament: {
@@ -753,7 +752,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
           initval: app.workingSampleTone,
           min: 1, max: 96
         };
-        $(el).TouchSpin(props).change((e: JQueryInputEventObject) => {
+        $(el).TouchSpin(props).change((e: JQueryInputEventTarget) => {
           const el = e.currentTarget;
           const val = validateAndClamp({ value: el.value, ...props });
           app.workingSampleTone = val;
@@ -791,7 +790,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#chSampleRelease',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const sample = app.player.samples[app.workingSample];
         if (sample.end !== sample.loop) {
           app.manager.historyPush({
@@ -810,7 +809,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSampleLength',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const sample = app.player.samples[app.workingSample];
         const value = validateAndClamp({
           value: e.currentTarget.value,
@@ -840,7 +839,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSampleRepeat',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const sample = app.player.samples[app.workingSample];
         const value = validateAndClamp({
           value: e.currentTarget.value,
@@ -900,7 +899,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scOrnLength',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const orn = app.player.ornaments[app.workingOrnament];
         const value = validateAndClamp({
           value: e.currentTarget.value,
@@ -930,7 +929,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scOrnRepeat',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const orn = app.player.ornaments[app.workingOrnament];
         const value = validateAndClamp({
           value: e.currentTarget.value,
@@ -963,7 +962,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSetTrkLines',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.settings.tracklistLines = validateAndClamp({
           value: e.currentTarget.value,
           initval: 17,
@@ -980,7 +979,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#scSetTrkLineHeight',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         app.settings.tracklistLineHeight = validateAndClamp({
           value: e.currentTarget.value,
           initval: 9,
@@ -990,7 +989,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#chSetTrkAutosize',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const state = !!e.currentTarget.checked;
         app.settings.tracklistAutosize = state;
 
@@ -1000,24 +999,24 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: '#chSetHexTracklist',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.settings.hexTracklines = !!e.currentTarget.checked)
+      handler:  (e: JQueryInputEventTarget) => (app.settings.hexTracklines = !!e.currentTarget.checked)
     }, {
       selector: '#chSetHexFreqShifts',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.settings.hexSampleFreq = !!e.currentTarget.checked)
+      handler:  (e: JQueryInputEventTarget) => (app.settings.hexSampleFreq = !!e.currentTarget.checked)
     }, {
       selector: '#chShowAutosaveFile',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.settings.showAutosaveInFileDialog = !!e.currentTarget.checked)
+      handler:  (e: JQueryInputEventTarget) => (app.settings.showAutosaveInFileDialog = !!e.currentTarget.checked)
     }, {
       selector: '#chHandleRShiftRCtrlAsPlay',
       method:   'change',
-      handler:  (e: JQueryInputEventObject) => (app.settings.handleRShiftRCtrlAsPlay = !!e.currentTarget.checked)
+      handler:  (e: JQueryInputEventTarget) => (app.settings.handleRShiftRCtrlAsPlay = !!e.currentTarget.checked)
     }, {
       selector: '#rgSetAudioVolume',
       method:   'on',
       param:    'input change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         app.settings.setAudioGain(+el.value);
         $(el).tooltip('show');
@@ -1038,7 +1037,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: '#rgSetAudioBuffers',
       method:   'on',
       param:    'input change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         app.settings.audioBuffers = +el.value;
         app.settings.updateLatencyInfo();
@@ -1047,7 +1046,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       selector: 'input[name=rdSetAudioInt]',
       method:   'on',
       param:    'input change',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         app.settings.audioInterrupt = +el.value;
         app.settings.updateLatencyInfo();
@@ -1055,7 +1054,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
     }, {
       selector: 'a[id^="mi"]', // all menu items
       method:   'click',
-      handler:  (e: JQueryInputEventObject) => {
+      handler:  (e: JQueryInputEventTarget) => {
         const el = e.currentTarget;
         const name = el.id.replace(/^mi/, 'onCmd');
         const method = app[name as keyof Tracker] as any;

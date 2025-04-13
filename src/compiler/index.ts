@@ -1,7 +1,7 @@
 /**
  * SAA1099Tracker: Compiler
  * Copyright (c) 2017-2019 Roman Borik <pmd85emu@gmail.com>
- * Copyright (c) 2022-2023 Martin Borik <martin@borik.net>
+ * Copyright (c) 2022-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -29,10 +29,6 @@ import { pick } from '../commons/pick';
 import constants from '../tracker/constants';
 import CompilerRender from './renderer';
 
-
-declare interface JQueryInputEvent {
-  currentTarget: HTMLInputElement;
-}
 
 const enum PlayerPlatform { Z80 = 0, I8080 = 1, I8080PP = 2 }
 const enum PlayerType { AUTODETECT = -1, V0 = 0, V1 = 1, V2 = 2, V3 = 3 }
@@ -89,7 +85,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     }
     catch (e) {}
 
-    devLog('Tracker.compiler', 'Settings fetched from localStorage %o...', getConfigProps(this));
+    devLog('Tracker.compiler', 'Compiler settings fetched from localStorage %o...', getConfigProps(this));
 
     this.populateElements();
   }
@@ -99,7 +95,7 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
 
     $('#chIncludePlayer')
       .prop('checked', this.includePlayer)
-      .change((e: JQueryInputEvent) => {
+      .change((e: JQueryInputEventTarget) => {
         this.includePlayer = !!e.currentTarget.checked;
         this.onIncludePlayerChanged();
         return true;
@@ -108,30 +104,30 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
     $(`#rdPlayerPlatform${this.playerPlatform}`).prop('checked', true);
     $(`#rdPlayerType${this.playerType < 0 ? 'Auto' : `V${this.playerType}`}`).prop('checked', true);
 
-    $('input[name=rdPlayerPlatform]').change((e: JQueryInputEvent) => {
+    $('input[name=rdPlayerPlatform]').change((e: JQueryInputEventTarget) => {
       this.onPlayerAddressChanging();
       this.playerPlatform = +e.currentTarget.value;
       this.onPlayerAddressChanged();
     });
-    $('input[name=rdPlayerType]').change( (e: JQueryInputEvent) => {
+    $('input[name=rdPlayerType]').change( (e: JQueryInputEventTarget) => {
       this.playerType = +e.currentTarget.value;
     });
 
     $('#chPlayerRepeat')
       .prop('checked', this.playerRepeat)
-      .change((e: JQueryInputEvent) => {
+      .change((e: JQueryInputEventTarget) => {
         this.playerRepeat = !!e.currentTarget.checked;
       });
 
     $('#chSongHeader')
       .prop('checked', this.songHeader)
-      .change((e: JQueryInputEvent) => {
+      .change((e: JQueryInputEventTarget) => {
         this.songHeader = !!e.currentTarget.checked;
       });
 
     $('#chVerbose')
       .prop('checked', this.verbose)
-      .change((e: JQueryInputEvent) => {
+      .change((e: JQueryInputEventTarget) => {
         this.verbose = !!e.currentTarget.checked;
       });
 
@@ -144,14 +140,14 @@ export default class Compiler extends CompilerRender implements CompilerOptions 
         size: 'mini',
         width: 50,
       })
-      .change((e: JQueryInputEvent) => {
+      .change((e: JQueryInputEventTarget) => {
         this.onPlayerAddressChanging();
         this.hexPlayerAddress = !!e.currentTarget.checked;
         this.onPlayerAddressChanged();
       })
       .bootstrapToggle(this.hexPlayerAddress ? 'on' : 'off');
 
-    $('#txPlayerAddress').change((e: JQueryInputEvent) => {
+    $('#txPlayerAddress').change((e: JQueryInputEventTarget) => {
       this.onPlayerAddressChanging(e.currentTarget.value);
       this.onPlayerAddressChanged();
     });

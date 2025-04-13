@@ -118,6 +118,7 @@ export default class Tracker {
   onCmdFileExport: (this: Tracker) => void;
   onCmdFileExportText: (this: Tracker) => void;
   onCmdFileExportVGM: (this: Tracker) => void;
+  onCmdFileExportWave: (this: Tracker) => void;
   onCmdFileCompile: (this: Tracker) => void;
   onCmdPreferences: (this: Tracker) => void;
   onCmdOrnClear: (this: Tracker) => void;

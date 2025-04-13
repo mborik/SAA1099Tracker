@@ -1,6 +1,6 @@
 /**
  * SAA1099Tracker: File API helper functions for manupulation with uploads & downloads.
- * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
+ * Copyright (c) 2015-2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -38,7 +38,7 @@ export class FileSystem {
 
   public load(binary: boolean, fileExt: string): Promise<multitype | binarytype> {
     return new Promise((resolve, reject) => {
-      devLog('FileSystem',
+      devLog('Tracker.file',
         `Querying user to select ${binary ? 'binary' : 'text'} file of type "${fileExt}"...`);
 
       const obj = this._input;
@@ -55,7 +55,7 @@ export class FileSystem {
         }
 
         try {
-          devLog('FileSystem', 'FileReader loading %o...', file);
+          devLog('Tracker.file', 'FileReader loading %o...', file);
 
           reader.onload = () => {
             resolve(
@@ -74,7 +74,7 @@ export class FileSystem {
           }
         }
         catch (ex) {
-          devLog('FileSystem', 'FileReader load error: %o', ex);
+          devLog('Tracker.file', 'FileReader load error: %o', ex);
           reject("Can't read a file!");
         }
         finally {
@@ -91,7 +91,7 @@ export class FileSystem {
     let url: string;
 
     try {
-      devLog('FileSystem', 'Preparing file output to Blob...');
+      devLog('Tracker.file', 'Preparing file output to Blob...');
 
       if (typeof data === 'string') {
         blob = new Blob([ data ], {
@@ -106,16 +106,16 @@ export class FileSystem {
       }
     }
     catch (ex) {
-      devLog('FileSystem', 'Blob feature missing [%o]...', ex);
+      devLog('Tracker.file', 'Blob feature missing [%o]...', ex);
     }
 
     if (blob) {
       try {
-        devLog('FileSystem', 'Conversion of Blob to URL Object...');
+        devLog('Tracker.file', 'Conversion of Blob to URL Object...');
         url = URL.createObjectURL(blob);
       }
       catch (ex) {
-        devLog('FileSystem', 'URL feature for Blob missing [%o]', ex);
+        devLog('Tracker.file', 'URL feature for Blob missing [%o]', ex);
         return;
       }
     }
@@ -127,7 +127,7 @@ export class FileSystem {
       download: fileName
     });
 
-    devLog('FileSystem', 'Querying user to download file "%s" from url %o...',
+    devLog('Tracker.file', 'Querying user to download file "%s" from url %o...',
       fileName, url);
 
     (obj[0] as HTMLAnchorElement).click();

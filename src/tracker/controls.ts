@@ -393,8 +393,11 @@ Tracker.prototype.onCmdFileExportText = function() {
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileExportVGM = function() {
-  this.onCmdStop();
   this.file.export.vgm();
+};
+//---------------------------------------------------------------------------------------
+Tracker.prototype.onCmdFileExportWave = function() {
+  this.file.export.waveDialog();
 };
 //---------------------------------------------------------------------------------------
 Tracker.prototype.onCmdFileCompile = function() {

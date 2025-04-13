@@ -21,16 +21,115 @@
  */
 
 import pako from 'pako';
+import { devLog } from '../commons/dev';
 import { toWidth } from '../commons/number';
+import { pick } from '../commons/pick';
+import { SAASound } from '../saa/SAASound';
 import constants from './constants';
 import { STMFile } from './file';
 import Tracker from '.';
 
 
-export class FileExport {
+interface ExportOptions {
+  frequency: number;
+  bitDepth: number;
+  channels: number;
+  repeatCount: number;
+}
+
+const getConfigProps = (obj: any) => pick(obj, [
+  'frequency',
+  'bitDepth',
+  'channels',
+  'repeatCount',
+]);
+
+export class FileExport implements ExportOptions {
+  private exportDialog: JQuery = null;
+
+  public frequency: number = 44100;
+  public bitDepth: number = 16;
+  public channels: number = 2;
+  public repeatCount: number = 0;
+
   constructor(
     private _app: Tracker,
     private _parent: STMFile) {}
+
+
+  private _initExportDialog() {
+    this.exportDialog = $('#export');
+
+    try {
+      const input = localStorage.getItem(constants.EXPORT_SETTINGS_KEY) || '{}';
+      const userOptions = JSON.parse(input);
+      Object.assign(this, userOptions);
+    }
+    catch (e) {}
+
+    devLog('Tracker.file', 'Export settings fetched from localStorage %o...', getConfigProps(this));
+
+    $(`#rdWaveFrequency${this.frequency}`).prop('checked', true);
+    $(`#rdWaveBitDepth${this.bitDepth}`).prop('checked', true);
+    $(`#rdWaveRepeat${this.repeatCount}`).prop('checked', true);
+    $(`#rdWaveChannels${this.channels}`).prop('checked', true);
+
+    $('input[name=rdWaveFrequency]').change((e: JQueryInputEventTarget) => {
+      this.frequency = +e.currentTarget.value;
+    });
+    $('input[name=rdWaveBitDepth]').change((e: JQueryInputEventTarget) => {
+      this.bitDepth = +e.currentTarget.value;
+    });
+    $('input[name=rdWaveRepeat]').change((e: JQueryInputEventTarget) => {
+      this.repeatCount = +e.currentTarget.value;
+    });
+    $('input[name=rdWaveChannels]').change((e: JQueryInputEventTarget) => {
+      this.channels = +e.currentTarget.value;
+    });
+  }
+
+  public waveDialog() {
+    if (!this.exportDialog) {
+      this._initExportDialog();
+    }
+
+    const tracker = this._app;
+    tracker.globalKeyState.inDialog = true;
+
+    this.exportDialog.on('show.bs.modal', () => {
+      this.exportDialog
+        .before($('<div/>')
+          .addClass('modal-backdrop in').css('z-index', '1030'));
+
+      this.exportDialog.find('.apply').click(() => {
+        this.exportDialog.modal('hide');
+        $('#overlay .loader').html('rendering');
+        document.body.className = 'loading';
+
+        setTimeout(() => {
+          this.wave();
+          document.body.className = '';
+        }, 50);
+        return true;
+      });
+
+    }).on('hide.bs.modal', () => {
+      this.exportDialog.prev('.modal-backdrop').remove();
+      this.exportDialog.find('.modal-footer>.btn').off();
+      this.exportDialog.off();
+
+      localStorage.setItem(
+        constants.EXPORT_SETTINGS_KEY,
+        JSON.stringify(getConfigProps(this))
+      );
+
+      tracker.globalKeyState.inDialog = false;
+
+    }).modal({
+      show: true,
+      backdrop: false
+    });
+  }
 
   /**
    * Export song to STMF format (SAA1099Tracker Module File).
@@ -102,17 +201,18 @@ export class FileExport {
    * Render SAA1099 soundchip data, export to Video Game Music (VGM) format v1.71
    * and compress with gzip (.vgz).
    */
-  public vgm(): boolean {
+  public vgm(): void {
     const app = this._app;
     const player = this._app.player;
 
-    if (
-      app.modePlay ||
-      player.positions.length === 0 ||
-      app.globalKeyState.lastPlayMode !== 0
-    ) {
-      return false;
+    if (app.modePlay || app.globalKeyState.lastPlayMode) {
+      app.onCmdStop();
     }
+    if (!player.positions.length) {
+      return;
+    }
+
+    devLog('Tracker.file', 'Exporting to VGM format v1.71...');
 
     const file = this._parent;
     const fileName = file.getFixedFileName();
@@ -161,6 +261,8 @@ export class FileExport {
       ptr += 3;
     };
 
+    devLog('Tracker.file', 'Starting playback simulation...');
+
     player.simulatePlayback(
       (rt) => {
         Object.keys(rt.regs).forEach(key => {
@@ -204,8 +306,138 @@ export class FileExport {
       data.setUint32(0x20, sampleCounter - loopSampleOffset, true); // Loop # samples
     }
 
+    devLog('Tracker.file', 'Gzipping, VGM total length: %d bytes...', ptr);
+
     const packed = pako.gzip(buffer.slice(0, ptr));
     file.system.save(packed, `${fileName}.vgz`, constants.MIMETYPE_VGM);
-    return true;
+  }
+
+  /**
+   * Render SAA1099 soundchip data and export to WAVE format.
+   * @see http://soundfile.sapp.org/doc/WaveFormat/
+   */
+  public wave(): void {
+    const app = this._app;
+    const player = this._app.player;
+
+    if (app.modePlay || app.globalKeyState.lastPlayMode) {
+      app.onCmdStop();
+    }
+    if (!player.positions.length) {
+      return;
+    }
+
+    devLog('Tracker.file', 'Exporting to WAVE format, %d channels, %d Hz, %d bit...',
+      this.channels, this.frequency, this.bitDepth);
+
+    const file = this._parent;
+    const fileName = file.getFixedFileName();
+
+    const sampleRate = this.frequency / 50;
+    const blockAlign = this.channels * (this.bitDepth / 8);
+    const byteRate = sampleRate * blockAlign;
+    const byteRateSec = this.frequency * blockAlign;
+    const dataSize = file.durationInFrames * byteRate * (this.repeatCount + 1);
+
+    const buffer = new ArrayBuffer(64 + dataSize);
+    const data = new DataView(buffer);
+
+    data.setUint32(0 , 0x52494646, false);    // "RIFF"
+    data.setUint32(8 , 0x57415645, false);    // "WAVE"
+    data.setUint32(12, 0x666d7420, false);    // "fmt "
+    data.setUint32(16, 16, true);             // Size of fmt chunk
+    data.setUint16(20, this.bitDepth === 32 ? 3 : 1, true); // PCM or IEEE float
+    data.setUint16(22, this.channels, true);  // Number of channels
+    data.setUint32(24, this.frequency, true); // Sample rate
+    data.setUint32(28, byteRateSec, true);    // Byte rate
+    data.setUint16(32, blockAlign, true);     // Block align
+    data.setUint16(34, this.bitDepth, true);  // Bits per sample
+    data.setUint32(36, 0x64617461, false);    // "data"
+
+    let ptr = 44;
+    let loopSampleOffset = 0;
+    const leftBuf = new Float32Array(sampleRate);
+    const rightBuf = new Float32Array(sampleRate);
+    const SAA1099 = new SAASound(this.frequency);
+
+    devLog('Tracker.file', 'Starting playback simulation...', this.frequency);
+
+    player.simulatePlayback(
+      (rt) => {
+        SAA1099.setAllRegs(rt);
+        SAA1099.output(leftBuf, rightBuf, sampleRate);
+
+        for (let i = 0; i < sampleRate; i++) {
+          if (this.channels === 1) {
+            const mono = (leftBuf[i] + rightBuf[i]) / 2;
+            switch (this.bitDepth) {
+              case 8:
+                data.setInt8(ptr, mono * 127);
+                ptr += 1;
+                break;
+              case 16:
+                data.setInt16(ptr, mono * 32767, true);
+                ptr += 2;
+                break;
+              case 24:
+                data.setInt32(ptr, mono * 8388607, true);
+                ptr += 3;
+                break;
+              case 32:
+                data.setFloat32(ptr, mono, true);
+                ptr += 4;
+                break;
+            }
+          }
+          else {
+            switch (this.bitDepth) {
+              case 8:
+                data.setInt8(ptr, leftBuf[i] * 127);
+                ptr += 1;
+                data.setInt8(ptr, rightBuf[i] * 127);
+                ptr += 1;
+                break;
+              case 16:
+                data.setInt16(ptr, leftBuf[i] * 32767, true);
+                ptr += 2;
+                data.setInt16(ptr, rightBuf[i] * 32767, true);
+                ptr += 2;
+                break;
+              case 24:
+                data.setInt32(ptr, leftBuf[i] * 8388607, true);
+                ptr += 3;
+                data.setInt32(ptr, rightBuf[i] * 8388607, true);
+                ptr += 3;
+                break;
+              case 32:
+                data.setFloat32(ptr, leftBuf[i], true);
+                ptr += 4;
+                data.setFloat32(ptr, rightBuf[i], true);
+                ptr += 4;
+            }
+          }
+        }
+      },
+      () => {
+        if (this.repeatCount) {
+          loopSampleOffset = ptr;
+        }
+      });
+
+    if (this.repeatCount) {
+      const loopLength = ptr - loopSampleOffset;
+      devLog('Tracker.file', 'Appending repeat sequence [offset %d, length %d]...',
+        ptr - 44, loopLength);
+
+      for (let i = loopSampleOffset; i < loopSampleOffset + loopLength; i++, ptr++) {
+        data.setUint8(ptr, data.getUint8(i));
+      }
+    }
+
+    data.setUint32(4, ptr - 8, true); // Size of RIFF chunk
+    data.setUint32(40, ptr - 44, true); // Size of data chunk
+
+    const output = new Uint8Array(buffer.slice(0, ptr));
+    file.system.save(output, `${fileName}.wav`, constants.MIMETYPE_WAV);
   }
 }

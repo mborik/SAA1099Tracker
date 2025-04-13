@@ -650,10 +650,12 @@ canvas.oscilloscope[id$="0"] {
 	}
 }
 
-#settings, #compiler {
+#settings, #compiler, #export {
 	z-index: 1030;
 
 	.modal-body {
+		padding-bottom: 8px;
+
 		.form-group {
 			label,
 			input[type="radio"],
@@ -720,6 +722,9 @@ canvas.oscilloscope[id$="0"] {
 
 #compiler .modal-footer .btn {
 	width: 20%;
+}
+#export .modal-footer .btn {
+	width: 45%;
 }
 
 #filedialog {

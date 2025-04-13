@@ -118,3 +118,5 @@ export default class PlayerRuntime extends SAASoundRegData {
     }
   }
 }
+
+export type PlayerSimulationCallback = (rt: PlayerRuntime) => void;

@@ -26,7 +26,7 @@ import { SAASound } from '../saa/SAASound';
 import { MAX_PATTERN_LEN, Mixer, PlayerMode, Tone, Volume } from './globals';
 import Ornament from './Ornament';
 import Pattern from './Pattern';
-import PlayerRuntime from './PlayerRuntime';
+import PlayerRuntime, { PlayerSimulationCallback } from './PlayerRuntime';
 import Position from './Position';
 import Sample from './Sample';
 
@@ -235,7 +235,7 @@ export default class Player {
    * @param callback Callback function to be called while simulation;
    */
   public simulatePlayback(
-    chipDataCallback: (rt: PlayerRuntime) => void,
+    chipDataCallback: PlayerSimulationCallback,
     loopControlCallback?: () => void,
   ): void {
     this.position = 0;
@@ -269,7 +269,7 @@ export default class Player {
   private simulation(
     lines: number,
     pos: number = this.position,
-    callback?: (rt: PlayerRuntime) => void,
+    callback?: PlayerSimulationCallback,
     rt: PlayerRuntime = this.rtSong,
   ): boolean {
     if (lines <= 0) {
