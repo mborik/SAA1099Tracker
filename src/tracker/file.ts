@@ -22,6 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import pako from 'pako';
+import { bytesToString } from '../commons/binary';
 import { devLog } from '../commons/dev';
 import { abs, toHex, validateAndClamp } from '../commons/number';
 import Player from '../player/Player';
@@ -666,7 +667,7 @@ export class STMFile {
 
     const data = this.createJSON();
     devLog('Tracker.file', 'JSON file format built, original size: ' + data.length);
-    const packed = btoa(String.fromCharCode.apply(null, pako.deflate(data)));
+    const packed = btoa(bytesToString(pako.deflate(data)));
     devLog('Tracker.file', 'Packed and stored in BASE64, length ' + packed.length);
 
     const now: number = abs(Date.now() / 1000);

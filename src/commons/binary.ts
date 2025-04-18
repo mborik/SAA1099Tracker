@@ -49,7 +49,7 @@ export const stringToBytes = (str: string, asciiOnly?: boolean): Uint8Array =>
   );
 
 export const bytesToString = (bytes: Uint8Array): string =>
-  String.fromCharCode.apply(null, bytes);
+  String.fromCharCode.apply(null, Array.from(bytes));
 
 export const writeWordLE = (bytes: Uint8Array, offset: number, word: number) => {
   bytes[offset] = (word & 0xFF);
