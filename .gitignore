@@ -4,6 +4,7 @@
 .pnp.js
 
 # production
+/cli/*.js
 /build
 /dist
 

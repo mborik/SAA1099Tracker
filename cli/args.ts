@@ -1,6 +1,6 @@
 /**
- * SAA1099Tracker: Development mode test and custom logger.
- * Copyright (c) 2020-2025 Martin Borik <martin@borik.net>
+ * SAA1099Tracker: CLI tool command line arguments.
+ * Copyright (c) 2025 Martin Borik <martin@borik.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -19,36 +19,63 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-//---------------------------------------------------------------------------------------
 
-export const isDev = (
-  (typeof process === 'undefined') && (
-    (/[?&#]dev/.test(location.search || location.hash))) || process.env.NODE_ENV
-);
-
-/**
- * Log message onto console when development mode is active.
- * First param
- * @param {string} section
- * @param {...any[]} args
- */
-export const devLog = (section: string, ...args: any[]): void => {
-  if (!isDev) {
-    return;
-  }
-
-  if (section && args.length > 0 && typeof args[0] === 'string') {
-    args.splice(0, 1, `%c[${section}]%c ${args[0]}`, 'color:steelblue', 'color:inherit');
-  }
-  else {
-    args.unshift(section);
-  }
-
-  if (typeof process !== 'undefined') {
-    args = args.map((arg) =>
-      (typeof arg === 'object') ? `[${arg.constructor.name}]` : arg);
-  }
-
-  // eslint-disable-next-line
-  console.log.apply(console, args);
-};
+export const cliCmdLineArgs = [{
+  name: 'help',
+  alias: 'h',
+  type: Boolean,
+  group: 'general',
+  defaultValue: false,
+}, {
+  name: 'version',
+  alias: 'v',
+  type: Boolean,
+  group: 'general',
+  defaultValue: false,
+}, {
+  name: 'input',
+  alias: 'i',
+  type: String,
+  group: 'file',
+}, {
+  name: 'output',
+  alias: 'o',
+  type: String,
+  group: 'file',
+}, {
+  name: 'force',
+  alias: 'f',
+  type: Boolean,
+  group: 'file',
+  defaultValue: false,
+}, {
+  name: 'format',
+  alias: 't',
+  type: String,
+  group: 'general',
+  defaultValue: 'mp3',
+}, {
+  name: 'sample-rate',
+  alias: 's',
+  type: Number,
+  group: 'audio',
+  defaultValue: 44100,
+}, {
+  name: 'bit-depth',
+  alias: 'b',
+  type: Number,
+  group: 'audio',
+  defaultValue: 16,
+}, {
+  name: 'quality',
+  alias: 'q',
+  type: Number,
+  group: 'audio',
+  defaultValue: 256,
+}, {
+  name: 'mono',
+  alias: 'm',
+  type: Boolean,
+  group: 'audio',
+  defaultValue: false,
+}];
