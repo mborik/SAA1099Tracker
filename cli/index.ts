@@ -26,7 +26,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { basename, dirname, extname, join } from 'path';
 import commandLineArgs from 'command-line-args';
 import { devLog } from '../src/commons/dev';
-import { vgm, wave } from '../src/commons/export';
+import { mp3, vgm, wave } from '../src/commons/export';
 import { SAASound } from '../src/libs/SAASound';
 import Player from '../src/player/Player';
 import { cliCmdLineArgs } from './args';
@@ -97,7 +97,7 @@ if (!['vgm', 'vgz', 'wav', 'mp3'].includes(format)) {
   console.error(`Invalid format: ${format}!`);
   showHelp(1);
 }
-const { sampleRate, bitDepth, quality, mono } = cli.audio ?? {};
+let { sampleRate, bitDepth, quality, mono } = cli.audio ?? {};
 if (![22050, 44100, 48000, 96000].includes(sampleRate)) {
   console.error(`Invalid sample rate ${sampleRate}, expected 22050, 44100, 48000 or 96000!`);
   showHelp(1);
@@ -106,8 +106,9 @@ if (![8, 16, 24, 32].includes(bitDepth)) {
   console.error(`Invalid bit depth ${bitDepth}, expected 8, 16, 24 or 32!`);
   showHelp(1);
 }
-if (![128, 192, 256, 320].includes(quality)) {
-  console.error(`Invalid quality ${quality}, expected 128, 192, 256 or 320!`);
+const encoderBitrates = [96, 112, 128, 192, 224, 256, 320];
+if (!encoderBitrates.includes(quality)) {
+  console.error(`Invalid quality ${quality}, expected\n\t${JSON.stringify(encoderBitrates)}!`);
   showHelp(1);
 }
 
@@ -119,6 +120,13 @@ output = join(dirname(output), `${basename(output, extname(output))}.${format}`)
 if (existsSync(output) && !force) {
   console.error(`Output file already exists: '${output}'`);
   process.exit(1);
+}
+
+const isMP3 = format === 'mp3';
+if (isMP3 && !(sampleRate === 44100 && bitDepth === 16)) {
+  sampleRate = 44100;
+  bitDepth = 16;
+  devLog('CLI', 'MP3 encoder requires 44100 Hz / 16 bit');
 }
 
 devLog('CLI', `Selected format ${format.toUpperCase()} to output path: '${output}'`);
@@ -159,19 +167,29 @@ if (isVGM) {
   });
 }
 else {
-  outputData = wave({
-    player,
-    SAA1099,
-    frequency: sampleRate,
-    bitDepth,
-    channels: mono ? 1 : 2,
-    repeatCount: 0,
-    audioInterrupt: settings.audioInterrupt,
-    durationInFrames,
-  });
-
-  if (format === 'mp3') {
-    devLog('CLI', 'MP3 encoding is not supported yet!');
+  const channels = mono ? 1 : 2;
+  if (isMP3) {
+    outputData = mp3({
+      player,
+      SAA1099,
+      bitrate: quality,
+      channels,
+      repeatCount: 0,
+      audioInterrupt: settings.audioInterrupt,
+      durationInFrames,
+    });
+  }
+  else {
+    outputData = wave({
+      player,
+      SAA1099,
+      frequency: sampleRate,
+      bitDepth,
+      channels: mono ? 1 : 2,
+      repeatCount: 0,
+      audioInterrupt: settings.audioInterrupt,
+      durationInFrames,
+    });
   }
 }
 

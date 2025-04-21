@@ -24,6 +24,7 @@
 import pako from 'pako';
 import { devLog } from '../commons/dev';
 import { toWidth } from '../commons/number';
+import { Mp3Encoder } from '../libs/lamejs';
 import { SAASound } from '../libs/SAASound';
 import Player from '../player/Player';
 
@@ -292,4 +293,115 @@ export const wave = ({
   devLog('Export', 'Total WAVE file length: %d bytes...', ptr);
 
   return new Uint8Array(buffer.slice(0, ptr));
+};
+
+//---------------------------------------------------------------------------------------
+interface MP3ExportOptions {
+  player: Player;
+  SAA1099: SAASound;
+  bitrate: number;
+  channels: number;
+  repeatCount: number;
+  audioInterrupt: number;
+  durationInFrames: number;
+}
+
+/**
+ * Render SAA1099 soundchip data and export to MP3 format.
+ */
+export const mp3 = ({
+  player,
+  SAA1099,
+  bitrate,
+  channels,
+  repeatCount,
+  audioInterrupt,
+  durationInFrames,
+}: MP3ExportOptions) => {
+
+  const frequency = 44100;
+  const bitDepth = 16;
+
+  devLog('Export', 'Exporting to MP3 format, %d channels, %d Hz, %d bit, %d kbps...',
+    channels, frequency, bitDepth, bitrate);
+
+  const sampleRate = Math.floor(frequency / audioInterrupt);
+  const blockAlign = (bitDepth / 8);
+  const wavByteRate = sampleRate * blockAlign;
+  const wavDataSize = durationInFrames * wavByteRate * (repeatCount + 1);
+  const mp3DataSize = (((durationInFrames / audioInterrupt) * (repeatCount + 1.1)) * bitrate * 1000) / 8;
+
+  const leftWaveBuffer = new ArrayBuffer(wavDataSize);
+  const rightWaveBuffer = new ArrayBuffer(wavDataSize);
+
+  const leftWaveData = new Int16Array(leftWaveBuffer, 0);
+  const rightWaveData = new Int16Array(rightWaveBuffer, 0);
+
+  const leftBuf = new Float32Array(sampleRate);
+  const rightBuf = new Float32Array(sampleRate);
+
+  const encoder = new Mp3Encoder(channels, frequency, bitrate);
+  const mp3Buffer = new Uint8Array(mp3DataSize);
+
+  let mp3ptr = 0;
+  let wavptr = 0, wavSegStart = 0;
+  let loopSampleSegmentStart = 0;
+
+  devLog('Export', 'Starting playback simulation on %d Hz...', frequency);
+
+  player.simulatePlayback(
+    (rt) => {
+      SAA1099.setAllRegs(rt);
+      SAA1099.output(leftBuf, rightBuf, sampleRate);
+
+      wavSegStart = wavptr;
+      for (let i = 0; i < sampleRate; i++) {
+        if (channels === 1) {
+          const mono = (leftBuf[i] + rightBuf[i]) / 2;
+          leftWaveData[wavptr] = mono * 32767;
+        }
+        else {
+          leftWaveData[wavptr] = leftBuf[i] * 32767;
+          rightWaveData[wavptr] = rightBuf[i] * 32767;
+        }
+
+        wavptr++;
+      }
+
+      const mp3SegOut = encoder.encodeBuffer(
+        leftWaveData.slice(wavSegStart, wavptr),
+        (channels === 1 ? undefined : rightWaveData.slice(wavSegStart, wavptr)),
+      );
+
+      mp3Buffer.set(mp3SegOut, mp3ptr);
+      mp3ptr += mp3SegOut.length;
+    },
+    () => {
+      if (repeatCount) {
+        loopSampleSegmentStart = wavptr;
+      }
+    });
+
+  if (repeatCount) {
+    wavSegStart = loopSampleSegmentStart;
+    devLog('Export', 'Encoding repeat sequence...');
+
+    for (let i = wavSegStart; i < wavptr; i += sampleRate) {
+      const mp3SegOut = encoder.encodeBuffer(
+        leftWaveData.slice(i, i + sampleRate),
+        (channels === 1 ? undefined : rightWaveData.slice(i, i + sampleRate))
+      );
+
+      mp3Buffer.set(mp3SegOut, mp3ptr);
+      mp3ptr += mp3SegOut.length;
+    }
+  }
+
+  const mp3SegOut = encoder.flush();
+  mp3Buffer.set(mp3SegOut, mp3ptr);
+  mp3ptr += mp3SegOut.length;
+
+  devLog('Export', 'Total MP3 file length: %d bytes...', mp3ptr);
+
+  return new Uint8Array(mp3Buffer.slice(0, mp3ptr));
 };
