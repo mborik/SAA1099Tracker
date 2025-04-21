@@ -23,7 +23,8 @@
     "dev": "webpack-dev-server --config ./webpack.config.js --host 0.0.0.0",
     "start": "concurrently --kill-others \"npm run dev\" -s first \"sleep 5 && electron . -dl\"",
     "dist": "electron-builder build -wl --x64 --config electron.json",
-    "dist-mac": "electron-builder build -m --arm64 --x64 --config electron.json"
+    "dist-mac": "electron-builder build -m --arm64 --x64 --config electron.json",
+    "test": "eslint . --ext .ts,.js"
   },
   "dependencies": {
     "bootstrap": "~3.4.1",

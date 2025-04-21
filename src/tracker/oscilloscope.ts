@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import AudioDriver from '../commons/audio';
-import { SAASoundMonitorCallback } from '../saa/SAASound';
+import { SAASoundMonitorCallback } from '../libs/SAASound';
 import Tracker, { TrackerCanvasPair } from '.';
 
 export default class Oscilloscope {

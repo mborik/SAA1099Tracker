@@ -1,5 +1,5 @@
 /**
- * SAASound - Phillips SAA 1099 sound chip emulator
+ * SAASound - Philips SAA 1099 sound chip emulator
  * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  * Based on SAASound - portable C/C++ library
  * Copyright (c) 1998-2004 Dave Hooper <stripwax@users.sourceforge.net>
@@ -23,7 +23,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from '../commons/dev';
+import { devLog } from '../../commons/dev';
 import { SAAEnv } from './SAAEnv';
 import { SAANoise } from './SAANoise';
 import { SAASound } from './SAASound';

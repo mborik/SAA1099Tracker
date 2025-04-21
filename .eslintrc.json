@@ -6,6 +6,10 @@
     "jquery": true
   },
   "root": true,
+  "ignorePatterns": [
+    "build/**/*.js",
+    "**/bootstrap*/*.js"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "sourceType": "module",

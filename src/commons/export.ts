@@ -24,8 +24,8 @@
 import pako from 'pako';
 import { devLog } from '../commons/dev';
 import { toWidth } from '../commons/number';
+import { SAASound } from '../libs/SAASound';
 import Player from '../player/Player';
-import { SAASound } from '../saa/SAASound';
 
 interface VgmExportOptions {
   player: Player;

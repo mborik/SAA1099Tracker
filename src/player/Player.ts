@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { devLog } from '../commons/dev';
-import { SAASound } from '../saa/SAASound';
+import { SAASound } from '../libs/SAASound';
 import { MAX_PATTERN_LEN, Mixer, PlayerMode, Tone, Volume } from './globals';
 import Ornament from './Ornament';
 import Pattern from './Pattern';

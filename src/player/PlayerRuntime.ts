@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------------------
 
 import { toHex } from '../commons/number';
-import { SAASoundRegData } from '../saa/SAASound';
+import { SAASoundRegData } from '../libs/SAASound';
 import { Volume } from './globals';
 import Ornament from './Ornament';
 import Player from './Player';

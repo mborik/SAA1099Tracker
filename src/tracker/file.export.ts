@@ -23,7 +23,7 @@
 import { devLog } from '../commons/dev';
 import { vgm, wave } from '../commons/export';
 import { pick } from '../commons/pick';
-import { SAASound } from '../saa/SAASound';
+import { SAASound } from '../libs/SAASound';
 import constants from './constants';
 import { STMFile } from './file';
 import Tracker from '.';

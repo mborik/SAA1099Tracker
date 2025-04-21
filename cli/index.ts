@@ -27,8 +27,8 @@ import { basename, dirname, extname, join } from 'path';
 import commandLineArgs from 'command-line-args';
 import { devLog } from '../src/commons/dev';
 import { vgm, wave } from '../src/commons/export';
+import { SAASound } from '../src/libs/SAASound';
 import Player from '../src/player/Player';
-import { SAASound } from '../src/saa/SAASound';
 import { cliCmdLineArgs } from './args';
 import { calculateDuration, parseJSON } from './utils';
 

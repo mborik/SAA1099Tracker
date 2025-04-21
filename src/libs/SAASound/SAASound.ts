@@ -1,5 +1,5 @@
 /**
- * SAASound - Phillips SAA 1099 sound chip emulator
+ * SAASound - Philips SAA 1099 sound chip emulator
  * Copyright (c) 2015-2022 Martin Borik <martin@borik.net>
  * Based on SAASound - portable C/C++ library
  * Copyright (c) 1998-2004 Dave Hooper <stripwax@users.sourceforge.net>
@@ -23,7 +23,7 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { devLog } from '../commons/dev';
+import { devLog } from '../../commons/dev';
 import { SAAAmp } from './SAAAmp';
 import { SAAEnv } from './SAAEnv';
 import { SAAFreq } from './SAAFreq';
@@ -51,7 +51,7 @@ export class SAASoundRegData {
 export type SAASoundMonitorCallback = (chn: number, left: number, right: number) => void;
 
 /**
- * SAASound: Phillips SAA 1099 sound chip emulator core class.
+ * SAASound: Philips SAA 1099 sound chip emulator core class.
  */
 export class SAASound {
   public static sampleRate: number;
