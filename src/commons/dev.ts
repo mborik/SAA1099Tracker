@@ -23,7 +23,8 @@
 
 export const isDev = (
   (typeof process === 'undefined') && (
-    (/[?&#]dev/.test(location.search || location.hash))) ||
+    (/[?&#]dev/.test(location.search || location.hash))) || (
+    typeof window !== 'undefined' && (window as any).isDev) ||
     !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
 );
 

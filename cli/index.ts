@@ -22,6 +22,14 @@
 
 /// <reference path="../src/global.d.ts" />
 
+/* polyfill for window within globalThis in Node.js */
+Object.defineProperty(globalThis, 'window', {
+  value: { isDev: true },
+  enumerable: true,
+  configurable: true,
+  writable: true,
+});
+
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { basename, dirname, extname, join } from 'path';
 import commandLineArgs from 'command-line-args';
@@ -136,12 +144,7 @@ const player = new Player(SAA1099);
 const settings = { audioInterrupt: 50 };
 const Tracker: { [key: string]: any } = { player, settings };
 
-Object.defineProperty(globalThis, 'window', {
-  value: { Tracker, isDev: true },
-  enumerable: true,
-  configurable: true,
-  writable: true,
-});
+(window as any).Tracker = Tracker;
 
 const inputData = readFileSync(input);
 if (inputData[0] === 0x7B) { // '{' character

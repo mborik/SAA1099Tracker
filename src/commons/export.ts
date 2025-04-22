@@ -29,8 +29,8 @@ import { SAASound } from '../libs/SAASound';
 import Player from '../player/Player';
 import { stringToBytes } from './binary';
 
-const removeAccents = (str: string) =>
-  str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const removeUnicode = (str: string) =>
+  str.normalize('NFD').replace(/[\u0080-\uffff]/g, '');
 
 
 interface VgmExportOptions {
@@ -62,9 +62,9 @@ export const vgm = ({
   devLog('Export', 'Exporting to VGM format v1.71...');
 
   const gd3tag = `${
-    removeAccents(songTitle)
+    removeUnicode(songTitle)
   }\0\0\0\0\0\0${
-    removeAccents(songAuthor)
+    removeUnicode(songAuthor)
   }\0\0${
     date.getUTCFullYear()
   }/${
@@ -416,9 +416,9 @@ export const mp3 = ({
   mp3ptr += mp3SegOut.length;
 
   const id3v1 = `TAG${
-    removeAccents(songTitle.slice(0, 29)).padEnd(30, '\0')
+    removeUnicode(songTitle).slice(0, 29).padEnd(30, '\0')
   }${
-    removeAccents(songAuthor.slice(0, 29)).padEnd(30, '\0')
+    removeUnicode(songAuthor).slice(0, 29).padEnd(30, '\0')
   }${
     ''.padEnd(30, '\0')
   }${
