@@ -53,7 +53,7 @@ const showHelp = (errorCode: number) => {
     -t  --format       Output format (vgm, vgz, wav, mp3; default: mp3)
     -s  --sample-rate  Sample rate (default: 44100)
     -b  --bit-depth    Bit depth of wav (default: 16)
-    -q  --quality      MP3 bitrate in kbps (default: 256)
+    -q  --quality      MP3 bitrate in kbps (default: 128)
     -m  --mono         Mono output (default is stereo)
     -f  --force        Force overwrite output file
     -h  --help         Show this help message
@@ -177,6 +177,8 @@ else {
       repeatCount: 0,
       audioInterrupt: settings.audioInterrupt,
       durationInFrames,
+      songTitle: Tracker.songTitle,
+      songAuthor: Tracker.songAuthor,
     });
   }
   else {

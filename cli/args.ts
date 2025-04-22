@@ -71,7 +71,7 @@ export const cliCmdLineArgs = [{
   alias: 'q',
   type: Number,
   group: 'audio',
-  defaultValue: 256,
+  defaultValue: 128,
 }, {
   name: 'mono',
   alias: 'm',

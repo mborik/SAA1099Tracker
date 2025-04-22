@@ -27,6 +27,11 @@ import { toWidth } from '../commons/number';
 import { Mp3Encoder } from '../libs/lamejs';
 import { SAASound } from '../libs/SAASound';
 import Player from '../player/Player';
+import { stringToBytes } from './binary';
+
+const removeAccents = (str: string) =>
+  str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 
 interface VgmExportOptions {
   player: Player;
@@ -57,9 +62,9 @@ export const vgm = ({
   devLog('Export', 'Exporting to VGM format v1.71...');
 
   const gd3tag = `${
-    songTitle
+    removeAccents(songTitle)
   }\0\0\0\0\0\0${
-    songAuthor
+    removeAccents(songAuthor)
   }\0\0${
     date.getUTCFullYear()
   }/${
@@ -291,7 +296,6 @@ export const wave = ({
   data.setUint32(40, ptr - 44, true); // Size of data chunk
 
   devLog('Export', 'Total WAVE file length: %d bytes...', ptr);
-
   return new Uint8Array(buffer.slice(0, ptr));
 };
 
@@ -304,6 +308,11 @@ interface MP3ExportOptions {
   repeatCount: number;
   audioInterrupt: number;
   durationInFrames: number;
+  songTitle: string;
+  songAuthor: string;
+  genre?: number;
+  appName?: string;
+  date?: Date;
 }
 
 /**
@@ -317,6 +326,11 @@ export const mp3 = ({
   repeatCount,
   audioInterrupt,
   durationInFrames,
+  songTitle,
+  songAuthor,
+  genre = 37, // "Sound clip"
+  appName = 'SAA1099Tracker',
+  date = new Date(),
 }: MP3ExportOptions) => {
 
   const frequency = 44100;
@@ -329,7 +343,7 @@ export const mp3 = ({
   const blockAlign = (bitDepth / 8);
   const wavByteRate = sampleRate * blockAlign;
   const wavDataSize = durationInFrames * wavByteRate * (repeatCount + 1);
-  const mp3DataSize = (((durationInFrames / audioInterrupt) * (repeatCount + 1.1)) * bitrate * 1000) / 8;
+  const mp3DataSize = (((durationInFrames / audioInterrupt) * (repeatCount + 1)) * bitrate * 1000) / 8;
 
   const leftWaveBuffer = new ArrayBuffer(wavDataSize);
   const rightWaveBuffer = new ArrayBuffer(wavDataSize);
@@ -341,7 +355,7 @@ export const mp3 = ({
   const rightBuf = new Float32Array(sampleRate);
 
   const encoder = new Mp3Encoder(channels, frequency, bitrate);
-  const mp3Buffer = new Uint8Array(mp3DataSize);
+  const mp3Buffer = new Uint8Array(mp3DataSize + 1024); // 1k padding for safety and ID3v1 tag
 
   let mp3ptr = 0;
   let wavptr = 0, wavSegStart = 0;
@@ -401,7 +415,24 @@ export const mp3 = ({
   mp3Buffer.set(mp3SegOut, mp3ptr);
   mp3ptr += mp3SegOut.length;
 
-  devLog('Export', 'Total MP3 file length: %d bytes...', mp3ptr);
+  const id3v1 = `TAG${
+    removeAccents(songTitle.slice(0, 29)).padEnd(30, '\0')
+  }${
+    removeAccents(songAuthor.slice(0, 29)).padEnd(30, '\0')
+  }${
+    ''.padEnd(30, '\0')
+  }${
+    date.getUTCFullYear()
+  }${
+    appName.padEnd(30, '\0')
+  }${
+    String.fromCharCode(genre)
+  }`;
 
+  const id3v1Bytes = stringToBytes(id3v1);
+  mp3Buffer.set(id3v1Bytes, mp3ptr);
+  mp3ptr += id3v1Bytes.length;
+
+  devLog('Export', 'Total MP3 file length: %d bytes...', mp3ptr);
   return new Uint8Array(mp3Buffer.slice(0, mp3ptr));
 };
