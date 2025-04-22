@@ -1034,6 +1034,27 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         }
       }
     }, {
+      selector: '#rgWaveBitrate',
+      method:   'on',
+      param:    'input change',
+      handler:  (e: JQueryInputEventTarget) => {
+        const el = e.currentTarget;
+        app.file.export.setBitrate(+el.value);
+        $(el).tooltip('show');
+      }
+    }, {
+      selector: '#rgWaveBitrate',
+      method:   'tooltip',
+      data: {
+        animation: false,
+        trigger: 'hover',
+        placement: 'right',
+        delay: { 'show': 0, 'hide': 500 },
+        title: function() {
+          return `${this.value} kbps`;
+        }
+      }
+    }, {
       selector: '#rgSetAudioBuffers',
       method:   'on',
       param:    'input change',

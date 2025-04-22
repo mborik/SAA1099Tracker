@@ -21,7 +21,8 @@
  */
 
 import { devLog } from '../commons/dev';
-import { vgm, wave } from '../commons/export';
+import { mp3, vgm, wave } from '../commons/export';
+import { validateAndClamp } from '../commons/number';
 import { pick } from '../commons/pick';
 import { SAASound } from '../libs/SAASound';
 import constants from './constants';
@@ -29,7 +30,13 @@ import { STMFile } from './file';
 import Tracker from '.';
 
 
+const enum ExportFileType {
+  WAV = 'WAV',
+  MP3 = 'MP3',
+}
 interface ExportOptions {
+  fileType: ExportFileType;
+  bitrate: number;
   frequency: number;
   bitDepth: number;
   channels: number;
@@ -37,6 +44,8 @@ interface ExportOptions {
 }
 
 const getConfigProps = (obj: any) => pick(obj, [
+  'fileType',
+  'bitRate',
   'frequency',
   'bitDepth',
   'channels',
@@ -46,6 +55,8 @@ const getConfigProps = (obj: any) => pick(obj, [
 export class FileExport implements ExportOptions {
   private exportDialog: JQuery = null;
 
+  public fileType: ExportFileType = ExportFileType.MP3;
+  public bitrate: number = 128;
   public frequency: number = 44100;
   public bitDepth: number = 16;
   public channels: number = 2;
@@ -56,6 +67,15 @@ export class FileExport implements ExportOptions {
     private _app: Tracker,
     private _parent: STMFile) {}
 
+
+  setBitrate(value: number) {
+    this.bitrate = validateAndClamp({
+      value: `${value / 32}`,
+      min: 2,
+      max: 10,
+      initval: 4,
+    }) * 32;
+  }
 
   private _initExportDialog() {
     this.exportDialog = $('#export');
@@ -69,11 +89,32 @@ export class FileExport implements ExportOptions {
 
     devLog('Tracker.file', 'Export settings fetched from localStorage %o...', getConfigProps(this));
 
+    const isMP3 = this.fileType === ExportFileType.MP3;
+
+    $(`#rdWaveType${this.fileType}`).prop('checked', true);
     $(`#rdWaveFrequency${this.frequency}`).prop('checked', true);
     $(`#rdWaveBitDepth${this.bitDepth}`).prop('checked', true);
     $(`#rdWaveRepeat${this.repeatCount}`).prop('checked', true);
     $(`#rdWaveChannels${this.channels}`).prop('checked', true);
+    $('#rgWaveBitrate').val(this.bitrate);
 
+    $('#panel-bitrate').toggle(isMP3);
+    $('input[name=rdWaveFrequency]').prop('disabled', isMP3);
+    $('input[name=rdWaveBitDepth]').prop('disabled', isMP3);
+
+    $('input[name=rdWaveType]').change((e: JQueryInputEventTarget) => {
+      const isMP3 = e.currentTarget.value === ExportFileType.MP3;
+      this.fileType = isMP3 ? ExportFileType.MP3 : ExportFileType.WAV;
+      if (isMP3) {
+        this.frequency = 44100;
+        this.bitDepth = 16;
+        $(`#rdWaveFrequency${this.frequency}`).prop('checked', true);
+        $(`#rdWaveBitDepth${this.bitDepth}`).prop('checked', true);
+      }
+      $('input[name=rdWaveFrequency]').prop('disabled', isMP3);
+      $('input[name=rdWaveBitDepth]').prop('disabled', isMP3);
+      $('#panel-bitrate').toggle(isMP3);
+    });
     $('input[name=rdWaveFrequency]').change((e: JQueryInputEventTarget) => {
       this.frequency = +e.currentTarget.value;
     });
@@ -107,7 +148,12 @@ export class FileExport implements ExportOptions {
         document.body.className = 'loading';
 
         setTimeout(() => {
-          this.wave();
+          if (this.fileType === ExportFileType.MP3) {
+            this.mp3();
+          }
+          else {
+            this.wave();
+          }
           document.body.className = '';
         }, 50);
         return true;
@@ -256,5 +302,37 @@ export class FileExport implements ExportOptions {
     });
 
     file.system.save(output, `${fileName}.wav`, constants.MIMETYPE_WAV);
+  }
+
+  /**
+   * Render SAA1099 soundchip data and export to MP3 format.
+   */
+  public mp3(): void {
+    const app = this._app;
+    const player = this._app.player;
+
+    if (app.modePlay || app.globalKeyState.lastPlayMode) {
+      app.onCmdStop();
+    }
+    if (!player.positions.length) {
+      return;
+    }
+
+    const file = this._parent;
+    const fileName = file.getFixedFileName();
+
+    const output = mp3({
+      player,
+      SAA1099: new SAASound(this.frequency),
+      bitrate: this.bitrate,
+      channels: this.channels,
+      repeatCount: this.repeatCount,
+      audioInterrupt: app.settings.audioInterrupt,
+      durationInFrames: file.durationInFrames,
+      songTitle: app.songTitle,
+      songAuthor: app.songAuthor,
+    });
+
+    file.system.save(output, `${fileName}.mp3`, constants.MIMETYPE_MP3);
   }
 }

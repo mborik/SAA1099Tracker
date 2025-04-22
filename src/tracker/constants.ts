@@ -30,6 +30,7 @@ export default {
   MIMETYPE_TEXT: 'text/plain',
   MIMETYPE_VGM: 'audio/x-vgz',
   MIMETYPE_WAV: 'audio/x-wav',
+  MIMETYPE_MP3: 'audio/mpeg',
 
   AUTOSAVE_FILENAME: 'AUTOSAVE',
   LOCALSTORAGE_ASSUMED_SIZE: 2 ** 21,
