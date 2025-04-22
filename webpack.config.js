@@ -134,7 +134,6 @@ module.exports = {
       './src/libs/bootstrap-touchspin/bootstrap-touchspin.js',
       './src/libs/bootstrap-confirm/bootstrap-confirm.js',
       './src/commons/timer.ts',
-      './src/commons/browser.ts',
       './src/commons/dev.ts',
       './src/commons/pick.ts',
       './src/commons/audio.ts',

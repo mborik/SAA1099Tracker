@@ -21,7 +21,6 @@
  */
 //---------------------------------------------------------------------------------------
 
-import { browser } from '../commons/browser';
 import SmpOrnEditor from './smporn';
 import Tracklist from './tracklist';
 import Tracker from '.';
@@ -29,9 +28,7 @@ import Tracker from '.';
 
 Tracker.prototype.handleMouseEvent = function(part: string, inputObj: any, e: JQueryEventObject) {
   let x = e.pageX || 0, y = e.pageY || 0;
-  const leftButton = browser.isFirefox ?
-    (!!(e.buttons & 1) || (e.type !== 'mousemove' && e.button === 0)) :
-    (e.which === 1);
+  const leftButton = (e.which === 1);
 
   if (part === 'tracklist') {
     const obj = <Tracklist> inputObj;

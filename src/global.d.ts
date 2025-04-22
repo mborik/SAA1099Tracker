@@ -10,6 +10,7 @@ declare interface JQueryEventObject {
   buttons: number;
   delta: number;
   target: HTMLElement;
+  which: number;
 }
 declare interface JQueryInputEventTarget extends JQueryInputEventObject {
   currentTarget: HTMLInputElement;
