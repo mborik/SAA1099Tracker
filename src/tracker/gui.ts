@@ -1131,8 +1131,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
       handler:  (e: JQueryMouseEventObject) => {
         const id = e.currentTarget.id;
         const name = id.replace(/^bt/, 'onCmd');
-        //@ts-ignore
-        app[name] ?? app[name]();
+        (app as any)[name]?.();
       }
     }, {
       selector: 'button[id^="btSample"]',
@@ -1143,8 +1142,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         if (name.match(/Stop$/)) {
           return app.onCmdStop();
         }
-        //@ts-ignore
-        app[name] ?? app[name]();
+        (app as any)[name]?.();
       }
     }, {
       selector: 'button[id^="btOrn"]',
@@ -1155,8 +1153,7 @@ Tracker.prototype.populateGUI = function(app: Tracker) {
         if (name.match(/Stop$/)) {
           return app.onCmdStop();
         }
-        //@ts-ignore
-        app[name] ?? app[name]();
+        (app as any)[name]?.();
       }
     }
   ];

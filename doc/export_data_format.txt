@@ -6,7 +6,7 @@ focusing on shortest data length. All pointers in header are offsets from the
 ===============================================================================
 
  0. | DWORD signature: "STMF"
- 1. | BYTE file version number and complexity of used commands in BCD code
+ 4. | BYTE file version number and complexity of used commands in BCD code
       (current format specification is 1.0 = 0x10 + value of cmd complexity)
 
  5. | WORD pointer to sample pointer list
